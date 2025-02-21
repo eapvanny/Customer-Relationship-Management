@@ -1,0 +1,137 @@
+/*
+	this style is overide from section __skine_blue in _all-skins.css
+	and use to custom navbar
+*/
+
+/*	block viriable*/
+$item-color : #707070;
+$item-background-color : #F1F1F1;
+$border-color : #eee;
+/*	mixin         */
+@mixin item-border($width : 0px ,$hieght : 0px, $bg-color : $item-background-color){
+	width: $width;
+	height: $hieght;
+	border-radius: 50%;
+	color: $item-color;
+	background-color: $bg-color;
+}
+
+.main-header {
+    .language {
+        .main-language {
+            border: 1px solid $border-color;
+            border-radius: 15px;
+            padding: 0 9px 0 2px;
+
+            a {
+                margin-right: 0px;
+                span {
+                    font-size: 16px !important;
+                }
+            }
+            .icon-language {
+                img {
+                    width: 26px;
+                    height: 26px;
+                    background-color: $item-background-color;
+                    padding: 4px;
+                    border-radius: 12px;
+                }
+            }
+            .label-language {
+                color: #646464;
+            }
+        }
+        .dropdown-item {
+            img {
+                width: 25px;
+                height: 25px;
+            }
+            font-size: 14px;
+        }
+    }
+    .avatar {
+        a {
+            color: #444444;
+            span {
+                line-height: 16px;
+
+                small {
+                    font-size: 12px;
+                    color: #646464;
+                }
+            }
+        }
+    }
+    .sepa-menu-header {
+        border-right: 1px solid $border-color;
+        width: 1px;
+        height: 20px;
+    }
+}
+
+/*	block style   */
+.skin-blue .main-header .navbar-custom-menu{
+	.navbar-nav{
+		display: inline-flex;
+		div{
+			.dropdown{
+				a{
+					text-decoration: none;
+					i{
+						display: inline-flex;
+						justify-content: center;
+						font-size:16px;
+						align-items: center;
+						opacity: 0.7;
+						@include item-border(30px,30px);
+						small{
+                            position: absolute;
+                            text-align: center;
+                            top: -7px;
+                            width: 18px;
+                            height: 18px;
+                            border-radius: 50%;
+                            color: #FFF;
+                            right: -6px;
+                            font-size: 11px;
+                            line-height: 16px;
+                            font-weight: bold;
+						}
+					}
+                    .fa-envelope {
+                        small {
+                            background-color: #00bcd4;
+                        }
+                    }
+                    .fa-bell-o {
+                        small {
+                            background-color: #ff9800;
+                        }
+                    }
+					span{
+						font-size: 20px;
+
+					}
+				}
+				a.notifi-icon::after{
+					content: none;
+				}
+			}
+            .dropdown .notifications{
+                width: 350px !important;
+                height: fit-content;
+            }
+		}
+	}
+
+}
+
+@media (max-width: 767px){
+	.hidden-xs {
+		display: none!important;
+	}
+	.hidden-dropdow-xs::after{
+		content: none;
+	}
+}

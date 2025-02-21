@@ -1,0 +1,59 @@
+#sortable {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 90%;
+}
+#sortable li {
+    margin: 3px 3px 3px 0;
+    padding: 1px;
+    float: left;
+    border: 0;
+    background: none;
+}
+#sortable li img{
+    width: 180px;
+    height: 140px;
+}
+
+.ui-state-default:hover .edit {
+    display: block;
+}
+
+.edit {
+    position: absolute;
+    right: 5px;
+    top: 0px;
+    display: none;
+}
+.ui-state-default{
+    position: relative;
+}
+.dropzone{
+    min-height: 200px !important;
+    text-align: center !important;
+    position: relative !important;
+    overflow-x: scroll;
+}
+.dropzone .dz-message {
+    font-size: 1.5rem !important;
+    top: 40% !important;
+    height: 150px !important;
+}
+.dropzone .dz-message:before{
+    font-size: 50px !important;
+}
+.table td,
+.table th{
+    vertical-align: middle;
+    padding: 0.5rem 0.75rem;
+}
+#btn-search{
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    height: 41px;
+
+}

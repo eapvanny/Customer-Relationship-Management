@@ -1,0 +1,11 @@
+.tab-content .col-md-3 p {
+    word-break: break-all;
+}
+.global-view-tab{
+    word-break: break-all;
+}
+.student-view-img{
+    margin:0 auto;
+    padding:3px;
+    border:3px solid #d2d6de
+}
