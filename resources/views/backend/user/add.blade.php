@@ -137,7 +137,7 @@
 
                     <!-- End organization -->
                     <div class="row">
-                        <div class="col-md-4 col-xl-4">
+                        {{-- <div class="col-md-4 col-xl-4">
                             <div class="form-group has-feedback">
                                 <label for="department_id"> {{ __('Department') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -153,7 +153,7 @@
                                 <span class="form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('department_id') }}</span>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="col-md-4">
                             <div class="form-group has-feedback">
                                 <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>

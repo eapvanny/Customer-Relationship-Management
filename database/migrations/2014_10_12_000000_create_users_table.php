@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('photo')->nullable();
             $table->unsignedBigInteger('role_id');
             $table->tinyInteger('gender')->nullable();
-            $table->string('user_lang', '2')->default('kh');
+            $table->string('user_lang', '1')->default('kh');
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

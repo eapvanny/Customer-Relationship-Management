@@ -13,13 +13,13 @@ use Yajra\DataTables\Facades\DataTables;
 
 class RoleController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:view role', ['only' => ['index']]);
-        $this->middleware('permission:create role', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update role', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete role', ['only' => ['destroy']]);
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware('permission:view role', ['only' => ['index']]);
+    //     $this->middleware('permission:create role', ['only' => ['create', 'store']]);
+    //     $this->middleware('permission:update role', ['only' => ['update', 'edit']]);
+    //     $this->middleware('permission:delete role', ['only' => ['destroy']]);
+    // }
     public $indexof = 1;
     public function index(Request $request)
     {

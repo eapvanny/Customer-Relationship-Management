@@ -83,7 +83,7 @@
                     <div class="table-responsive">
                         <table id="datatabble" class="table table-bordered table-striped display responsive no-wrap" width="100%">
                             <thead>
-                            <tr>
+                            <tr
                                 <th>{{ __('Text') }}</th>
                                 <th>{{ __('Translate As') }}</th>
                                 <th class="notexport" width="10%"> {{ __('Action') }} </th>

@@ -31,7 +31,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = User::with('department', 'role');
+            $query = User::with('role');
 
             if (!in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
                 $query->where('id', auth()->user()->id);
@@ -163,7 +163,6 @@ class UserController extends Controller
         $user = User::find($id);
         $roles = Role::pluck('name', 'id');
 
-        $departments = Department::pluck('name', 'id');
         if (!$user) {
             return redirect()->route('user.index');
         }
@@ -171,7 +170,6 @@ class UserController extends Controller
             'backend.user.add',
             compact(
                 'user',
-                'departments',
                 'roles'
             )
         );

@@ -25,6 +25,7 @@ class User extends Authenticatable
         'username',
         'id_card',
         'phone_no',
+        'photo',
         'gender',
         'user_lang',
         'role_id',
@@ -49,4 +50,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function getPhotoUrlAttribute()
+    {
+        return $this->photo ? asset('storage/' . $this->photo) : asset('images/avatar.png'); // Default photo if none exists
+    }
 }
