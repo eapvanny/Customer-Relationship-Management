@@ -35,6 +35,10 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('demo123'),
                 'photo' => '123.jpg',
                 'id_card' => '1280',
+                'family_name' => 'ឌី',
+                'name' => 'អេដមីន',
+                'family_name_latin' => 'Dy',
+                'name_latin' => 'Admin',
                 'role_id' => AppHelper::USER_SUPER_ADMIN,
                 'phone_no' => '0987876567',
             ]);

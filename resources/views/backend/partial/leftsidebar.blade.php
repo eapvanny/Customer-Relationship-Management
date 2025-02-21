@@ -11,6 +11,11 @@
                     <i class="fa fa-solid fa-chart-line"></i> <span> {{ __('Dashboard') }}</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ URL::route('report.index') }}" class="text-decoration-none">
+                    <i class="fa fa-regular fa-folder-open"></i> <span>{{ __('Report') }}</span>
+                </a>
+            </li>
             @can('view department')
                 <li>
                     <a href="{{ URL::route('department.index') }}" class="text-decoration-none">

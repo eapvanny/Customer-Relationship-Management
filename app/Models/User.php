@@ -55,8 +55,12 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
 
-    public function getPhotoUrlAttribute()
+    public function report()
     {
-        return $this->photo ? asset('storage/' . $this->photo) : asset('images/avatar.png'); // Default photo if none exists
+        return $this->hasMany(Report::class);
     }
+    // public function getPhotoUrlAttribute()
+    // {
+    //     return $this->photo ? asset('storage/' . $this->photo) : asset('images/avatar.png'); // Default photo if none exists
+    // }
 }

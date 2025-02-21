@@ -3,23 +3,60 @@
 
 <!-- Page title -->
 @section('pageTitle')
-    User
+    Reports
 @endsection
 <!-- End block -->
+
+@section('extraStyle')
+    <style>
+        /* .modal-fullscreen .modal-dialog {
+                width: 100%;
+                max-width: none;
+                height: 100%;
+                margin: 0;
+            }
+
+            .modal-fullscreen .modal-content {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .modal-body {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            } */
+
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .chat-input-container {
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            padding: 10px;
+        }
+    </style>
+@endsection
 
 <!-- Page body extra class -->
 @section('bodyCssClass')
 @endsection
 <!-- End block -->
-
+@php
+    use App\Http\Helpers\AppHelper;
+@endphp
 <!-- BEGIN PAGE CONTENT-->
 @section('pageContent')
     <!-- Section header -->
     <section class="content-header">
         <ol class="breadcrumb">
-            <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }}</a></li>
-            {{-- <li> {{ __('Administrator') }} </li> --}}
-            <li class="active">{{ __('User') }}</li>
+            <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
+            <li class="active"> {{ __('Reports') }} </li>
         </ol>
     </section>
     <!-- ./Section header -->
@@ -29,40 +66,42 @@
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
                     <h1>
-                        {{ __('User') }}
+                        {{ __('Reports') }}
                         <small> {{ __('List') }} </small>
                     </h1>
                     <div class="box-tools pull-right">
-                        {{-- @if (auth()->user()->newRole->role_id != AppHelper::USER_ADMIN)
-
-                            <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
-
-                        @endif --}}
-                        @can('create user')
-                            <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i
-                                    class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
-                        @endcan
+                        <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}"><i
+                                class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
                     </div>
                 </div>
+
                 <div class="wrap-outter-box">
                     <div class="box box-info">
+                        <div class="box-header">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                            </div>
+                        </div>
                         <!-- /.box-header -->
-                        <div class="box-body">
-                            <div class="table-responsive">
+                        <div class="box-body margin-top-20">
+                            <div class="table-responsive mt-4">
                                 <table id="datatabble"
                                     class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
                                     width="100%">
                                     <thead>
                                         <tr>
-                                            <th>{{ __('Photo') }}</th>
-                                            <th>{{ __('Name') }}</th>
-                                            <th>{{ __('Username') }}</th>
-                                            <th>{{ __('Email') }}</th>
-                                            <th>{{ __('Phone No.') }}</th>
-                                            <th>{{ __('Role') }}</th>
-                                            <th>{{ __('Gender') }}</th>
-                                            <th>{{ __('Status') }}</th>
-                                            <th class="notexport" style="min-width: 65px;">{{ __('Action') }}</th>
+                                            <th> {{ __('Photo') }} </th>
+                                            <th> {{ __('ID No.') }} </th>
+                                            <th> {{ __('Name') }} </th>
+                                            <th> {{ __('Area') }} </th>
+                                            <th> {{ __('Depot Stock') }} </th>
+                                            <th> {{ __('250ml') }} </th>
+                                            <th> {{ __('350ml') }} </th>
+                                            <th> {{ __('600ml') }} </th>
+                                            <th> {{ __('1500ml') }} </th>
+                                            <th> {{ __('Date') }} </th>
+                                            <th> {{ __('Other') }} </th>
+                                            <th class="notexport" style="max-width: 80px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -81,12 +120,10 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
-        </div>
-
     </section>
+
     <!-- /.content -->
 @endsection
 <!-- END PAGE CONTENT-->
@@ -95,75 +132,73 @@
 @section('extraScript')
     <script type="text/javascript">
         $(document).ready(function() {
-            Generic.initCommonPageJS();
-            Generic.initDeleteDialog();
-            window.filter_org = 1;
-            Generic.initFilter();
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-            var t = $('#datatabble').DataTable({
+            t = $('#datatabble').DataTable({
                 processing: false,
                 serverSide: true,
                 ajax: {
-                    url: "{!! route('user.index', Request::query()) !!}",
+                    url: "{!! route('report.index', request()->all()) !!}",
                 },
+                pageLength: 10,
                 columns: [
-                    {   
+                    {
                         data: 'photo',
-                        name: 'photo',
+                        name: 'photo'
+                    },
+                    {
+                        data: 'id_card',
+                        name: 'id_card'
                     },
                     {
                         data: 'name',
-                        name: 'name',
+                        name: 'name'
                     },
                     {
-                        data: 'username',
-                        name: 'username',
+                        data: 'area',
+                        name: 'area'
                     },
                     {
-                        data: 'email',
-                        name: 'email',
+                        data: 'depot_stock',
+                        name: 'depot_stock'
                     },
                     {
-                        data: 'phone_no',
-                        name: 'phone_no',
+                        data: '250ml',
+                        name: '250ml'
                     },
                     {
-                        data: 'role',
-                        name: 'role',
+                        data: '350ml',
+                        name: '350ml'
                     },
                     {
-                        data: 'gender',
-                        name: 'gender',
+                        data: '600ml',
+                        name: '600ml'
                     },
                     {
-                        data: 'status',
-                        name: 'status',
-                        orderable: false
+                        data: '1500ml',
+                        name: '1500ml'
                     },
+                    {
+                        data: 'date',
+                        name: 'date'
+                    },
+                    {
+                        data: 'other',
+                        name: 'other'
+                    },
+                    
                     {
                         data: 'action',
                         name: 'action',
                         orderable: false
                     }
                 ],
-                "fnDrawCallback": function() {
-                    $('#datatabble input.statusChange').bootstrapToggle({
-                        on: "<i class='fa fa-check-circle'></i>",
-                        off: "<i class='fa fa-ban'></i>"
-                    });
-                }
             });
 
-
-            // t.on( 'order.dt search.dt', function () {
-            //     t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
-            //         cell.innerHTML = i+1;
-            //     } );
-            // } ).draw();
+            //delete grade_level
             $('#datatabble').delegate('.delete', 'click', function(e) {
                 let action = $(this).attr('href');
                 console.log()

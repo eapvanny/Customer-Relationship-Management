@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TranslationController;
 use App\Http\Controllers\UserController;
@@ -81,6 +82,9 @@ Route::group(['middleware' => 'auth'], function() {
     // Route::put('/permission/update/{id}', [PermissionController::class, 'update'])->name('permission.update');
     // Route::delete('/permission/delete/{id}', [PermissionController::class, 'destroy'])->name('permission.delete');
 
+    //Report
+    Route::resource('report', ReportController::class);
+    
     // Translation Routes
     Route::prefix('translations')->name('translation.')->group(function () {
         // List all translations

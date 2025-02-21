@@ -41,16 +41,10 @@ class UserController extends Controller
 
             return DataTables::of($users)
                 ->addColumn('photo', function ($data) {
-                    return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" 
-                src="' . ($data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png')) . '" >';
+                    $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
+                    return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" src="' . $photoUrl . '" >';
                 })
-                ->addColumn('department', function ($data) {
-                    $language = session('user_lang', 'kh');
-                    if ($language == 'en') {
-                        return $data->department ? __($data->department->name_in_latin) : __('N/A');
-                    }
-                    return $data->department ? __($data->department->name) : __('N/A');
-                })
+
                 ->addColumn('name', function ($data) {
                     return __($data->name);
                 })
@@ -101,9 +95,9 @@ class UserController extends Controller
     public function create()
     {
         $user = null;
-        $departments = Department::pluck('name', 'id');
+        // $departments = Department::pluck('name', 'id');
         $roles = Role::pluck('name', 'id');
-        return view('backend.user.add', compact('user', 'roles', 'departments'));
+        return view('backend.user.add', compact('user', 'roles'));
     }
 
     public function store(Request $request)
@@ -111,7 +105,6 @@ class UserController extends Controller
         $rules = [
             'photo' => 'mimes:jpeg,jpg,png|max:2000|dimensions:min_width=50,min_height=50',
             'name' => 'required|min:2|max:255',
-            'department_id' => 'required',
             'email' => 'email|max:255|unique:users,email',
             'username' => 'required|min:5|max:255|unique:users,username',
             'password' => 'required|min:6|max:50',
@@ -125,7 +118,6 @@ class UserController extends Controller
 
         $userData = [
             'name' => $request->name,
-            'department_id' => $request->department_id,
             'role_id' => $request->role_id,
             'gender' => $request->gender,
             'username' => $request->username,
@@ -182,7 +174,6 @@ class UserController extends Controller
         $rules = [
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:2000|dimensions:min_width=50,min_height=50',
             'name' => 'required|min:2|max:255',
-            'department_id' => 'required',
             'email' => 'required|email|max:255|unique:users,email,' . $id,
             'username' => 'required|min:5|max:255|unique:users,username,' . $id,
             'password' => 'nullable|min:6|max:50',
@@ -194,7 +185,6 @@ class UserController extends Controller
         $this->validate($request, $rules);
         $userData = [
             'name' => $request->name,
-            'department_id' => $request->department_id,
             'role_id' => $request->role_id,
             'gender' => $request->gender,
             'username' => $request->username,

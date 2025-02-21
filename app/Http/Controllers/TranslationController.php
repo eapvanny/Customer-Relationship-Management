@@ -13,7 +13,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class TranslationController extends Controller
 {
-    protected $locales = ['en', 'kh']; // Defined locales.
+    protected $locales = ['kh', 'en']; // Defined locales.
 
     /**
      * Display a listing of the translations.
