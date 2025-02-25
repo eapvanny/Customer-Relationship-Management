@@ -55,7 +55,10 @@
                                     <thead>
                                         <tr>
                                             <th>{{ __('Photo') }}</th>
+                                            <th>{{ __('Staff ID') }}</th>
                                             <th>{{ __('Name') }}</th>
+                                            <th>{{ __('Position') }}</th>
+                                            <th>{{ __('Area') }}</th>
                                             <th>{{ __('Username') }}</th>
                                             <th>{{ __('Email') }}</th>
                                             <th>{{ __('Phone No.') }}</th>
@@ -116,8 +119,20 @@
                         name: 'photo',
                     },
                     {
+                        data: 'staff_id_card',
+                        name: 'staff_id_card',
+                    },
+                    {
                         data: 'name',
                         name: 'name',
+                    },
+                    {
+                        data: 'position',
+                        name: 'position',
+                    },
+                    {
+                        data: 'area',
+                        name: 'area',
                     },
                     {
                         data: 'username',
@@ -156,6 +171,132 @@
                         off: "<i class='fa fa-ban'></i>"
                     });
                 }
+            });
+
+            $(document).on('click', '.disable-user', function() {
+                var userId = $(this).data('id');
+                var row = $(this).closest('tr');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Do you want to disable this user?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, disable it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/user/disable/' + userId,
+                            type: 'POST',
+                            data: {
+                                '_token': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Disabled!',
+                                        text: response.message,
+                                        icon: 'success',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+                                    t.ajax.reload(function() {
+                                        row.find('td').css('color', 'red');
+                                        row.find('.disable-user')
+                                            .removeClass(
+                                                'btn-danger disable-user')
+                                            .addClass('btn-success enable-user')
+                                            .html('<i class="fa fa-check"></i>')
+                                            .attr('title', 'Enable');
+                                    }, false);
+
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: response.message,
+                                        icon: 'error'
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'Error: ' + (xhr.responseJSON
+                                        ?.message || 'Something went wrong'
+                                    ),
+                                    icon: 'error'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Enable user
+            $(document).on('click', '.enable-user', function() {
+                var userId = $(this).data('id');
+                var row = $(this).closest('tr');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Do you want to enable this user?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, enable it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/user/enable/' + userId,
+                            type: 'POST',
+                            data: {
+                                '_token': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Enabled!',
+                                        text: response.message,
+                                        icon: 'success',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+
+                                    t.ajax.reload(function() {
+                                        row.find('td').css('color', '');
+                                        row.find('span').css('color', '')
+                                            .addClass('status-active');
+                                        row.find('.enable-user')
+                                            .removeClass(
+                                                'btn-success enable-user')
+                                            .addClass('btn-danger disable-user')
+                                            .html('<i class="fa fa-ban"></i>')
+                                            .attr('title', 'Disable');
+                                    }, false);
+
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: response.message,
+                                        icon: 'error'
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'Error: ' + (xhr.responseJSON
+                                        ?.message || 'Something went wrong'
+                                    ),
+                                    icon: 'error'
+                                });
+                            }
+                        });
+                    }
+                });
             });
 
 

@@ -44,9 +44,17 @@ class UserController extends Controller
                     $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
                     return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" src="' . $photoUrl . '" >';
                 })
-
+                ->addColumn('staff_id_card', function ($data) {
+                    return __($data->staff_id_card);
+                })
                 ->addColumn('name', function ($data) {
                     return __($data->name);
+                })
+                ->addColumn('position', function ($data) {
+                    return __($data->position);
+                })
+                ->addColumn('area', function ($data) {
+                    return __($data->area);
                 })
                 ->addColumn('username', function ($data) {
                     return __($data->username);
@@ -64,17 +72,30 @@ class UserController extends Controller
                     return AppHelper::GENDER[$data->gender] ?? __('N/A');
                 })
                 ->addColumn('status', function ($data) {
-                    return $data->status == 1 ? __('Active') : __('Inactive');
+                    return $data->status == 1
+                        ? '<span class="status-active">' . __('Active') . '</span>'
+                        : '<span style="color: red;">' . __('Inactive') . '</span>';
                 })
                 ->addColumn('action', function ($data) {
                     $button = '<div class="change-action-item">';
                     $actions = false;
+
                     if (auth()->user()->can('update user')) {
                         $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                         $actions = true;
                     }
-                    if (auth()->user()->can('delete user')) {
-                        $button .= '<a href="' . route('user.destroy', $data->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                    // if (auth()->user()->can('delete user')) {
+                    //     $button .= '<a href="' . route('user.destroy', $data->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                    //     $actions = true;
+                    // }
+                    // Add disable button only for active users and if user has permission
+                    if (auth()->user()->can('update user') && $data->status == 1) {
+                        $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" title="Disable" data-id="' . $data->id . '"><i class="fa fa-ban"></i></a>';
+                        $actions = true;
+                    }
+                    // Enable button for inactive users
+                    if (auth()->user()->can('update user') && $data->status == 0) {
+                        $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" title="Enable" data-id="' . $data->id . '"><i class="fa fa-check"></i></a>';
                         $actions = true;
                     }
                     if (!$actions) {
@@ -84,6 +105,7 @@ class UserController extends Controller
                     return $button;
                 })
 
+
                 ->rawColumns(['action', 'photo', 'status'])
                 ->make(true);
         }
@@ -91,6 +113,74 @@ class UserController extends Controller
         return view('backend.user.list');
     }
 
+    public function disable($id)
+    {
+        try {
+            
+            $user = User::findOrFail($id);
+
+            // Check if user has permission
+            if (!auth()->user()->can('update user')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized action'
+                ], 403);
+            }
+
+            if ($user->status == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is already disabled'
+                ]);
+            }
+
+            $user->update(['status' => 0]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User disabled successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error disabling user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function enable($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            // Check if user has permission
+            if (!auth()->user()->can('update user')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized action'
+                ], 403);
+            }
+
+            if ($user->status == 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is already active'
+                ]);
+            }
+
+            $user->update(['status' => 1]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User enabled successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error enabling user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function create()
     {
@@ -104,26 +194,38 @@ class UserController extends Controller
     {
         $rules = [
             'photo' => 'mimes:jpeg,jpg,png|max:2000|dimensions:min_width=50,min_height=50',
+            'family_name' => 'required|min:2|max:255',
             'name' => 'required|min:2|max:255',
-            'email' => 'email|max:255|unique:users,email',
+            'family_name_latin' => 'required|min:2|max:255',
+            'name_latin' => 'required|min:2|max:255',
+            // 'email' => 'email|max:255|unique:users,email',
             'username' => 'required|min:5|max:255|unique:users,username',
             'password' => 'required|min:6|max:50',
             'phone_no' => 'nullable|max:15',
             'role_id' => 'required',
             'gender' => 'required',
+            'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card',
+            'position' => 'required',
+            'area' => 'required'
 
         ];
 
         $this->validate($request, $rules);
 
         $userData = [
+            'family_name' => $request->family_name,
             'name' => $request->name,
+            'family_name_latin' => $request->family_name_latin,
+            'name_latin' => $request->name_latin,
             'role_id' => $request->role_id,
             'gender' => $request->gender,
             'username' => $request->username,
             'email' => $request->email,
             'phone_no' => $request->phone_no,
             'status' => $request->status,
+            'staff_id_card' => $request->staff_id_card,
+            'position' => $request->position,
+            'area' => $request->area,
             'password' => bcrypt($request->password),
         ];
 
@@ -174,13 +276,16 @@ class UserController extends Controller
         $rules = [
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:2000|dimensions:min_width=50,min_height=50',
             'name' => 'required|min:2|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $id,
+            // 'email' => 'required|email|max:255|unique:users,email,' . $id,
             'username' => 'required|min:5|max:255|unique:users,username,' . $id,
             'password' => 'nullable|min:6|max:50',
             'phone_no' => 'nullable|max:15',
             'role_id' => 'required',
             'gender' => 'required',
-        ];
+            'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card,' . $id,
+            'position' => 'required',
+            'area' => 'required'
+        ];        
 
         $this->validate($request, $rules);
         $userData = [
@@ -192,6 +297,9 @@ class UserController extends Controller
             'phone_no' => $request->phone_no,
             'status' => $request->status,
             'photo' => $user->photo,
+            'staff_id_card' => $request->staff_id_card,
+            'position' => $request->position,
+            'area' => $request->area,
         ];
 
         // Handle password update only if provided

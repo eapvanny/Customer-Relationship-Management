@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Helpers\AppHelper;
 use App\Models\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Yajra\DataTables\Facades\DataTables;
 
 class ReportController extends Controller
@@ -93,9 +94,35 @@ class ReportController extends Controller
         $rules = [
             'area' => 'required',
             'depot_stock' => 'required',
-            'date' => 'required|date'
+            'date' => 'required|date',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ];
         $this->validate($request, $rules);
+
+        // Get location details from Google Maps API
+        $apiKey = env('GOOGLE_MAPS_API_KEY');
+        $response = Http::get("https://maps.googleapis.com/maps/api/geocode/json", [
+            'latlng' => $request->latitude . ',' . $request->longitude,
+            'key' => $apiKey
+        ]);
+
+        $city = 'Unknown';
+        $country = 'Unknown';
+
+        if ($response->successful()) {
+            $results = $response->json()['results'];
+            if (!empty($results)) {
+                foreach ($results[0]['address_components'] as $component) {
+                    if (in_array('locality', $component['types'])) {
+                        $city = $component['long_name'];
+                    }
+                    if (in_array('country', $component['types'])) {
+                        $country = $component['long_name'];
+                    }
+                }
+            }
+        }
 
         Report::create([
             'user_id' => auth()->id(),
@@ -107,35 +134,59 @@ class ReportController extends Controller
             '600_ml' => $request['600_ml'],
             '1500_ml' => $request['1500_ml'],
             'other' => $request->other,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $city,
+            'country' => $country,
         ]);
 
-        Report::latest()->first()->id;
-
-        return redirect()->route('report.index')->with('success', "Reports has been created!");
-        
+        return redirect()->route('report.index')->with('success', "Report has been created!");
     }
+
     public function edit($id)
     {
-        $report =Report::find($id);
+        $report = Report::find($id);
         if (!$report) {
             return redirect()->route('report.index');
         }
-        return view(
-            'backend.report.add',
-            compact(
-                'report'
-            )
-        );
+        return view('backend.report.add', compact('report'));
     }
+
     public function update(Request $request, $id)
     {
-        $report =Report::find($id);
+        $report = Report::find($id);
         $rules = [
             'area' => 'required',
             'depot_stock' => 'required',
-            'date' => 'required|date'
+            'date' => 'required|date',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ];
         $this->validate($request, $rules);
+
+        // Get location details from Google Maps API
+        $apiKey = env('GOOGLE_MAPS_API_KEY');
+        $response = Http::get("https://maps.googleapis.com/maps/api/geocode/json", [
+            'latlng' => $request->latitude . ',' . $request->longitude,
+            'key' => $apiKey
+        ]);
+
+        $city = 'Unknown';
+        $country = 'Unknown';
+
+        if ($response->successful()) {
+            $results = $response->json()['results'];
+            if (!empty($results)) {
+                foreach ($results[0]['address_components'] as $component) {
+                    if (in_array('locality', $component['types'])) {
+                        $city = $component['long_name'];
+                    }
+                    if (in_array('country', $component['types'])) {
+                        $country = $component['long_name'];
+                    }
+                }
+            }
+        }
 
         $report->update([
             'area' => $request->area,
@@ -146,16 +197,15 @@ class ReportController extends Controller
             '600_ml' => $request['600_ml'],
             '1500_ml' => $request['1500_ml'],
             'other' => $request->other,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $city,
+            'country' => $country,
         ]);
+
         return redirect()->route('report.index')->with('success', "Report has been updated!");
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         $report = Report::find($id);

@@ -25,13 +25,28 @@ class AuthController extends Controller
         }
 
         $credentials = $request->only('username', 'password');
+
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+
+            if ($user->status == 0) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withInput()->withErrors([
+                    'username' => 'Your account is inactive. Please contact support.'
+                ]);
+            }
+
             $request->session()->regenerate();
-            return redirect()->route('dashboard.index')->with('success', 'Welcome to AdminPanel.')->with('show_popup', true);
+            return redirect()->route('dashboard.index')
+                ->with('success', 'Welcome to AdminPanel.')
+                ->with('show_popup', true);
         }
 
         return back()->withInput()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'username' => 'The provided credentials do not match our records.',
         ]);
     }
 

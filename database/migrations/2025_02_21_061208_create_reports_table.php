@@ -21,6 +21,10 @@ return new class extends Migration
             $table->integer('350_ml')->nullable();  
             $table->integer('600_ml')->nullable(); 
             $table->integer('1500_ml')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->string('city')->nullable();
+            $table->string('country')->nullable();
             $table->string('other')->nullable();  
             $table->timestamps();  
         });

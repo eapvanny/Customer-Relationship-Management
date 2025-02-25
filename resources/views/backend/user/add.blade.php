@@ -109,7 +109,7 @@
                         </h1>
 
                         <div class="box-tools pull-right">
-                            <a href="{{ URL::route('user.index') }}" class="btn btn-default">{{__('Cancel')}}</a>
+                            <a href="{{ URL::route('user.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($user) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($user)
@@ -137,27 +137,31 @@
 
                     <!-- End organization -->
                     <div class="row">
-                        {{-- <div class="col-md-4 col-xl-4">
+                        <div class="col-lg-4 col-md-6 col-xl-4">
                             <div class="form-group has-feedback">
-                                <label for="department_id"> {{ __('Department') }} <span class="text-danger">*</span>
-                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="Select Department"></i>
-                                </label>
-                                {!! Form::select('department_id', $departments, old('department_id', optional($user)->department_id), [
-                                    'placeholder' => __('Select a department'),
-                                    'id' => 'department_id',
-                                    'name' => 'department_id',
-                                    'class' => 'form-control select2',
-                                    'required' => true,
-                                ]) !!}
-                                <span class="form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('department_id') }}</span>
+                                <label for="staff_id_card"> {{ __('Staff ID') }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="staff_id_card" placeholder="staff_id_card"
+                                    value="@if ($user) {{ $user->staff_id_card }}@else{{ old('staff_id_card') }} @endif"
+                                    required minlength="3" maxlength="10">
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('staff_id_card') }}</span>
                             </div>
-                        </div> --}}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group has-feedback">
+                                <label for="family_name"> {{ __('Family Name') }} <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="family_name" placeholder="family_name"
+                                    value="@if ($user) {{ $user->family_name }}@else{{ old('family_name') }} @endif"
+                                    required minlength="2" maxlength="255">
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('family_name') }}</span>
+                            </div>
+                        </div>
                         <div class="col-md-4">
                             <div class="form-group has-feedback">
                                 <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="name" placeholder="name"
+                                <input type="text" class="form-control" name="name"
                                     value="@if ($user) {{ $user->name }}@else{{ old('name') }} @endif"
                                     required minlength="2" maxlength="255">
                                 <span class="fa fa-info form-control-feedback"></span>
@@ -166,15 +170,57 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group has-feedback">
+                                <label for="family_name_latin"> {{ __('Family Name Latin') }} <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="family_name_latin"
+                                    value="@if ($user) {{ $user->family_name_latin }}@else{{ old('family_name_latin') }} @endif"
+                                    required minlength="2" maxlength="255">
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('family_name_latin') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group has-feedback">
+                                <label for="name_latin"> {{ __('Name Latin') }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="name_latin"
+                                    value="@if ($user) {{ $user->name_latin }}@else{{ old('name_latin') }} @endif"
+                                    required minlength="2" maxlength="255">
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('name_latin') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group has-feedback">
                                 <label for="phone_no"> {{ __('Phone No.') }}</label>
                                 <input type="text" class="form-control" name="phone_no"
-                                    placeholder="phone or mobile number"
                                     value="@if ($user) {{ $user->phone_no }}@else{{ old('phone_no') }} @endif"
                                     maxlength="15">
                                 <span class="fa fa-phone form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('phone_no') }}</span>
                             </div>
                         </div>
+                        <div class="col-lg-4 col-md-6 col-xl-4">
+                            <div class="form-group has-feedback">
+                                <label for="position"> {{ __('Position') }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="position"
+                                    value="@if ($user) {{ $user->position }}@else{{ old('position') }} @endif"
+                                    required>
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('position') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-xl-4">
+                            <div class="form-group has-feedback">
+                                <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="area"
+                                    value="@if ($user) {{ $user->area }}@else{{ old('area') }} @endif"
+                                    required>
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('area') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-4">
                             <div class="form-group has-feedback">
                                 <label for="id"> {{ __('User Role') }}
@@ -230,7 +276,8 @@
                                 ) !!}
                             </div>
                         </div>
-
+                    </div>
+                    <div class="row">
                         <div class="col-md-4">
                             <div class="form-group has-feedback">
                                 <label for="email"> {{ __('Email') }} <span class=""></span></label>
@@ -262,8 +309,8 @@
                                     <span class="text-danger">{{ $errors->first('password') }}</span>
                                 </div>
                             </div>
+                        @endif
                     </div>
-                    @endif
                     <div class="row">
                         <div class="col-md-12">
                             <div class="form-group has-feedback">
@@ -271,7 +318,7 @@
                                     <div class="col-md-6">
                                         <label for="photo"> {{ __('Photo') }} <br /><span
                                                 class="text-muted fst-italic">{{ __('(Files: jpeg, jpg, or png, min dimension: 50
-                                                                                                                                                x 50 pixel, 2Mb max size)') }}</span></label>
+                                                                                                                                                                                                x 50 pixel, 2Mb max size)') }}</span></label>
                                         <input type="file" class="form-control" accept=".jpeg, .jpg, .png"
                                             name="photo" placeholder="{{ __('Photo image') }}">
                                         <span class="glyphicon glyphicon-open-file form-control-feedback"

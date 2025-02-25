@@ -48,7 +48,9 @@ Route::group(['middleware' => 'auth'], function() {
     Route::get('change-password', [UserController::class, 'showChangePasswordForm'])->name('change_password');
     Route::post('change-password', [UserController::class, 'changePassword'])->name('update_password');
     Route::get('/lock', [UserController::class, 'lock'])->name('lockscreen');
-
+    
+    Route::post('/user/disable/{id}', [UserController::class, 'disable'])->name('user.disable');
+    Route::post('/user/enable/{id}', [UserController::class, 'enable'])->name('user.enable');
     // Route::get('/user', [UserController::class, 'index'])->name('user.index');
     // Route::get('/user/create', [UserController::class, 'create'])->name('user.create');
     // Route::post('/user/store', [UserController::class, 'store'])->name('user.store');
