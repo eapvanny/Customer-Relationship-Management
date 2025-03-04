@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Helpers\AppHelper;
 use App\Models\Contact;
+use App\Models\Report; // Assuming Report model represents chat reports
 use Illuminate\Http\Request;
 use App\Models\Ticket;
 
@@ -11,38 +12,48 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        return view('backend.dashboard');
+        $query = Report::query();
+        if (auth()->user()->role_id == AppHelper::USER_EMPLOYEE) {
+            $query->where('user_id', auth()->user()->id);
+        }
+       
+        // Get monthly chat report data
+        $monthlyChatReports = (clone $query)
+            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(id) as count')
+            ->whereYear('created_at', date('Y')) 
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('count', 'month')
+            ->toArray();
+
+        $monthlyData = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlyData[] = $monthlyChatReports[$i] ?? 0;
+        }
+        
+        // Pass a flag to show the popup (if needed)
+        return view('backend.dashboard', [
+            'monthlyData' => $monthlyData,
+            'show_popup' => true // Optional: control the loader visibility
+        ]);
     }
 
-
-
-    // public function getTicketData()
+    // public function getReportData()
     // {
-    //     $monthlyTickets = Ticket::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+    //     $monthlyReports = Report::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
     //         ->groupBy('month')
     //         ->orderBy('month')
     //         ->pluck('count', 'month')
     //         ->toArray();
 
-    //     $ticketData = [
-    //         'open' => Ticket::where('status', 'open')->count(),
-    //         'pending' => Ticket::where('status', 'pending')->count(),
-    //         'solved' => Ticket::where('status', 'solved')->count(),
-    //         'unassigned' => Ticket::whereNull('agent_id')->count(),
+    //     $reportData = [
     //         'monthly' => array_fill(0, 12, 0)
     //     ];
 
-    //     foreach ($monthlyTickets as $month => $count) {
-    //         $ticketData['monthly'][$month - 1] = $count;
+    //     foreach ($monthlyReports as $month => $count) {
+    //         $reportData['monthly'][$month - 1] = $count;
     //     }
 
-    //     return response()->json($ticketData);
-    // }
-
-    // public function getSupportUser()
-    // {
-    //     $contacts = Contact::all();
-
-    //     return view('backend.partial.modal_contact_user.contact_support', compact('contacts'));
+    //     return response()->json($reportData);
     // }
 }

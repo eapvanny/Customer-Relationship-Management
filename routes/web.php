@@ -35,7 +35,7 @@ Route::post('/forget-password', [AuthController::class, 'forgetPasswordPost'])->
 Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset.password');
 Route::post('/reset-password', [AuthController::class, 'resetPasswordPost'])->name('reset.password.post');
 
-Route::group(['middleware' => 'auth'], function() {
+Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
     Route::resource('dashboard', DashboardController::class);
     // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -48,6 +48,7 @@ Route::group(['middleware' => 'auth'], function() {
     Route::get('change-password', [UserController::class, 'showChangePasswordForm'])->name('change_password');
     Route::post('change-password', [UserController::class, 'changePassword'])->name('update_password');
     Route::get('/lock', [UserController::class, 'lock'])->name('lockscreen');
+    Route::post('/unlock', [UserController::class, 'unlock'])->name('unlock');
     
     Route::post('/user/disable/{id}', [UserController::class, 'disable'])->name('user.disable');
     Route::post('/user/enable/{id}', [UserController::class, 'enable'])->name('user.enable');

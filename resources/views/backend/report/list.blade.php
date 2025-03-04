@@ -91,14 +91,15 @@
                                     <thead>
                                         <tr>
                                             <th> {{ __('Photo') }} </th>
-                                            <th> {{ __('ID No.') }} </th>
+                                            <th> {{ __('Staff ID') }} </th>
                                             <th> {{ __('Name') }} </th>
                                             <th> {{ __('Area') }} </th>
-                                            <th> {{ __('Depot Stock') }} </th>
+                                            <th> {{ __('Outlet') }} </th>
                                             <th> {{ __('250ml') }} </th>
                                             <th> {{ __('350ml') }} </th>
                                             <th> {{ __('600ml') }} </th>
                                             <th> {{ __('1500ml') }} </th>
+                                            <th> {{ __('Location') }} </th>
                                             <th> {{ __('Date') }} </th>
                                             <th> {{ __('Other') }} </th>
                                             <th class="notexport" style="max-width: 80px"> {{ __('Action') }} </th>
@@ -162,8 +163,8 @@
                         name: 'area'
                     },
                     {
-                        data: 'depot_stock',
-                        name: 'depot_stock'
+                        data: 'outlet',
+                        name: 'outlet'
                     },
                     {
                         data: '250ml',
@@ -180,6 +181,10 @@
                     {
                         data: '1500ml',
                         name: '1500ml'
+                    },
+                    {
+                        data: 'location',
+                        name: 'location'
                     },
                     {
                         data: 'date',

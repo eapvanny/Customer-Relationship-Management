@@ -495,15 +495,124 @@ input:-webkit-autofill:active  {
 }
 
 
-body{
-  background: url('../../../images/backround.jpg') !important;
-  background-attachment: fixed !important;
-  background-repeat: no-repeat !important;
-  background-size: cover!important;
+/* Reset default margins and padding to ensure no interference */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-.logo-hitech{
+
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  font-family: Poppins-Regular, sans-serif;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Updated background and login form positioning */
+#backgroundLogin {
+  background: url('../../../images/Hi-Tech-AE-Prepare-Same-Res-but-15MB.gif');
+  background-position: left;
+  background-size: 50.2%;
+  background-repeat: repeat-x; /* Horizontal repeat */
+  background-attachment: fixed; /* Keep background fixed */
+  width: 100%;
+  height: 100vh; /* Full viewport height */
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex; /* Use flexbox to center content */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+  z-index: 0; /* Ensure background stays behind the form */
+}
+
+#backgroundLogin .filter {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: #bfbfbf38; /* Semi-transparent gray overlay */
+  z-index: 1; /* Ensure filter is above background but below form */
+}
+
+/* Center the login container */
+.container-login100 {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  padding: 15px;
+  position: relative; /* Ensure it sits above the background */
+  z-index: 2; /* Ensure form is above filter and background */
+}
+
+/* Adjust the wrap-login100 to match your mockup (e.g., white background, shadow, etc.) */
+.wrap-login100 {
+  width: 390px; /* Match the width from your mockup */
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 77px 55px 33px 55px;
+  box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+  -o-box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+  -ms-box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+  position: relative; /* Ensure it stays positioned correctly */
+}
+
+/* Ensure the logo and form title are styled correctly */
+.login100-form-title img.logo-hitech {
   width: 150px;
-  height: auto; 
-  object-fit: cover
+  height: auto;
+  object-fit: cover;
+}
+
+/* Optional: Adjust the button and input styles to match your mockup’s colors (e.g., gradient for the login button) */
+.login100-form-btn {
+  font-family: Poppins-Medium;
+  font-size: 15px;
+  color: #fff;
+  line-height: 1.2;
+  text-transform: uppercase;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(to right, #21d4fd, #b721ff); /* Gradient for the button */
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.4s;
+}
+
+.login100-form-btn:hover {
+  opacity: 0.9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .wrap-login100 {
+    padding: 77px 15px 33px 15px;
+    width: 100%; /* Full width on smaller screens */
+  }
+}
+
+/* Ensure no unexpected margins or paddings interfere with centering */
+.limiter {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 

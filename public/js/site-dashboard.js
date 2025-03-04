@@ -1,10 +1,11 @@
-(self["webpackChunk"] = self["webpackChunk"] || []).push([["/js/site-dashboard"],{
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["/js/site-dashboard"],{
 
 /***/ "./node_modules/chart.js/dist/Chart.js":
 /*!*********************************************!*\
   !*** ./node_modules/chart.js/dist/Chart.js ***!
   \*********************************************/
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 /*!
  * Chart.js v2.9.4
@@ -14,7 +15,7 @@
  */
 (function (global, factory) {
  true ? module.exports = factory(function() { try { return __webpack_require__(/*! moment */ "./node_modules/moment/moment.js"); } catch(e) { } }()) :
-0;
+undefined;
 }(this, (function (moment) { 'use strict';
 
 moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
@@ -16182,20 +16183,21 @@ return src;
 /***/ }),
 
 /***/ "./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n":
-/*!******************************************************************************!*\
-  !*** ./node_modules/moment/locale/ sync select2[\/\\]dist[\/\\]js[\/\\]i18n ***!
-  \******************************************************************************/
-/***/ ((module) => {
+/*!*****************************************************************************!*\
+  !*** ./node_modules/moment/locale sync select2[\/\\]dist[\/\\]js[\/\\]i18n ***!
+  \*****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
 	var e = new Error("Cannot find module '" + req + "'");
 	e.code = 'MODULE_NOT_FOUND';
 	throw e;
 }
-webpackEmptyContext.keys = () => ([]);
+webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
-webpackEmptyContext.id = "./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n";
 module.exports = webpackEmptyContext;
+webpackEmptyContext.id = "./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n";
 
 /***/ }),
 
@@ -16203,10 +16205,10 @@ module.exports = webpackEmptyContext;
 /*!***************************************!*\
   !*** ./node_modules/moment/moment.js ***!
   \***************************************/
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-/* module decorator */ module = __webpack_require__.nmd(module);
-//! moment.js
+/* WEBPACK VAR INJECTION */(function(module) {var require;//! moment.js
 //! version : 2.30.1
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
@@ -16214,7 +16216,7 @@ module.exports = webpackEmptyContext;
 
 ;(function (global, factory) {
      true ? module.exports = factory() :
-    0
+    undefined
 }(this, (function () { 'use strict';
 
     var hookCallback;
@@ -18361,14 +18363,14 @@ module.exports = webpackEmptyContext;
         // TODO: Find a better way to register and load all the locales in Node
         if (
             locales[name] === undefined &&
-            "object" !== 'undefined' &&
+            typeof module !== 'undefined' &&
             module &&
             module.exports &&
             isLocaleNameSane(name)
         ) {
             try {
                 oldLocale = globalLocale._abbr;
-                aliasedRequire = undefined;
+                aliasedRequire = require;
                 __webpack_require__("./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n")("./" + name);
                 getSetGlobalLocale(oldLocale);
             } catch (e) {
@@ -21894,6 +21896,40 @@ module.exports = webpackEmptyContext;
 
 })));
 
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/module.js */ "./node_modules/webpack/buildin/module.js")(module)))
+
+/***/ }),
+
+/***/ "./node_modules/webpack/buildin/module.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/module.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if (!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if (!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
 
 /***/ }),
 
@@ -21901,14 +21937,13 @@ module.exports = webpackEmptyContext;
 /*!*******************************************************!*\
   !*** ./resources/assets/backend/js/site-dashboard.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var chart_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! chart.js */ "./node_modules/chart.js/dist/Chart.js");
+/* WEBPACK VAR INJECTION */(function(__webpack_provided_window_dot_moment, $) {/* harmony import */ var chart_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! chart.js */ "./node_modules/chart.js/dist/Chart.js");
 /* harmony import */ var chart_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(chart_js__WEBPACK_IMPORTED_MODULE_0__);
-/* provided dependency */ var __webpack_provided_window_dot_moment = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
-/* provided dependency */ var $ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
@@ -22133,7 +22168,7 @@ var GoogleAnaylytics = /*#__PURE__*/function () {
                 data: data1
               }]
             };
-            chart_js__WEBPACK_IMPORTED_MODULE_0___default().Line(makeCanvas('chart-1-container'), {
+            chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.Line(makeCanvas('chart-1-container'), {
               data: data
             });
           });
@@ -22195,7 +22230,7 @@ var GoogleAnaylytics = /*#__PURE__*/function () {
                 data: data1
               }]
             };
-            chart_js__WEBPACK_IMPORTED_MODULE_0___default().Bar(makeCanvas('chart-2-container'), {
+            chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.Bar(makeCanvas('chart-2-container'), {
               data: data
             });
           })["catch"](function (err) {
@@ -22231,7 +22266,7 @@ var GoogleAnaylytics = /*#__PURE__*/function () {
               }],
               labels: labels
             };
-            chart_js__WEBPACK_IMPORTED_MODULE_0___default().Doughnut(makeCanvas('chart-3-container'), {
+            chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.Doughnut(makeCanvas('chart-3-container'), {
               data: data
             });
           });
@@ -22278,7 +22313,7 @@ var GoogleAnaylytics = /*#__PURE__*/function () {
               }],
               labels: labels
             };
-            chart_js__WEBPACK_IMPORTED_MODULE_0___default().Doughnut(makeCanvas('chart-4-container'), {
+            chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.Doughnut(makeCanvas('chart-4-container'), {
               data: data
               // options: {
               //     tooltips: {
@@ -22333,22 +22368,29 @@ var GoogleAnaylytics = /*#__PURE__*/function () {
         }
 
         // Set some global Chart.js defaults.
-        (chart_js__WEBPACK_IMPORTED_MODULE_0___default().defaults).global.animationSteps = 60;
-        (chart_js__WEBPACK_IMPORTED_MODULE_0___default().defaults).global.animationEasing = 'easeInOutQuart';
-        (chart_js__WEBPACK_IMPORTED_MODULE_0___default().defaults).global.responsive = true;
-        (chart_js__WEBPACK_IMPORTED_MODULE_0___default().defaults).global.maintainAspectRatio = false;
+        chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.defaults.global.animationSteps = 60;
+        chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.defaults.global.animationEasing = 'easeInOutQuart';
+        chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.defaults.global.responsive = true;
+        chart_js__WEBPACK_IMPORTED_MODULE_0___default.a.defaults.global.maintainAspectRatio = false;
       });
     }
   }]);
 }();
 window.GoogleAnaylytics = GoogleAnaylytics;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! moment */ "./node_modules/moment/moment.js"), __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
+/***/ 1:
+/*!*************************************************************!*\
+  !*** multi ./resources/assets/backend/js/site-dashboard.js ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(/*! D:\Project\HelpDeskV7\resources\assets\backend\js\site-dashboard.js */"./resources/assets/backend/js/site-dashboard.js");
+
 
 /***/ })
 
-},
-/******/ __webpack_require__ => { // webpackRuntimeModules
-/******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, ["/js/vendor"], () => (__webpack_exec__("./resources/assets/backend/js/site-dashboard.js")));
-/******/ var __webpack_exports__ = __webpack_require__.O();
-/******/ }
-]);
+},[[1,"/js/manifest","/js/vendor"]]]);

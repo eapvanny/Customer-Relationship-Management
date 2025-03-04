@@ -79,7 +79,7 @@
             <li><a href="{{ URL::route('role.index') }}"> {{ __('Role') }} </a></li>
             <li class="active">
                 @if ($role)
-                    {{__('Update')}}
+                    {{ __('Update') }}
                 @else
                     {{ __('Add') }}
                 @endif
@@ -100,7 +100,7 @@
                             {{ __('Role') }}
                             <small>
                                 @if ($role)
-                                    {{__('Update')}}
+                                    {{ __('Update') }}
                                 @else
                                     {{ __('Add New') }}
                                 @endif
@@ -108,13 +108,13 @@
                         </h1>
 
                         <div class="box-tools pull-right">
-                            <a href="{{ URL::route('role.index') }}" class="btn btn-default">{{__('Cancel')}}</a>
+                            <a href="{{ URL::route('role.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($role) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($role)
-                                    {{__('Update')}}
+                                    {{ __('Update') }}
                                 @else
-                                    {{__('Add')}}
+                                    {{ __('Add') }}
                                 @endif
                             </button>
                         </div>
@@ -129,7 +129,7 @@
                         @method('PUT')
                     @endif
                     <div class="row">
-                        <div class="col-md-4">
+                        {{-- <div class="col-md-4">
                             <div class="form-group has-feedback">
                                 <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>
                                 <input autofocus type="text" class="form-control" name="name" placeholder="name"
@@ -137,6 +137,24 @@
                                     required minlength="2" maxlength="25">
                                 <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('name') }}</span>
+                            </div>
+                        </div> --}}
+                        <div class="col-md-4">
+                            <div class="form-group has-feedback">
+                                <label for="role_id"> {{ __('Role') }}
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                        title="{{ __('Set a user role') }}"></i>
+                                    <span class="text-danger">*</span>@if ($role)
+                                    <span class="text-danger">{{ __('(Role can not be changed)') }}</span>
+                                @endif
+                                </label>
+                                {!! Form::select('role_id', $all_role, old('role_id', $role ? $role->id : null), array_merge([
+                                    'placeholder' => __('Select Role'),
+                                    'class' => 'form-control select2',
+                                    'required' => true,
+                                ], $role ? ['disabled' => 'disabled'] : [])) !!}
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
                         <hr>
@@ -147,7 +165,8 @@
                                     <div class="col-md-12">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="all-dashboard">
-                                            <label class="form-check-label" for="all-dashboard">{{__('Manage All dashboard')}}</label>
+                                            <label class="form-check-label"
+                                                for="all-dashboard">{{ __('Manage All dashboard') }}</label>
                                         </div>
                                     </div>
                                     <hr>

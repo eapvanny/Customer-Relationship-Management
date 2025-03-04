@@ -1,20 +1,21 @@
-(self["webpackChunk"] = self["webpackChunk"] || []).push([["/js/theme"],{
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["/js/theme"],{
 
 /***/ "./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n":
-/*!******************************************************************************!*\
-  !*** ./node_modules/moment/locale/ sync select2[\/\\]dist[\/\\]js[\/\\]i18n ***!
-  \******************************************************************************/
-/***/ ((module) => {
+/*!*****************************************************************************!*\
+  !*** ./node_modules/moment/locale sync select2[\/\\]dist[\/\\]js[\/\\]i18n ***!
+  \*****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
 	var e = new Error("Cannot find module '" + req + "'");
 	e.code = 'MODULE_NOT_FOUND';
 	throw e;
 }
-webpackEmptyContext.keys = () => ([]);
+webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
-webpackEmptyContext.id = "./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n";
 module.exports = webpackEmptyContext;
+webpackEmptyContext.id = "./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n";
 
 /***/ }),
 
@@ -22,10 +23,10 @@ module.exports = webpackEmptyContext;
 /*!***************************************!*\
   !*** ./node_modules/moment/moment.js ***!
   \***************************************/
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-/* module decorator */ module = __webpack_require__.nmd(module);
-//! moment.js
+/* WEBPACK VAR INJECTION */(function(module) {var require;//! moment.js
 //! version : 2.30.1
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
@@ -33,7 +34,7 @@ module.exports = webpackEmptyContext;
 
 ;(function (global, factory) {
      true ? module.exports = factory() :
-    0
+    undefined
 }(this, (function () { 'use strict';
 
     var hookCallback;
@@ -2180,14 +2181,14 @@ module.exports = webpackEmptyContext;
         // TODO: Find a better way to register and load all the locales in Node
         if (
             locales[name] === undefined &&
-            "object" !== 'undefined' &&
+            typeof module !== 'undefined' &&
             module &&
             module.exports &&
             isLocaleNameSane(name)
         ) {
             try {
                 oldLocale = globalLocale._abbr;
-                aliasedRequire = undefined;
+                aliasedRequire = require;
                 __webpack_require__("./node_modules/moment/locale sync recursive select2[\\/\\\\]dist[\\/\\\\]js[\\/\\\\]i18n")("./" + name);
                 getSetGlobalLocale(oldLocale);
             } catch (e) {
@@ -5713,6 +5714,40 @@ module.exports = webpackEmptyContext;
 
 })));
 
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/module.js */ "./node_modules/webpack/buildin/module.js")(module)))
+
+/***/ }),
+
+/***/ "./node_modules/webpack/buildin/module.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/module.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if (!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if (!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
 
 /***/ }),
 
@@ -5720,10 +5755,10 @@ module.exports = webpackEmptyContext;
 /*!*************************************************!*\
   !*** ./resources/assets/backend/js/adminlte.js ***!
   \*************************************************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-/* provided dependency */ var jQuery = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+/* WEBPACK VAR INJECTION */(function(jQuery) {function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 /*! AdminLTE app.js
 * ================
 * Main JS application file for AdminLTE v2. This file
@@ -6694,6 +6729,7 @@ if (typeof jQuery === 'undefined') {
     });
   });
 }(jQuery);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -6701,16 +6737,17 @@ if (typeof jQuery === 'undefined') {
 /*!*********************************************************************!*\
   !*** ./resources/assets/backend/js/bootstrap-datetimepicker.min.js ***!
   \*********************************************************************/
-/***/ ((module, exports, __webpack_require__) => {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 !function (a) {
   "use strict";
 
   if (true) !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"), __webpack_require__(/*! moment */ "./node_modules/moment/moment.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (a),
-		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));else {}
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));else {}
 }(function (a, b) {
   "use strict";
 
@@ -7693,10 +7730,10 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 /*!*************************************************************!*\
   !*** ./resources/assets/backend/js/bootstrap-toggle.min.js ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-/* provided dependency */ var jQuery = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+/* WEBPACK VAR INJECTION */(function(jQuery) {function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 /*! ========================================================================
  * Bootstrap Toggle: bootstrap-toggle.js v2.2.0
  * http://www.bootstraptoggle.com
@@ -7787,6 +7824,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     c.bootstrapToggle("toggle"), b.preventDefault();
   });
 }(jQuery);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -7794,10 +7832,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 /*!*******************************************************!*\
   !*** ./resources/assets/backend/js/theme_settings.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-/* provided dependency */ var $ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-/**
+/* WEBPACK VAR INJECTION */(function($) {/**
  * AdminLTE Theme settings
  * ------------------
  */
@@ -8209,13 +8247,23 @@ $(function () {
   hrs();
   fetchNotifications();
 });
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
+/***/ 5:
+/*!***************************************************************************************************************************************************************************************************************************!*\
+  !*** multi ./resources/assets/backend/js/adminlte.js ./resources/assets/backend/js/theme_settings.js ./resources/assets/backend/js/bootstrap-datetimepicker.min.js ./resources/assets/backend/js/bootstrap-toggle.min.js ***!
+  \***************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! D:\Project\HelpDeskV7\resources\assets\backend\js\adminlte.js */"./resources/assets/backend/js/adminlte.js");
+__webpack_require__(/*! D:\Project\HelpDeskV7\resources\assets\backend\js\theme_settings.js */"./resources/assets/backend/js/theme_settings.js");
+__webpack_require__(/*! D:\Project\HelpDeskV7\resources\assets\backend\js\bootstrap-datetimepicker.min.js */"./resources/assets/backend/js/bootstrap-datetimepicker.min.js");
+module.exports = __webpack_require__(/*! D:\Project\HelpDeskV7\resources\assets\backend\js\bootstrap-toggle.min.js */"./resources/assets/backend/js/bootstrap-toggle.min.js");
+
 
 /***/ })
 
-},
-/******/ __webpack_require__ => { // webpackRuntimeModules
-/******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, ["/js/vendor"], () => (__webpack_exec__("./resources/assets/backend/js/adminlte.js"), __webpack_exec__("./resources/assets/backend/js/theme_settings.js"), __webpack_exec__("./resources/assets/backend/js/bootstrap-datetimepicker.min.js"), __webpack_exec__("./resources/assets/backend/js/bootstrap-toggle.min.js")));
-/******/ var __webpack_exports__ = __webpack_require__.O();
-/******/ }
-]);
+},[[5,"/js/manifest","/js/vendor"]]]);

@@ -444,10 +444,35 @@ class UserController extends Controller
     }
     public function lock()
     {
-        $username = auth()->user()->username;
-        $name = auth()->user()->name;
-        $photo = auth()->user()->photo;
-        Auth::logout();
-        return view('backend.user.lock', compact('username', 'name', 'photo'));
+        $user = auth()->user();
+        session([
+            'locked' => true,
+            'locked_username' => $user->username,
+            'locked_name' => $user->name,
+            'locked_photo' => $user->photo,
+        ]);
+
+        return view('backend.user.lock', [
+            'username' => $user->username,
+            'name' => $user->name,
+            'photo' => $user->photo,
+        ]);
+    }
+    public function unlock(Request $request)
+    {
+        $request->validate([
+            'password' => 'required',
+            'username' => 'required',
+        ]);
+
+        if (session('locked') && Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
+            // Clear the lock session data
+            session()->forget(['locked', 'locked_username', 'locked_name', 'locked_photo']);
+            return redirect()->route('dashboard.index')
+                ->with('success', 'Welcome to AdminPanel.')
+                ->with('show_popup', true);
+        }
+
+        return redirect()->route('lockscreen')->with('error', 'Invalid password.');
     }
 }

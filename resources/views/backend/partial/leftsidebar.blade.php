@@ -45,27 +45,38 @@
                 </li>
             @endcan
 
-            @can('view user')
-                <li>
-                    <a href="{{ URL::route('user.index') }}" class="text-decoration-none">
-                        <i class="fa fa-users"></i> <span>{{ __('Users') }}</span>
-                    </a>
-                </li>
-            @endcan
-            @can('view role')
-                <li>
-                    <a href="{{ URL::route('role.index') }}" class="text-decoration-none">
-                        <i class="fa fa-users"></i> <span>{{ __('User roles') }}</span>
-                    </a>
-                </li>
-            @endcan
-            @can('view permission')
-                <li>
-                    <a href="{{ URL::route('permission.index') }}" class="text-decoration-none">
-                        <i class="fa fa-snowflake"></i> <span>{{ __('Permission') }}</span>
-                    </a>
-                </li>
-            @endcan
+            <li class="treeview">
+                <a href="#" class="text-decoration-none">
+                    <i class="fa fa-solid fa-people-roof"></i>
+                    <span>{{ __('Administrator') }}</span>
+                    <span class="pull-right-container">
+                        <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                </a>
+                <ul class="treeview-menu">
+                    @can('view user')
+                        <li>
+                            <a href="{{ URL::route('user.index') }}" class="text-decoration-none">
+                                <i class="fa fa-users"></i> <span>{{ __('Users') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('view role')
+                        <li>
+                            <a href="{{ URL::route('role.index') }}" class="text-decoration-none">
+                                <i class="fa fa-users"></i> <span>{{ __('Role & Permissions') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @if (auth()->user() && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
+                        <li>
+                            <a href="{{ URL::route('permission.index') }}" class="text-decoration-none">
+                                <i class="fa fa-snowflake"></i> <span>{{ __('Permission') }}</span>
+                            </a>
+                        </li>
+                    @endif
+                </ul>
+            </li>
 
             <li class="treeview">
                 <a href="#" class="text-decoration-none">

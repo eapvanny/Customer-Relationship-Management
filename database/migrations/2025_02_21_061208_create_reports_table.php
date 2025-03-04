@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('reports', function (Blueprint $table) {
             $table->id();  
             $table->string('area'); 
-            $table->string('depot_stock');
+            $table->string('outlet');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->date('date'); 
             $table->integer('250_ml')->nullable();  

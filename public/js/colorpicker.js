@@ -1,9 +1,10 @@
-(self["webpackChunk"] = self["webpackChunk"] || []).push([["/js/colorpicker"],{
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["/js/colorpicker"],{
 
 /***/ "./node_modules/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js":
 /*!*****************************************************************************!*\
   !*** ./node_modules/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js ***!
   \*****************************************************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -22,7 +23,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
     !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function(jq) {
       return (factory(jq));
     }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
   } else {}
 }(this, function($) {
   'use strict';
@@ -1335,16 +1336,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 /*!****************************************************!*\
   !*** ./resources/assets/backend/js/colorpicker.js ***!
   \****************************************************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(/*! bootstrap-colorpicker */ "./node_modules/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js");
 
+/***/ }),
+
+/***/ 6:
+/*!**********************************************************!*\
+  !*** multi ./resources/assets/backend/js/colorpicker.js ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(/*! D:\Project\HelpDeskV7\resources\assets\backend\js\colorpicker.js */"./resources/assets/backend/js/colorpicker.js");
+
+
 /***/ })
 
-},
-/******/ __webpack_require__ => { // webpackRuntimeModules
-/******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, ["/js/vendor"], () => (__webpack_exec__("./resources/assets/backend/js/colorpicker.js")));
-/******/ var __webpack_exports__ = __webpack_require__.O();
-/******/ }
-]);
+},[[6,"/js/manifest","/js/vendor"]]]);

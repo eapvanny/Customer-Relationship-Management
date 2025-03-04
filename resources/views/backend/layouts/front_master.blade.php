@@ -17,7 +17,7 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Favicon png -->
-    <link rel="icon" href="@if(isset(auth()->user()->organization->favicon) && !empty(auth()->user()->organization->favicon)){{asset('storage/logo/'.auth()->user()->organization->favicon)}} @else{{ asset('images/kh.png') }}@endif" type="image/png">
+    <link rel="icon" href="@if(isset(auth()->user()->organization->favicon) && !empty(auth()->user()->organization->favicon)){{asset('storage/logo/'.auth()->user()->organization->favicon)}} @else{{ asset('images/Hi-Tech_Water_Logo.png') }}@endif" type="image/png">
     <!-- Pace loading -->
     <script src="{{ asset(mix('/js/pace.js')) }}"></script>
     <link href="{{ asset(mix('/css/pace.css')) }}" rel="stylesheet" type="text/css">

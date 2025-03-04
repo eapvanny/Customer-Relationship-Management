@@ -67,6 +67,9 @@
             width: 100%;
             margin-top: 10px;
         }
+        .leaflet-touch .leaflet-control-attribution, .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar{
+            display: none;
+        }
     </style>
 @endsection
 
@@ -140,15 +143,15 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="depot_stock"> {{ __('Depot Stock') }} <span
+                                <label for="outlet"> {{ __('Outlet') }} <span
                                         class="text-danger">*</span></label>
-                                <textarea name="depot_stock" class="form-control" placeholder="" rows="1" maxlength="500" required>
+                                <textarea name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
 @if ($report)
-{{ old('depot_stock') ?? $report->depot_stock }}@else{{ old('depot_stock') }}
+{{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}
 @endif
 </textarea>
                                 <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('depot_stock') }}</span>
+                                <span class="text-danger">{{ $errors->first('outlet') }}</span>
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
@@ -201,38 +204,43 @@
                                 <div class="row">
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="latitude"> {{ __('Latitude') }}</label>
+                                            <label for="latitude">{{ __('Latitude') }}</label>
                                             <input type="text" class="form-control" name="latitude" id="latitude"
-                                                value="{{ isset($report) ? $report['latitude'] : old('latitude') }}"
-                                                readonly>
+                                                value="{{ isset($report) ? $report->latitude : old('latitude') }}"
+                                                readonly required>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="longitude"> {{ __('Longitude') }}</label>
+                                            <label for="longitude">{{ __('Longitude') }}</label>
                                             <input type="text" class="form-control" name="longitude" id="longitude"
-                                                value="{{ isset($report) ? $report['longitude'] : old('longitude') }}"
-                                                readonly>
+                                                value="{{ isset($report) ? $report->longitude : old('longitude') }}"
+                                                readonly required>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="city"> {{ __('City') }}</label>
-                                            <input type="text" class="form-control" name="city" id="city"
-                                                value="{{ isset($report) ? $report['city'] : old('city') }}" readonly>
+                                            <label for="city">{{ __('Address') }}</label>
+                                            {{-- <input type="text" class="form-control" name="city" id="city"
+                                                value="{{ isset($report) ? $report->city : old('city') }}" readonly
+                                                required> --}}
+                                            <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>
+                                                    {{ isset($report) ? $report->city : old('city') }}
+                                                </textarea>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="country"> {{ __('Country') }}</label>
+                                            <label for="country">{{ __('Country') }}</label>
                                             <input type="text" class="form-control" name="country" id="country"
-                                                value="{{ isset($report) ? $report['country'] : old('country') }}"
-                                                readonly>
+                                                value="{{ isset($report) ? $report->country : old('country') }}" readonly
+                                                required>
                                         </div>
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12">
-                                        <button type="button" class="btn btn-primary" id="getLocationBtn">{{ __('Get My Location') }}</button>
-                                        <div id="map"></div>
+                                        <button type="button" class="btn btn-primary"
+                                            id="getLocationBtn">{{ __('Get My Location') }}</button>
+                                        <div id="map" style="height: 400px; margin-top: 10px;"></div>
                                     </div>
                                 </div>
                             </fieldset>
@@ -245,90 +253,156 @@
 @endsection
 
 @section('extraScript')
-    <script>
-        function initMap(lat, lng) {
-            const userLocation = {
-                lat: parseFloat(lat),
-                lng: parseFloat(lng)
-            };
-            const map = new google.maps.Map(document.getElementById('map'), {
-                center: userLocation,
-                zoom: 12
-            });
-            new google.maps.Marker({
-                position: userLocation,
-                map: map,
-                title: $('#city').val() ? `${$('#city').val()}, ${$('#country').val()}` : 'Your Location'
-            });
-        }
-
-        function handleApiError() {
-            alert('Failed to load Google Maps. Please check your API key and internet connection.');
-            // Fallback to a static map or default location
-            const fallbackLat = 11.5621; // Phnom Penh latitude
-            const fallbackLng = 104.9160; // Phnom Penh longitude
-            $('#latitude').val(fallbackLat);
-            $('#longitude').val(fallbackLng);
-            initMap(fallbackLat, fallbackLng);
-        }
-
-        function getCurrentLocation() {
+    {{-- <script>
+        document.getElementById('getLocationBtn').addEventListener('click', async function() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
+                    async (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
 
-                        $('#latitude').val(latitude);
-                        $('#longitude').val(longitude);
-                        initMap(latitude, longitude);
-                    },
-                    (error) => {
-                        console.error('Geolocation error:', error.message);
-                        alert('Error getting location: ' + error.message);
-                        const fallbackLat = 11.5621;
-                        const fallbackLng = 104.9160;
-                        $('#latitude').val(fallbackLat);
-                        $('#longitude').val(fallbackLng);
-                        initMap(fallbackLat, fallbackLng);
-                    }
+                            // Reverse geocode using Nominatim
+                            try {
+                                const response = await fetch(
+                                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+                                );
+                                const data = await response.json();
+
+                                const country = data.address.country || 'Unknown';
+                                const province = data.address.state || 'Unknown';
+                                const comune = data.address.comune || 'Unknown';
+                                const district = data.address.district || 'Unknown';
+                                const village = data.address.village || 'Unknown';
+                                const khan = data.address.city || 'Unknown';
+                                const town = data.address.town;
+
+                                const city = [khan, village, comune, district,town, province]
+                                    .filter(location => location !== 'Unknown')
+                                    .join(', ') || 'Unknown';
+
+
+
+                                // Populate form fields
+                                document.getElementById('latitude').value = lat;
+                                document.getElementById('longitude').value = lon;
+                                document.getElementById('city').value = city;
+                                document.getElementById('country').value = country;
+
+                                console.log(`Country: ${country}, Province: ${province}, City: ${city}`);
+                            } catch (error) {
+                                alert('Failed to fetch location details. Please try again.');
+                                console.error(error);
+                            }
+                        },
+                        (error) => {
+                            alert('Unable to retrieve location. Please allow location access.');
+                            console.error(error);
+                        }
                 );
             } else {
-                alert('Geolocation is not supported by this browser.');
-                const fallbackLat = 11.5621;
-                const fallbackLng = 104.9160;
-                $('#latitude').val(fallbackLat);
-                $('#longitude').val(fallbackLng);
-                initMap(fallbackLat, fallbackLng);
+                alert('Geolocation is not supported by your browser.');
+            }
+        });
+    </script> --}}
+    @section('extraScript')
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        let map;
+        let marker;
+
+        // Initialize map function
+        function initMap(lat = 0, lng = 0) {
+            if (map) {
+                map.remove(); // Remove existing map if any
+            }
+            
+            map = L.map('map').setView([lat, lng], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19,
+            }).addTo(map);
+            
+            marker = L.marker([lat, lng]).addTo(map);
+        }
+
+        // Function to update map position
+        function updateMap(lat, lng) {
+            if (!map) {
+                initMap(lat, lng);
+            } else {
+                map.setView([lat, lng], 15);
+                marker.setLatLng([lat, lng]);
             }
         }
 
-        // Load Google Maps API dynamically with error handling
-        function loadGoogleMapsApi() {
-            const apiKey = '{{ env('GOOGLE_MAPS_API_KEY') }}';
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initializeMap`;
-            script.async = true;
-            script.defer = true;
-            script.onerror = handleApiError;
-            document.head.appendChild(script);
-        }
+        document.getElementById('getLocationBtn').addEventListener('click', async function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
 
-        function initializeMap() {
-            @if ($report && $report->latitude && $report->longitude)
-                initMap({{ $report->latitude }}, {{ $report->longitude }});
-            @else
-                getCurrentLocation();
-            @endif
-        }
+                        // Reverse geocode using Nominatim
+                        try {
+                            const response = await fetch(
+                                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+                            );
+                            const data = await response.json();
 
-        // Load the map when the document is ready
-        $(document).ready(function() {
-            loadGoogleMapsApi();
+                            const country = data.address.country || 'Unknown';
+                            const province = data.address.state || 'Unknown';
+                            const comune = data.address.comune || 'Unknown';
+                            const district = data.address.district || 'Unknown';
+                            const village = data.address.village || 'Unknown';
+                            const khan = data.address.city || 'Unknown';
+                            const town = data.address.town;
 
-            $('#getLocationBtn').click(function() {
-                getCurrentLocation();
-            });
+                            const city = [khan, village, comune, district, town, province]
+                                .filter(location => location !== 'Unknown')
+                                .join(', ') || 'Unknown';
+
+                            // Populate form fields
+                            document.getElementById('latitude').value = lat;
+                            document.getElementById('longitude').value = lon;
+                            document.getElementById('city').value = city;
+                            document.getElementById('country').value = country;
+
+                            // Update map with new coordinates
+                            updateMap(lat, lon);
+
+                            console.log(`Country: ${country}, Province: ${province}, City: ${city}`);
+                        } catch (error) {
+                            alert('Failed to fetch location details. Please try again.');
+                            console.error(error);
+                        }
+                    },
+                    (error) => {
+                        alert('Unable to retrieve location. Please allow location access.');
+                        console.error(error);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
         });
+
+        // Initialize map with default coordinates if report exists
+        @if ($report && $report->latitude && $report->longitude)
+            window.onload = function() {
+                initMap({{ $report->latitude }}, {{ $report->longitude }});
+            }
+        @else
+            // Initialize with a default location (e.g., center of the world)
+            window.onload = function() {
+                initMap(0, 0);
+            }
+        @endif
     </script>
+@endsection
 @endsection

@@ -22,7 +22,8 @@
     <script src="{{ asset(mix('/js/pace.js')) }}"></script>
     <link href="{{ asset(mix('/css/pace.css')) }}" rel="stylesheet" type="text/css">
     <script src="{{asset('js/swal.js')}}"></script>
-    
+    <script src="{{ asset('js/chart.js') }}"></script>
+
     <!-- vendor libraries CSS -->
     <link href="{{ asset(mix('/css/vendor.css')) }}" rel="stylesheet" type="text/css">
     <!-- theme CSS -->
