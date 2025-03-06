@@ -23,8 +23,10 @@
     <link href="{{ asset(mix('/css/pace.css')) }}" rel="stylesheet" type="text/css">
     <script src="{{asset('js/swal.js')}}"></script>
     <script src="{{ asset('js/chart.js') }}"></script>
-
+    <!-- Leaflet JS -->
+    <script src="{{asset('js/leaflet.js')}}"></script>
     <!-- vendor libraries CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="{{ asset(mix('/css/vendor.css')) }}" rel="stylesheet" type="text/css">
     <!-- theme CSS -->
     <link href="{{ asset(mix('/css/theme.css')) }}" rel="stylesheet" type="text/css">

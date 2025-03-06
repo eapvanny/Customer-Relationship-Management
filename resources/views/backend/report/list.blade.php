@@ -86,7 +86,7 @@
                         <div class="box-body margin-top-20">
                             <div class="table-responsive mt-4">
                                 <table id="datatabble"
-                                    class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
+                                    class="table table-bordered table-striped list_view_table display responsive wrap datatable-server"
                                     width="100%">
                                     <thead>
                                         <tr>
@@ -102,7 +102,7 @@
                                             <th> {{ __('Location') }} </th>
                                             <th> {{ __('Date') }} </th>
                                             <th> {{ __('Other') }} </th>
-                                            <th class="notexport" style="max-width: 80px"> {{ __('Action') }} </th>
+                                            <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
                                     <tbody>

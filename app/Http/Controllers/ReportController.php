@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Helpers\AppHelper;
 use App\Models\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -56,7 +57,7 @@ class ReportController extends Controller
                     return __($data->city .',' .$data->country) ?? 'N/A';
                 })
                 ->addColumn('date', function ($data) {
-                    return $data->date ? \Carbon\Carbon::parse($data->date)->format('d-M-Y') : 'N/A';
+                    return $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A';
                 })
                 ->addColumn('other', function ($data) {
                     return __($data->other) ?? 'N/A';
@@ -95,7 +96,6 @@ class ReportController extends Controller
         $rules = [
             'area' => 'required',
             'outlet' => 'required',
-            'date' => 'required|date',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
@@ -107,7 +107,7 @@ class ReportController extends Controller
             'user_id' => auth()->id(),
             'area' => $request->area,
             'outlet' => $request->outlet,
-            'date' => $request->date,
+            'date' => Carbon::now('Asia/Phnom_Penh'),
             '250_ml' => $request['250_ml'],
             '350_ml' => $request['350_ml'],
             '600_ml' => $request['600_ml'],
@@ -141,7 +141,6 @@ class ReportController extends Controller
         $rules = [
             'area' => 'required',
             'outlet' => 'required',
-            'date' => 'required|date',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
@@ -152,7 +151,7 @@ class ReportController extends Controller
         $report->update([
             'area' => $request->area,
             'outlet' => $request->outlet,
-            'date' => $request->date,
+            'date' => Carbon::now('Asia/Phnom_Penh'),
             '250_ml' => $request['250_ml'],
             '350_ml' => $request['350_ml'],
             '600_ml' => $request['600_ml'],

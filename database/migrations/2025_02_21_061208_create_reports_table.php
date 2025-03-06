@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('area'); 
             $table->string('outlet');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->date('date'); 
+            $table->datetime('date'); 
             $table->integer('250_ml')->nullable();  
             $table->integer('350_ml')->nullable();  
             $table->integer('600_ml')->nullable(); 
