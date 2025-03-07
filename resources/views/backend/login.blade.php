@@ -29,6 +29,11 @@
         <div class="limiter">
             <div class="container-login100">
                 <div class="wrap-login100">
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                     <form class="login100-form validate-form" novalidate id="loginForm"
                         action="{{ URL::Route('login') }}" method="post" enctype="multipart/form-data">
                         @csrf

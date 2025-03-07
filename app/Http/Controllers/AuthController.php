@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Helpers\AppHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -68,66 +69,90 @@ class AuthController extends Controller
         ]);
     }
 
-    public function forgetPassword()
+    public function forgetPassword(Request $request, $id)
     {
-        return view('backend.user.forget-password');
+        $user = User::findOrFail($id);
+        return view('backend.user.forget-password', compact('user'));
     }
 
-    public function forgetPasswordPost(Request $request)
+    public function forgetPasswordPost(Request $request, $id)
     {
         $request->validate([
-            'email' => "required|email|exists:users",
+            'email' => 'required|email|exists:users,email',
         ]);
 
-        $token = Str::random(16);
+        $superAdmin = User::where('email', $request->email)
+            ->where('role_id', AppHelper::USER_SUPER_ADMIN)
+            ->first();
 
-        DB::table('password_reset_tokens')->insert([
-            'email' => $request->email,
-            'token' => $token,
-            'created_at' => Carbon::now(),
-        ]);
-
-        Mail::send("backend.email.forget-password", ['token' => $token], function ($message) use ($request) {
-            $message->to($request->email);
-            $message->subject("Reset Password");
-        });
-
-        return redirect()->to(route('forget.password'))->with('success', 'We have send an email to reset password');
-    }
-
-    public function resetPassword($token)
-    {
-        return view('backend.user.new-password', compact('token'));
-    }
-
-    public function resetPasswordPost(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email|exists:users',
-            'password' => 'required|string|min:6',
-            'password_confirmation' => 'required|same:password',
-        ]);
-
-
-        $updatePassword = DB::table('password_reset_tokens')
-            ->where([
-                'email' => $request->email,
-                'token' => $request->token,
-            ])->first();
-
-        if (!$updatePassword) {
-            return redirect()->to(route('reset.password'))->with('error', 'Invalid');
+        if (!$superAdmin) {
+            return redirect()->back()->with("error", "Email doesn't match a super admin account.");
         }
 
-        User::where('email', $request->email)
-            ->update(['password' => Hash::make($request->password)]);
+        $user = User::findOrFail($id);
 
-        DB::table('password_reset_tokens')
-            ->where(['email' => $request->email])
-            ->delete();
+        $user->password = Hash::make('123456');
+        $user->save();
 
-        return redirect()->to(route('login'))->with('succcess', 'Password reset successfully');
+        return redirect()->route('login')->with('success', 'Password reset successfully.');
     }
+
+
+    // public function forgetPasswordPost(Request $request)
+    // {
+    //     $request->validate([
+    //         'email' => "required|email|exists:users",
+    //     ]);
+
+    //     $token = Str::random(16);
+
+    //     DB::table('password_reset_tokens')->insert([
+    //         'email' => $request->email,
+    //         'token' => $token,
+    //         'created_at' => Carbon::now(),
+    //     ]);
+
+    //     Mail::send("backend.email.forget-password", ['token' => $token], function ($message) use ($request) {
+    //         $message->to($request->email);
+    //         $message->subject("Reset Password");
+    //     });
+
+    //     return redirect()->to(route('forget.password'))->with('success', 'We have send an email to reset password');
+    // }
+
+    // public function resetPassword($token)
+    // {
+    //     return view('backend.user.new-password', compact('token'));
+    // }
+
+    // public function resetPasswordPost(Request $request)
+    // {
+    //     $request->validate([
+    //         'email' => 'required|email|exists:users',
+    //         'password' => 'required|string|min:6',
+    //         'password_confirmation' => 'required|same:password',
+    //     ]);
+
+
+    //     $updatePassword = DB::table('password_reset_tokens')
+    //         ->where([
+    //             'email' => $request->email,
+    //             'token' => $request->token,
+    //         ])->first();
+
+    //     if (!$updatePassword) {
+    //         return redirect()->to(route('reset.password'))->with('error', 'Invalid');
+    //     }
+
+    //     User::where('email', $request->email)
+    //         ->update(['password' => Hash::make($request->password)]);
+
+    //     DB::table('password_reset_tokens')
+    //         ->where(['email' => $request->email])
+    //         ->delete();
+
+    //     return redirect()->to(route('login'))->with('succcess', 'Password reset successfully');
+    // }
 
     public function logout()
     {

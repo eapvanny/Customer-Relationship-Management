@@ -77,7 +77,7 @@
                     @endif
                 </ul>
             </li>
-
+            @if (auth()->user() && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
             <li class="treeview">
                 <a href="#" class="text-decoration-none">
                     <i class="fa fa-cogs"></i> <span>{{ __('Settings') }}</span>
@@ -86,20 +86,13 @@
                     </span>
                 </a>
                 <ul class="treeview-menu">
-                    @if (auth()->user() && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
+                    {{-- @if (auth()->user() && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
                         <li>
                             <a href="{{ URL::route('forget.password') }}" class="text-decoration-none">
                                 <i class="fa fa-eye"></i><span>{{ __('Reset Password') }}</span>
                             </a>
                         </li>
-                    @endif
-                    @can('view contact')
-                        <li>
-                            <a href="{{ URL::route('contact.index') }}" class="text-decoration-none">
-                                <i class="fa fa-solid fa-phone"></i><span>{{ __('Supporter') }}</span>
-                            </a>
-                        </li>
-                    @endcan
+                    @endif --}}
                     <li>
                         <a href="{{ URL::route('translation.index') }}" class="text-decoration-none">
                             <i class="fa fa-solid fa-person-dots-from-line"></i><span>{{ __('Translations') }}</span>
@@ -108,6 +101,7 @@
                 </ul>
 
             </li>
+            @endif
         </ul>
     </section>
     <!-- /.sidebar -->

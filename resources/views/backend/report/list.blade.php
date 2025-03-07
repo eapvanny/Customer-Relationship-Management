@@ -9,25 +9,6 @@
 
 @section('extraStyle')
     <style>
-        /* .modal-fullscreen .modal-dialog {
-                width: 100%;
-                max-width: none;
-                height: 100%;
-                margin: 0;
-            }
-
-            .modal-fullscreen .modal-content {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .modal-body {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-            } */
-
         .chat-container {
             flex-grow: 1;
             overflow-y: auto;
@@ -39,6 +20,31 @@
             width: 100%;
             background: white;
             padding: 10px;
+        }
+
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .table td,
+        .table th {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table th,
+        .table td {
+            min-width: 0;
+            max-width: none;
         }
     </style>
 @endsection
@@ -70,6 +76,10 @@
                         <small> {{ __('List') }} </small>
                     </h1>
                     <div class="box-tools pull-right">
+                        <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
+                        data-bs-target="#filterContainer">
+                        <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
+                    </button>
                         <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}"><i
                                 class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
                     </div>
@@ -80,13 +90,43 @@
                         <div class="box-header">
                             <div class="row">
                                 <div class="col-12 mb-2">
+                                    <form action="{{ route("report.index") }}" method="GET" id="filterForm">
+                                        <div class="wrap_filter_form @if (!$is_filter) collapse @endif"
+                                            id="filterContainer">
+                                            <a id="close_filter" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                            <div class="row">
+                                                <!-- Filter fields remain the same -->
+                                                <div class="col-xl-4">
+                                                    <div class="form-group">
+                                                        <label for="Department">{{ __('Date') }}</label>
+                                                        <input type="date" name="date" id="date" class="form-control select2" value="{{ request('date') }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12 mt-2">
+                                                    <button id="apply_filter" class="btn btn-outline-secondary btn-sm float-end"
+                                                        type="submit">
+                                                        <i class="fa-solid fa-magnifying-glass"></i> {{ __('Apply') }}
+                                                    </button>
+                                                    <a href="{{ route("report.index") }}"
+                                                        class="btn btn-outline-secondary btn-sm float-end me-1">
+                                                        <i class="fa-solid fa-xmark"></i> {{ __('Cancel') }}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body margin-top-20">
                             <div class="table-responsive mt-4">
                                 <table id="datatabble"
-                                    class="table table-bordered table-striped list_view_table display responsive wrap datatable-server"
+                                    class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
                                     width="100%">
                                     <thead>
                                         <tr>
@@ -99,9 +139,9 @@
                                             <th> {{ __('350ml') }} </th>
                                             <th> {{ __('600ml') }} </th>
                                             <th> {{ __('1500ml') }} </th>
+                                            <th> {{ __('Other') }} </th>
                                             <th> {{ __('Location') }} </th>
                                             <th> {{ __('Date') }} </th>
-                                            <th> {{ __('Other') }} </th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
@@ -148,7 +188,8 @@
                 columns: [
                     {
                         data: 'photo',
-                        name: 'photo'
+                        name: 'photo',
+                        orderable: false
                     },
                     {
                         data: 'id_card',
@@ -183,6 +224,10 @@
                         name: '1500ml'
                     },
                     {
+                        data: 'other',
+                        name: 'other'
+                    },
+                    {
                         data: 'location',
                         name: 'location'
                     },
@@ -191,16 +236,15 @@
                         name: 'date'
                     },
                     {
-                        data: 'other',
-                        name: 'other'
-                    },
-                    
-                    {
                         data: 'action',
                         name: 'action',
                         orderable: false
                     }
                 ],
+            });
+
+            $('#close_filter').click(function() {
+                $("#filters").trigger('click');
             });
 
             //delete grade_level

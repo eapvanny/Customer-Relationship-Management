@@ -98,6 +98,10 @@ class UserController extends Controller
                         $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" title="Enable" data-id="' . $data->id . '"><i class="fa fa-check"></i></a>';
                         $actions = true;
                     }
+                    if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN) {
+                        $button .= '<a title="forgotPassword" href="' . route('forget.password', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa-solid fa-arrows-rotate"></i></a>';
+                        $actions = true;
+                    }
                     if (!$actions) {
                         $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
                     }

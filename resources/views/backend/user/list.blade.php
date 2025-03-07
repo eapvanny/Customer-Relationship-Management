@@ -65,7 +65,7 @@
                                             <th>{{ __('Role') }}</th>
                                             <th>{{ __('Gender') }}</th>
                                             <th>{{ __('Status') }}</th>
-                                            <th class="notexport" style="min-width: 65px;">{{ __('Action') }}</th>
+                                            <th class="notexport" style="min-width: 90px;">{{ __('Action') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

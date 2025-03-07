@@ -16,12 +16,17 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        $query = Report::with('user');
-
+        $query = Report::with('user')->orderBy('id', 'desc');
         if (auth()->user()->role_id !== AppHelper::USER_SUPER_ADMIN && auth()->user()->role_id !== AppHelper::USER_ADMIN) {
             $query->where('user_id', auth()->id());
         }
-
+        $is_filter = false;
+        if ($request->has('date') && !empty($request->date)) {
+            $is_filter = true;
+            $formattedDate = Carbon::parse($request->date)->format('Y-m-d');
+            $query->whereRaw("DATE(date) = ?", [$formattedDate]);
+        }
+        
         if ($request->ajax()) {
             $reports = $query->get();
 
@@ -72,7 +77,6 @@ class ReportController extends Controller
                                 <i class="fa fa-edit"></i>
                             </a>
                         </span>
-                          
                         <span class="change-action-item">
                             <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
                                 <i class="fa fa-fw fa-trash"></i>
@@ -83,7 +87,7 @@ class ReportController extends Controller
                 ->make(true);
         }
 
-        return view('backend.report.list');
+        return view('backend.report.list',compact('is_filter'));
     }
 
     public function create()

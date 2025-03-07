@@ -46,21 +46,22 @@
                     </div>
                 @endif
                 <form class="login100-form validate-form" novalidate id="loginForm"
-                    action="{{ URL::Route('forget.password.post') }}" method="post" enctype="multipart/form-data">
+                    action="{{ URL::Route('forget.password.post',$user->id) }}" method="post" enctype="multipart/form-data">
                     @csrf
                     <span class="login100-form-title p-b-26">
                         <img class="logo-hitech" src="{{ asset('images/Hi-Tech_Water_Logo.png') }}" alt="">
                     </span>
-                    <div style="margin-top: -20px; padding: 10px 0">
-                        <p style="font-size: 11px">We will send a link reset password to your email.</p>
-                    </div>
+                    <div style="margin-top: -20px; padding: 10px 0;">
+                        <p style="font-size: 11px;">The password will be reset only if the email matches the admin's email.</p>
+                    </div>                    
                     {{-- <div class="login100-form-title p-b-48">
 						<img src="{{getLogoLogin()}}" alt="" style="width: 280px;">
 					</div> --}}
+                    <input type="hidden" name="" value="{{$user->id}}">
                     <div class="wrap-input100 validate-input {{ $errors->first('email') ? 'alert-validate' : '' }} "
                         data-validate = "{{ $errors->first('email') }}">
                         <input class="input100" type="email" name="email" placeholder="Email">
-                        {{-- <span class="focus-input100" data-placeholder="Username"></span> --}}
+                        {{-- <span class="focus-input100" data-placeholder="email"></span> --}}
                         <span class="text-danger">{{ $errors->first('email') }}</span>
                     </div>
 
