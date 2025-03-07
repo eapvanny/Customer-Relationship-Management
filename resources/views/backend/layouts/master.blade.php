@@ -205,8 +205,71 @@
 @php
     }
 @endphp
-
+<script src="{{asset('js/pusher.js')}}"></script>
 <script type="text/javascript">
+
+$(document).ready(function() {
+        // Enable Pusher logging for debugging
+        var loggedInUserId = {{ auth()->id() }};
+        var roleInUserId = {{ auth()->user()->role_id }};
+        Pusher.logToConsole = true;
+        var AppHelper = {
+            USER_SUPER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_SUPER_ADMIN }},
+            USER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_ADMIN }},
+            USER_EMPLOYEE: {{ App\Http\Helpers\AppHelper::USER_EMPLOYEE }}
+        };
+        
+        // Initialize Pusher with the correct key from .env
+        var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
+            cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+            forceTLS: true
+        });
+
+        var channel = pusher.subscribe('my-channel');
+        channel.bind('my-event', function(data) {
+            var allowedRoles = [
+                AppHelper.USER_SUPER_ADMIN,
+                AppHelper.USER_ADMIN,
+            ];
+            // Show notification only if:
+            // 1. Current user's role is in allowedRoles
+            // 2. Current user is NOT the one who created the ticket (loggedInUserId != data.user_id)
+            if (allowedRoles.includes(roleInUserId) && loggedInUserId != data.user_id) {
+                toastr.options = {
+                    "closeButton": true,
+                    "progressBar": true,
+                    "timeOut": 9000, // 9 seconds
+                    "extendedTimeOut": 2000,
+                    "positionClass": "toast-top-right"
+                };
+                toastr["info"](data.message, "Report Notification");
+                incrementNotificationBadge();
+            }
+        });
+    });
+
+    function incrementNotificationBadge() {
+        var badgeElement = document.querySelector('.notification_badge');
+        if (badgeElement) {
+            let currentCount = parseInt(badgeElement.textContent) || 0;
+            
+            if (currentCount >= 5) {
+                badgeElement.textContent = '5+';
+                badgeElement.style.fontSize = '9px';
+            } else {
+                currentCount += 1;
+                badgeElement.textContent = currentCount;
+                badgeElement.style.fontSize = '';
+            }
+            
+            badgeElement.style.display = (currentCount > 0 || badgeElement.textContent === '5+') ? 'inline' : 'none';
+        } else {
+            console.warn('Notification badge element not found');
+        }
+    }
+
+
+
     var DatatableSignal = function(){
         this.dispatcher = $({});
     };

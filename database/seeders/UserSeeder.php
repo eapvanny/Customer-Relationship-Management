@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('crm123'),
                 // 'photo' => '123.jpg',
                 'staff_id_card' => '1280',
-                'family_name' => 'ឌី',
+                'family_name' => 'ឌី',   
                 'name' => 'អេដមីន',
                 'family_name_latin' => 'Dy',
                 'name_latin' => 'Admin',

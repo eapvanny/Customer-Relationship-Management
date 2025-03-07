@@ -71,7 +71,7 @@
                             </div>
                         </div>
                     </form>
-                    <div class="row my-2">
+                    <div class="row my-2 d-none">
                         <div class="col-12">
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="fa-solid fa-file-import"></i> {{__('Import')}}
@@ -80,7 +80,7 @@
                             <a class="btn btn-primary btn-sm" href="{{ route('translation.export') }}"><i class="fa-solid fa-download"></i> {{__('Export')}}</a>
                         </div>
                     </div>
-                    <div class="table-responsive">
+                    <div class="table-responsive my-2">
                         <table id="datatabble" class="table table-bordered table-striped display responsive no-wrap" width="100%">
                             <thead>
                             <tr>

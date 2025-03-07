@@ -1,6 +1,8 @@
 @php
     use Illuminate\Support\Facades\Storage;
     use Illuminate\Support\Facades\Auth;
+    use App\Http\Helpers\AppHelper;
+    use App\Models\Report;
     $authUser = Auth::user();
     $photoPath = $authUser->photo ? asset('storage/' . $authUser->photo) : asset('images/avatar.png');
 @endphp
@@ -175,30 +177,25 @@
                     </div>
                     <!-- Notifications -->
                     <div class="dropdown mx-2">
-                        <a data-mdb-dropdown-init class="notifi-icon text-reset dropdown-toggle"
-                            id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button" aria-expanded="false">
-                            <i class="fa-bell-o fa-regular fa-bell"><small class="notification_badge"></small></i>
-                        </a>
-                        <ul
-                            class="dropdown-menu dropdown-menu-end notifications position-absolute mt-2 p-2 "aria-labelledby="navbarDropdownMenuLink">
-                            <li>
-                                <a class="dropdown-item notificaton_header" href="#">
-                                </a>
-                            </li>
-                            <li class="dropdown-divider"></li>
-                            <li>
-                                <div class="dropdown-item">
-                                    Top Notifications
-                                </div>
-                                <ul class="notification_top"></ul>
-                            </li>
-                            <li class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-primary" href="#">
-                                    See All Notifications
-                                </a>
-                            </li>
-                        </ul>
+                        <?php
+                        $user = auth()->user();
+                        $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
+                        $query = Report::whereNull('deleted_at');
+                        if (!$isAdmin) {
+                            $query->where('user_id', $user->id);
+                        }
+                        $totalReports = $query->count();
+                        $badgeText = $totalReports > 5 ? '<span style="font-size: 9px;">5+</span>' : ($totalReports > 0 ? $totalReports : '');
+                    ?>
+                    
+                    <a href="{{ URL::route('report.index') }}" class="notifi-icon text-reset show-notification"
+                        id="notificationBell">
+                        <i class="fa-bell-o fa-regular fa-bell">
+                            <small class="notification_badge">
+                                <?= $badgeText ?>
+                            </small>
+                        </i>
+                    </a>
                     </div>
                     <div class="sepa-menu-header"></div>
                     <!-- Avatar -->

@@ -323,11 +323,19 @@
                 </a>
             @endif
             <div class="col-md-12">
-                <div class="date">
-                    <input class="select2" type="date">
-                    <input class="select2" type="date">
+                <div class="sub-head">
+                    <div class="row w-100">
+                        <div class="col-md-8">
+                            <h4>{{__('Customer Relationship Management')}}</h4>
+                        </div>
+                        <div class="col-md-4 date-container">
+                            <input class="select2" type="date">
+                            <input class="select2" type="date">
+                        </div>
+                    </div>
                 </div>
             </div>
+            
         </div>
     </section>
     <section>

@@ -13,7 +13,7 @@
             </li>
             <li>
                 <a href="{{ URL::route('report.index') }}" class="text-decoration-none">
-                    <i class="fa fa-regular fa-folder-open"></i> <span>{{ __('Report') }}</span>
+                    <i class="fa fa-regular fa-folder-open"></i> <span>{{ __('Daily Report') }}</span>
                 </a>
             </li>
             @can('view department')

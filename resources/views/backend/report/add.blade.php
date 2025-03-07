@@ -110,7 +110,7 @@
     <section class="content-header">
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li><a href="{{ URL::route('report.index') }}"> {{ __('Report') }} </a></li>
+            <li><a href="{{ URL::route('report.index') }}"> {{ __('Reports') }} </a></li>
             <li class="active">
                 @if ($report)
                     Update
@@ -129,7 +129,7 @@
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
                         <h1>
-                            {{ __('Report') }}
+                            {{ __('Customer Data') }}
                             <small>
                                 @if ($report)
                                     Update
@@ -231,7 +231,7 @@
                                 <div class="row">
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="latitude">{{ __('Latitude') }}</label>
+                                            <label for="latitude">{{ __('Latitude') }}<span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="latitude" id="latitude"
                                                 value="{{ isset($report) ? $report->latitude : old('latitude') }}"
                                                 readonly required>
@@ -239,7 +239,7 @@
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="longitude">{{ __('Longitude') }}</label>
+                                            <label for="longitude">{{ __('Longitude') }}<span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="longitude" id="longitude"
                                                 value="{{ isset($report) ? $report->longitude : old('longitude') }}"
                                                 readonly required>
@@ -247,7 +247,7 @@
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="city">{{ __('Address') }}</label>
+                                            <label for="city">{{ __('Address') }}<span class="text-danger">*</span></label>
                                             <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>
                                                     {{ isset($report) ? $report->city : old('city') }}
                                                 </textarea>
@@ -255,7 +255,7 @@
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="country">{{ __('Country') }}</label>
+                                            <label for="country">{{ __('Country') }}<span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="country" id="country"
                                                 value="{{ isset($report) ? $report->country : old('country') }}" readonly
                                                 required>

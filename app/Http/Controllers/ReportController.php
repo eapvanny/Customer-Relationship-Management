@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ReportRequest;
 use App\Http\Helpers\AppHelper;
 use App\Models\Report;
 use Illuminate\Http\Request;
@@ -118,6 +119,17 @@ class ReportController extends Controller
             'city' => $request->city,
             'country' => $request->country,
         ]);
+
+        $allowedUserTypes = [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN
+        ];
+
+        // Check if current user's type is in allowed types before firing event
+        if (!in_array(auth()->user()->role_id, $allowedUserTypes)) {
+            event(new ReportRequest(__("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name));
+        }
+        
 
         return redirect()->route('report.index')->with('success', "Report has been created!");
     }
