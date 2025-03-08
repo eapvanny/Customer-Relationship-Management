@@ -28,6 +28,12 @@
             .display-flex {
                 display: inline-flex;
             }
+            .wrap-outter-header-title h1 {
+                font-size: 19px;
+            }
+            .wrap-outter-header-title .toch {
+                font-size: 11px;
+            }
         }
 
         .checkbox,
@@ -130,9 +136,9 @@
                     <div class="wrap-outter-header-title">
                         <h1>
                             {{ __('Customer Data') }}
-                            <small>
+                            <small class="toch">
                                 @if ($report)
-                                    Update
+                                    {{__('Update')}}
                                 @else
                                     {{ __('Add New') }}
                                 @endif
