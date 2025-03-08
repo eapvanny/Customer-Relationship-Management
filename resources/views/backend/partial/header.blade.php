@@ -186,16 +186,43 @@
                         }
                         $totalReports = $query->count();
                         $badgeText = $totalReports > 5 ? '<span style="font-size: 9px;">5+</span>' : ($totalReports > 0 ? $totalReports : '');
-                    ?>
-                    
-                    <a href="{{ URL::route('report.index') }}" class="notifi-icon text-reset show-notification"
-                        id="notificationBell">
-                        <i class="fa-bell-o fa-regular fa-bell">
-                            <small class="notification_badge">
-                                <?= $badgeText ?>
-                            </small>
-                        </i>
-                    </a>
+                        ?>
+
+                        <a data-mdb-dropdown-init class="notifi-icon text-reset dropdown-toggle show-notification"
+                            id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                            <i class="fa-bell-o fa-regular fa-bell">
+                                <small class="notification_badge">
+                                    <?= $badgeText ?>
+                                </small>
+                            </i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end notifications position-absolute mt-2 p-2"
+                            aria-labelledby="navbarDropdownMenuLink">
+                            <li>
+                                <a class="dropdown-item notificaton_header" href="#">
+                                    {{ __('Notifications') }}
+                                </a>
+                            </li>
+                            <li class="dropdown-divider"></li>
+                            <li>
+                                <ul class="notification_top">
+                                    <span class="notification-item" style="color: #777">
+                                        <div class="notification-subject">
+
+                                        </div>
+                                    </span>
+                                </ul>
+                            </li>
+
+                            @if ($totalReports != 0)
+                                <li class="dropdown-divider"></li>
+                            @endif
+                            <li>
+                                <a class="dropdown-item text-primary" href="{{ route('report.index') }}">
+                                    {{ __('See All Reports') }}
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                     <div class="sepa-menu-header"></div>
                     <!-- Avatar -->
@@ -277,22 +304,34 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            $('#contact-user').on('click', function() {
-                let url = $(this).data('url'); 
-
+            $('.show-notification').on('click', function() {
                 $.ajax({
-                    url: url,
-                    type: 'GET',
-                    beforeSend: function() {
-                        $('#modal-body-content').html(
-                            '<p>Loading contacts...</p>'); 
-                    },
-                    success: function(response) {
-                        $('#modal-body-content').html(response); 
+                    url: "{{ route('get-reports') }}",
+                    method: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        let notificationList = $(".notification_top");
+                        notificationList.empty(); // Clear previous notifications
+
+                        if (data.length > 0) {
+                            data.forEach(function(report) {
+                                let listItem = `
+                            <li class="notification-item d-flex align-items-center p-2 border-bottom">
+                                <img src="${report.photo}" class="rounded-circle" style="height: 35px; width: 35px; object-fit: cover; margin-right: 10px;">
+                                <div class="d-flex flex-column">
+                                    <span><strong>${report.family_name} ${report.name}</strong> (${report.area})</span>
+                                </div>
+                            </li>`;
+                                notificationList.append(listItem);
+                            });
+                        } else {
+                            notificationList.append(
+                                `<li class="notification-item text-muted p-2">No new reports</li>`
+                                );
+                        }
                     },
                     error: function() {
-                        $('#modal-body-content').html(
-                            '<p class="text-danger">Failed to load contacts.</p>');
+                        console.error("Failed to fetch reports.");
                     }
                 });
             });

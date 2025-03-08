@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('outlet');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->datetime('date'); 
-            $table->integer('250_ml')->nullable();  
-            $table->integer('350_ml')->nullable();  
-            $table->integer('600_ml')->nullable(); 
-            $table->integer('1500_ml')->nullable();
+            $table->string('250_ml')->nullable();  
+            $table->string('350_ml')->nullable();  
+            $table->string('600_ml')->nullable(); 
+            $table->string('1500_ml')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->string('city')->nullable();

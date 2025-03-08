@@ -7,6 +7,7 @@ use App\Http\Helpers\AppHelper;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -17,16 +18,22 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $query = Report::with('user')->orderBy('id', 'desc');
+
         if (auth()->user()->role_id !== AppHelper::USER_SUPER_ADMIN && auth()->user()->role_id !== AppHelper::USER_ADMIN) {
             $query->where('user_id', auth()->id());
         }
+
         $is_filter = false;
-        if ($request->has('date') && !empty($request->date)) {
+
+        // Filter by date range
+        if ($request->has(['date1', 'date2']) && !empty($request->date1) && !empty($request->date2)) {
             $is_filter = true;
-            $formattedDate = Carbon::parse($request->date)->format('Y-m-d');
-            $query->whereRaw("DATE(date) = ?", [$formattedDate]);
+            $startDate = Carbon::parse($request->date1)->startOfDay();
+            $endDate = Carbon::parse($request->date2)->endOfDay();
+
+            $query->whereBetween('date', [$startDate, $endDate]);
         }
-        
+
         if ($request->ajax()) {
             $reports = $query->get();
 
@@ -60,7 +67,7 @@ class ReportController extends Controller
                     return __($data->{"1500_ml"}) ?? 'N/A';
                 })
                 ->addColumn('location', function ($data) {
-                    return __($data->city .',' .$data->country) ?? 'N/A';
+                    return __($data->city . ',' . $data->country) ?? 'N/A';
                 })
                 ->addColumn('date', function ($data) {
                     return $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A';
@@ -73,22 +80,23 @@ class ReportController extends Controller
                     $deleteRoute = route('report.destroy', $data->id);
 
                     return '<span class="change-action-item">
-                            <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                        </span>
-                        <span class="change-action-item">
-                            <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
-                                <i class="fa fa-fw fa-trash"></i>
-                            </a>
-                        </span>';
+                        <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                    </span>
+                    <span class="change-action-item">
+                        <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
+                            <i class="fa fa-fw fa-trash"></i>
+                        </a>
+                    </span>';
                 })
                 ->rawColumns(['photo', 'action'])
                 ->make(true);
         }
 
-        return view('backend.report.list',compact('is_filter'));
+        return view('backend.report.list', compact('is_filter'));
     }
+
 
     public function create()
     {
@@ -133,7 +141,7 @@ class ReportController extends Controller
         if (!in_array(auth()->user()->role_id, $allowedUserTypes)) {
             event(new ReportRequest(__("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name));
         }
-        
+
 
         return redirect()->route('report.index')->with('success', "Report has been created!");
     }
@@ -190,5 +198,28 @@ class ReportController extends Controller
             return redirect()->back()->with('success', "Report has been deleted!");
         }
         return redirect()->back()->with('error', "Report not found!");
+    }
+
+    public function getReports()
+    {
+        $user = Auth::user();
+
+        $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
+
+        $query = Report::with('user')->whereNull('deleted_at');
+        if (!$isAdmin) {
+            $query->where('user_id', $user->id);
+        }
+
+        $reports = $query->latest()->limit(5)->get()->map(function ($report) {
+            return [
+                'family_name' => $report->user->family_name,
+                'name' => $report->user->name,
+                'area' => $report->area,
+                'photo' => $report->user->photo ? asset('storage/' . $report->user->photo) : asset('images/avatar.png')
+            ];
+        });
+
+        return response()->json($reports);
     }
 }

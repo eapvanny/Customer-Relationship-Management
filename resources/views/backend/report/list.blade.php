@@ -77,9 +77,9 @@
                     </h1>
                     <div class="box-tools pull-right">
                         <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
-                        data-bs-target="#filterContainer">
-                        <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
-                    </button>
+                            data-bs-target="#filterContainer">
+                            <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
+                        </button>
                         <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}"><i
                                 class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
                     </div>
@@ -90,28 +90,35 @@
                         <div class="box-header">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <form action="{{ route("report.index") }}" method="GET" id="filterForm">
+                                    <form action="{{ route('report.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif"
                                             id="filterContainer">
                                             <a id="close_filter" class="btn btn-outline-secondary btn-sm">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
                                             <div class="row">
-                                                <!-- Filter fields remain the same -->
                                                 <div class="col-xl-4">
                                                     <div class="form-group">
-                                                        <label for="Department">{{ __('Date') }}</label>
-                                                        <input type="date" name="date" id="date" class="form-control select2" value="{{ request('date') }}">
+                                                        <label for="date1">{{ __('From Date') }}</label>
+                                                        <input type="date" name="date1" id="date1"
+                                                            class="form-control" value="{{ request('date1') }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-4">
+                                                    <div class="form-group">
+                                                        <label for="date2">{{ __('To Date') }}</label>
+                                                        <input type="date" name="date2" id="date2"
+                                                            class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <div class="col-12 mt-2">
-                                                    <button id="apply_filter" class="btn btn-outline-secondary btn-sm float-end"
-                                                        type="submit">
+                                                    <button id="apply_filter"
+                                                        class="btn btn-outline-secondary btn-sm float-end" type="submit">
                                                         <i class="fa-solid fa-magnifying-glass"></i> {{ __('Apply') }}
                                                     </button>
-                                                    <a href="{{ route("report.index") }}"
+                                                    <a href="{{ route('report.index') }}"
                                                         class="btn btn-outline-secondary btn-sm float-end me-1">
                                                         <i class="fa-solid fa-xmark"></i> {{ __('Cancel') }}
                                                     </a>
@@ -119,6 +126,7 @@
                                             </div>
                                         </div>
                                     </form>
+
                                 </div>
                             </div>
                         </div>
@@ -185,8 +193,7 @@
                     url: "{!! route('report.index', request()->all()) !!}",
                 },
                 pageLength: 10,
-                columns: [
-                    {
+                columns: [{
                         data: 'photo',
                         name: 'photo',
                         orderable: false
