@@ -180,22 +180,25 @@
                         <?php
                         $user = auth()->user();
                         $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
-                        $query = Report::whereNull('deleted_at');
-                        if (!$isAdmin) {
-                            $query->where('user_id', $user->id);
+                        
+                        $totalReports = 0; // Default to 0 for non-admins
+                        if ($isAdmin) {
+                            $totalReports = Report::whereNull('deleted_at')->count();
                         }
-                        $totalReports = $query->count();
                         $badgeText = $totalReports > 5 ? '<span style="font-size: 9px;">5+</span>' : ($totalReports > 0 ? $totalReports : '');
                         ?>
+                        @if ($isAdmin)
+                            <a data-mdb-dropdown-init class="notifi-icon text-reset dropdown-toggle show-notification"
+                                id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button"
+                                aria-expanded="false">
+                                <i class="fa-bell-o fa-regular fa-bell">
+                                    <small class="notification_badge">
+                                        <?= $badgeText ?>
+                                    </small>
+                                </i>
+                            </a>
+                        @endif
 
-                        <a data-mdb-dropdown-init class="notifi-icon text-reset dropdown-toggle show-notification"
-                            id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button" aria-expanded="false">
-                            <i class="fa-bell-o fa-regular fa-bell">
-                                <small class="notification_badge">
-                                    <?= $badgeText ?>
-                                </small>
-                            </i>
-                        </a>
                         <ul class="dropdown-menu dropdown-menu-end notifications position-absolute mt-2 p-2"
                             aria-labelledby="navbarDropdownMenuLink">
                             <li>
@@ -207,9 +210,7 @@
                             <li>
                                 <ul class="notification_top">
                                     <span class="notification-item" style="color: #777">
-                                        <div class="notification-subject">
-
-                                        </div>
+                                        <div class="notification-subject"></div>
                                     </span>
                                 </ul>
                             </li>
@@ -304,30 +305,38 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            $('.show-notification').on('click', function() {
+            let isAdmin =
+                "{{ in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]) ? 'true' : 'false' }}";
+
+            if (isAdmin === 'false') {
+                $(".show-notification").remove();
+                return; 
+            }
+
+            $('.show-notification').one('click', function() {
                 $.ajax({
                     url: "{{ route('get-reports') }}",
                     method: "GET",
                     dataType: "json",
                     success: function(data) {
                         let notificationList = $(".notification_top");
-                        notificationList.empty(); // Clear previous notifications
+                        notificationList.empty(); 
 
                         if (data.length > 0) {
                             data.forEach(function(report) {
                                 let listItem = `
-                            <li class="notification-item d-flex align-items-center p-2 border-bottom">
-                                <img src="${report.photo}" class="rounded-circle" style="height: 35px; width: 35px; object-fit: cover; margin-right: 10px;">
-                                <div class="d-flex flex-column">
-                                    <span><strong>${report.family_name} ${report.name}</strong> (${report.area})</span>
-                                </div>
-                            </li>`;
+                        <li class="notification-item d-flex align-items-center p-2 border-bottom">
+                            <img src="${report.photo}" class="rounded-circle" style="height: 35px; width: 35px; object-fit: cover; margin-right: 10px;">
+                            <div class="d-flex flex-column">
+                                <span><strong>${report.family_name} ${report.name}</strong> (${report.area})</span>
+                            </div>
+                        </li>`;
                                 notificationList.append(listItem);
                             });
                         } else {
                             notificationList.append(
                                 `<li class="notification-item text-muted p-2">No new reports</li>`
-                                );
+                            );
                         }
                     },
                     error: function() {

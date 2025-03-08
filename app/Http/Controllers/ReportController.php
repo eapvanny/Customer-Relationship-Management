@@ -208,7 +208,7 @@ class ReportController extends Controller
 
         $query = Report::with('user')->whereNull('deleted_at');
         if (!$isAdmin) {
-            $query->where('user_id', $user->id);
+            return response()->json([]);
         }
 
         $reports = $query->latest()->limit(5)->get()->map(function ($report) {
