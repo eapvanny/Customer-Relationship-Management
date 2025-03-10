@@ -126,10 +126,16 @@
                                             </div>
                                         </div>
                                     </form>
-
+                                    <div class="row" style="margin-bottom: -20px">
+                                        <div class="col-12">
+                                            <a class="btn btn-success btn-sm" href="{{ route('report.export') }}"><i class="fa-solid fa-download"></i> {{__('Export')}}</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            
                         </div>
+                        
                         <!-- /.box-header -->
                         <div class="box-body margin-top-20">
                             <div class="table-responsive mt-4">

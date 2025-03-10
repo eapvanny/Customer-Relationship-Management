@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use App\Exports\ReportsExport;
+use Maatwebsite\Excel\Excel as ExcelExcel;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class ReportController extends Controller
@@ -221,5 +224,9 @@ class ReportController extends Controller
         });
 
         return response()->json($reports);
+    }
+    public function export()
+    {
+        return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 }

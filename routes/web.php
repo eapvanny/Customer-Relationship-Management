@@ -89,7 +89,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::resource('report', ReportController::class);
 
     Route::get('/get-reports', [ReportController::class, 'getReports'])->name('get-reports');
-
+    Route::get('/export', [ReportController::class, 'export'])->name('report.export');
     // Translation Routes
     Route::prefix('translations')->name('translation.')->group(function () {
         // List all translations
