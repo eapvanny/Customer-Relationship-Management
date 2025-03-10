@@ -2210,6 +2210,8 @@ a:focus {
   position: relative;
   background: #f9f9f9;
   border-radius: 5px;
+  margin-bottom: 10px;
+
 }
 
 .fly_action_btn {
