@@ -67,7 +67,7 @@
                                 </div>
                                 <div class="col-lg-9">
                                     <h3 class="profile-username text-center my-1"> {{ $user->name }}</h3>
-                                    <p class="text-muted text-center">{{ __('Admin') }}</p>
+                                    <p class="text-muted text-center">{{ $user->role->name }}</p>
                                     <ul class="list-group list-group-unbordered profile-log">
                                         <li class="list-group-item size">
                                             <strong><i class="fa fa-user margin-r-5"></i> {{ __('Username') }} :</strong>
