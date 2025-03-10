@@ -266,7 +266,7 @@
                                         <button type="button" class="btn btn-primary" id="getLocationBtn">
                                             {{ __('Get My Location') }}
                                         </button>
-                                        <div id="map" style="height: 400px; margin-top: 10px;"></div>
+                                        <div id="map" style="height: 400px; margin-top: 15px;"></div>
                                     </div>
 
                                     <!-- Loading Overlay -->
