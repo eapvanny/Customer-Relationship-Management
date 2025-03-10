@@ -251,9 +251,7 @@
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
                                             <label for="city">{{ __('Address') }}<span class="text-danger">*</span></label>
-                                            <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>
-                                                    {{ isset($report) ? $report->city : old('city') }}
-                                                </textarea>
+                                            <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>{{ isset($report) ? $report->city : old('city') }}</textarea>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
