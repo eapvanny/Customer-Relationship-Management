@@ -6195,6 +6195,7 @@ div.dataTables_wrapper div.dataTables_filter input {
   .sub-head h4 {
     width: 100%;
     text-align: start;
+    margin-left: -12px;
   }
 }
 
@@ -6224,6 +6225,7 @@ div.dataTables_wrapper div.dataTables_filter input {
   .sub-head h4 {
     width: 100%;
     text-align: start;
+    margin-left: -12px;
   }
 }
 
