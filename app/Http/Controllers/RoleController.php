@@ -24,7 +24,7 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $roles = Role::whereHas('permissions')->with('permissions')->get();
+            $roles = Role::whereHas('permissions')->with('permissions');
             return DataTables::of($roles)
                 ->addIndexColumn()
                 ->filter(function ($query) use ($request) {

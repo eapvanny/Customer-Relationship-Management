@@ -119,7 +119,7 @@
             <li><a href="{{ URL::route('report.index') }}"> {{ __('Reports') }} </a></li>
             <li class="active">
                 @if ($report)
-                    Update
+                    {{__('Update')}}
                 @else
                     {{ __('Add') }}
                 @endif
