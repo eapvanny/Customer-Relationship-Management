@@ -179,8 +179,7 @@
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="outlet"> {{ __('Outlet') }} <span class="text-danger">*</span></label>
-                                <textarea name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>@if ($report){{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}@endif
-                                </textarea>
+                                <textarea name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>@if ($report){{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}@endif</textarea>
                                 <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('outlet') }}</span>
                             </div>
