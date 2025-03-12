@@ -39,7 +39,7 @@ class AuthController extends Controller
                 $request->session()->regenerateToken();
 
                 return back()->withInput()->withErrors([
-                    'username' => 'Your account is inactive. Please contact support.'
+                    'username' => 'Your account is inactive. Please contact manager.'
                 ]);
             }
 
@@ -59,9 +59,16 @@ class AuthController extends Controller
                 app()->setLocale($user->user_lang);
             }
             $request->session()->regenerate();
-            return redirect()->route('dashboard.index')
-                ->with('success', 'Welcome to AdminPanel.')
-                ->with('show_popup', true);
+            if(auth()->user()->role_id == AppHelper::USER_EMPLOYEE){
+                return redirect()->route('report.index')
+                    ->with('success', 'Welcome to CRM system.')
+                    ->with('show_popup', true);
+            }else{
+                return redirect()->route('dashboard.index')
+                    ->with('success', 'Welcome to AdminPanel.')
+                    ->with('show_popup', true);
+            }
+            
         }
 
         return back()->withInput()->withErrors([

@@ -24,6 +24,10 @@ class Report extends Model
         'city',
         'country',
         'user_id',
+        'posm',
+        'qty',
+        'photo',
+        'manager_id'
     ];
 
     public function user()

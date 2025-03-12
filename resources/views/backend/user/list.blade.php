@@ -11,7 +11,9 @@
 @section('bodyCssClass')
 @endsection
 <!-- End block -->
-
+@php
+    use App\Http\Helpers\AppHelper;
+@endphp
 <!-- BEGIN PAGE CONTENT-->
 @section('pageContent')
     <!-- Section header -->
@@ -33,11 +35,12 @@
                         <small> {{ __('List') }} </small>
                     </h1>
                     <div class="box-tools pull-right">
-                        {{-- @if (auth()->user()->newRole->role_id != AppHelper::USER_ADMIN)
-
-                            <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
-
-                        @endif --}}
+                        @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
+                            <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
+                                data-bs-target="#filterContainer">
+                                <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
+                            </button>
+                        @endif
                         @can('create user')
                             <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i
                                     class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
@@ -46,6 +49,55 @@
                 </div>
                 <div class="wrap-outter-box">
                     <div class="box box-info">
+                        <div class="box-header">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <form action="{{ route('user.index') }}" method="GET" id="filterForm">
+                                        <div class="wrap_filter_form @if (!$is_filter) collapse @endif"
+                                            id="filterContainer">
+                                            <a id="close_filter" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                            <div class="row">
+                                                <div class="col-xl-4">
+                                                    <div class="form-group">
+                                                        <label for="manager_id">{{ __('Manager') }}</label>
+                                                        {!! Form::select('manager_id', $areaManager, request('manager_id'), [
+                                                            'placeholder' => __('Select a manager'),
+                                                            'id' => 'manager_id',
+                                                            'class' => 'form-control select2',
+                                                        ]) !!}
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-4">
+                                                    <div class="form-group">
+                                                        <label for="full_name">{{ __('Employee Name') }}</label>
+                                                        {!! Form::select('full_name', $full_name, request('full_name'), [
+                                                            'placeholder' => __('Select employee name'),
+                                                            'id' => 'full_name',
+                                                            'class' => 'form-control select2',
+                                                        ]) !!}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12 mt-2">
+                                                    <button id="apply_filter"
+                                                        class="btn btn-outline-secondary btn-sm float-end" type="submit">
+                                                        <i class="fa-solid fa-magnifying-glass"></i> {{ __('Apply') }}
+                                                    </button>
+                                                    <a href="{{ route('user.index') }}"
+                                                        class="btn btn-outline-secondary btn-sm float-end me-1">
+                                                        <i class="fa-solid fa-xmark"></i> {{ __('Cancel') }}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
                         <!-- /.box-header -->
                         <div class="box-body">
                             <div class="table-responsive">
@@ -61,6 +113,9 @@
                                             <th>{{ __('Area') }}</th>
                                             <th>{{ __('Username') }}</th>
                                             <th>{{ __('Email') }}</th>
+                                            @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
+                                                <th>{{ __('Managed By') }}</th>
+                                            @endif
                                             <th>{{ __('Phone No.') }}</th>
                                             <th>{{ __('Role') }}</th>
                                             <th>{{ __('Gender') }}</th>
@@ -113,8 +168,7 @@
                 ajax: {
                     url: "{!! route('user.index', Request::query()) !!}",
                 },
-                columns: [
-                    {   
+                columns: [{
                         data: 'photo',
                         name: 'photo',
                     },
@@ -142,7 +196,12 @@
                         data: 'email',
                         name: 'email',
                     },
-                    {
+                    @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
+                        {
+                            data: 'managed_by',
+                            name: 'managed_by',
+                        },
+                    @endif {
                         data: 'phone_no',
                         name: 'phone_no',
                     },

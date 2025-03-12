@@ -12,9 +12,18 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $query = Report::query();
-        if (auth()->user()->role_id == AppHelper::USER_EMPLOYEE) {
-            $query->where('user_id', auth()->user()->id);
+        // $query = Report::query();
+        // if (auth()->user()->role_id == AppHelper::USER_EMPLOYEE) {
+        //     $query->where('user_id', auth()->user()->id);
+        // }
+        $query = Report::with('user');
+        $user = auth()->user();
+        if ($user->role_id === AppHelper::USER_MANAGER) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('manager_id', $user->id);
+            });
+        } elseif ($user->role_id !== AppHelper::USER_SUPER_ADMIN && $user->role_id !== AppHelper::USER_ADMIN) {
+            $query->where('user_id', $user->id);
         }
        
         // Get monthly chat report data

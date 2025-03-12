@@ -509,6 +509,8 @@ body, html {
   width: 100%;
   font-family: Poppins-Regular, sans-serif;
   overflow-x: hidden; /* Prevent horizontal scrolling */
+  background-color: #f8f8f8;
+
 }
 
 /* Updated background and login form positioning */

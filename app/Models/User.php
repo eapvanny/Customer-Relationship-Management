@@ -35,6 +35,7 @@ class User extends Authenticatable
         'position',
         'status',
         'area',
+        'manager_id'
     ];
 
     /**
@@ -64,6 +65,26 @@ class User extends Authenticatable
     public function report()
     {
         return $this->hasMany(Report::class);
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    // Optional: Relationship to get users managed by this user
+    public function managedUsers()
+    {
+        return $this->hasMany(User::class, 'manager_id');
+    }
+
+    public function getFullNameAttribute()
+    {
+        return $this->family_name . ' ' . $this->name;
+    }
+    public function getFullNameLatinAttribute()
+    {
+        return $this->family_name_latin . ' ' . $this->name_latin;
     }
     // public function getPhotoUrlAttribute()
     // {

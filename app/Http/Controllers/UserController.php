@@ -30,15 +30,48 @@ class UserController extends Controller
     public $indexof = 1;
     public function index(Request $request)
     {
+        $is_filter = false;
+        $query = User::with(['role', 'manager']);
+
+        // Apply role-based filtering
+        if (auth()->user()->role_id == AppHelper::USER_MANAGER) {
+            $loggedInUserId = auth()->user()->id;
+            $query->where(function ($q) use ($loggedInUserId) {
+                $q->where('id', $loggedInUserId)
+                    ->orWhere('manager_id', $loggedInUserId);
+            });
+        } elseif (!in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
+            $query->where('id', auth()->user()->id);
+        }
+
+        $authUser = auth()->user();
+        $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+            return [
+                $manager->id => $authUser->user_lang === 'en'
+                    ? $manager->family_name_latin . ' ' . $manager->name_latin
+                    : $manager->family_name . ' ' . $manager->name
+            ];
+        });
+        $full_name = User::where('role_id', AppHelper::USER_EMPLOYEE)->get()->mapWithKeys(function ($employee) use ($authUser) {
+            return [
+                $employee->id => $authUser->user_lang === 'en'
+                    ? $employee->family_name_latin . ' ' . $employee->name_latin
+                    : $employee->family_name . ' ' . $employee->name
+            ];
+        });
+
+        if ($request->has('manager_id') && !empty($request->manager_id)) {
+            $query->where('manager_id', $request->manager_id);
+            $is_filter = true;
+        }
+
+        if ($request->has('full_name') && !empty($request->full_name)) {
+            $is_filter = true;
+            $query->where('id', $request->full_name); 
+        }
+
         if ($request->ajax()) {
-            $query = User::with('role');
-
-            if (!in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
-                $query->where('id', auth()->user()->id);
-            }
-
             $users = $query->get();
-
             return DataTables::of($users)
                 ->addColumn('photo', function ($data) {
                     $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
@@ -48,7 +81,7 @@ class UserController extends Controller
                     return __($data->staff_id_card);
                 })
                 ->addColumn('name', function ($data) {
-                    return __($data->name);
+                    return auth()->user()->user_lang == 'en' ? $data->getFullNameLatinAttribute() : $data->getFullNameAttribute();
                 })
                 ->addColumn('position', function ($data) {
                     return __($data->position);
@@ -62,6 +95,11 @@ class UserController extends Controller
                 ->addColumn('email', function ($data) {
                     return __($data->email);
                 })
+                ->addColumn('managed_by', function ($data) {
+                    return $data->manager
+                        ? (auth()->user()->user_lang == 'en' ? $data->manager->getFullNameLatinAttribute() : $data->manager->getFullNameAttribute())
+                        : '<span class="text-danger">' . __("No Manager") . '</span>';
+                })
                 ->addColumn('phone_no', function ($data) {
                     return __($data->phone_no);
                 })
@@ -69,7 +107,7 @@ class UserController extends Controller
                     return $data->role ? __($data->role->name) : __('N/A');
                 })
                 ->addColumn('gender', function ($data) {
-                    return AppHelper::GENDER[$data->gender] ?? __('N/A');
+                    return isset(AppHelper::GENDER[$data->gender]) ? __(AppHelper::GENDER[$data->gender]) : __('N/A');
                 })
                 ->addColumn('status', function ($data) {
                     return $data->status == 1
@@ -84,16 +122,10 @@ class UserController extends Controller
                         $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                         $actions = true;
                     }
-                    // if (auth()->user()->can('delete user')) {
-                    //     $button .= '<a href="' . route('user.destroy', $data->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                    //     $actions = true;
-                    // }
-                    // Add disable button only for active users and if user has permission
                     if (auth()->user()->can('update user') && $data->status == 1) {
                         $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" title="Disable" data-id="' . $data->id . '"><i class="fa fa-ban"></i></a>';
                         $actions = true;
                     }
-                    // Enable button for inactive users
                     if (auth()->user()->can('update user') && $data->status == 0) {
                         $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" title="Enable" data-id="' . $data->id . '"><i class="fa fa-check"></i></a>';
                         $actions = true;
@@ -108,19 +140,19 @@ class UserController extends Controller
                     $button .= '</div>';
                     return $button;
                 })
-
-
-                ->rawColumns(['action', 'photo', 'status'])
+                ->rawColumns(['action', 'photo', 'status', 'managed_by'])
                 ->make(true);
         }
 
-        return view('backend.user.list');
+        // Fetch Area Managers for Filter Dropdown
+        return view('backend.user.list', compact('areaManager', 'is_filter', 'full_name'));
     }
+
 
     public function disable($id)
     {
         try {
-            
+
             $user = User::findOrFail($id);
 
             // Check if user has permission
@@ -191,7 +223,15 @@ class UserController extends Controller
         $user = null;
         // $departments = Department::pluck('name', 'id');
         $roles = Role::pluck('name', 'id');
-        return view('backend.user.add', compact('user', 'roles'));
+        $authUser = auth()->user();
+        $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+            return [
+                $manager->id => $authUser->user_lang === 'en'
+                    ? $manager->family_name_latin . ' ' . $manager->name_latin
+                    : $manager->family_name . ' ' . $manager->name
+            ];
+        });
+        return view('backend.user.add', compact('user', 'roles', 'areaManager'));
     }
 
     public function store(Request $request)
@@ -214,6 +254,9 @@ class UserController extends Controller
 
         ];
 
+        if ($request->role_id == AppHelper::USER_EMPLOYEE) {
+            $rules['manager_id'] = 'required';
+        }
         $this->validate($request, $rules);
 
         $userData = [
@@ -231,6 +274,7 @@ class UserController extends Controller
             'position' => $request->position,
             'area' => $request->area,
             'password' => bcrypt($request->password),
+            'manager_id' => $request->manager_id,
         ];
 
         if ($request->hasFile('photo')) {
@@ -260,7 +304,14 @@ class UserController extends Controller
     {
         $user = User::find($id);
         $roles = Role::pluck('name', 'id');
-
+        $authUser = auth()->user();
+        $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+            return [
+                $manager->id => $authUser->user_lang === 'en'
+                    ? $manager->family_name_latin . ' ' . $manager->name_latin
+                    : $manager->family_name . ' ' . $manager->name
+            ];
+        });
         if (!$user) {
             return redirect()->route('user.index');
         }
@@ -268,7 +319,8 @@ class UserController extends Controller
             'backend.user.add',
             compact(
                 'user',
-                'roles'
+                'roles',
+                'areaManager'
             )
         );
     }
@@ -288,10 +340,14 @@ class UserController extends Controller
             'gender' => 'required',
             'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card,' . $id,
             'position' => 'required',
-            'area' => 'required'
-        ];        
+            'area' => 'required',
+        ];
 
+        if ($request->role_id == AppHelper::USER_EMPLOYEE) {
+            $rules['manager_id'] = 'required';
+        }
         $this->validate($request, $rules);
+
         $userData = [
             'name' => $request->name,
             'role_id' => $request->role_id,
@@ -304,6 +360,7 @@ class UserController extends Controller
             'staff_id_card' => $request->staff_id_card,
             'position' => $request->position,
             'area' => $request->area,
+            'manager_id' => $request->manager_id,
         ];
 
         // Handle password update only if provided

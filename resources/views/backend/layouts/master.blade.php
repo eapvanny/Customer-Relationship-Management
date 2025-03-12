@@ -216,7 +216,8 @@ $(document).ready(function() {
         var AppHelper = {
             USER_SUPER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_SUPER_ADMIN }},
             USER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_ADMIN }},
-            USER_EMPLOYEE: {{ App\Http\Helpers\AppHelper::USER_EMPLOYEE }}
+            USER_EMPLOYEE: {{ App\Http\Helpers\AppHelper::USER_EMPLOYEE }},
+            USER_MANAGER: {{ App\Http\Helpers\AppHelper::USER_MANAGER }}
         };
         
         // Initialize Pusher with the correct key from .env
@@ -230,6 +231,7 @@ $(document).ready(function() {
             var allowedRoles = [
                 AppHelper.USER_SUPER_ADMIN,
                 AppHelper.USER_ADMIN,
+                AppHelper.USER_MANAGER,
             ];
             // Show notification only if:
             // 1. Current user's role is in allowedRoles
