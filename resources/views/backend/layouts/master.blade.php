@@ -211,16 +211,14 @@
 $(document).ready(function() {
         // Enable Pusher logging for debugging
         var loggedInUserId = {{ auth()->id() }};
-        var roleInUserId = {{ auth()->user()->role_id }};
         Pusher.logToConsole = true;
+
         var AppHelper = {
             USER_SUPER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_SUPER_ADMIN }},
             USER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_ADMIN }},
-            USER_EMPLOYEE: {{ App\Http\Helpers\AppHelper::USER_EMPLOYEE }},
             USER_MANAGER: {{ App\Http\Helpers\AppHelper::USER_MANAGER }}
         };
-        
-        // Initialize Pusher with the correct key from .env
+
         var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
             cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
             forceTLS: true
@@ -228,15 +226,10 @@ $(document).ready(function() {
 
         var channel = pusher.subscribe('my-channel');
         channel.bind('my-event', function(data) {
-            var allowedRoles = [
-                AppHelper.USER_SUPER_ADMIN,
-                AppHelper.USER_ADMIN,
-                AppHelper.USER_MANAGER,
-            ];
-            // Show notification only if:
-            // 1. Current user's role is in allowedRoles
-            // 2. Current user is NOT the one who created the ticket (loggedInUserId != data.user_id)
-            if (allowedRoles.includes(roleInUserId) && loggedInUserId != data.user_id) {
+            var allowedUsers = data.allowedUsers; // Get the allowed users from the event
+
+            // Show notification only if the current user is in allowedUsers and did not create the report
+            if (allowedUsers.includes(loggedInUserId)) {
                 toastr.options = {
                     "closeButton": true,
                     "progressBar": true,
@@ -248,27 +241,27 @@ $(document).ready(function() {
                 incrementNotificationBadge();
             }
         });
-    });
+            });
 
-    function incrementNotificationBadge() {
-        var badgeElement = document.querySelector('.notification_badge');
-        if (badgeElement) {
-            let currentCount = parseInt(badgeElement.textContent) || 0;
-            
-            if (currentCount >= 5) {
-                badgeElement.textContent = '5+';
-                badgeElement.style.fontSize = '9px';
+            function incrementNotificationBadge() {
+            var badgeElement = document.querySelector('.notification_badge');
+            if (badgeElement) {
+                let currentCount = parseInt(badgeElement.textContent) || 0;
+
+                if (currentCount >= 5) {
+                    badgeElement.textContent = '5+';
+                    badgeElement.style.fontSize = '9px';
+                } else {
+                    currentCount += 1;
+                    badgeElement.textContent = currentCount;
+                    badgeElement.style.fontSize = '';
+                }
+
+                badgeElement.style.display = (currentCount > 0 || badgeElement.textContent === '5+') ? 'inline' : 'none';
             } else {
-                currentCount += 1;
-                badgeElement.textContent = currentCount;
-                badgeElement.style.fontSize = '';
+                console.warn('Notification badge element not found');
             }
-            
-            badgeElement.style.display = (currentCount > 0 || badgeElement.textContent === '5+') ? 'inline' : 'none';
-        } else {
-            console.warn('Notification badge element not found');
         }
-    }
 
 
 

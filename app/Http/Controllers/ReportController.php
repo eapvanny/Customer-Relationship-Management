@@ -80,11 +80,11 @@ class ReportController extends Controller
                 })
                 ->addColumn('name', function ($data) {
                     $user = optional($data->user);
-                    return auth()->user()->user_lang == 'en' 
-                        ? ($user->getFullNameLatinAttribute() ?? 'N/A') 
+                    return auth()->user()->user_lang == 'en'
+                        ? ($user->getFullNameLatinAttribute() ?? 'N/A')
                         : ($user->getFullNameAttribute() ?? 'N/A');
                 })
-                
+
                 ->addColumn('area', function ($data) {
                     return __($data->area);
                 })
@@ -121,14 +121,14 @@ class ReportController extends Controller
                 ->addColumn('action', function ($data) {
                     $editRoute = route('report.edit', $data->id);
                     $deleteRoute = route('report.destroy', $data->id);
-                    
+
                     $actionButtons = '
                     <span class="change-action-item">
                         <a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal">
                             <i class="fa fa-fw fa-eye"></i>
                         </a>
                     </span>';
-                
+
                     if (auth()->user()->can('update user')) {
                         $actionButtons .= '
                         <span class="change-action-item">
@@ -137,21 +137,21 @@ class ReportController extends Controller
                             </a>
                         </span>';
                     }
-                
+
                     return $actionButtons;
                 })
-                
-            //        <span class="change-action-item">
-            //        <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
-            //            <i class="fa fa-fw fa-trash"></i>
-            //        </a>
-            //    </span>
+
+                //        <span class="change-action-item">
+                //        <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
+                //            <i class="fa fa-fw fa-trash"></i>
+                //        </a>
+                //    </span>
                 // })
                 ->rawColumns(['photo', 'action'])
                 ->make(true);
         }
 
-        return view('backend.report.list', compact('is_filter','full_name'));
+        return view('backend.report.list', compact('is_filter', 'full_name'));
     }
 
 
@@ -177,9 +177,9 @@ class ReportController extends Controller
                 ? $user->getFullNameLatinAttribute()
                 : $user->getFullNameAttribute();
         }
-        $posm = isset(AppHelper::MATERIAL[$report->posm]) 
-                ? __(AppHelper::MATERIAL[$report->posm]) 
-                : 'Unknown';
+        $posm = isset(AppHelper::MATERIAL[$report->posm])
+            ? __(AppHelper::MATERIAL[$report->posm])
+            : 'Unknown';
         return response()->json([
             'report' => [
                 'photo' => $report->photo ? asset('storage/' . $report->photo) : asset('images/avatar.png'),
@@ -240,18 +240,26 @@ class ReportController extends Controller
             'photo' => $data['photo'],
         ]);
 
-        $allowedUserTypes = [
+        $adminUsers = User::whereIn('role_id', [
             AppHelper::USER_SUPER_ADMIN,
-            AppHelper::USER_ADMIN,
-            AppHelper::USER_MANAGER
-        ];
+            AppHelper::USER_ADMIN
+        ])->pluck('id')->toArray();
 
-        // Check if current user's type is in allowed types before firing event
-        if (!in_array(auth()->user()->role_id, $allowedUserTypes)) {
-            event(new ReportRequest(__("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name));
+        $managerId = auth()->user()->manager_id;
+
+        $notificationUsers = $adminUsers;
+
+        if ($managerId) {
+            $notificationUsers[] = $managerId;
         }
 
+        // Remove duplicate user IDs (if any)
+        $notificationUsers = array_unique($notificationUsers);
 
+        event(new ReportRequest(
+            __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
+            $notificationUsers
+        ));
         return redirect()->route('report.index')->with('success', "Report has been created!");
     }
 
@@ -329,17 +337,23 @@ class ReportController extends Controller
         $user = Auth::user();
 
         $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
+        $isManager = $user->role_id == AppHelper::USER_MANAGER;
 
         $query = Report::with('user')->whereNull('deleted_at');
-        if (!$isAdmin) {
+
+        if ($isManager) {
+            // Managers can only see reports from their employees
+            $query->whereIn('user_id', User::where('manager_id', $user->id)->pluck('id'));
+        } elseif (!$isAdmin) {
+            // Other users should not receive reports
             return response()->json([]);
         }
 
         $reports = $query->latest()->limit(5)->get()->map(function ($report) {
             return [
-                'family_name' => $report->user->family_name,
-                'name' => $report->user->name,
-                'area' => $report->area,
+                'family_name' => $report->user->family_name ?? 'N/A',
+                'name' => $report->user->name ?? 'N/A',
+                'area' => $report->area ?? 'Unknown',
                 'photo' => $report->user->photo ? asset('storage/' . $report->user->photo) : asset('images/avatar.png')
             ];
         });

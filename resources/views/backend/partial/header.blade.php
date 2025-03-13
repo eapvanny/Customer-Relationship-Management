@@ -179,15 +179,26 @@
                     <div class="dropdown mx-2">
                         <?php
                         $user = auth()->user();
-                        $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
+                        $isAdminOrManager = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_MANAGER]);
                         
-                        $totalReports = 0; // Default to 0 for non-admins
-                        if ($isAdmin) {
-                            $totalReports = Report::whereNull('deleted_at')->count();
+                        $totalReports = 0; // Default to 0 for regular users
+                        
+                        if ($isAdminOrManager) {
+                            if (in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
+                                // Admins & Super Admins see all reports
+                                $totalReports = Report::whereNull('deleted_at')->count();
+                            } elseif ($user->role_id == AppHelper::USER_MANAGER) {
+                                // Managers only see reports from employees they manage
+                                $totalReports = Report::whereNull('deleted_at')
+                                    ->whereIn('user_id', \App\Models\User::where('manager_id', $user->id)->pluck('id'))
+                                    ->count();
+                            }
                         }
+                        
                         $badgeText = $totalReports > 5 ? '<span style="font-size: 9px;">5+</span>' : ($totalReports > 0 ? $totalReports : '');
                         ?>
-                        @if ($isAdmin)
+
+                        @if ($isAdminOrManager)
                             <a data-mdb-dropdown-init class="notifi-icon text-reset dropdown-toggle show-notification"
                                 id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button"
                                 aria-expanded="false">
@@ -305,12 +316,12 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            let isAdmin =
-                "{{ in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]) ? 'true' : 'false' }}";
+            let isAdminOrManager =
+                "{{ in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_MANAGER]) ? 'true' : 'false' }}";
 
-            if (isAdmin === 'false') {
+            if (isAdminOrManager === 'false') {
                 $(".show-notification").remove();
-                return; 
+                return;
             }
 
             $('.show-notification').one('click', function() {
@@ -320,17 +331,17 @@
                     dataType: "json",
                     success: function(data) {
                         let notificationList = $(".notification_top");
-                        notificationList.empty(); 
+                        notificationList.empty();
 
                         if (data.length > 0) {
                             data.forEach(function(report) {
                                 let listItem = `
-                        <li class="notification-item d-flex align-items-center p-2 border-bottom">
-                            <img src="${report.photo}" class="rounded-circle" style="height: 35px; width: 35px; object-fit: cover; margin-right: 10px;">
-                            <div class="d-flex flex-column">
-                                <span><strong>${report.family_name} ${report.name}</strong> (${report.area})</span>
-                            </div>
-                        </li>`;
+                            <li class="notification-item d-flex align-items-center p-2 border-bottom">
+                                <img src="${report.photo}" class="rounded-circle" style="height: 35px; width: 35px; object-fit: cover; margin-right: 10px;">
+                                <div class="d-flex flex-column">
+                                    <span><strong>${report.family_name} ${report.name}</strong> (${report.area})</span>
+                                </div>
+                            </li>`;
                                 notificationList.append(listItem);
                             });
                         } else {
