@@ -304,7 +304,7 @@
                                             <div class="row">
                                                 <div class="col-md-12 col-xl-12">
                                                     <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('POSM') }}
+                                                        <label for="posm"> {{ __('Material Type') }}
                                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select POSM"></i>
                                                         </label>
                                                         {!! Form::select('posm', 
@@ -314,7 +314,7 @@
                                                             AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
                                                             AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
                                                         ], old('posm', optional($report)->posm), [
-                                                            'placeholder' => __('Select a posm'),
+                                                            'placeholder' => __('Select material type'),
                                                             'id' => 'posm',
                                                             'name' => 'posm',
                                                             'class' => 'form-control select2',

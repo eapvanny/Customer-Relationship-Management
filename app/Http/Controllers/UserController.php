@@ -33,15 +33,18 @@ class UserController extends Controller
         $is_filter = false;
         $query = User::with(['role', 'manager']);
 
-        // Apply role-based filtering
-        if (auth()->user()->role_id == AppHelper::USER_MANAGER) {
-            $loggedInUserId = auth()->user()->id;
+        $loggedInUserRole = auth()->user()->role_id;
+        $loggedInUserId = auth()->user()->id;
+
+        if ($loggedInUserRole == AppHelper::USER_MANAGER) {
             $query->where(function ($q) use ($loggedInUserId) {
                 $q->where('id', $loggedInUserId)
                     ->orWhere('manager_id', $loggedInUserId);
             });
-        } elseif (!in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
-            $query->where('id', auth()->user()->id);
+        } elseif ($loggedInUserRole == AppHelper::USER_ADMIN) {
+            $query->where('role_id', '!=', AppHelper::USER_SUPER_ADMIN);
+        } elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
+            $query->where('id', $loggedInUserId);
         }
 
         $authUser = auth()->user();
@@ -67,7 +70,7 @@ class UserController extends Controller
 
         if ($request->has('full_name') && !empty($request->full_name)) {
             $is_filter = true;
-            $query->where('id', $request->full_name); 
+            $query->where('id', $request->full_name);
         }
 
         if ($request->ajax()) {
@@ -104,7 +107,7 @@ class UserController extends Controller
                     return __($data->phone_no);
                 })
                 ->addColumn('role', function ($data) {
-                    return $data->role ? __($data->role->name) : __('N/A');
+                    return $data->role ? $data->role->name : __('N/A');
                 })
                 ->addColumn('gender', function ($data) {
                     return isset(AppHelper::GENDER[$data->gender]) ? __(AppHelper::GENDER[$data->gender]) : __('N/A');
@@ -221,18 +224,47 @@ class UserController extends Controller
     public function create()
     {
         $user = null;
-        // $departments = Department::pluck('name', 'id');
-        $roles = Role::pluck('name', 'id');
         $authUser = auth()->user();
-        $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
-            return [
-                $manager->id => $authUser->user_lang === 'en'
-                    ? $manager->family_name_latin . ' ' . $manager->name_latin
-                    : $manager->family_name . ' ' . $manager->name
-            ];
-        });
+
+        if ($authUser->role_id === AppHelper::USER_MANAGER) {
+            // User Manager can only assign Employee role
+            $roles = Role::where('id', AppHelper::USER_EMPLOYEE)->pluck('name', 'id');
+
+            $areaManager = User::where('id', $authUser->id)->get()->mapWithKeys(function ($manager) use ($authUser) {
+                return [
+                    $manager->id => $authUser->user_lang === 'en'
+                        ? $manager->family_name_latin . ' ' . $manager->name_latin
+                        : $manager->family_name . ' ' . $manager->name
+                ];
+            });
+        } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
+            // Admin can assign Manager and Employee roles
+            $roles = Role::whereIn('id', [AppHelper::USER_MANAGER, AppHelper::USER_EMPLOYEE])->pluck('name', 'id');
+
+            $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+                return [
+                    $manager->id => $authUser->user_lang === 'en'
+                        ? $manager->family_name_latin . ' ' . $manager->name_latin
+                        : $manager->family_name . ' ' . $manager->name
+                ];
+            });
+        } else {
+            // Super Admin or other roles can assign all roles
+            $roles = Role::pluck('name', 'id');
+            $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+                return [
+                    $manager->id => $authUser->user_lang === 'en'
+                        ? $manager->family_name_latin . ' ' . $manager->name_latin
+                        : $manager->family_name . ' ' . $manager->name
+                ];
+            });
+        }
+
+
+
         return view('backend.user.add', compact('user', 'roles', 'areaManager'));
     }
+
 
     public function store(Request $request)
     {
@@ -258,7 +290,7 @@ class UserController extends Controller
             $rules['manager_id'] = 'required';
         }
         $this->validate($request, $rules);
-
+        $createdBy = auth()->user()->role_id;
         $userData = [
             'family_name' => $request->family_name,
             'name' => $request->name,
@@ -275,6 +307,7 @@ class UserController extends Controller
             'area' => $request->area,
             'password' => bcrypt($request->password),
             'manager_id' => $request->manager_id,
+            'created_by' => $createdBy,
         ];
 
         if ($request->hasFile('photo')) {

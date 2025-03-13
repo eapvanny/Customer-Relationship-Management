@@ -35,7 +35,9 @@ class User extends Authenticatable
         'position',
         'status',
         'area',
-        'manager_id'
+        'manager_id',
+        'created_by',
+        'deleted_by'
     ];
 
     /**
