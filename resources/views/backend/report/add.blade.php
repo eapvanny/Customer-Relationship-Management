@@ -375,7 +375,7 @@
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12 mt-3">
                                         <button type="button" class="btn btn-primary" id="getLocationBtn">
-                                            {{ __('Get My Location') }}
+                                            <i class="fa-solid fa-location-dot"></i>{{ __('Get Location') }}
                                         </button>
                                         <div id="map" style="height: 400px; margin-top: 15px;"></div>
                                     </div>

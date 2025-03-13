@@ -128,5 +128,12 @@
     "Umbrella": "ឆ័ត្រ",
     "Fan": "កង្ហារ",
     "T-Shirt": "អាវយឺត",
-    "Select material type": "ជ្រើសរើសប្រភេទសម្ភារៈ"
+    "Select material type": "ជ្រើសរើសប្រភេទសម្ភារៈ",
+    "Latitude": "រយៈទទឹង",
+    "Longitude": "រយៈបណ្តោយ",
+    "Address": "អាស័យដ្ឋាន",
+    "Country": "ប្រទេស",
+    "Get Location": "ទាញយកទីតាំង",
+    "Customer Relationship Management": "ការគ្រប់គ្រងទំនាក់ទំនងអតិថិជន",
+    "All reports in this year": "របាយការណ៍ទាំងអស់ក្នុងឆ្នាំនេះ"
 }
