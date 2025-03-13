@@ -398,7 +398,7 @@
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>
                                                             {!! Form::select('full_name', $full_name, request('full_name'), [
-                                                                'placeholder' => __('Select employee name'),
+                                                                'placeholder' => __('Select employee'),
                                                                 'id' => 'full_name',
                                                                 'class' => 'form-control select2',
                                                             ]) !!}

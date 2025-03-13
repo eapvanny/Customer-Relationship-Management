@@ -30,13 +30,13 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('user.login');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/forget-password/{id}', [AuthController::class, 'forgetPassword'])->name('forget.password');
-Route::post('/forget-password/{id}', [AuthController::class, 'forgetPasswordPost'])->name('forget.password.post');
-Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset.password');
-Route::post('/reset-password', [AuthController::class, 'resetPasswordPost'])->name('reset.password.post');
+
 
 Route::group(['middleware' => ['auth', 'isAdmin']], function () {
-
+    Route::get('/forget-password/{id}', [AuthController::class, 'forgetPassword'])->name('forget.password');
+    Route::post('/forget-password/{id}', [AuthController::class, 'forgetPasswordPost'])->name('forget.password.post');
+    Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('reset.password');
+    Route::post('/reset-password', [AuthController::class, 'resetPasswordPost'])->name('reset.password.post');
     Route::resource('dashboard', DashboardController::class);
     // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     // Route::get('/dashboard/ticket-data', [DashboardController::class, 'getTicketData'])->name('dashboard.ticket-data');

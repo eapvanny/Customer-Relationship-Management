@@ -18,6 +18,13 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view report', ['only' => ['index']]);
+        $this->middleware('permission:create report', ['only' => ['create', 'store']]);
+        $this->middleware('permission:update report', ['only' => ['update', 'edit']]);
+        $this->middleware('permission:delete report', ['only' => ['destroy']]);
+    }
     public $indexof = 1;
 
     public function index(Request $request)
@@ -114,21 +121,32 @@ class ReportController extends Controller
                 ->addColumn('action', function ($data) {
                     $editRoute = route('report.edit', $data->id);
                     $deleteRoute = route('report.destroy', $data->id);
-
-                    return '
-                    <span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal"><i class="fa fa-fw fa-eye"></i></a></span>
+                    
+                    $actionButtons = '
                     <span class="change-action-item">
-                        <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
-                            <i class="fa fa-edit"></i>
+                        <a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal">
+                            <i class="fa fa-fw fa-eye"></i>
                         </a>
-                    </span>
-                   ';
+                    </span>';
+                
+                    if (auth()->user()->can('update user')) {
+                        $actionButtons .= '
+                        <span class="change-action-item">
+                            <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </span>';
+                    }
+                
+                    return $actionButtons;
+                })
+                
             //        <span class="change-action-item">
             //        <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
             //            <i class="fa fa-fw fa-trash"></i>
             //        </a>
             //    </span>
-                })
+                // })
                 ->rawColumns(['photo', 'action'])
                 ->make(true);
         }

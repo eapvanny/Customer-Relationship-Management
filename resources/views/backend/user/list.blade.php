@@ -63,7 +63,7 @@
                                                     <div class="form-group">
                                                         <label for="manager_id">{{ __('Manager') }}</label>
                                                         {!! Form::select('manager_id', $areaManager, request('manager_id'), [
-                                                            'placeholder' => __('Select a manager'),
+                                                            'placeholder' => __('Select manager'),
                                                             'id' => 'manager_id',
                                                             'class' => 'form-control select2',
                                                         ]) !!}
@@ -73,7 +73,7 @@
                                                     <div class="form-group">
                                                         <label for="full_name">{{ __('Employee Name') }}</label>
                                                         {!! Form::select('full_name', $full_name, request('full_name'), [
-                                                            'placeholder' => __('Select employee name'),
+                                                            'placeholder' => __('Select employee'),
                                                             'id' => 'full_name',
                                                             'class' => 'form-control select2',
                                                         ]) !!}

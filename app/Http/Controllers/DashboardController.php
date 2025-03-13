@@ -10,6 +10,10 @@ use App\Models\Ticket;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view dashboard', ['only' => ['index']]);
+    }
     public function index()
     {
         // $query = Report::query();
