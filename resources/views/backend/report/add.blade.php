@@ -147,8 +147,8 @@
         }
 
         fieldset>#photo-preview {
-            height: 250px;
-            width: 250px;
+            height: 238px;
+            width: 238px;
             position: absolute;
             object-fit: cover;
         }
@@ -282,7 +282,7 @@
                             <div class="row">
                                 <div class="form-group has-feedback">
                                     <div class="row">
-                                        <div class="row-span-6 col-sm-12 col-md-6 col-lg-6 col-xl-6">
+                                        <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
                                             <div class="form-group has-feedback position-relative">
                                                 <input type="file" id="photo" name="photo" style="display: none" accept="image/*">
                                                 <button type="button" class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1" id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
@@ -302,7 +302,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="row">
-                                                <div class="col-md-12 col-xl-12">
+                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
                                                         <label for="posm"> {{ __('Material Type') }}
                                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select POSM"></i>
@@ -323,7 +323,7 @@
                                                         <span class="text-danger">{{ $errors->first('department_id') }}</span>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-12 col-xl-12">
+                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
                                                         <label for="qty"> {{ __('Quantity') }} </label>
                                                         <input type="number" class="form-control" name="qty" 
@@ -375,7 +375,7 @@
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12 mt-3">
                                         <button type="button" class="btn btn-primary" id="getLocationBtn">
-                                            <i class="fa-solid fa-location-dot"></i>{{ __('Get Location') }}
+                                            <i class="fa-solid fa-location-dot"></i> {{ __('Get Location') }}
                                         </button>
                                         <div id="map" style="height: 400px; margin-top: 15px;"></div>
                                     </div>
