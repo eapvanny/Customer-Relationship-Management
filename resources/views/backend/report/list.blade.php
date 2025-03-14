@@ -287,6 +287,19 @@
                         min-width: 0;
                         max-width: none;
                     } */
+        .list-group-unbordered .list-group-item {
+            padding: 10px 0;
+            font-size: 0.95rem;
+        }
+
+        .list-group-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .col-lg-8{
+            flex: 1;
+        }
     </style>
 @endsection
 
@@ -493,30 +506,30 @@
                         <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
                             <div class="report-details">
                                 <div class="row">
-                                    <div class="col-md-7 col-sm-7 col-lg-7 col-xl-7">
+                                    <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><strong>{{__('Employee Name')}}:</strong> <span
+                                            <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Employee Name')}}:</strong> <span
                                                     id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i> <strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i> <strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
         
-                                            <li class="list-group-item"><strong>{{__('Location')}} :</strong> <span id="modalCity"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Location')}} :</strong> <span id="modalCity"></span></li>
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
-                                    <div class="col-md-5 col-sm-5 col-lg-5 col-xl-5">
+                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><strong>{{__('250ml')}} :</strong> <span id="modal250ml"></span></li>
-                                            <li class="list-group-item"><strong>{{__('350ml')}} :</strong> <span id="modal350ml"></span></li>
-                                            <li class="list-group-item"><strong>{{__('600ml')}} :</strong> <span id="modal600ml"></span></li>
-                                            <li class="list-group-item"><strong>{{__('1500ml')}} :</strong> <span id="modal1500ml"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Other')}} :</strong> <span id="modalOther"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Material Type')}} :</strong> <span id="modalPosm"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Quantity')}} :</strong> <span id="modalQty"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('250ml')}} :</strong> <span id="modal250ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('350ml')}} :</strong> <span id="modal350ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('600ml')}} :</strong> <span id="modal600ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('1500ml')}} :</strong> <span id="modal1500ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('Other')}} :</strong> <span id="modalOther"></span></li>
+                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i> <strong>{{__('Material Type')}} :</strong> <span id="modalPosm"></span></li>
+                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('Quantity')}} :</strong> <span id="modalQty"></span>
                                             </li>
                                         </ul>
                                     </div>

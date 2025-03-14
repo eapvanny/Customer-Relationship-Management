@@ -324,7 +324,7 @@
                 return;
             }
 
-            $('.show-notification').one('click', function() {
+            $('.show-notification').on('click', function() {
                 $.ajax({
                     url: "{{ route('get-reports') }}",
                     method: "GET",
