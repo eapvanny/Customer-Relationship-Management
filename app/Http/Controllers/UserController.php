@@ -461,32 +461,25 @@ class UserController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-
+            if ($user->photo && Storage::exists($user->photo)) {
+                Storage::delete($user->photo);
+            }
 
             $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
             $filePath = 'uploads/' . $fileName;
             Storage::put($filePath, file_get_contents($file));
-            // $urlPath = Storage::url($filePath);
 
-            $user_photo = $filePath;
+            $userData['photo'] = $filePath;
 
-
-            // Delete the old photo if exists
-            $oldFile = $user->photo;
-            if ($oldFile) {
-                Storage::delete($oldFile);
-            }
-
-            // Update the student's photo field
-            $update = $user->update(['photo' => $user_photo]);
+            $update = $user->update($userData);
             if ($update) {
                 return redirect()->back()->with('success', 'Profile Photo updated!');
             } else {
                 return redirect()->back()->with('error', 'Failed to update profile photo in the database.')->withInput();
             }
         }
-        return redirect()->back()->with('error', 'Profile Fail updated!');
+        return redirect()->back()->with('error', 'No photo uploaded!');
     }
 
     public function setLanguage($lang)

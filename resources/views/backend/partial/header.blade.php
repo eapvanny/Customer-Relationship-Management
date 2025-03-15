@@ -346,7 +346,7 @@
                             });
                         } else {
                             notificationList.append(
-                                `<li class="notification-item text-muted p-2">No new reports</li>`
+                                `<li class="notification-item text-muted p-2">{{__('No new reports')}}</li>`
                             );
                         }
                     },
