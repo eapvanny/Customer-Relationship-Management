@@ -464,7 +464,7 @@
                                             <th> {{ __('Other') }} </th>
                                             <th> {{ __('Material Type') }} </th>
                                             <th> {{ __('Qty') }} </th>
-                                            <th> {{ __('Location') }} </th>
+                                            <th> {{ __('Address') }} </th>
                                             <th> {{ __('Date') }} </th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
@@ -517,7 +517,7 @@
                                             </li>
                                             <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
         
-                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Location')}} :</strong> <span id="modalCity"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Address')}} :</strong> <span id="modalCity"></span></li>
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
