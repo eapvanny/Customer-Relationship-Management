@@ -8,8 +8,8 @@
 @endphp
 <header class="main-header shadow-sm">
     <!-- Logo -->
-    <a href="@if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE)
-        {{ URL::route('dashboard.index') }} @else {{ URL::route('report.index') }} @endif" class="logo hidden-xs logo-hitech">
+    <a href="@if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE) {{ URL::route('dashboard.index') }} @else {{ URL::route('report.index') }} @endif"
+        class="logo hidden-xs logo-hitech">
         <!-- mini logo for sidebar mini 50x50 pixels -->
         <span class="logo-mini">
             <img src="{{ asset('images/Background1.jpg') }}" alt="logo-mini" style="border-radius: 50%; margin-top: 14px">
@@ -163,7 +163,7 @@
 
                     <div class="sepa-menu-header"></div>
                     <!-- Messages -->
-                    <div class="dropdown mx-2">
+                    {{-- <div class="dropdown mx-2">
                         <a data-mdb-dropdown-init class="notifi-icon text-reset dropdown-toggle" href="#"
                             id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button" aria-expanded="false">
                             <i class="fa-regular fa-envelope"><small class="d-none">1</small></i>
@@ -175,23 +175,23 @@
                             </li>
 
                         </ul>
-                    </div>
+                    </div> --}}
                     <!-- Notifications -->
                     <div class="dropdown mx-2">
                         <?php
+                        
                         $user = auth()->user();
                         $isAdminOrManager = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_MANAGER]);
                         
-                        $totalReports = 0; // Default to 0 for regular users
+                        $totalReports = 0;
                         
                         if ($isAdminOrManager) {
                             if (in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
-                                // Admins & Super Admins see all reports
-                                $totalReports = Report::whereNull('deleted_at')->count();
+                                $totalReports = Report::whereNull('deleted_at')->where('is_seen', false)->count();
                             } elseif ($user->role_id == AppHelper::USER_MANAGER) {
-                                // Managers only see reports from employees they manage
                                 $totalReports = Report::whereNull('deleted_at')
-                                    ->whereIn('user_id', \App\Models\User::where('manager_id', $user->id)->pluck('id'))
+                                    ->whereIn('user_id', User::where('manager_id', $user->id)->pluck('id'))
+                                    ->where('is_seen', false)
                                     ->count();
                             }
                         }
@@ -204,7 +204,7 @@
                                 id="navbarDropdownMenuLink" data-bs-toggle="dropdown" role="button"
                                 aria-expanded="false">
                                 <i class="fa-bell-o fa-regular fa-bell">
-                                    <small class="notification_badge">
+                                    <small id="notification_badge" class="notification_badge">
                                         <?= $badgeText ?>
                                     </small>
                                 </i>
@@ -231,12 +231,14 @@
                                 <li class="dropdown-divider"></li>
                             @endif
                             <li>
-                                <a class="dropdown-item text-primary" href="{{ route('report.index') }}">
+                                <a class="dropdown-item text-primary see-all-reports"
+                                    href="{{ route('report.index') }}">
                                     {{ __('See All Reports') }}
                                 </a>
                             </li>
                         </ul>
                     </div>
+
                     <div class="sepa-menu-header"></div>
                     <!-- Avatar -->
                     <div class="dropdown avatar me-3 ps-4">
@@ -347,12 +349,35 @@
                             });
                         } else {
                             notificationList.append(
-                                `<li class="notification-item text-muted p-2">{{__('No new reports')}}</li>`
+                                `<li class="notification-item text-muted p-2">{{ __('No new reports') }}</li>`
                             );
                         }
                     },
                     error: function() {
                         console.error("Failed to fetch reports.");
+                    }
+                });
+            });
+
+
+            $(".see-all-reports").click(function(e) {
+                e.preventDefault(); // Prevent default navigation
+
+                $.ajax({
+                    url: "{{ route('reports.markAsSeen') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#notification_badge").html(""); // Clear the notification badge
+                            window.location.href =
+                                "{{ route('report.index') }}"; // Redirect after AJAX call
+                        }
+                    },
+                    error: function() {
+                        console.log("Error marking reports as seen.");
                     }
                 });
             });

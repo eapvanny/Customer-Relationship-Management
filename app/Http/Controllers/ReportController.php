@@ -339,7 +339,7 @@ class ReportController extends Controller
         $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
         $isManager = $user->role_id == AppHelper::USER_MANAGER;
 
-        $query = Report::with('user')->whereNull('deleted_at');
+        $query = Report::with('user')->whereNull('deleted_at')->where('is_seen', false);
 
         if ($isManager) {
             // Managers can only see reports from their employees
@@ -363,5 +363,20 @@ class ReportController extends Controller
     public function export()
     {
         return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
+    }
+
+    public function markAsSeen()
+    {
+        $user = auth()->user();
+
+        if (in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
+            Report::whereNull('deleted_at')->update(['is_seen' => true]);
+        } elseif ($user->role_id == AppHelper::USER_MANAGER) {
+            Report::whereNull('deleted_at')
+                ->whereIn('user_id', User::where('manager_id', $user->id)->pluck('id'))
+                ->update(['is_seen' => true]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }
