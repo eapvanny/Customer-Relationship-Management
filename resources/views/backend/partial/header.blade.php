@@ -8,7 +8,8 @@
 @endphp
 <header class="main-header shadow-sm">
     <!-- Logo -->
-    <a href="{{ URL::route('dashboard.index') }}" class="logo hidden-xs logo-hitech">
+    <a href="@if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE)
+        {{ URL::route('dashboard.index') }} @else {{ URL::route('report.index') }} @endif" class="logo hidden-xs logo-hitech">
         <!-- mini logo for sidebar mini 50x50 pixels -->
         <span class="logo-mini">
             <img src="{{ asset('images/Background1.jpg') }}" alt="logo-mini" style="border-radius: 50%; margin-top: 14px">
