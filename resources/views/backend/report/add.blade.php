@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-            margin-bottom: 0px;
-        }
+                        margin-bottom: 0px;
+                    }
 
-        fieldset .iradio .error,
-        fieldset .icheck .error {
-            display: none !important;
-        }
+                    fieldset .iradio .error,
+                    fieldset .icheck .error {
+                        display: none !important;
+                    }
 
-        @media (max-width: 600px) {
-            .display-flex {
-                display: inline-flex;
-            }
-        } */
+                    @media (max-width: 600px) {
+                        .display-flex {
+                            display: inline-flex;
+                        }
+                    } */
 
         .checkbox,
         .radio {
@@ -93,6 +93,7 @@
             height: 50px;
             opacity: 0.4;
         }
+
         fieldset {
             padding: 1em 0.625em 1em;
             border: 1px solid #ddd;
@@ -131,7 +132,7 @@
             }
         }
 
-        fieldset>#student-photo {
+        fieldset>#open-camera-btn {
             overflow: hidden;
             cursor: pointer;
             width: 100%;
@@ -139,7 +140,7 @@
             background-color: #f5f5f5;
         }
 
-        fieldset>#student-photo>#btn-upload-photo {
+        fieldset>#open-camera-btn>#btn-upload-photo {
             min-width: 100px;
             min-height: 100px;
             background-color: #ddd;
@@ -156,7 +157,38 @@
         .fly_action_btn {
             z-index: 2;
         }
-        
+
+        .camera-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .camera-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        video {
+            width: 90vw;
+            height: auto;
+            max-height: 70vh;
+            border: 5px solid white;
+            border-radius: 10px;
+        }
+
+        button {
+            margin-top: 10px;
+        }
     </style>
 @endsection
 
@@ -171,7 +203,7 @@
             <li><a href="{{ URL::route('report.index') }}"> {{ __('Reports') }} </a></li>
             <li class="active">
                 @if ($report)
-                    {{__('Update')}}
+                    {{ __('Update') }}
                 @else
                     {{ __('Add') }}
                 @endif
@@ -190,7 +222,7 @@
                             {{ __('Customer Data') }}
                             <small class="toch">
                                 @if ($report)
-                                    {{__('Update')}}
+                                    {{ __('Update') }}
                                 @else
                                     {{ __('Add New') }}
                                 @endif
@@ -231,7 +263,11 @@
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="outlet"> {{ __('Outlet') }} <span class="text-danger">*</span></label>
-                                <textarea name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>@if ($report){{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}@endif</textarea>
+                                <textarea name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
+@if ($report)
+{{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}
+@endif
+</textarea>
                                 <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('outlet') }}</span>
                             </div>
@@ -345,26 +381,42 @@
                                         <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
                                             
                                             <div class="form-group has-feedback position-relative">
-                                                <input type="hidden" id="btn-upload-photo" name="photo" style="display: none">
-                                                <button type="button" class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1" id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
-                                                <fieldset class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if(!old('oldphoto') && !old('img-preview') && !isset($report)){{'d-none'}}@endif z-1" id="photo-preview" name="oldphoto" src="@if(optional($report)->photo){{asset('storage/' . $report->photo)}}@else{{old('oldphoto')}}@endif" alt="photo">
-                                                    
-                                                    <input type="hidden" id="img-preview" name="oldphoto" value="@if(optional($report)->photo){{asset($report->photo)}}@endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2  @if(!old('img-preview')){{'opacity-100'}} @else {{'opacity-25'}}@endif" id="student-photo">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo" type="button" onclick="showCamera()" >
+                                                <input type="file" id="photo" name="photo" style="display: none"
+                                                    accept="image/*">
+                                                <button type="button"
+                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                    id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
+                                                <fieldset id="photo-upload"
+                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
+                                                        id="photo-preview" name="oldphoto"
+                                                        src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
+                                                        alt="photo">
+                                                    <input type="hidden" id="img-preview" name="oldphoto"
+                                                        value="@if (optional($report)->photo) {{ asset($report->photo) }} @endif">
+                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2  @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                        id="open-camera-btn">
+                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo"
+                                                            type="button" onclick="">
                                                             <i class="fa-solid fa-camera-retro"></i>
                                                         </button>
                                                         
                                                     </div>
-                                                    <label class="position-absolute bottom-0 text-center w-100 mb-2" for="photo">
-                                                        {{__('Photo Attachment only accept jpg, png, jpeg images')}}
+                                                    <label class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                        {{ __('Click to open camera and capture photo') }}
                                                     </label>
                                                 </fieldset>
                                             </div>
-
-                                            
-
+                                            <div id="camera-modal" class="camera-modal d-none">
+                                                <div class="camera-content">
+                                                    <video id="webcam" autoplay></video>
+                                                    <canvas id="canvas" class="d-none"></canvas>
+                                                    <button id="capture-btn" class="btn btn-success" type="button">📸
+                                                        Take Photo</button>
+                                                    <button id="close-camera-btn" class="btn btn-danger" type="button">❌
+                                                        Close Camera</button>
+                                                </div>
+                                            </div>
 
                                         </div>
                                         <div class="col-md-6">
@@ -374,31 +426,36 @@
                                                         <label for="posm"> {{ __('POSM') }}
                                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select POSM"></i>
                                                         </label>
-                                                        {!! Form::select('posm', 
-                                                        [
-                                                            AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                            AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                                            AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                                            AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
-                                                        ], old('posm', optional($report)->posm), [
-                                                            'placeholder' => __('Select material type'),
-                                                            'id' => 'posm',
-                                                            'name' => 'posm',
-                                                            'class' => 'form-control select2',
-                                                        ]) !!}
+                                                        {!! Form::select(
+                                                            'posm',
+                                                            [
+                                                                AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
+                                                                AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
+                                                                AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
+                                                                AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
+                                                            ],
+                                                            old('posm', optional($report)->posm),
+                                                            [
+                                                                'placeholder' => __('Select material type'),
+                                                                'id' => 'posm',
+                                                                'name' => 'posm',
+                                                                'class' => 'form-control select2',
+                                                            ],
+                                                        ) !!}
                                                         <span class="form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('department_id') }}</span>
+                                                        <span
+                                                            class="text-danger">{{ $errors->first('department_id') }}</span>
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
                                                         <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="qty" 
+                                                        <input type="number" class="form-control" name="qty"
                                                             value="{{ old('qty', $report->qty ?? '') }}">
                                                         <span class="fa fa-info form-control-feedback"></span>
                                                         <span class="text-danger">{{ $errors->first('qty') }}</span>
                                                     </div>
-                                                </div>                                                
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -412,7 +469,8 @@
                                 <div class="row">
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="latitude">{{ __('Latitude') }}<span class="text-danger">*</span></label>
+                                            <label for="latitude">{{ __('Latitude') }}<span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="latitude" id="latitude"
                                                 value="{{ isset($report) ? $report->latitude : old('latitude') }}"
                                                 readonly required>
@@ -420,7 +478,8 @@
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="longitude">{{ __('Longitude') }}<span class="text-danger">*</span></label>
+                                            <label for="longitude">{{ __('Longitude') }}<span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="longitude" id="longitude"
                                                 value="{{ isset($report) ? $report->longitude : old('longitude') }}"
                                                 readonly required>
@@ -428,13 +487,15 @@
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="city">{{ __('Address') }}<span class="text-danger">*</span></label>
+                                            <label for="city">{{ __('Address') }}<span
+                                                    class="text-danger">*</span></label>
                                             <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>{{ isset($report) ? $report->city : old('city') }}</textarea>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
-                                            <label for="country">{{ __('Country') }}<span class="text-danger">*</span></label>
+                                            <label for="country">{{ __('Country') }}<span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="country" id="country"
                                                 value="{{ isset($report) ? $report->country : old('country') }}" readonly
                                                 required>
@@ -464,7 +525,7 @@
 @endsection
 
 @section('extraScript')
-{{-- <script src="{{asset('js/leaflet.js')}}"></script> --}}
+    {{-- <script src="{{asset('js/leaflet.js')}}"></script> --}}
     <script>
         let map;
         let marker;
@@ -590,43 +651,91 @@
         @endif
 
         $(document).ready(function() {
-            $('#photo-upload').on('click', function(){
-			$("#photo").trigger("click")
-		});
-		$('#btn-remove-photo').on('click', function(){
-			$("#photo").val('');
-			$('#img-preview').val('');
-			$("#photo-preview").removeAttr('src').addClass('d-none');
-			$('#btn-remove-photo').addClass('d-none');
-			$('#btn-upload-photo').removeClass('d-none');
-			$('#student-photo').removeClass('opacity-25').addClass('opacity-100')
-		})
-		$("#photo").change(function(e) {
-			var file = e.target.files[0];
-			if (!file) {
-				return;
-			}
-			var reader = new FileReader();
-			reader.onload = function(event) {
-				$("#photo-preview").attr("src", event.target.result);
-				$('#img-preview').val(event.target.result);
-				$("#photo-preview").removeClass("d-none");
-				$('#btn-upload-photo').addClass('d-none');
-				$('#btn-remove-photo').removeClass('d-none');
-				$('#student-photo').removeClass('opacity-100').addClass('opacity-25')
-			};
-			reader.readAsDataURL(file);
-		});
+            let video = document.getElementById('webcam');
+            let canvas = document.getElementById('canvas');
+            let context = canvas.getContext('2d');
+            let imgPreview = $('#photo-preview');
+            let imgInput = $('#img-preview');
+            let cameraModal = $('#camera-modal');
 
-		//hide show image preview
-		if ($("#photo-preview").attr("src")) {
-			$('#btn-upload-photo').addClass('d-none');
-			$('#btn-remove-photo').removeClass('d-none');
-		} else {
-			$('#btn-upload-photo').removeClass('d-none');
-			$('#btn-remove-photo').addClass('d-none');
-			$("#photo-preview").addClass('d-none');
-		}  
+
+            // Open Camera
+            $('#open-camera-btn').on('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                cameraModal.removeClass('d-none'); // Show modal
+                if (navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({
+                            video: true
+                        })
+                        .then(function(stream) {
+                            video.srcObject = stream;
+                        })
+                        .catch(function(error) {
+                            alert('Unable to access camera: ' + error);
+                        });
+                }
+            });
+            $('#btn-remove-photo').on('click', function() {
+                $("#photo").val('');
+                $('#img-preview').val('');
+                $("#photo-preview").removeAttr('src').addClass('d-none');
+                $('#btn-remove-photo').addClass('d-none');
+                $('#btn-upload-photo').removeClass('d-none');
+                $('#student-photo').removeClass('opacity-25').addClass('opacity-100')
+            })
+            // Capture Photo
+            $('#capture-btn').on('click', function(e) {
+                e.preventDefault();
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                let imageData = canvas.toDataURL('image/png'); // Convert to base64
+                imgPreview.attr('src', imageData).removeClass('d-none'); // Show captured photo
+                imgInput.val(imageData); // Store image data in hidden input
+
+                stopCamera();
+                $('#btn-upload-photo').addClass('d-none');
+                $('#btn-remove-photo').removeClass('d-none');
+                cameraModal.addClass('d-none'); // Hide modal
+            });
+
+            // When submitting the form, ensure base64 image data is included
+            $('#entryForm').on('submit', function(e) {
+                let imageData = $('#img-preview').val();
+                if (imageData) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'photo_base64',
+                        value: imageData
+                    }).appendTo(this);
+                }
+            });
+
+            // Close Camera
+            $('#close-camera-btn').on('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                stopCamera();
+                cameraModal.addClass('d-none'); // Hide modal
+            });
+
+            // Stop Camera Function
+            function stopCamera() {
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                video.srcObject = null;
+            }
+            //hide show image preview
+
+            if ($("#photo-preview").attr("src")) {
+                $('#btn-upload-photo').addClass('d-none');
+                $('#btn-remove-photo').removeClass('d-none');
+            } else {
+                $('#btn-upload-photo').removeClass('d-none');
+                $('#btn-remove-photo').addClass('d-none');
+                $("#photo-preview").addClass('d-none');
+            }
         });
     </script>    
 @endsection

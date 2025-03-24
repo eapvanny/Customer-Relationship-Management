@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Str;
 
 use function Laravel\Prompts\error;
 
@@ -226,6 +227,37 @@ class ReportController extends Controller
     }
 
     public function store(Request $request)
+{
+    $rules = [
+        'area' => 'required',
+        'outlet' => 'required',
+        'latitude' => 'required|numeric',
+        'longitude' => 'required|numeric',
+        'city' => 'required|string',
+        'country' => 'required|string',
+        'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+        'photo_base64' => 'nullable|string'
+    ];
+
+    $this->validate($request, $rules);
+
+    $data = $request->except(['photo', 'photo_base64']);
+    $data['photo'] = null;
+
+    // Handle file upload if exists
+    if ($request->hasFile('photo')) {
+        $file = $request->file('photo');
+        $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+        $filePath = 'uploads/' . $fileName;
+        Storage::put($filePath, file_get_contents($file));
+        $data['photo'] = $filePath;
+    }
+
+    // Handle base64 image if provided
+    if ($request->photo_base64) {
+        $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
+        $image = str_replace(' ', '+', $image);
+        $imageData = base64_decode($image);
     {
         $rules = [
             'area' => 'required',
@@ -273,21 +305,17 @@ class ReportController extends Controller
 
         $managerId = auth()->user()->manager_id;
 
-        $notificationUsers = $adminUsers;
+        $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
+        Storage::put($fileName, $imageData);
 
-        if ($managerId) {
-            $notificationUsers[] = $managerId;
-        }
-
-        // Remove duplicate user IDs (if any)
-        $notificationUsers = array_unique($notificationUsers);
-
-        event(new ReportRequest(
-            __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
-            $notificationUsers
-        ));
-        return redirect()->route('report.index')->with('success', "Report has been created!");
+        $data['photo'] = $fileName;
     }
+
+    // Store report data
+    Report::create(array_merge($data, ['user_id' => auth()->id(), 'date' => now()]));
+
+    return redirect()->route('report.index')->with('success', "Report has been created!");
+}
 
     public function edit($id)
     {
