@@ -16,6 +16,8 @@ use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
+use function Laravel\Prompts\error;
+
 class ReportController extends Controller
 {
     public function __construct()
@@ -91,6 +93,14 @@ class ReportController extends Controller
                 ->addColumn('outlet', function ($data) {
                     return __($data->outlet);
                 })
+                ->addColumn('customer', function ($data) {
+                    return __($data->customer);
+                })
+
+                ->addColumn('customer_type', function ($data) {
+                    return __($data->customer_type);
+                })
+
                 ->addColumn('250ml', function ($data) {
                     return __($data->{"250_ml"}) ?? 'N/A';
                 })
@@ -103,6 +113,18 @@ class ReportController extends Controller
                 ->addColumn('1500ml', function ($data) {
                     return __($data->{"1500_ml"}) ?? 'N/A';
                 })
+
+                ->addColumn('phone', function ($data) {
+                    return __($data->{"phone"}) ?? 'N/A';
+                })
+
+                ->addColumn('latitude', function ($data) {
+                    return __($data->latitude) ?? 'N/A';
+                })
+                ->addColumn('longitude', function ($data) {
+                    return __($data->longitude) ?? 'N/A';
+                })
+                
                 ->addColumn('location', function ($data) {
                     return __($data->city . ',' . $data->country) ?? 'N/A';
                 })
@@ -187,12 +209,15 @@ class ReportController extends Controller
                 'staff_id_card' => $user->staff_id_card ?? 'N/A',
                 'area' => $report->area,
                 'outlet' => $report->outlet,
+                'customer' => $report->customer,
+                'customer_type' => $report->customer_type,
                 'date' => $report->date,
                 'other' => $report->other ?? 'N/A',
                 '250_ml' => $report->{'250_ml'},
                 '350_ml' => $report->{'350_ml'},
                 '600_ml' => $report->{'600_ml'},
                 '1500_ml' => $report->{'1500_ml'},
+                'phone' => $report->{'phone'},
                 'city' => $report->city,
                 'posm' => $posm,
                 'qty' => $report->qty,
@@ -205,31 +230,32 @@ class ReportController extends Controller
         $rules = [
             'area' => 'required',
             'outlet' => 'required',
+            'customer' => 'required',
+            'customer_type' => 'required',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
             'country' => 'required|string',
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'phone' => 'nullable',
         ];
+
         $this->validate($request, $rules);
+
         $data['photo'] = null;
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'uploads/' . $fileName;
-            Storage::put($filePath, file_get_contents($file));
-            $data['photo'] = $filePath;
-        }
-        // dd($request->all());
+
         Report::create([
             'user_id' => auth()->id(),
             'area' => $request->area,
             'outlet' => $request->outlet,
+            'customer' => $request->customer,
+            'customer_type' => $request->customer_type,
             'date' => Carbon::now('Asia/Phnom_Penh'),
             '250_ml' => $request['250_ml'],
             '350_ml' => $request['350_ml'],
             '600_ml' => $request['600_ml'],
             '1500_ml' => $request['1500_ml'],
+            'phone' => $request['phone'],
             'other' => $request->other,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
@@ -283,21 +309,29 @@ class ReportController extends Controller
         $rules = [
             'area' => 'required',
             'outlet' => 'required',
+            'customer' => 'required',
+            'customer_type' => 'required',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
             'country' => 'required|string',
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'phone' => 'nullable',
         ];
+        // dd($request->input());
+
         $this->validate($request, $rules);
         $data = [
             'area' => $request->area,
             'outlet' => $request->outlet,
+            'customer' => $request->customer,
+            'customer_type' => $request->customer_type,
             'date' => Carbon::now('Asia/Phnom_Penh'),
             '250_ml' => $request->input('250_ml'),
             '350_ml' => $request->input('350_ml'),
             '600_ml' => $request->input('600_ml'),
             '1500_ml' => $request->input('1500_ml'),
+            'phone' => $request->input('phone'),
             'other' => $request->other,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
@@ -320,6 +354,8 @@ class ReportController extends Controller
 
         return redirect()->route('report.index')->with('success', "Report has been updated!");
     }
+
+
 
 
     public function destroy($id)

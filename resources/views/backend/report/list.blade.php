@@ -457,10 +457,13 @@
                                             <th> {{ __('Name') }} </th>
                                             <th> {{ __('Area') }} </th>
                                             <th> {{ __('Outlet') }} </th>
+                                            <th> {{ __('Customer') }} </th>
+                                            <th> {{ __('Customer Type') }} </th>
                                             <th> {{ __('250ml') }} </th>
                                             <th> {{ __('350ml') }} </th>
                                             <th> {{ __('600ml') }} </th>
                                             <th> {{ __('1500ml') }} </th>
+                                            <th> {{ __('Phone number') }} </th>
                                             <th> {{ __('Other') }} </th>
                                             <th> {{ __('Material Type') }} </th>
                                             <th> {{ __('Qty') }} </th>
@@ -613,6 +616,14 @@
                         name: 'outlet'
                     },
                     {
+                        data: 'customer',
+                        name: 'customer'
+                    },
+                    {
+                        data: 'customer_type',
+                        name: 'customer_type'
+                    },
+                    {
                         data: '250ml',
                         name: '250ml'
                     },
@@ -627,6 +638,10 @@
                     {
                         data: '1500ml',
                         name: '1500ml'
+                    },
+                    {
+                        data: 'phone',
+                        name: 'phone'
                     },
                     {
                         data: 'other',

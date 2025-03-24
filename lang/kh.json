@@ -139,5 +139,9 @@
     "A new Request has been created by": "សំណើថ្មីត្រូវបានបង្កើតឡើងដោយ",
     "From Date": "កាលបរិច្ឆេទចាប់ពី",
     "To Date": "ដល់កាលបរិច្ឆេទ",
-    "Female": "ស្រី"
+    "Female": "ស្រី",
+    "Customer": "អតិថិជន",
+    "Customer Type": "ប្រភេទអតិថិជន",
+    "Select customer type": "ជ្រើសរើសប្រភេទអតិថិជន",
+    "Phone number": "លេខទូរស័ព្ទ"
 }

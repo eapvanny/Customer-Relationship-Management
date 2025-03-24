@@ -156,6 +156,7 @@
         .fly_action_btn {
             z-index: 2;
         }
+        
     </style>
 @endsection
 
@@ -235,6 +236,58 @@
                                 <span class="text-danger">{{ $errors->first('outlet') }}</span>
                             </div>
                         </div>
+
+                        <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="customer"> {{ __('Customer') }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="customer" name="customer" placeholder="{{ __('Customer') }}"
+                                    value="@if ($report) {{ $report->customer }}@else{{ old('customer') }} @endif"
+                                    required>
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('customer') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="customer_type"> {{ __('Customer Type') }} <span class="text-danger">*</span>
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select customer type"></i>
+                                </label>
+                                <select name="customer_type" id="customer_type" class="form-control select2">
+                                    <option selected disabled>{{__('Select customer type')}}</option>
+                                    <option value="test1" 
+                                        @if ($report)
+                                            @if ($report->customer_type == 'test1')
+                                                selected
+                                            @endif
+                                        @endif
+                                    >Test1</option>
+                                    <option value="test2" 
+                                        @if ($report)
+                                            @if ($report->customer_type == 'test2')
+                                                selected
+                                            @endif
+                                        @endif
+                                    >Test2</option>
+                                </select>
+                                {{-- {!! Form::select('customer_type', 
+                                [
+                                    AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
+                                    AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
+                                    AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
+                                    AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
+                                ], old('customer_type', optional($report)->customer_type), [
+                                    'placeholder' => __('Select customer type'),
+                                    'id' => 'customer_type',
+                                    'name' => 'customer_type',
+                                    'class' => 'form-control select2',
+                                ]) !!} --}}
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('department_id') }}</span>
+                            </div>
+                        </div>
+
+                        {{-- -------------------------- --}}
+
                         <div class="col-lg-6 col-md-6 col-xl-6 d-none">
                             <div class="form-group has-feedback">
                                 <label for="date"> {{ __('Date') }}</label>
@@ -272,6 +325,13 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
+                                <label for="phone"> {{ __('Phone number') }}</label>
+                                <input type="tel" class="form-control" name="phone" placeholder="{{ __('Phone number') }}"
+                                    value="@if ($report) {{ $report->phone }}@else{{ old('phone') }} @endif">
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
                                 <label for="other"> {{ __('Other') }}</label>
                                 <input type="text" class="form-control" name="other" placeholder="other"
                                     value="@if ($report) {{ $report->other }}@else{{ old('other') }} @endif">
@@ -283,28 +343,35 @@
                                 <div class="form-group has-feedback">
                                     <div class="row">
                                         <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
+                                            
                                             <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo" name="photo" style="display: none" accept="image/*">
+                                                <input type="hidden" id="btn-upload-photo" name="photo" style="display: none">
                                                 <button type="button" class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1" id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
-                                                <fieldset id="photo-upload" class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                <fieldset class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
                                                     <img class="rounded mx-auto d-block @if(!old('oldphoto') && !old('img-preview') && !isset($report)){{'d-none'}}@endif z-1" id="photo-preview" name="oldphoto" src="@if(optional($report)->photo){{asset('storage/' . $report->photo)}}@else{{old('oldphoto')}}@endif" alt="photo">
+                                                    
                                                     <input type="hidden" id="img-preview" name="oldphoto" value="@if(optional($report)->photo){{asset($report->photo)}}@endif">
                                                     <div class="d-flex align-items-center justify-content-center bg-transparent z-2  @if(!old('img-preview')){{'opacity-100'}} @else {{'opacity-25'}}@endif" id="student-photo">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo" type="button" onclick="" >
+                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo" type="button" onclick="showCamera()" >
                                                             <i class="fa-solid fa-camera-retro"></i>
                                                         </button>
+                                                        
                                                     </div>
                                                     <label class="position-absolute bottom-0 text-center w-100 mb-2" for="photo">
                                                         {{__('Photo Attachment only accept jpg, png, jpeg images')}}
                                                     </label>
                                                 </fieldset>
                                             </div>
+
+                                            
+
+
                                         </div>
                                         <div class="col-md-6">
                                             <div class="row">
                                                 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('Material Type') }}
+                                                        <label for="posm"> {{ __('POSM') }}
                                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select POSM"></i>
                                                         </label>
                                                         {!! Form::select('posm', 
@@ -561,5 +628,5 @@
 			$("#photo-preview").addClass('d-none');
 		}  
         });
-    </script>
+    </script>    
 @endsection

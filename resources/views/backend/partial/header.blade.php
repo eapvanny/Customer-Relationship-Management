@@ -3,6 +3,7 @@
     use Illuminate\Support\Facades\Auth;
     use App\Http\Helpers\AppHelper;
     use App\Models\Report;
+    use App\Models\User;
     $authUser = Auth::user();
     $photoPath = $authUser->photo ? asset('storage/' . $authUser->photo) : asset('images/avatar.png');
 @endphp
@@ -173,9 +174,8 @@
                             <li>
                                 <a class="dropdown-item" href="#">{{ __('No mail available.') }}</a>
                             </li>
-
                         </ul>
-                    </div> --}}
+                    </div>  --}}
                     <!-- Notifications -->
                     <div class="dropdown mx-2">
                         <?php

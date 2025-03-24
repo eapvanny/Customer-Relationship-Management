@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('reports', function (Blueprint $table) {
             $table->unsignedBigInteger('qty')->nullable()->after('other');
             $table->unsignedBigInteger('posm')->nullable()->after('qty');
-            $table->string('photo')->nullable()->after('posm');
+            $table->longText('photo')->nullable()->after('posm');
         });
     }
 
