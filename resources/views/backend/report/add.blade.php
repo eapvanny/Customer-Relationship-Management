@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                        margin-bottom: 0px;
-                    }
+                                    margin-bottom: 0px;
+                                }
 
-                    fieldset .iradio .error,
-                    fieldset .icheck .error {
-                        display: none !important;
-                    }
+                                fieldset .iradio .error,
+                                fieldset .icheck .error {
+                                    display: none !important;
+                                }
 
-                    @media (max-width: 600px) {
-                        .display-flex {
-                            display: inline-flex;
-                        }
-                    } */
+                                @media (max-width: 600px) {
+                                    .display-flex {
+                                        display: inline-flex;
+                                    }
+                                } */
 
         .checkbox,
         .radio {
@@ -164,7 +164,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -176,18 +176,150 @@
             flex-direction: column;
             align-items: center;
             position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 90vw;
+            max-height: 70vh;
+            margin: auto;
         }
 
         video {
-            width: 90vw;
-            height: auto;
-            max-height: 70vh;
-            border: 5px solid white;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             border-radius: 10px;
         }
+      
 
-        button {
-            margin-top: 10px;
+        /* Camera overlay for a realistic look */
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .overlay-top,
+        .overlay-bottom,
+        .overlay-left,
+        .overlay-right {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .overlay-top {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+        }
+
+        .overlay-bottom {
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+        }
+
+        .overlay-left {
+            top: 0;
+            left: 0;
+            width: 10%;
+            height: 100%;
+        }
+
+        .overlay-right {
+            top: 0;
+            right: 0;
+            width: 10%;
+            height: 100%;
+        }
+
+        .focus-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.5;
+        }
+
+        .switch-camera-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .switch-camera-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .camera-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .capture-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            transition: transform 0.1s;
+        }
+
+        .capture-btn:active {
+            transform: scale(0.95);
+        }
+
+        .close-camera-btn {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .close-camera-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
         }
     </style>
 @endsection
@@ -276,7 +408,8 @@
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="customer"> {{ __('Customer') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="customer" name="customer" placeholder="{{ __('Customer') }}"
+                                <input type="text" class="form-control" id="customer" name="customer"
+                                    placeholder="{{ __('Customer') }}"
                                     value="@if ($report) {{ $report->customer }}@else{{ old('customer') }} @endif"
                                     required>
                                 <span class="fa fa-info form-control-feedback"></span>
@@ -286,24 +419,21 @@
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="customer_type"> {{ __('Customer Type') }} <span class="text-danger">*</span>
-                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select customer type"></i>
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                        title="Select customer type"></i>
                                 </label>
                                 <select name="customer_type" id="customer_type" class="form-control select2">
-                                    <option selected disabled>{{__('Select customer type')}}</option>
-                                    <option value="test1" 
-                                        @if ($report)
-                                            @if ($report->customer_type == 'test1')
-                                                selected
-                                            @endif
+                                    <option selected disabled>{{ __('Select customer type') }}</option>
+                                    <option value="test1"
+                                        @if ($report) @if ($report->customer_type == 'test1')
+                                                selected @endif
                                         @endif
-                                    >Test1</option>
-                                    <option value="test2" 
-                                        @if ($report)
-                                            @if ($report->customer_type == 'test2')
-                                                selected
-                                            @endif
+                                        >Test1</option>
+                                    <option value="test2"
+                                        @if ($report) @if ($report->customer_type == 'test2')
+                                                selected @endif
                                         @endif
-                                    >Test2</option>
+                                        >Test2</option>
                                 </select>
                                 {{-- {!! Form::select('customer_type', 
                                 [
@@ -362,7 +492,8 @@
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="phone"> {{ __('Phone number') }}</label>
-                                <input type="tel" class="form-control" name="phone" placeholder="{{ __('Phone number') }}"
+                                <input type="tel" class="form-control" name="phone"
+                                    placeholder="{{ __('Phone number') }}"
                                     value="@if ($report) {{ $report->phone }}@else{{ old('phone') }} @endif">
                             </div>
                         </div>
@@ -379,13 +510,14 @@
                                 <div class="form-group has-feedback">
                                     <div class="row">
                                         <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
-                                            
                                             <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo" name="photo" style="display: none"
-                                                    accept="image/*">
+                                                <input type="file" id="photo" name="photo"
+                                                    style="display: none" accept="image/*">
                                                 <button type="button"
                                                     class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
+                                                    id="btn-remove-photo">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
                                                 <fieldset id="photo-upload"
                                                     class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
                                                     <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
@@ -394,13 +526,12 @@
                                                         alt="photo">
                                                     <input type="hidden" id="img-preview" name="oldphoto"
                                                         value="@if (optional($report)->photo) {{ asset($report->photo) }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2  @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
                                                         id="open-camera-btn">
                                                         <button class="btn p-3 rounded-circle" id="btn-upload-photo"
                                                             type="button" onclick="">
                                                             <i class="fa-solid fa-camera-retro"></i>
                                                         </button>
-                                                        
                                                     </div>
                                                     <label class="position-absolute bottom-0 text-center w-100 mb-2">
                                                         {{ __('Click to open camera and capture photo') }}
@@ -409,22 +540,41 @@
                                             </div>
                                             <div id="camera-modal" class="camera-modal d-none">
                                                 <div class="camera-content">
-                                                    <video id="webcam" autoplay></video>
+                                                    <div class="video-container position-relative">
+                                                        <video id="webcam" autoplay></video>
+                                                        <!-- Camera overlay for a realistic look -->
+                                                        <div class="camera-overlay">
+                                                            <div class="overlay-top"></div>
+                                                            <div class="overlay-bottom"></div>
+                                                            <div class="overlay-left"></div>
+                                                            <div class="overlay-right"></div>
+                                                            <div class="focus-circle"></div>
+                                                        </div>
+                                                        <button id="switch-camera-btn" class="btn switch-camera-btn"
+                                                            type="button">
+                                                            <i class="fa-solid fa-camera-rotate"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="camera-controls">
+                                                        <button id="capture-btn" class="btn capture-btn" type="button">
+                                                            <i class="fa-solid fa-camera"></i>
+                                                        </button>
+                                                        <button id="close-camera-btn" class="btn close-camera-btn"
+                                                            type="button">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
                                                     <canvas id="canvas" class="d-none"></canvas>
-                                                    <button id="capture-btn" class="btn btn-success" type="button">📸
-                                                        Take Photo</button>
-                                                    <button id="close-camera-btn" class="btn btn-danger" type="button">❌
-                                                        Close Camera</button>
                                                 </div>
                                             </div>
-
                                         </div>
                                         <div class="col-md-6">
                                             <div class="row">
                                                 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
                                                         <label for="posm"> {{ __('POSM') }}
-                                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="Select POSM"></i>
+                                                            <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                data-placement="bottom" title="Select POSM"></i>
                                                         </label>
                                                         {!! Form::select(
                                                             'posm',
@@ -657,15 +807,19 @@
             let imgPreview = $('#photo-preview');
             let imgInput = $('#img-preview');
             let cameraModal = $('#camera-modal');
+            let currentFacingMode = 'user'; // Default to front camera
 
+            @if ($report && $report->photo)
+                $('#btn-upload-photo').addClass('d-none');
+                $('#btn-remove-photo').removeClass('d-none');
+            @endif
 
-            // Open Camera
-            $('#open-camera-btn').on('click', function(e) {
-                e.preventDefault(); // Prevent form submission
-                cameraModal.removeClass('d-none'); // Show modal
+            function startCamera(facingMode) {
                 if (navigator.mediaDevices.getUserMedia) {
                     navigator.mediaDevices.getUserMedia({
-                            video: true
+                            video: {
+                                facingMode: facingMode
+                            }
                         })
                         .then(function(stream) {
                             video.srcObject = stream;
@@ -674,37 +828,57 @@
                             alert('Unable to access camera: ' + error);
                         });
                 }
+            }
+
+            // Open Camera
+            $('#open-camera-btn').on('click', function(e) {
+                e.preventDefault();
+                cameraModal.removeClass('d-none');
+                startCamera(currentFacingMode);
             });
-            @if ($report && $report->photo)
-                $('#btn-upload-photo').addClass('d-none');                
-            @endif
-            $('#btn-remove-photo').on('click', function() {
-                $("#photo").val('');
-                $('#img-preview').val('');
-                $("#photo-preview").removeAttr('src').addClass('d-none');
-                $('#btn-remove-photo').addClass('d-none');
-                $('#btn-upload-photo').removeClass('d-none');
-                $('#student-photo').removeClass('opacity-25').addClass('opacity-100')
-            })
-            // Capture Photo
+
+            // Switch Camera
+            $('#switch-camera-btn').on('click', function() {
+                currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+                stopCamera();
+                startCamera(currentFacingMode);
+            });
+
             $('#capture-btn').on('click', function(e) {
                 e.preventDefault();
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                let imageData = canvas.toDataURL('image/png'); // Convert to base64
-                imgPreview.attr('src', imageData).removeClass('d-none'); // Show captured photo
-                imgInput.val(imageData); // Store image data in hidden input
-
+                let imageData = canvas.toDataURL('image/png');
+                imgPreview.attr('src', imageData).removeClass('d-none');
+                imgInput.val(imageData);
                 stopCamera();
                 $('#btn-upload-photo').addClass('d-none');
                 $('#btn-remove-photo').removeClass('d-none');
-                
-                cameraModal.addClass('d-none'); // Hide modal
+                cameraModal.addClass('d-none');
             });
 
-            // When submitting the form, ensure base64 image data is included
+            $('#btn-remove-photo').on('click', function() {
+                $('#photo').val('');
+                $('#img-preview').val('');
+                $('#photo-preview').removeAttr('src').addClass('d-none');
+                $('#btn-remove-photo').addClass('d-none');
+                $('#btn-upload-photo').removeClass('d-none');
+            });
+
+            $('#close-camera-btn').on('click', function(e) {
+                e.preventDefault();
+                stopCamera();
+                cameraModal.addClass('d-none');
+            });
+
+            function stopCamera() {
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                video.srcObject = null;
+            }
+
             $('#entryForm').on('submit', function(e) {
                 let imageData = $('#img-preview').val();
                 if (imageData) {
@@ -716,29 +890,6 @@
                 }
             });
 
-            // Close Camera
-            $('#close-camera-btn').on('click', function(e) {
-                e.preventDefault(); // Prevent form submission
-                stopCamera();
-                cameraModal.addClass('d-none'); // Hide modal
-            });
-
-            // Stop Camera Function
-            function stopCamera() {
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                }
-                video.srcObject = null;
-            }
-            //hide show image preview
-
-            if ($("#photo-preview").attr("src")) {
-                $('#btn-remove-photo').removeClass('d-none');
-            } else {
-                $('#btn-upload-photo').removeClass('d-none');
-                $('#btn-remove-photo').addClass('d-none');
-                $("#photo-preview").addClass('d-none');
-            }
         });
-    </script>    
+    </script>
 @endsection
