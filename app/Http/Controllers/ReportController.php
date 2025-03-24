@@ -125,7 +125,7 @@ class ReportController extends Controller
                 ->addColumn('longitude', function ($data) {
                     return __($data->longitude) ?? 'N/A';
                 })
-                
+
                 ->addColumn('location', function ($data) {
                     return __($data->city . ',' . $data->country) ?? 'N/A';
                 })
@@ -227,55 +227,48 @@ class ReportController extends Controller
     }
 
     public function store(Request $request)
-{
-    $rules = [
-        'area' => 'required',
-        'outlet' => 'required',
-        'latitude' => 'required|numeric',
-        'longitude' => 'required|numeric',
-        'city' => 'required|string',
-        'country' => 'required|string',
-        'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
-        'photo_base64' => 'nullable|string'
-    ];
-
-    $this->validate($request, $rules);
-
-    $data = $request->except(['photo', 'photo_base64']);
-    $data['photo'] = null;
-
-    // Handle file upload if exists
-    if ($request->hasFile('photo')) {
-        $file = $request->file('photo');
-        $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-        $filePath = 'uploads/' . $fileName;
-        Storage::put($filePath, file_get_contents($file));
-        $data['photo'] = $filePath;
-    }
-
-    // Handle base64 image if provided
-    if ($request->photo_base64) {
-        $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
-        $image = str_replace(' ', '+', $image);
-        $imageData = base64_decode($image);
     {
         $rules = [
             'area' => 'required',
             'outlet' => 'required',
-            'customer' => 'required',
-            'customer_type' => 'required',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
             'country' => 'required|string',
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'photo_base64' => 'nullable|string',
+            'customer' => 'required',
+            'customer_type' => 'required',
             'phone' => 'nullable',
         ];
 
         $this->validate($request, $rules);
 
+        $data = $request->except(['photo', 'photo_base64']);
         $data['photo'] = null;
 
+        // Handle file upload if exists
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+            $filePath = 'uploads/' . $fileName;
+            Storage::put($filePath, file_get_contents($file));
+            $data['photo'] = $filePath;
+        }
+
+        // Handle base64 image if provided
+        if ($request->photo_base64) {
+            $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
+            $image = str_replace(' ', '+', $image);
+            $imageData = base64_decode($image);
+
+            $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
+            Storage::put($fileName, $imageData);
+
+            $data['photo'] = $fileName;
+        }
+
+        // Store report data
         Report::create([
             'user_id' => auth()->id(),
             'area' => $request->area,
@@ -305,17 +298,21 @@ class ReportController extends Controller
 
         $managerId = auth()->user()->manager_id;
 
-        $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
-        Storage::put($fileName, $imageData);
+        $notificationUsers = $adminUsers;
 
-        $data['photo'] = $fileName;
+        if ($managerId) {
+            $notificationUsers[] = $managerId;
+        }
+
+        // Remove duplicate user IDs (if any)
+        $notificationUsers = array_unique($notificationUsers);
+
+        event(new ReportRequest(
+            __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
+            $notificationUsers
+        ));
+        return redirect()->route('report.index')->with('success', "Report has been created!");
     }
-
-    // Store report data
-    Report::create(array_merge($data, ['user_id' => auth()->id(), 'date' => now()]));
-
-    return redirect()->route('report.index')->with('success', "Report has been created!");
-}
 
     public function edit($id)
     {
@@ -344,11 +341,12 @@ class ReportController extends Controller
             'city' => 'required|string',
             'country' => 'required|string',
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'photo_base64' => 'nullable|string',
             'phone' => 'nullable',
         ];
-        // dd($request->input());
 
         $this->validate($request, $rules);
+
         $data = [
             'area' => $request->area,
             'outlet' => $request->outlet,
@@ -368,20 +366,30 @@ class ReportController extends Controller
             'qty' => $request->qty,
             'posm' => $request->posm,
         ];
-        if ($request->hasFile('photo')) {
+
+        // Handle base64 image if provided
+        if ($request->photo_base64) {
             if ($report->photo && Storage::exists($report->photo)) {
                 Storage::delete($report->photo);
             }
-            $filePath = $request->file('photo')->store('uploads', 'public');
-            $data['photo'] = $filePath;
+            $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
+            $image = str_replace(' ', '+', $image);
+            $imageData = base64_decode($image);
+
+            $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
+            Storage::put($fileName, $imageData);
+
+            $data['photo'] = $fileName;
         } else {
             $data['photo'] = $report->photo;
         }
 
+        // Update report
         $report->update($data);
 
         return redirect()->route('report.index')->with('success', "Report has been updated!");
     }
+
 
 
 

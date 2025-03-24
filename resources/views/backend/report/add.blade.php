@@ -675,6 +675,9 @@
                         });
                 }
             });
+            @if ($report && $report->photo)
+                $('#btn-upload-photo').addClass('d-none');                
+            @endif
             $('#btn-remove-photo').on('click', function() {
                 $("#photo").val('');
                 $('#img-preview').val('');
@@ -697,6 +700,7 @@
                 stopCamera();
                 $('#btn-upload-photo').addClass('d-none');
                 $('#btn-remove-photo').removeClass('d-none');
+                
                 cameraModal.addClass('d-none'); // Hide modal
             });
 
@@ -729,7 +733,6 @@
             //hide show image preview
 
             if ($("#photo-preview").attr("src")) {
-                $('#btn-upload-photo').addClass('d-none');
                 $('#btn-remove-photo').removeClass('d-none');
             } else {
                 $('#btn-upload-photo').removeClass('d-none');
