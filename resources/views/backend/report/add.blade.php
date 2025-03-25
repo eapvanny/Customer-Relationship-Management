@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                                    margin-bottom: 0px;
-                                }
+                                            margin-bottom: 0px;
+                                        }
 
-                                fieldset .iradio .error,
-                                fieldset .icheck .error {
-                                    display: none !important;
-                                }
+                                        fieldset .iradio .error,
+                                        fieldset .icheck .error {
+                                            display: none !important;
+                                        }
 
-                                @media (max-width: 600px) {
-                                    .display-flex {
-                                        display: inline-flex;
-                                    }
-                                } */
+                                        @media (max-width: 600px) {
+                                            .display-flex {
+                                                display: inline-flex;
+                                            }
+                                        } */
 
         .checkbox,
         .radio {
@@ -138,6 +138,12 @@
             width: 100%;
             height: 340px;
             background-color: #f5f5f5;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        fieldset>#open-camera-btn:hover {
+            background-color: #e0e0e0;
         }
 
         fieldset>#open-camera-btn>#btn-upload-photo {
@@ -145,6 +151,13 @@
             min-height: 100px;
             background-color: #ddd;
             font-size: 25px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        fieldset>#open-camera-btn>#btn-upload-photo:hover {
+            transform: scale(1.05);
         }
 
         fieldset>#photo-preview {
@@ -152,10 +165,8 @@
             width: 238px;
             position: absolute;
             object-fit: cover;
-        }
-
-        .fly_action_btn {
-            z-index: 2;
+            border-radius: 8px;
+            border: 2px solid #ddd;
         }
 
         .camera-modal {
@@ -175,7 +186,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
             width: 100%;
             height: 100%;
         }
@@ -185,19 +195,22 @@
             width: 100%;
             height: 100%;
             max-width: 90vw;
-            max-height: 70vh;
+            max-height: 80vh;
             margin: auto;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 10px;
+            border-radius: 12px;
+            background: #000;
         }
-      
 
-        /* Camera overlay for a realistic look */
+        /* Camera Overlay */
         .camera-overlay {
             position: absolute;
             top: 0;
@@ -212,34 +225,35 @@
         .overlay-left,
         .overlay-right {
             position: absolute;
-            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #fff;
+            background: rgba(54, 54, 54, 0.5);
         }
 
         .overlay-top {
             top: 0;
             left: 0;
             width: 100%;
-            height: 10%;
+            height: 15%;
         }
 
         .overlay-bottom {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 10%;
+            height: 15%;
         }
 
         .overlay-left {
             top: 0;
             left: 0;
-            width: 10%;
+            width: 15%;
             height: 100%;
         }
 
         .overlay-right {
             top: 0;
             right: 0;
-            width: 10%;
+            width: 15%;
             height: 100%;
         }
 
@@ -247,66 +261,48 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 60px;
-            height: 60px;
-            border: 2px solid #fff;
+            width: 80px;
+            height: 80px;
+            border: 3px solid #fff;
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            opacity: 0.5;
+            opacity: 0.7;
+            animation: pulse 1.5s infinite;
         }
 
-        .switch-camera-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: background-color 0.3s;
+        @keyframes pulse {
+            0% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
 
-        .switch-camera-btn:hover {
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-
+        /* Camera Controls */
         .camera-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
+            align-items: center;
             gap: 20px;
-            align-items: center;
+            /* Space between buttons */
         }
 
-        .capture-btn {
-            background-color: #ff4d4d;
-            color: white;
-            border: 3px solid white;
-            border-radius: 50%;
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            transition: transform 0.1s;
-        }
-
-        .capture-btn:active {
-            transform: scale(0.95);
-        }
-
-        .close-camera-btn {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
+        /* Switch Camera Button */
+        .switch-camera-btn {
+            background: linear-gradient(145deg, #ffffff, #e0e0e0);
+            color: #333;
             border: none;
             border-radius: 50%;
             width: 50px;
@@ -314,12 +310,74 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            transition: background-color 0.3s;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .switch-camera-btn:hover {
+            background: linear-gradient(145deg, #e0e0e0, #ffffff);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .switch-camera-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Capture Button */
+        .capture-btn {
+            background: linear-gradient(145deg, #ff4d4d, #e63939);
+            color: white;
+            border: 4px solid white;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .capture-btn:hover {
+            background: linear-gradient(145deg, #e63939, #ff4d4d);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .capture-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Close Camera Button */
+        .close-camera-btn {
+            background: linear-gradient(145deg, #ff4d4d, #e63939);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .close-camera-btn:hover {
-            background-color: rgba(0, 0, 0, 0.9);
+            background: linear-gradient(145deg, #e63939, #ff4d4d);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .close-camera-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
     </style>
 @endsection
@@ -529,7 +587,7 @@
                                                     <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
                                                         id="open-camera-btn">
                                                         <button class="btn p-3 rounded-circle" id="btn-upload-photo"
-                                                            type="button" onclick="">
+                                                            type="button">
                                                             <i class="fa-solid fa-camera-retro"></i>
                                                         </button>
                                                     </div>
@@ -550,12 +608,12 @@
                                                             <div class="overlay-right"></div>
                                                             <div class="focus-circle"></div>
                                                         </div>
+                                                    </div>
+                                                    <div class="camera-controls">
                                                         <button id="switch-camera-btn" class="btn switch-camera-btn"
                                                             type="button">
                                                             <i class="fa-solid fa-camera-rotate"></i>
                                                         </button>
-                                                    </div>
-                                                    <div class="camera-controls">
                                                         <button id="capture-btn" class="btn capture-btn" type="button">
                                                             <i class="fa-solid fa-camera"></i>
                                                         </button>
