@@ -504,7 +504,7 @@
                 <div class="modal-body img-popup">
                     <div class="row">
                         <div class="col-md-12 col-sm-12 col-lg-12 col-xl-4 mt-2">
-                            <img id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
+                            <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
                         </div>
                         <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
                             <div class="report-details">
