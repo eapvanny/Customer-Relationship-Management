@@ -101,7 +101,7 @@ class AuthController extends Controller
         $user->password = Hash::make('123456');
         $user->save();
 
-        return redirect()->back()->with('success', 'Password reset successfully.');
+        return redirect()->route('dashboard.index')->with('success', 'Password reset successfully.');
     }
 
 
