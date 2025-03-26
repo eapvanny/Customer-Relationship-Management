@@ -195,7 +195,7 @@
             width: 100%;
             height: 100%;
             max-width: 90vw;
-            max-height: 80vh;
+            max-height: 93.3vh;
             margin: auto;
             overflow: hidden;
             border-radius: 12px;
