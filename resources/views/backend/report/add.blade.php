@@ -630,7 +630,7 @@
                                                                 AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
                                                                 AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
                                                             ],
-                                                            old('posm', optional($report)->photo),
+                                                            old('posm', optional($report)->posm),
                                                             [
                                                                 'placeholder' => __('Select material type'),
                                                                 'id' => 'posm',
