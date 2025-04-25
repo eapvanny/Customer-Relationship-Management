@@ -9,21 +9,7 @@
 
 @section('extraStyle')
     <style>
-        /* fieldset .form-group {
-                                            margin-bottom: 0px;
-                                        }
-
-                                        fieldset .iradio .error,
-                                        fieldset .icheck .error {
-                                            display: none !important;
-                                        }
-
-                                        @media (max-width: 600px) {
-                                            .display-flex {
-                                                display: inline-flex;
-                                            }
-                                        } */
-
+        /* Existing Styles with iOS Fixes */
         .checkbox,
         .radio {
             display: inline-block;
@@ -68,7 +54,6 @@
             display: none;
         }
 
-        /* Add to existing extraStyle section */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -176,10 +161,15 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.95);
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .camera-modal.d-none {
+            display: none !important;
         }
 
         .camera-content {
@@ -195,7 +185,7 @@
             width: 100%;
             height: 100%;
             max-width: 90vw;
-            max-height: 93.3vh;
+            max-height: 90vh;
             margin: auto;
             overflow: hidden;
             border-radius: 12px;
@@ -208,9 +198,9 @@
             object-fit: cover;
             border-radius: 12px;
             background: #000;
+            -webkit-transform: translateZ(0);
         }
 
-        /* Camera Overlay */
         .camera-overlay {
             position: absolute;
             top: 0;
@@ -287,7 +277,6 @@
             }
         }
 
-        /* Camera Controls */
         .camera-controls {
             position: absolute;
             bottom: 30px;
@@ -296,10 +285,9 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            /* Space between buttons */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Switch Camera Button */
         .switch-camera-btn {
             background: linear-gradient(145deg, #ffffff, #e0e0e0);
             color: #333;
@@ -326,7 +314,6 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        /* Capture Button */
         .capture-btn {
             background: linear-gradient(145deg, #ff4d4d, #e63939);
             color: white;
@@ -353,7 +340,6 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        /* Close Camera Button */
         .close-camera-btn {
             background: linear-gradient(145deg, #ff4d4d, #e63939);
             color: #fff;
@@ -378,6 +364,22 @@
         .close-camera-btn:active {
             transform: translateY(1px);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* iOS-specific fixes */
+        fieldset#photo-upload {
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        #open-camera-btn {
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+
+        #btn-upload-photo {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 @endsection
@@ -493,24 +495,10 @@
                                         @endif
                                         >Test2</option>
                                 </select>
-                                {{-- {!! Form::select('customer_type', 
-                                [
-                                    AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                    AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                    AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                    AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
-                                ], old('customer_type', optional($report)->customer_type), [
-                                    'placeholder' => __('Select customer type'),
-                                    'id' => 'customer_type',
-                                    'name' => 'customer_type',
-                                    'class' => 'form-control select2',
-                                ]) !!} --}}
                                 <span class="form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('department_id') }}</span>
+                                <span class="text-danger">{{ $errors->first('customer_type') }}</span>
                             </div>
                         </div>
-
-                        {{-- -------------------------- --}}
 
                         <div class="col-lg-6 col-md-6 col-xl-6 d-none">
                             <div class="form-group has-feedback">
@@ -587,11 +575,12 @@
                                                     <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
                                                         id="open-camera-btn">
                                                         <button class="btn p-3 rounded-circle" id="btn-upload-photo"
-                                                            type="button">
+                                                            type="button" data-action="open-camera">
                                                             <i class="fa-solid fa-camera-retro"></i>
                                                         </button>
                                                     </div>
-                                                    <label class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                    <label id="camera-label"
+                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
                                                         {{ __('Click to open camera and capture photo') }}
                                                     </label>
                                                 </fieldset>
@@ -599,8 +588,7 @@
                                             <div id="camera-modal" class="camera-modal d-none">
                                                 <div class="camera-content">
                                                     <div class="video-container position-relative">
-                                                        <video id="webcam" autoplay></video>
-                                                        <!-- Camera overlay for a realistic look -->
+                                                        <video id="webcam" autoplay playsinline></video>
                                                         <div class="camera-overlay">
                                                             <div class="overlay-top"></div>
                                                             <div class="overlay-bottom"></div>
@@ -642,7 +630,7 @@
                                                                 AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
                                                                 AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
                                                             ],
-                                                            old('posm', optional($report)->posm),
+                                                            old('posm', optional($report)->photo),
                                                             [
                                                                 'placeholder' => __('Select material type'),
                                                                 'id' => 'posm',
@@ -651,8 +639,7 @@
                                                             ],
                                                         ) !!}
                                                         <span class="form-control-feedback"></span>
-                                                        <span
-                                                            class="text-danger">{{ $errors->first('department_id') }}</span>
+                                                        <span class="text-danger">{{ $errors->first('posm') }}</span>
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
@@ -733,7 +720,6 @@
 @endsection
 
 @section('extraScript')
-    {{-- <script src="{{asset('js/leaflet.js')}}"></script> --}}
     <script>
         let map;
         let marker;
@@ -741,7 +727,7 @@
         // Initialize map function
         function initMap(lat = 0, lng = 0) {
             if (map) {
-                map.remove(); // Remove existing map if any
+                map.remove();
             }
 
             map = L.map('map').setView([lat, lng], 15);
@@ -776,7 +762,7 @@
 
         document.getElementById('getLocationBtn').addEventListener('click', async function() {
             if (navigator.geolocation) {
-                showLoading(); // Show loading when starting
+                showLoading();
 
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
@@ -801,13 +787,11 @@
                                     .filter(location => location !== 'Unknown')
                                     .join(', ') || 'Unknown';
 
-                                // Populate form fields
                                 document.getElementById('latitude').value = lat;
                                 document.getElementById('longitude').value = lon;
                                 document.getElementById('city').value = city;
                                 document.getElementById('country').value = country;
 
-                                // Update map with new coordinates
                                 updateMap(lat, lon);
 
                                 console.log(`Country: ${country}, Province: ${province}, City: ${city}`);
@@ -815,11 +799,11 @@
                                 alert('Failed to fetch location details. Please try again.');
                                 console.error(error);
                             } finally {
-                                hideLoading(); // Hide loading when done
+                                hideLoading();
                             }
                         },
                         (error) => {
-                            hideLoading(); // Hide loading on error
+                            hideLoading();
                             switch (error.code) {
                                 case error.PERMISSION_DENIED:
                                     alert('User denied the request for Geolocation.');
@@ -846,13 +830,11 @@
             }
         });
 
-        // Initialize map with default coordinates if report exists
         @if ($report && $report->latitude && $report->longitude)
             window.onload = function() {
                 initMap({{ $report->latitude }}, {{ $report->longitude }});
             }
         @else
-            // Initialize with a default location (e.g., center of the world)
             window.onload = function() {
                 initMap(0, 0);
             }
@@ -865,7 +847,20 @@
             let imgPreview = $('#photo-preview');
             let imgInput = $('#img-preview');
             let cameraModal = $('#camera-modal');
-            let currentFacingMode = 'user'; // Default to front camera
+            let cameraLabel = $('#camera-label');
+            let currentFacingMode = 'user';
+
+            // Function to update camera label based on photo presence
+            function updateCameraLabel() {
+                if (imgPreview.hasClass('d-none')) {
+                    cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
+                } else {
+                    cameraLabel.text('{{ __('Delete the old photo before you can open the camera') }}');
+                }
+            }
+
+            // Initialize label on page load
+            updateCameraLabel();
 
             @if ($report && $report->photo)
                 $('#btn-upload-photo').addClass('d-none');
@@ -873,29 +868,45 @@
             @endif
 
             function startCamera(facingMode) {
-                if (navigator.mediaDevices.getUserMedia) {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    video.setAttribute('playsinline', 'true');
+                    video.setAttribute('autoplay', 'true');
+
                     navigator.mediaDevices.getUserMedia({
                             video: {
-                                facingMode: facingMode
+                                facingMode: facingMode,
+                                width: {
+                                    ideal: 1280
+                                },
+                                height: {
+                                    ideal: 720
+                                }
                             }
                         })
                         .then(function(stream) {
                             video.srcObject = stream;
+                            video.play();
                         })
                         .catch(function(error) {
-                            alert('Unable to access camera: ' + error);
+                            alert('Unable to access camera: ' + error.message);
+                            console.error('Camera error:', error);
+                            cameraModal.addClass('d-none');
+                            $('#photo').click();
                         });
+                } else {
+                    alert('Camera not supported on this device.');
+                    $('#photo').click();
                 }
             }
 
-            // Open Camera
-            $('#open-camera-btn').on('click', function(e) {
+            // Use click event only, targeting the button specifically
+            $('[data-action="open-camera"]').on('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 cameraModal.removeClass('d-none');
                 startCamera(currentFacingMode);
             });
 
-            // Switch Camera
             $('#switch-camera-btn').on('click', function() {
                 currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
                 stopCamera();
@@ -914,6 +925,7 @@
                 $('#btn-upload-photo').addClass('d-none');
                 $('#btn-remove-photo').removeClass('d-none');
                 cameraModal.addClass('d-none');
+                updateCameraLabel(); // Update label after capturing photo
             });
 
             $('#btn-remove-photo').on('click', function() {
@@ -922,12 +934,28 @@
                 $('#photo-preview').removeAttr('src').addClass('d-none');
                 $('#btn-remove-photo').addClass('d-none');
                 $('#btn-upload-photo').removeClass('d-none');
+                updateCameraLabel(); // Update label after removing photo
             });
 
             $('#close-camera-btn').on('click', function(e) {
                 e.preventDefault();
                 stopCamera();
                 cameraModal.addClass('d-none');
+            });
+
+            $('#photo').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imgPreview.attr('src', e.target.result).removeClass('d-none');
+                        imgInput.val(e.target.result);
+                        $('#btn-upload-photo').addClass('d-none');
+                        $('#btn-remove-photo').removeClass('d-none');
+                        updateCameraLabel(); // Update label after uploading photo
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
 
             function stopCamera() {
@@ -947,7 +975,6 @@
                     }).appendTo(this);
                 }
             });
-
         });
     </script>
 @endsection
