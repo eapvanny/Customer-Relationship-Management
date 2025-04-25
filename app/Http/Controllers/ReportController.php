@@ -451,4 +451,32 @@ class ReportController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function getCustomerByOutlet(Request $request)
+    {
+        $outlet = $request->query('outlet');
+
+        $report = Report::where('outlet', $outlet)->orderBy('created_at', 'desc')->first();
+
+        if ($report) {
+            return response()->json([
+                'success' => true,
+                'area' => $report->area ?? '',
+                'customer' => $report->customer ?? '',
+                'customer_type' => $report->customer_type ?? '',
+                '250_ml' => $report->getAttribute('250_ml') ?? '',
+                '350_ml' => $report->getAttribute('350_ml') ?? '',
+                '600_ml' => $report->getAttribute('600_ml') ?? '',
+                '1500_ml' => $report->getAttribute('1500_ml') ?? '',
+                'phone' => $report->phone ?? '',
+                'other' => $report->other ?? '',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No matching outlet found.',
+        ]);
+    }
+
 }

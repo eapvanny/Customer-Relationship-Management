@@ -444,18 +444,8 @@
                     <div class="row">
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="area" placeholder="name"
-                                    value="@if ($report) {{ $report->area }}@else{{ old('area') }} @endif"
-                                    required>
-                                <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('area') }}</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
                                 <label for="outlet"> {{ __('Outlet') }} <span class="text-danger">*</span></label>
-                                <textarea name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
+                                <textarea id="outlet" name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
 @if ($report)
 {{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}
 @endif
@@ -464,7 +454,16 @@
                                 <span class="text-danger">{{ $errors->first('outlet') }}</span>
                             </div>
                         </div>
-
+                        <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="area" placeholder="name"
+                                    value="@if ($report) {{ $report->area }}@else{{ old('area') }} @endif"
+                                    required>
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('area') }}</span>
+                            </div>
+                        </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="customer"> {{ __('Customer') }} <span class="text-danger">*</span></label>
@@ -976,5 +975,66 @@
                 }
             });
         });
+
+        $('#outlet').on('input', function() {
+            let outletValue = $(this).val().trim();
+
+            if (outletValue.length > 0) {
+                $.ajax({
+                    url: '{{ route("report.getCustomerByOutlet") }}', // Make sure this route exists
+                    method: 'GET',
+                    data: { outlet: outletValue },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            $('input[name="area"]').val(response['area'] || '');
+                            $('#customer').val(response.customer || '');
+                            $('#customer_type').val(response.customer_type).trigger('change');
+
+                            $('input[name="250_ml"]').val(response['250_ml'] || '');
+                            $('input[name="350_ml"]').val(response['350_ml'] || '');
+                            $('input[name="600_ml"]').val(response['600_ml'] || '');
+                            $('input[name="1500_ml"]').val(response['1500_ml'] || '');
+                            $('input[name="phone"]').val(response.phone || '');
+                            $('input[name="other"]').val(response.other || '');
+                        } else {
+                            $('input[name="area"]').val('');
+                            $('#customer').val('');
+                            $('#customer_type').val('Select customer type').trigger('change');
+                            $('input[name="250_ml"]').val('');
+                            $('input[name="350_ml"]').val('');
+                            $('input[name="600_ml"]').val('');
+                            $('input[name="1500_ml"]').val('');
+                            $('input[name="phone"]').val('');
+                            $('input[name="other"]').val('');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching customer data:', error);
+                        $('input[name="area"]').val('');
+                        $('#customer').val('');
+                        $('#customer_type').val('Select customer type').trigger('change');
+                        $('input[name="250_ml"]').val('');
+                        $('input[name="350_ml"]').val('');
+                        $('input[name="600_ml"]').val('');
+                        $('input[name="1500_ml"]').val('');
+                        $('input[name="phone"]').val('');
+                        $('input[name="other"]').val('');
+                    }
+                });
+            } else {
+                $('input[name="area"]').val('');
+                $('#customer').val('');
+                $('#customer_type').val('Select customer type').trigger('change');
+                $('input[name="250_ml"]').val('');
+                $('input[name="350_ml"]').val('');
+                $('input[name="600_ml"]').val('');
+                $('input[name="1500_ml"]').val('');
+                $('input[name="phone"]').val('');
+                $('input[name="other"]').val('');
+            }
+        });
+
+
     </script>
 @endsection

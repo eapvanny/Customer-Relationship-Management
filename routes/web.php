@@ -30,7 +30,7 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('user.login');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-
+Route::get('/get-customer-by-outlet', [ReportController::class, 'getCustomerByOutlet'])->name('report.getCustomerByOutlet');
 
 Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/forget-password/{id}', [AuthController::class, 'forgetPassword'])->name('forget.password');
