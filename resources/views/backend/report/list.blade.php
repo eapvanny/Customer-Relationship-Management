@@ -463,7 +463,7 @@
                                             <th> {{ __('350ml') }} </th>
                                             <th> {{ __('600ml') }} </th>
                                             <th> {{ __('1500ml') }} </th>
-                                            <th> {{ __('Phone number') }} </th>
+                                            <th> {{ __('Phone Number') }} </th>
                                             <th> {{ __('Other') }} </th>
                                             <th> {{ __('Material Type') }} </th>
                                             <th> {{ __('Qty') }} </th>
