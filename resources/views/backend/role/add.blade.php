@@ -1,16 +1,12 @@
-<!-- Master page  -->
 @extends('backend.layouts.master')
 
-<!-- Page title -->
 @section('pageTitle')
-    Tickets
+    Roles
 @endsection
-<!-- End block -->
 
-<!-- Page body extra class -->
 @section('bodyCssClass')
 @endsection
-<!-- End block -->
+
 @section('extraStyle')
     <style>
         fieldset .form-group {
@@ -67,16 +63,16 @@
         }
     </style>
 @endsection
+
 @php
     use App\Http\Helpers\AppHelper;
 @endphp
-<!-- BEGIN PAGE CONTENT-->
+
 @section('pageContent')
-    <!-- Section header -->
     <section class="content-header">
         <ol class="breadcrumb">
-            <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li><a href="{{ URL::route('role.index') }}"> {{ __('Role') }} </a></li>
+            <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }}</a></li>
+            <li><a href="{{ URL::route('role.index') }}">{{ __('Role') }}</a></li>
             <li class="active">
                 @if ($role)
                     {{ __('Update') }}
@@ -86,12 +82,10 @@
             </li>
         </ol>
     </section>
-    <!-- ./Section header -->
-    <!-- Main content -->
-    <section class="content">
 
+    <section class="content">
         <form novalidate id="entryForm"
-            action="@if ($role) {{ URL::Route('role.update', $role->id) }} @else {{ URL::Route('role.store') }} @endif"
+            action="@if ($role) {{ URL::route('role.update', $role->id) }} @else {{ URL::route('role.store') }} @endif"
             method="post" enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
@@ -129,44 +123,60 @@
                         @method('PUT')
                     @endif
                     <div class="row">
-                        {{-- <div class="col-md-4">
-                            <div class="form-group has-feedback">
-                                <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>
-                                <input autofocus type="text" class="form-control" name="name" placeholder="name"
-                                    value="@if ($role) {{ $role->name }}@else{{ old('name') }} @endif"
-                                    required minlength="2" maxlength="25">
-                                <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('name') }}</span>
-                            </div>
-                        </div> --}}
                         <div class="col-md-4">
                             <div class="form-group has-feedback">
-                                <label for="role_id"> {{ __('Role') }}
+                                <label for="role_id">{{ __('Role') }}
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
                                         title="{{ __('Set a user role') }}"></i>
                                     <span class="text-danger">*</span>@if ($role)
-                                    <span class="text-danger">{{ __('(Role can not be changed)') }}</span>
-                                @endif
+                                        <span class="text-danger">{{ __('(Role cannot be changed)') }}</span>
+                                    @endif
                                 </label>
                                 {!! Form::select('role_id', $all_role, old('role_id', $role ? $role->id : null), array_merge([
                                     'placeholder' => __('Select Role'),
                                     'class' => 'form-control select2',
                                     'required' => true,
+                                    'id' => 'role_id'
                                 ], $role ? ['disabled' => 'disabled'] : [])) !!}
                                 <span class="form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
+                        <div class="col-md-4 co-xl-4">
+                            <div class="form-group has-feedback">
+                                <label for="type">{{ __('Role Type') }}
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                       title="{{ __('Set a role type') }}"></i>
+                                    <span class="text-danger">*</span>
+                                    @if ($role)
+                                        <span class="text-danger">{{ __('(Role Type cannot be changed)') }}</span>
+                                    @endif
+                                </label>
+                                <select name="type" id="type-select"
+                                        class="form-control select2"
+                                        {{ $role ? 'disabled' : 'required' }}>
+                                    <option value="">{{ __('Select role type') }}</option>
+                                    @foreach (AppHelper::USER_TYPE as $key => $label)
+                                        <option value="{{ $key }}" {{ old('type', $typeGet) == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @if ($role)
+                                    <input type="hidden" name="type" value="{{ old('type', $typeGet) }}">
+                                @endif
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('type') }}</span>
+                            </div>
+                        </div>
                         <hr>
                         <div class="col-md-12">
-                            <div class="form-group">
-                                <label class="fw-bold">{{ __('Manage Permissions') }}</label>
+                            <!-- All Permissions Section -->
+                            <div class="form-group permission-section" id="all-permissions" style="display: none;">
+                                <label class="fw-bold">{{ __('Manage All Permissions') }}</label>
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="all-dashboard">
-                                            <label class="form-check-label"
-                                                for="all-dashboard">{{ __('Manage All dashboard') }}</label>
+                                            <input class="form-check-input" type="checkbox" id="all-permissions-checkbox">
+                                            <label class="form-check-label" for="all-permissions-checkbox">{{ __('Select All Permissions') }}</label>
                                         </div>
                                     </div>
                                     <hr>
@@ -175,23 +185,107 @@
                                             @php $counter = 0; @endphp
                                             @foreach ($permissions as $permission)
                                                 @if ($counter % 4 == 0 && $counter > 0)
-                                    </div>
-                                    <div class="row">
-                                        @endif
-                                        <div class="col-md-3">
-                                            <div class="form-check">
-                                                <input {{ in_array($permission->name, $hasPermission) ? 'checked' : '' }}
-                                                    class="form-check-input permission-checkbox" type="checkbox"
-                                                    id="permission-{{ $permission->id }}" name="permissions[]"
-                                                    value="{{ $permission->id }}">
-
-                                                <label class="form-check-label" for="permission-{{ $permission->id }}">
-                                                    {{ $permission->name }}
-                                                </label>
+                                                    </div><div class="row">
+                                                @endif
+                                                <div class="col-md-3">
+                                                    <div class="form-check">
+                                                        <input {{ in_array($permission->id, $hasPermission) ? 'checked' : '' }}
+                                                            class="form-check-input permission-checkbox-all" type="checkbox"
+                                                            id="permission-all-{{ $permission->id }}" name="permissions[]"
+                                                            value="{{ $permission->id }}">
+                                                        <label class="form-check-label" for="permission-all-{{ $permission->id }}">
+                                                            {{ $permission->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                @php $counter++; @endphp
+                                            @endforeach
+                                        @else
+                                            <div class="col-md-12">
+                                                <p>No permissions available.</p>
                                             </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sale Permissions Section -->
+                            <div class="form-group permission-section" id="sale-permissions" style="display: none;">
+                                <label class="fw-bold">{{ __('Manage Permissions for Sale') }}</label>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="all-dashboard-sale">
+                                            <label class="form-check-label" for="all-dashboard-sale">{{ __('Select All Sale Permissions') }}</label>
                                         </div>
-                                        @php $counter++; @endphp
-                                        @endforeach
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        @php $salePermissions = $permissions->where('type', AppHelper::SALE); @endphp
+                                        @if ($salePermissions->count() > 0)
+                                            @php $counter = 0; @endphp
+                                            @foreach ($salePermissions as $permission)
+                                                @if ($counter % 4 == 0 && $counter > 0)
+                                                    </div><div class="row">
+                                                @endif
+                                                <div class="col-md-3">
+                                                    <div class="form-check">
+                                                        <input {{ in_array($permission->id, $hasPermission) ? 'checked' : '' }}
+                                                            class="form-check-input permission-checkbox-sale" type="checkbox"
+                                                            id="permission-sale-{{ $permission->id }}" name="permissions[]"
+                                                            value="{{ $permission->id }}">
+                                                        <label class="form-check-label" for="permission-sale-{{ $permission->id }}">
+                                                            {{ $permission->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                @php $counter++; @endphp
+                                            @endforeach
+                                        @else
+                                            <div class="col-md-12">
+                                                <p>No permissions available for Sale.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SE Permissions Section -->
+                            <div class="form-group permission-section" id="se-permissions" style="display: none;">
+                                <label class="fw-bold">{{ __('Manage Permissions for SE') }}</label>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="all-dashboard-se">
+                                            <label class="form-check-label" for="all-dashboard-se">{{ __('Select All SE Permissions') }}</label>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        @php $sePermissions = $permissions->where('type', AppHelper::SE); @endphp
+                                        @if ($sePermissions->count() > 0)
+                                            @php $counter = 0; @endphp
+                                            @foreach ($sePermissions as $permission)
+                                                @if ($counter % 4 == 0 && $counter > 0)
+                                                    </div><div class="row">
+                                                @endif
+                                                <div class="col-md-3">
+                                                    <div class="form-check">
+                                                        <input {{ in_array($permission->id, $hasPermission) ? 'checked' : '' }}
+                                                            class="form-check-input permission-checkbox-se" type="checkbox"
+                                                            id="permission-se-{{ $permission->id }}" name="permissions[]"
+                                                            value="{{ $permission->id }}">
+                                                        <label class="form-check-label" for="permission-se-{{ $permission->id }}">
+                                                            {{ $permission->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                @php $counter++; @endphp
+                                            @endforeach
+                                        @else
+                                            <div class="col-md-12">
+                                                <p>No permissions available for SE.</p>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
@@ -199,55 +293,50 @@
                         </div>
                     </div>
                 </div>
+            </div>
         </form>
     </section>
 @endsection
-<!-- END PAGE CONTENT-->
 
-<!-- BEGIN PAGE JS-->
 @section('extraScript')
     <script type="text/javascript">
-        $(document).ready(function() {
-            Generic.initDeleteDialog();
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
+        $(document).ready(function () {
+            // Function to toggle permissions based on selected type
+            function togglePermissions() {
+                var type = $('#type-select').val();
+                $('.permission-section').hide(); // Hide all permission sections
 
-            function updateLabelText() {
-                if ($('#dashboard-access').prop('checked')) {
-                    $('#dashboard-access-label').text('User can access the dashboard.');
-                } else {
-                    $('#dashboard-access-label').text(
-                        'Users will not have access to the dashboard unless enabled.');
+                if (type === '1') { // All
+                    $('#all-permissions').show();
+                } else if (type === '2') { // Sale
+                    $('#sale-permissions').show();
+                } else if (type === '3') { // SE
+                    $('#se-permissions').show();
                 }
             }
 
-            // Run the function once on page load
-            updateLabelText();
+            // Initial toggle based on pre-selected type (if any)
+            togglePermissions();
 
-            $('#dashboard-access').change(function() {
-                updateLabelText();
+            // Toggle permissions when the type selection changes
+            $('#type-select').on('change', function () {
+                togglePermissions();
             });
 
-            $('#all-dashboard').change(function() {
-                let isChecked = $(this).is(':checked');
-                $('.permission-checkbox').prop('checked', isChecked).trigger('change');
+            // Select all permissions for "All"
+            $('#all-permissions-checkbox').on('change', function () {
+                $('.permission-checkbox-all').prop('checked', $(this).prop('checked'));
             });
 
-            $('.permission-checkbox').change(function() {
-                let allChecked = $('.permission-checkbox').length === $('.permission-checkbox:checked')
-                    .length;
-                $('#all-dashboard').prop('checked', allChecked);
+            // Select all Sale permissions
+            $('#all-dashboard-sale').on('change', function () {
+                $('.permission-checkbox-sale').prop('checked', $(this).prop('checked'));
             });
 
-            $(document).ready(function() {
-                let allChecked = $('.permission-checkbox').length === $('.permission-checkbox:checked')
-                    .length;
-                $('#all-dashboard').prop('checked', allChecked);
+            // Select all SE permissions
+            $('#all-dashboard-se').on('change', function () {
+                $('.permission-checkbox-se').prop('checked', $(this).prop('checked'));
             });
         });
     </script>
 @endsection
-<!-- END PAGE JS-->

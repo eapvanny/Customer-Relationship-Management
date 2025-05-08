@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-// use App\Models\Permission;
+use App\Http\Helpers\AppHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
@@ -14,96 +14,131 @@ class PermissionController extends Controller
     {
         $this->middleware('permission:view permission', ['only' => ['index']]);
         $this->middleware('permission:create permission', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update permission', ['only' => ['update', 'edit']]);
+        $this->middleware('permission:update permission', ['only' => ['edit', 'update']]);
         $this->middleware('permission:delete permission', ['only' => ['destroy']]);
     }
-    public $indexof = 1;
+
+    /**
+     * Display a listing of permissions.
+     */
     public function index(Request $request)
     {
-        $permission = Permission::query();
         if ($request->ajax()) {
-            return DataTables::of($permission)
-            ->addIndexColumn()
-                ->filter(function ($query) use ($request) {
-                    if ($search = $request->input('search.value')) {
-                        $query->where(function ($q) use ($search) {
-                            $q->where('name', 'LIKE', "%{$search}%");
-                        });
-                    }
-                })
-                ->addColumn('action', function ($data) {
-                    $button = '<div class="change-action-item">';
-                    $button .= '<a title="Edit"  href="' . route('permission.edit', $data->id) . '"  class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
-                    $button .= '<a  href="' . route('permission.destroy', $data->id) . '"  class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                    $button .= '</div>';
-                    return $button;
-                })
+            return DataTables::of(Permission::query())
+                ->addIndexColumn()
+                ->filterColumn('name', fn ($query, $keyword) => $query->where('name', 'LIKE', "%{$keyword}%"))
+                ->addColumn('name', fn ($permission) => $permission->name)
+                ->addColumn('type', fn ($permission) => AppHelper::USER_TYPE[$permission->type] ?? 'N/A')
+                ->addColumn('action', fn ($permission) => sprintf(
+                    '<div class="change-action-item">
+                        <a title="Edit" href="%s" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <a title="Delete" href="%s" class="btn btn-danger btn-sm delete"><i class="fa fa-trash"></i></a>
+                    </div>',
+                    route('permission.edit', $permission->id),
+                    route('permission.destroy', $permission->id)
+                ))
                 ->rawColumns(['action'])
                 ->make(true);
         }
+
         return view('backend.permission.list');
     }
 
+    /**
+     * Show the form for creating a new permission.
+     */
     public function create()
     {
-        $permission = null;
-        return view('backend.permission.add', compact('permission'));
+        return view('backend.permission.add', [
+            'permission' => null,
+            'type' => AppHelper::USER_TYPE,
+        ]);
     }
 
+    /**
+     * Store a newly created permission.
+     */
     public function store(Request $request)
     {
+        $guardName = config('auth.defaults.guard');
         $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:permissions|min:3',
+            'name' => [
+                'required',
+                'min:3',
+                function ($attribute, $value, $fail) use ($request, $guardName) {
+                    if (Permission::where(['name' => $value, 'guard_name' => $guardName, 'type' => $request->type])->exists()) {
+                        $fail("The permission '{$value}' already exists for guard '{$guardName}' and type '{$request->type}'.");
+                    }
+                },
+            ],
+            'type' => 'required|in:1,2,3',
         ]);
 
-        if ($validator->passes()) {
-            Permission::create([
-                'name' => $request->name,
-            ]);
-            $permission = Permission::latest()->first()->id;
-
-            if ($request->has('saveandcontinue')) {
-                return redirect()->route('permission.create', $permission)->with('success', 'Permission added successfully!');
-            } else {
-                return redirect()->route('permission.index')->with('success', "Permission has been created!");
-            }
-        } else {
+        if ($validator->fails()) {
             return redirect()->route('permission.create')->withInput()->withErrors($validator);
         }
+
+        Permission::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'guard_name' => $guardName,
+        ]);
+
+        $redirect = $request->has('saveandcontinue') ? route('permission.create') : route('permission.index');
+        return redirect($redirect)->with('success', 'Permission created successfully.');
     }
 
-
+    /**
+     * Show the form for editing a permission.
+     */
     public function edit($id)
     {
-        $permission = Permission::find($id);
-        if (!$permission) {
-            return redirect()->route('permission.index');
-        }
-        return view(
-            'backend.permission.add',
-            compact(
-                'permission',
-            )
-        );
+        $permission = Permission::findOrFail($id);
+        return view('backend.permission.add', [
+            'permission' => $permission,
+            'type' => AppHelper::USER_TYPE,
+        ]);
     }
+
+    /**
+     * Update the specified permission.
+     */
     public function update(Request $request, $id)
     {
-        $permission = Permission::find($id);
+        $permission = Permission::findOrFail($id);
+        $guardName = $permission->guard_name;
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|min:3|unique:permissions,name,' . $id . ',id',
+            'name' => [
+                'required',
+                'min:3',
+                function ($attribute, $value, $fail) use ($request, $guardName, $id) {
+                    if (Permission::where(['name' => $value, 'guard_name' => $guardName, 'type' => $request->type])->where('id', '!=', $id)->exists()) {
+                        $fail("The permission '{$value}' already exists for guard '{$guardName}' and type '{$request->type}'.");
+                    }
+                },
+            ],
+            'type' => 'required|in:1,2,3',
         ]);
-        if ($validator->passes()) {
-            $permission->name = $request->name;
-            $permission->save();
-            return redirect()->route('permission.index')->with('success', "Permission has been updated!");
-        } else {
+
+        if ($validator->fails()) {
             return redirect()->back()->withInput()->withErrors($validator);
         }
+
+        $permission->update([
+            'name' => $request->name,
+            'type' => $request->type,
+        ]);
+
+        return redirect()->route('permission.index')->with('success', 'Permission updated successfully.');
     }
+
+    /**
+     * Remove the specified permission.
+     */
     public function destroy($id)
     {
-        $permission = Permission::find($id);
-        $permission->delete();
-        return redirect()->back()->with('success', "Permission has been deleted!");
+        Permission::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Permission deleted successfully.');
     }
 }

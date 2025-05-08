@@ -35,6 +35,7 @@ class User extends Authenticatable
         'position',
         'status',
         'area',
+        'type',
         'manager_id',
         'created_by',
         'deleted_by'

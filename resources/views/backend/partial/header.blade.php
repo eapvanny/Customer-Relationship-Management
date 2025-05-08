@@ -147,15 +147,15 @@
                         <ul class="dropdown-menu dropdown-menu-end position-absolute"
                             aria-labelledby="navbarDropdownMenuLink">
                             <li>
-                                <a class="dropdown-item" href="{{ route('user.set_lang', 'en') }}">
-                                    <img src="{{ asset('./images/en.png') }}" alt="English" loading="lazy" />
-                                    English
-                                </a>
-                            </li>
-                            <li>
                                 <a class="dropdown-item" href="{{ route('user.set_lang', 'kh') }}">
                                     <img src="{{ asset('./images/kh.png') }}" alt="Khmer" loading="lazy" />
                                     ភាសាខ្មែរ
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('user.set_lang', 'en') }}">
+                                    <img src="{{ asset('./images/en.png') }}" alt="English" loading="lazy" />
+                                    English
                                 </a>
                             </li>
                         </ul>

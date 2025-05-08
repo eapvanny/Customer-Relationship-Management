@@ -47,8 +47,9 @@
                                     <thead>
                                         <tr>
                                             <th width="10%">#</th>
-                                            <th width="60%"> {{ __('Name') }} </th>
-                                            <th class="notexport" width="30%"> {{ __('Action') }} </th>
+                                            <th > {{ __('Name') }} </th>
+                                            <th > {{ __('Permission Type') }} </th>
+                                            <th class="notexport" style="max-width: 80px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -102,6 +103,10 @@
                     {
                         data: 'name',
                         name: 'name'
+                    },
+                    {
+                        data: 'type',
+                        name: 'type'
                     },
                     {
                         data: 'action',

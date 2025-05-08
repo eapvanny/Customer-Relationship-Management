@@ -1,6 +1,8 @@
 <!-- Left side column. contains the sidebar -->
 @php
     use App\Http\Helpers\AppHelper;
+    $roleId = auth()->user()->role_id;
+    $type = auth()->user()->type ?? null;
 @endphp
 <aside class="main-sidebar shadow">
     <section class="sidebar">
@@ -13,6 +15,13 @@
                     </a>
                 </li>
             @endif
+            @can('view customer')
+                <li>
+                    <a href="{{ URL::route('customer.index') }}" class="text-decoration-none">
+                        <i class="fa fa-solid fa-user"></i> <span>{{ __('Customer') }}</span>
+                    </a>
+                </li>
+            @endcan
             @can('view report')
                 <li>
                     <a href="{{ URL::route('report.index') }}" class="text-decoration-none">
@@ -56,6 +65,72 @@
                     </ul>
                 </li>
             @endif
+
+            {{-- SE section  start --}}
+
+            @if ($type != AppHelper::SALE)
+                <li class="treeview">
+                    <a href="#" class="text-decoration-none">
+                        {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
+                        <i class="fas fa-bullhorn"></i>
+                        <span>{{ __('Sale promotion') }}</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        @can('view sub-wholesale')
+                            <li>
+                                <a href="{{ URL::route('sub-wholesale.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('Sub wholesale') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('view retail')
+                            <li>
+                                <a href="{{ URL::route('retail.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('Retail') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                    </ul>
+                </li>
+
+                <li class="treeview">
+                    <a href="#" class="text-decoration-none">
+                        {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
+                        {{-- <i class="fas fa-bullhorn"></i> --}}
+                        <i class="fas fa-object-group"></i>
+                        <span>{{ __('Display program') }}</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        @can('view asm')
+                            <li>
+                                <a href="{{ URL::route('asm.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('ASM program') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('view se')
+                            <li>
+                                <a href="{{ URL::route('se.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('SE program') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                    </ul>
+                </li>
+            @endif
+
+            {{-- SE section  end --}}
+
             @if (auth()->user() && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
                 @can('view setting')
                     <li class="treeview">

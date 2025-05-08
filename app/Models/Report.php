@@ -11,9 +11,9 @@ class Report extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'area',
+        'area_id',
         'outlet',
-        'customer',
+        'customer_id',
         'customer_type',
         'date',
         'other',
@@ -36,6 +36,10 @@ class Report extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }
 

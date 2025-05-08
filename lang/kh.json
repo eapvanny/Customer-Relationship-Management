@@ -147,5 +147,14 @@
     "Select customer type": "ជ្រើសរើសប្រភេទអតិថិជន",
     "Delete the old photo before you can open the camera": "លុបរូបភាពចាស់សិនទើបអាចបើកកាមេរ៉ាបាន",
     "Position": "មុខតំណែង",
-    "Phone Number": "លេខទូរស័ព្ទ"
+    "Phone Number": "លេខទូរស័ព្ទ",
+    "Cusetomer": "ឈ្មោះអតិថិជន",
+    "Role Type": "ប្រភេទតួនាទី",
+    "Select role type": "ជ្រើសរើសប្រភេទតួនាទី",
+    "Customer Name": "ឈ្មោះអតិថិជន",
+    "Select Area": "ជ្រើសរើសតំបន់",
+    "Select Customer": "ជ្រើសរើសអតិថិជន",
+    "Import file Excel to store data" : "បញ្ជូលឯកសារ Excel ដើម្បីរក្សាទិន្នន័យ",
+    "Browse to file" : "ជ្រើសរើសឯកសារ",
+    "You are selecting a file" : "អ្នកកំពុងជ្រើសរើសឯកសារ Excel មួយ"
 }

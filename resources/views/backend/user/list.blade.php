@@ -118,6 +118,7 @@
                                             @endif
                                             <th>{{ __('Phone No.') }}</th>
                                             <th>{{ __('Role') }}</th>
+                                            <th>{{ __('User Type') }}</th>
                                             <th>{{ __('Gender') }}</th>
                                             <th>{{ __('Status') }}</th>
                                             <th class="notexport" style="min-width: 90px;">{{ __('Action') }}</th>
@@ -208,6 +209,10 @@
                     {
                         data: 'role',
                         name: 'role',
+                    },
+                    {
+                        data: 'type',
+                        name: 'type',
                     },
                     {
                         data: 'gender',

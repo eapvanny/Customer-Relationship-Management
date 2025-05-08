@@ -109,6 +109,9 @@ class UserController extends Controller
                 ->addColumn('role', function ($data) {
                     return $data->role ? $data->role->name : __('N/A');
                 })
+                ->addColumn('type', function ($data) {
+                    return isset(AppHelper::USER_TYPE[$data->type]) ? __(AppHelper::USER_TYPE[$data->type]) : __('N/A');
+                })
                 ->addColumn('gender', function ($data) {
                     return isset(AppHelper::GENDER[$data->gender]) ? __(AppHelper::GENDER[$data->gender]) : __('N/A');
                 })
@@ -225,7 +228,7 @@ class UserController extends Controller
     {
         $user = null;
         $authUser = auth()->user();
-
+        $type = AppHelper::USER_TYPE;
         if ($authUser->role_id === AppHelper::USER_MANAGER) {
             // User Manager can only assign Employee role
             $roles = Role::where('id', AppHelper::USER_EMPLOYEE)->pluck('name', 'id');
@@ -262,7 +265,7 @@ class UserController extends Controller
 
 
 
-        return view('backend.user.add', compact('user', 'roles', 'areaManager'));
+        return view('backend.user.add', compact('user', 'roles', 'areaManager','type'));
     }
 
 
@@ -282,7 +285,8 @@ class UserController extends Controller
             'gender' => 'required',
             'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card',
             'position' => 'required',
-            'area' => 'required'
+            'area' => 'required',
+            'type' => 'required'
 
         ];
 
@@ -305,6 +309,7 @@ class UserController extends Controller
             'staff_id_card' => $request->staff_id_card,
             'position' => $request->position,
             'area' => $request->area,
+            'type' => $request->type,
             'password' => bcrypt($request->password),
             'manager_id' => $request->manager_id,
             'created_by' => $createdBy,
@@ -337,6 +342,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
         $roles = Role::pluck('name', 'id');
+        $type = AppHelper::USER_TYPE;
         $authUser = auth()->user();
         $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
             return [
@@ -353,7 +359,8 @@ class UserController extends Controller
             compact(
                 'user',
                 'roles',
-                'areaManager'
+                'areaManager',
+                'type'
             )
         );
     }
@@ -374,6 +381,7 @@ class UserController extends Controller
             'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card,' . $id,
             'position' => 'required',
             'area' => 'required',
+            'type' => 'required',
         ];
 
         if ($request->role_id == AppHelper::USER_EMPLOYEE) {
@@ -393,6 +401,7 @@ class UserController extends Controller
             'staff_id_card' => $request->staff_id_card,
             'position' => $request->position,
             'area' => $request->area,
+            'type' => $request->type,
             'manager_id' => $request->manager_id,
         ];
 

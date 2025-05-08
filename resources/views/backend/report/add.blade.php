@@ -442,6 +442,26 @@
                         @method('PUT')
                     @endif
                     <div class="row">
+                        <div class="col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
+                                <select name="area" id="area" class="form-control select2" required>
+                                    <option value="">{{ __('Select Area') }}</option>
+                                    @foreach(\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                        <optgroup label="{{ $area }}">
+                                            @foreach($subItems as $area_id => $subItem)
+                                                <option value="{{ $area_id }}"
+                                                    @if(old('area', $report->area_id ?? '') == $area_id) selected @endif>
+                                                    {{ $subItem }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                </select>
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('area') }}</span>
+                            </div>
+                        </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="outlet"> {{ __('Outlet') }} <span class="text-danger">*</span></label>
@@ -456,23 +476,22 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="area" placeholder="name"
-                                    value="@if ($report) {{ $report->area }}@else{{ old('area') }} @endif"
-                                    required>
+                                <label for="customer_id">{{ __('Customer') }} <span class="text-danger">*</span></label>
+                                <select name="customer_id" class="form-control select2" id="customer_id" required>
+                                    <option value="">{{ __('Select Customer') }}</option>
+                                    @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
+                                        <option value="{{ $report->customer_id }}" selected>
+                                            {{ $report->customer->name }} (Current)
+                                        </option>
+                                    @endif
+                                    @foreach($customers as $c)
+                                        <option value="{{ $c->id }}" {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
+                                            {{ $c->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                                 <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('area') }}</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="customer"> {{ __('Customer') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="customer" name="customer"
-                                    placeholder="{{ __('Customer') }}"
-                                    value="@if ($report) {{ $report->customer }}@else{{ old('customer') }} @endif"
-                                    required>
-                                <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('customer') }}</span>
+                                <span class="text-danger">{{ $errors->first('customer_id') }}</span>
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
@@ -481,7 +500,13 @@
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
                                         title="Select customer type"></i>
                                 </label>
-                                <select name="customer_type" id="customer_type" class="form-control select2">
+                                {!! Form::select('customer_type', $customerType, old('customer_type', optional($report)->customer_type), [
+                                    'placeholder' => __('Select customer type'),
+                                    'id' => 'customer_type',
+                                    'class' => 'form-control select2',
+                                    'required' => true,
+                                ]) !!}
+                                {{-- <select name="customer_type" id="customer_type" class="form-control select2">
                                     <option selected disabled>{{ __('Select customer type') }}</option>
                                     <option value="test1"
                                         @if ($report) @if ($report->customer_type == 'test1')
@@ -493,7 +518,7 @@
                                                 selected @endif
                                         @endif
                                         >Test2</option>
-                                </select>
+                                </select> --}}
                                 <span class="form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('customer_type') }}</span>
                             </div>
@@ -534,15 +559,7 @@
                                     value="{{ isset($report) ? $report['1500_ml'] : old('1500_ml') }}">
                             </div>
                         </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="phone"> {{ __('Phone number') }}</label>
-                                <input type="tel" class="form-control" name="phone"
-                                    placeholder="{{ __('Phone number') }}"
-                                    value="@if ($report) {{ $report->phone }}@else{{ old('phone') }} @endif">
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
+                        <div class="col-lg-12 col-md-12 col-xl-12">
                             <div class="form-group has-feedback">
                                 <label for="other"> {{ __('Other') }}</label>
                                 <input type="text" class="form-control" name="other" placeholder="other"
@@ -964,6 +981,44 @@
                 video.srcObject = null;
             }
 
+            $('#area').on('change', function() {
+    var areaId = $(this).val();
+    var selectedCustomerId = $('#customer_id').val(); // Store current customer_id
+    if (areaId) {
+        $.ajax({
+            url: '{{ route("customers.byArea") }}',
+            type: 'GET',
+            data: { area_id: areaId },
+            success: function(data) {
+                $('#customer_id').empty();
+                if (data.length === 0) {
+                    $('#customer_id').append('<option value="">{{ __("Customer Not Found!") }}</option>');
+                } else {
+                    $('#customer_id').append('<option value="">{{ __("Select Customer") }}</option>');
+                    $.each(data, function(key, customer) {
+                        var isSelected = (customer.id == selectedCustomerId) ? 'selected' : '';
+                        $('#customer_id').append('<option value="' + customer.id + '" ' + isSelected + '>' + customer.name + '</option>');
+                    });
+                }
+                $('#customer_id').trigger('change');
+            },
+            error: function(xhr) {
+                console.log('Error fetching customers:', xhr);
+                $('#customer_id').empty().append('<option value="">{{ __("Customer Not Found!") }}</option>');
+                $('#customer_id').trigger('change');
+            }
+        });
+    } else {
+        $('#customer_id').empty().append('<option value="">{{ __("Customer Not Found!") }}</option>');
+        $('#customer_id').trigger('change');
+    }
+});
+
+            // Trigger change on page load if area is pre-selected
+            if ($('#area').val()) {
+                $('#area').trigger('change');
+            }
+
             $('#entryForm').on('submit', function(e) {
                 let imageData = $('#img-preview').val();
                 if (imageData) {
@@ -976,65 +1031,63 @@
             });
         });
 
-        $('#outlet').on('input', function() {
-            let outletValue = $(this).val().trim();
+        // $('#outlet').on('input', function() {
+        //     let outletValue = $(this).val().trim();
 
-            if (outletValue.length > 0) {
-                $.ajax({
-                    url: '{{ route("report.getCustomerByOutlet") }}', // Make sure this route exists
-                    method: 'GET',
-                    data: { outlet: outletValue },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            $('input[name="area"]').val(response['area'] || '');
-                            $('#customer').val(response.customer || '');
-                            $('#customer_type').val(response.customer_type).trigger('change');
+        //     if (outletValue.length > 0) {
+        //         $.ajax({
+        //             method: 'GET',
+        //             data: { outlet: outletValue },
+        //             dataType: 'json',
+        //             success: function(response) {
+        //                 if (response.success) {
+        //                     $('input[name="area"]').val(response['area'] || '');
+        //                     $('#customer').val(response.customer || '');
+        //                     $('#customer_type').val(response.customer_type).trigger('change');
 
-                            $('input[name="250_ml"]').val(response['250_ml'] || '');
-                            $('input[name="350_ml"]').val(response['350_ml'] || '');
-                            $('input[name="600_ml"]').val(response['600_ml'] || '');
-                            $('input[name="1500_ml"]').val(response['1500_ml'] || '');
-                            $('input[name="phone"]').val(response.phone || '');
-                            $('input[name="other"]').val(response.other || '');
-                        } else {
-                            $('input[name="area"]').val('');
-                            $('#customer').val('');
-                            $('#customer_type').val('Select customer type').trigger('change');
-                            $('input[name="250_ml"]').val('');
-                            $('input[name="350_ml"]').val('');
-                            $('input[name="600_ml"]').val('');
-                            $('input[name="1500_ml"]').val('');
-                            $('input[name="phone"]').val('');
-                            $('input[name="other"]').val('');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error fetching customer data:', error);
-                        $('input[name="area"]').val('');
-                        $('#customer').val('');
-                        $('#customer_type').val('Select customer type').trigger('change');
-                        $('input[name="250_ml"]').val('');
-                        $('input[name="350_ml"]').val('');
-                        $('input[name="600_ml"]').val('');
-                        $('input[name="1500_ml"]').val('');
-                        $('input[name="phone"]').val('');
-                        $('input[name="other"]').val('');
-                    }
-                });
-            } else {
-                $('input[name="area"]').val('');
-                $('#customer').val('');
-                $('#customer_type').val('Select customer type').trigger('change');
-                $('input[name="250_ml"]').val('');
-                $('input[name="350_ml"]').val('');
-                $('input[name="600_ml"]').val('');
-                $('input[name="1500_ml"]').val('');
-                $('input[name="phone"]').val('');
-                $('input[name="other"]').val('');
-            }
-        });
-
+        //                     $('input[name="250_ml"]').val(response['250_ml'] || '');
+        //                     $('input[name="350_ml"]').val(response['350_ml'] || '');
+        //                     $('input[name="600_ml"]').val(response['600_ml'] || '');
+        //                     $('input[name="1500_ml"]').val(response['1500_ml'] || '');
+        //                     $('input[name="phone"]').val(response.phone || '');
+        //                     $('input[name="other"]').val(response.other || '');
+        //                 } else {
+        //                     $('input[name="area"]').val('');
+        //                     $('#customer').val('');
+        //                     $('#customer_type').val('Select customer type').trigger('change');
+        //                     $('input[name="250_ml"]').val('');
+        //                     $('input[name="350_ml"]').val('');
+        //                     $('input[name="600_ml"]').val('');
+        //                     $('input[name="1500_ml"]').val('');
+        //                     $('input[name="phone"]').val('');
+        //                     $('input[name="other"]').val('');
+        //                 }
+        //             },
+        //             error: function(xhr, status, error) {
+        //                 console.error('Error fetching customer data:', error);
+        //                 $('input[name="area"]').val('');
+        //                 $('#customer').val('');
+        //                 $('#customer_type').val('Select customer type').trigger('change');
+        //                 $('input[name="250_ml"]').val('');
+        //                 $('input[name="350_ml"]').val('');
+        //                 $('input[name="600_ml"]').val('');
+        //                 $('input[name="1500_ml"]').val('');
+        //                 $('input[name="phone"]').val('');
+        //                 $('input[name="other"]').val('');
+        //             }
+        //         });
+        //     } else {
+        //         $('input[name="area"]').val('');
+        //         $('#customer').val('');
+        //         $('#customer_type').val('Select customer type').trigger('change');
+        //         $('input[name="250_ml"]').val('');
+        //         $('input[name="350_ml"]').val('');
+        //         $('input[name="600_ml"]').val('');
+        //         $('input[name="1500_ml"]').val('');
+        //         $('input[name="phone"]').val('');
+        //         $('input[name="other"]').val('');
+        //     }
+        // });
 
     </script>
 @endsection

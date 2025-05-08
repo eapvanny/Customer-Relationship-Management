@@ -347,7 +347,24 @@
                         
                     </div>
                     <div class="row">
-                        <div class="col-md-6 co-xl-6">
+                        <div class="col-md-4 co-xl-4">
+                            <div class="form-group has-feedback">
+                                <label for="type"> {{ __('User Type') }}
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                        title="" data-original-title="Set a user type"></i>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {!! Form::select('type', $type, old('type', optional($user)->type), [
+                                    'placeholder' => __('Select Type'),
+                                    'id' => 'type',
+                                    'class' => 'form-control select2',
+                                    'required' => true,
+                                ]) !!}
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('type') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 co-xl-4">
                             <div class="form-group has-feedback">
                                 <label for="id"> {{ __('User Role') }}
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -364,7 +381,7 @@
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-6 col-xl-6 d-none" id="area-manager-section">
+                        <div class="col-md-4 col-xl-4 d-none" id="area-manager-section">
                             <div class="form-group has-feedback">
                                 <label for="area_manager"> {{ __('Area Manager') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -427,8 +444,8 @@
                                 <input type="email" class="form-control" name="email" placeholder="email address"
                                     value="@if ($user) {{ $user->email }}@else{{ old('email') }} @endif"
                                     maxlength="100">
-                                <span class="fa fa-envelope form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('email') }}</span>
+                                {{-- <span class="fa fa-envelope form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('email') }}</span> --}}
                             </div>
                         </div>
                         <div class="col-md-4">

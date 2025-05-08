@@ -59,7 +59,8 @@ class AuthController extends Controller
                 app()->setLocale($user->user_lang);
             }
             $request->session()->regenerate();
-            if(auth()->user()->role_id == AppHelper::USER_EMPLOYEE){
+            // dd(auth()->user()->role_id);
+            if(auth()->user()->role_id == AppHelper::USER_EMPLOYEE && auth()->user()->type == 1){
                 return redirect()->route('report.index')
                     ->with('success', 'Welcome to CRM system.')
                     ->with('show_popup', true);

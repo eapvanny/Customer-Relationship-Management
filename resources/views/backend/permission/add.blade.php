@@ -135,12 +135,29 @@
                         @method('PUT')
                     @endif
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 co-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>
                                 <textarea name="name" class="form-control" placeholder="" rows="1" maxlength="500" required>@if($permission){{old('name')??$permission->name}}@else{{old('name')}}@endif</textarea>
                                 <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('name') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 co-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="type"> {{ __('Permission Type') }}
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                        title="" data-original-title="Set a permission type"></i>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {!! Form::select('type', $type, old('type', optional($permission)->type), [
+                                    'placeholder' => __('Select Type'),
+                                    'id' => 'type',
+                                    'class' => 'form-control select2',
+                                    'required' => true,
+                                ]) !!}
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('type') }}</span>
                             </div>
                         </div>
                     </div>

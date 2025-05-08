@@ -10,6 +10,7 @@ class Permission extends Model
     use HasFactory;
     protected $fillable = [
         'name',
-        'quard_name'
+        'quard_name',
+        'type',
     ];
 }

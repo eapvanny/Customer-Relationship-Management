@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-// use App\Models\Permission;
-// use App\Models\Role;
-use App\Models\RolePermission;
+use App\Http\Helpers\AppHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
@@ -17,139 +15,166 @@ class RoleController extends Controller
     {
         $this->middleware('permission:view role', ['only' => ['index']]);
         $this->middleware('permission:create role', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update role', ['only' => ['update', 'edit']]);
+        $this->middleware('permission:update role', ['only' => ['edit', 'update']]);
         $this->middleware('permission:delete role', ['only' => ['destroy']]);
     }
-    public $indexof = 1;
+
+    /**
+     * Display a listing of roles with their permissions.
+     */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $roles = Role::whereHas('permissions')->with('permissions');
-            return DataTables::of($roles)
-                ->addIndexColumn()
-                ->filter(function ($query) use ($request) {
-                    if ($search = $request->input('search.value')) {
-                        $query->where(function ($q) use ($search) {
-                            $q->where('name', 'LIKE', "%{$search}%");
-                        });
-                    }
-                })
-                ->addColumn('permission', function ($data) {
-                    return $data->permissions->pluck('name')->implode(', ');
-                })
-                ->addColumn('action', function ($data) {
-                    $button = '<div class="change-action-item">';
-                    $actions = false;
+            $roles = Role::has('permissions')->with(['permissions' => fn ($query) => $query->withPivot('type')])->get();
 
-                    if (auth()->user()->can('update role')) {
-                        $button .= '<a title="Edit" href="' . route('role.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
-                        $actions = true;
+            $transformedRoles = $roles->flatMap(function ($role) {
+                $types = $role->permissions->pluck('pivot.type')->unique();
+
+                return $types->map(function ($type) use ($role) {
+                    return [
+                        'role' => $role,
+                        'type_value' => $type,
+                        'type_label' => AppHelper::USER_TYPE[$type] ?? 'Unknown',
+                        'permissions' => $role->permissions->where('pivot.type', $type),
+                    ];
+                });
+            });
+
+            return DataTables::of($transformedRoles)
+                ->addIndexColumn()
+                ->addColumn('name', fn ($data) => $data['role']->name)
+                ->addColumn('permission', fn ($data) => $data['permissions']->pluck('name')->implode(', '))
+                ->addColumn('type', fn ($data) => $data['type_label'])
+                ->addColumn('action', function ($data) {
+                    $role = $data['role'];
+                    $type = $data['type_value'];
+                    $actions = [];
+
+                    if (auth()->user()->hasPermissionTo('update role', null, AppHelper::ALL)) {
+                        $editUrl = route('role.edit', $role->id) . ($type ? '?type=' . $type : '');
+                        $actions[] = '<a title="Edit" href="' . $editUrl . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                     }
-                    // if (auth()->user()->can('delete role')) {
-                    //     $button .= '<a href="' . route('role.destroy', $data->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                    //     $actions = true;
-                    // }
-                    if (!$actions) {
-                        $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
+
+                    if (auth()->user()->hasPermissionTo('delete role', null, AppHelper::ALL)) {
+                        $actions[] = '<a title="Delete" href="' . route('role.destroy', $role->id) . '" class="btn btn-danger btn-sm delete"><i class="fa fa-trash"></i></a>';
                     }
-                    $button .= '</div>';
-                    return $button;
+
+                    return '<div class="change-action-item">' . ($actions ? implode(' ', $actions) : '<span style="font-weight:bold; color:red;">No Action</span>') . '</div>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
+
         return view('backend.role.list');
     }
 
+    /**
+     * Show the form for creating a new role permission assignment.
+     */
     public function create()
     {
-        $role = null;
-        $all_role = Role::pluck('name', 'id'); // Fetch list of roles
-        $permissions = Permission::get();
-        $hasPermission = [];
-        return view('backend.role.add', compact('role', 'permissions', 'hasPermission', 'all_role'));
+        return view('backend.role.add', [
+            'role' => null,
+            'typeGet' => null,
+            'all_role' => Role::pluck('name', 'id'),
+            'permissions' => Permission::all(),
+            'hasPermission' => [],
+            'type' => AppHelper::USER_TYPE,
+        ]);
     }
 
-
+    /**
+     * Store a newly created role permission assignment.
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'role_id' => 'required', // Added exists validation
-            'permissions' => 'array',
+            'role_id' => 'required|exists:roles,id',
+            'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            'type' => 'required|in:1,2,3',
         ]);
-
-        // Remove dd() in production code
-        // dd($request->role_id);
 
         if ($validator->fails()) {
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        // Get the actual Role model instance
-        $role = Role::find($request->role_id); // Assuming Role is your model class
+        $role = Role::findOrFail($request->role_id);
 
-        if (!$role) {
-            return redirect()->back()->with('error', 'Role not found');
+        if ($role->permissions()->wherePivot('type', $request->type)->exists()) {
+            return redirect()->back()->withInput()->with('error', "Role '{$role->name}' with type '" . (AppHelper::USER_TYPE[$request->type] ?? 'Unknown') . "' already exists.");
         }
 
-        if ($request->has('permissions')) {
-            $permissions = Permission::whereIn('id', $request->permissions)->get();
-            $role->syncPermissions($permissions);
+        $permissions = $request->input('permissions', []);
+        if ($permissions) {
+            $role->permissions()->attach($permissions, ['type' => $request->type]);
         }
 
-        return redirect()->route('role.index')->with('success', "Role permissions have been updated!");
+        return redirect()->route('role.index')->with('success', 'Role permissions added successfully.');
     }
 
-
-
-
-    public function edit($id)
+    /**
+     * Show the form for editing a role's permissions.
+     */
+    public function edit($id, Request $request)
     {
-        $role = Role::find($id);
-        // dd($role);
-        if (!$role) {
-            return redirect()->route('ticket.index')->with('error', 'Role not found.');
+        $role = Role::findOrFail($id);
+        $typeGet = $request->query('type');
+
+        if ($typeGet && !in_array($typeGet, ['1', '2', '3'])) {
+            return redirect()->route('role.index')->with('error', 'Invalid role type.');
         }
 
-        $all_role = Role::pluck('name', 'id'); // Fetch list of roles
-        $hasPermission = $role->permissions->pluck('name')->toArray();
-        $permissions = Permission::all(); // Fetch full permission objects
+        $permissions = match ((int) $typeGet) {
+            AppHelper::ALL => Permission::all(),
+            AppHelper::SALE => Permission::where('type', AppHelper::SALE)->get(),
+            AppHelper::SE => Permission::where('type', AppHelper::SE)->get(),
+            default => Permission::all(),
+        };
 
-        return view('backend.role.add', compact('role', 'permissions', 'hasPermission', 'all_role'));
+        return view('backend.role.add', [
+            'role' => $role,
+            'typeGet' => $typeGet,
+            'all_role' => Role::pluck('name', 'id'),
+            'permissions' => $permissions,
+            'hasPermission' => $role->permissions()->wherePivot('type', $typeGet)->pluck('permissions.id')->toArray(),
+            'type' => AppHelper::USER_TYPE,
+        ]);
     }
 
+    /**
+     * Update the specified role's permissions.
+     */
     public function update(Request $request, $id)
     {
-        $role = Role::find($id);
+        $role = Role::findOrFail($id);
 
-        if (!$role) {
-            return redirect()->route('role.index')->with('error', 'Role not found.');
-        }
-
-        // Conditionally require role_id if it is not set
-        $rules = [
-            'role_id' => $role ? 'nullable|exists:roles,id' : 'required|exists:roles,id',
+        $validator = Validator::make($request->all(), [
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
-        ];
+            'type' => 'required|in:1,2,3',
+        ]);
 
-        $this->validate($request, $rules);
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
-        $permissionIds = $request->input('permissions', []);
-        $permissions = Permission::whereIn('id', $permissionIds)->pluck('name')->toArray();
+        $type = $request->input('type');
+        $newPermissions = $request->input('permissions', []);
+        $currentPermissions = $role->permissions()->wherePivot('type', $type)->pluck('permissions.id')->toArray();
 
-        $role->syncPermissions($permissions);
+        $role->permissions()->wherePivot('type', $type)->detach(array_diff($currentPermissions, $newPermissions));
+        $role->permissions()->attach(array_diff($newPermissions, $currentPermissions), ['type' => $type]);
 
-        return redirect()->route('role.index')->with('success', "Role permissions have been updated!");
+        return redirect()->route('role.index')->with('success', 'Role permissions updated successfully.');
     }
 
-
-
-    // public function destroy($id)
-    // {
-    //     $ticket = Role::find($id);
-    //     $ticket->delete();
-    //     return redirect()->back()->with('success', "Role has been deleted!");
-    // }
+    /**
+     * Remove the specified role.
+     */
+    public function destroy($id)
+    {
+        Role::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Role deleted successfully.');
+    }
 }

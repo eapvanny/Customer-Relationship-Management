@@ -457,7 +457,7 @@
                                             <th> {{ __('Name') }} </th>
                                             <th> {{ __('Area') }} </th>
                                             <th> {{ __('Outlet') }} </th>
-                                            <th> {{ __('Customer') }} </th>
+                                            <th> {{ __('Customer Name') }} </th>
                                             <th> {{ __('Customer Type') }} </th>
                                             <th> {{ __('250ml') }} </th>
                                             <th> {{ __('350ml') }} </th>
