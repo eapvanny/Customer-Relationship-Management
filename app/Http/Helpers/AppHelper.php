@@ -9,12 +9,16 @@ class AppHelper
     const USER_ADMIN = 2;
     const USER_EMPLOYEE = 3;
     const USER_MANAGER = 4;
+    const USER_SE = 5;
+    const USER_SE_MANAGER = 6;
 
     const USER = [
         self::USER_SUPER_ADMIN => 'Super Admin',
         self::USER_ADMIN => 'Admin',
         self::USER_EMPLOYEE => 'Employee',
         self::USER_MANAGER => 'Manager',
+        self::USER_SE => 'SE',
+        self::USER_SE_MANAGER => 'SE Manager',
     ];
 
     const UMBRELLA = 1;

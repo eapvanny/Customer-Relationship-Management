@@ -52,7 +52,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/profile', [UserController::class, 'profile'])->name('profile');
 
     //User
-    Route::resource('user', UserController::class);
+    Route::resource('user', UserController::class)->except('show');
     Route::get('change-password', [UserController::class, 'showChangePasswordForm'])->name('change_password');
     Route::post('change-password', [UserController::class, 'changePassword'])->name('update_password');
     Route::get('/lock', [UserController::class, 'lock'])->name('lockscreen');
@@ -62,6 +62,9 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/user/enable/{id}', [UserController::class, 'enable'])->name('user.enable');
     Route::post('/users/{id}/update-profile-photo', [UserController::class, 'updateProfilePhoto'])
         ->name('users.updateProfilePhoto');
+
+    Route::get('/user/fetch-managers', [UserController::class, 'fetchManagers'])
+        ->name('user.fetchManagers');
 
     // Route for switching languages
     Route::get('/set-lang/{lang}', [UserController::class, 'setLanguage'])->name('user.set_lang');

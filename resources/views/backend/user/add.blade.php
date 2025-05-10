@@ -487,62 +487,90 @@
 
             function toggleAreaManagerField() {
                 var selectedRole = $('#role_id').val();
-                var employeeRoleId = "{{ AppHelper::USER_EMPLOYEE }}"; 
+                var employeeRoleId = "{{ AppHelper::USER_EMPLOYEE }}"; // Role ID for Employee
+                var seRoleId = "{{ AppHelper::USER_SE }}"; // Role ID for SE
 
-                if (selectedRole == employeeRoleId) {
+                if (selectedRole == employeeRoleId || selectedRole == seRoleId) {
                     $('#area-manager-section').removeClass('d-none');
                     $('#manager_id').prop('required', true);
+                    fetchManagers(selectedRole); // Fetch managers based on role
                 } else {
                     $('#area-manager-section').addClass('d-none');
                     $('#manager_id').prop('required', false);
-                    $('#manager_id').val(null).trigger('change'); 
+                    $('#manager_id').val(null).trigger('change'); // Clear manager selection
                 }
             }
 
+            function fetchManagers(roleId) {
+                $.ajax({
+                    url: "{{ route('user.fetchManagers') }}", // Route to fetch managers
+                    method: 'GET',
+                    data: { role_id: roleId },
+                    success: function(response) {
+                        var managerSelect = $('#manager_id');
+                        managerSelect.empty(); // Clear existing options
+                        managerSelect.append('<option value="">{{ __("Select a manager") }}</option>');
+
+                        $.each(response.managers, function(id, name) {
+                            managerSelect.append('<option value="' + id + '">' + name + '</option>');
+                        });
+
+                        managerSelect.trigger('change'); // Refresh Select2
+                    },
+                    error: function(xhr) {
+                        console.error('Error fetching managers:', xhr);
+                    }
+                });
+            }
+
+            // Initialize the area manager field visibility and fetch managers if needed
             toggleAreaManagerField();
 
+            // Trigger fetchManagers when role_id changes
             $('#role_id').on('change', function() {
                 toggleAreaManagerField();
             });
-            $(document).ready(function() {
-            $('#photo-upload').on('click', function(){
-			$("#photo").trigger("click")
-		});
-		$('#btn-remove-photo').on('click', function(){
-			$("#photo").val('');
-			$('#img-preview').val('');
-			$("#photo-preview").removeAttr('src').addClass('d-none');
-			$('#btn-remove-photo').addClass('d-none');
-			$('#btn-upload-photo').removeClass('d-none');
-			$('#student-photo').removeClass('opacity-25').addClass('opacity-100')
-		})
-		$("#photo").change(function(e) {
-			var file = e.target.files[0];
-			if (!file) {
-				return;
-			}
-			var reader = new FileReader();
-			reader.onload = function(event) {
-				$("#photo-preview").attr("src", event.target.result);
-				$('#img-preview').val(event.target.result);
-				$("#photo-preview").removeClass("d-none");
-				$('#btn-upload-photo').addClass('d-none');
-				$('#btn-remove-photo').removeClass('d-none');
-				$('#student-photo').removeClass('opacity-100').addClass('opacity-25')
-			};
-			reader.readAsDataURL(file);
-		});
 
-		//hide show image preview
-		if ($("#photo-preview").attr("src")) {
-			$('#btn-upload-photo').addClass('d-none');
-			$('#btn-remove-photo').removeClass('d-none');
-		} else {
-			$('#btn-upload-photo').removeClass('d-none');
-			$('#btn-remove-photo').addClass('d-none');
-			$("#photo-preview").addClass('d-none');
-		}  
-        });
+            // Photo upload handling (unchanged)
+            $('#photo-upload').on('click', function() {
+                $("#photo").trigger("click");
+            });
+
+            $('#btn-remove-photo').on('click', function() {
+                $("#photo").val('');
+                $('#img-preview').val('');
+                $("#photo-preview").removeAttr('src').addClass('d-none');
+                $('#btn-remove-photo').addClass('d-none');
+                $('#btn-upload-photo').removeClass('d-none');
+                $('#student-photo').removeClass('opacity-25').addClass('opacity-100');
+            });
+
+            $("#photo").change(function(e) {
+                var file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    $("#photo-preview").attr("src", event.target.result);
+                    $('#img-preview').val(event.target.result);
+                    $("#photo-preview").removeClass("d-none");
+                    $('#btn-upload-photo').addClass('d-none');
+                    $('#btn-remove-photo').removeClass('d-none');
+                    $('#student-photo').removeClass('opacity-100').addClass('opacity-25');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Hide/show image preview
+            if ($("#photo-preview").attr("src")) {
+                $('#btn-upload-photo').addClass('d-none');
+                $('#btn-remove-photo').removeClass('d-none');
+            } else {
+                $('#btn-upload-photo').removeClass('d-none');
+                $('#btn-remove-photo').addClass('d-none');
+                $("#photo-preview").addClass('d-none');
+            }
         });
     </script>
 @endsection

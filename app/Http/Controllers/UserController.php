@@ -48,14 +48,18 @@ class UserController extends Controller
         }
 
         $authUser = auth()->user();
-        $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+        $areaManager = User::where('role_id', AppHelper::USER_MANAGER)
+                        ->orWhere('role_id', AppHelper::USER_SE_MANAGER)
+                        ->get()->mapWithKeys(function ($manager) use ($authUser) {
             return [
                 $manager->id => $authUser->user_lang === 'en'
                     ? $manager->family_name_latin . ' ' . $manager->name_latin
                     : $manager->family_name . ' ' . $manager->name
             ];
         });
-        $full_name = User::where('role_id', AppHelper::USER_EMPLOYEE)->get()->mapWithKeys(function ($employee) use ($authUser) {
+        $full_name = User::where('role_id', AppHelper::USER_EMPLOYEE)
+                        ->orWhere('role_id', AppHelper::USER_SE)
+                        ->get()->mapWithKeys(function ($employee) use ($authUser) {
             return [
                 $employee->id => $authUser->user_lang === 'en'
                     ? $employee->family_name_latin . ' ' . $employee->name_latin
@@ -224,15 +228,16 @@ class UserController extends Controller
         }
     }
 
-    public function create()
+   public function create()
     {
         $user = null;
         $authUser = auth()->user();
         $type = AppHelper::USER_TYPE;
+        $roles = Role::pluck('name', 'id')->toArray();
+        $areaManager = [];
         if ($authUser->role_id === AppHelper::USER_MANAGER) {
             // User Manager can only assign Employee role
             $roles = Role::where('id', AppHelper::USER_EMPLOYEE)->pluck('name', 'id');
-
             $areaManager = User::where('id', $authUser->id)->get()->mapWithKeys(function ($manager) use ($authUser) {
                 return [
                     $manager->id => $authUser->user_lang === 'en'
@@ -243,29 +248,66 @@ class UserController extends Controller
         } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
             // Admin can assign Manager and Employee roles
             $roles = Role::whereIn('id', [AppHelper::USER_MANAGER, AppHelper::USER_EMPLOYEE])->pluck('name', 'id');
+            $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
+                return [
+                    $manager->id => $authUser->user_lang === 'en'
+                        ? $manager->family_name_latin . ' ' . $manager->name_latin
+                        : $manager->family_name . ' ' . $manager->name
+                ];
+            });
+        } 
+        // else {
+        //     // Super Admin or other roles can assign all roles
+        //     $roles = Role::pluck('name', 'id');
+        //     $areaManager = User::where('role_id', AppHelper::USER_MANAGER)
+        //         ->orWhere('role_id', AppHelper::USER_SE_MANAGER)
+        //         ->get()
+        //         ->mapWithKeys(function ($manager) use ($authUser) {
+        //             return [
+        //                 $manager->id => $authUser->user_lang === 'en'
+        //                     ? $manager->family_name_latin . ' ' . $manager->name_latin
+        //                     : $manager->family_name . ' ' . $manager->name
+        //             ];
+        //         });
+        // }
 
-            $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
-                return [
-                    $manager->id => $authUser->user_lang === 'en'
-                        ? $manager->family_name_latin . ' ' . $manager->name_latin
-                        : $manager->family_name . ' ' . $manager->name
-                ];
-            });
-        } else {
-            // Super Admin or other roles can assign all roles
-            $roles = Role::pluck('name', 'id');
-            $areaManager = User::where('role_id', AppHelper::USER_MANAGER)->get()->mapWithKeys(function ($manager) use ($authUser) {
-                return [
-                    $manager->id => $authUser->user_lang === 'en'
-                        ? $manager->family_name_latin . ' ' . $manager->name_latin
-                        : $manager->family_name . ' ' . $manager->name
-                ];
-            });
+        return view('backend.user.add', compact('user', 'roles', 'areaManager', 'type'));
+    }
+
+    public function fetchManagers(Request $request)
+    {
+        $roleId = $request->query('role_id');
+        // dd($roleId);
+        $authUser = auth()->user();
+        $managers = [];
+
+        if ($roleId == AppHelper::USER_EMPLOYEE) {
+            // Fetch managers with type = 2 (Sale)
+            $managers = User::where('role_id', AppHelper::USER_MANAGER)
+                ->where('type', AppHelper::SALE)
+                ->get()
+                ->mapWithKeys(function ($manager) use ($authUser) {
+                    return [
+                        $manager->id => $authUser->user_lang === 'en'
+                            ? $manager->family_name_latin . ' ' . $manager->name_latin
+                            : $manager->family_name . ' ' . $manager->name
+                    ];
+                });
+        } elseif ($roleId == AppHelper::USER_SE) {
+            // Fetch managers with type = 3 (SE)
+            $managers = User::where('role_id', AppHelper::USER_SE_MANAGER)
+                ->where('type', AppHelper::SE)
+                ->get()
+                ->mapWithKeys(function ($manager) use ($authUser) {
+                    return [
+                        $manager->id => $authUser->user_lang === 'en'
+                            ? $manager->family_name_latin . ' ' . $manager->name_latin
+                            : $manager->family_name . ' ' . $manager->name
+                    ];
+                });
         }
 
-
-
-        return view('backend.user.add', compact('user', 'roles', 'areaManager','type'));
+        return response()->json(['managers' => $managers]);
     }
 
 
@@ -371,7 +413,10 @@ class UserController extends Controller
 
         $rules = [
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:2000|dimensions:min_width=50,min_height=50',
+            'family_name' => 'required|min:2|max:255',
             'name' => 'required|min:2|max:255',
+            'family_name_latin' => 'required|min:2|max:255',
+            'name_latin' => 'required|min:2|max:255',
             // 'email' => 'required|email|max:255|unique:users,email,' . $id,
             'username' => 'required|min:5|max:255|unique:users,username,' . $id,
             'password' => 'nullable|min:6|max:50',
@@ -390,7 +435,10 @@ class UserController extends Controller
         $this->validate($request, $rules);
 
         $userData = [
+            'family_name' => $request->family_name,
             'name' => $request->name,
+            'family_name_latin' => $request->family_name_latin,
+            'name_latin' => $request->name_latin,
             'role_id' => $request->role_id,
             'gender' => $request->gender,
             'username' => $request->username,
