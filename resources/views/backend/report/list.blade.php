@@ -516,6 +516,7 @@
                                             <li class="list-group-item"><i class="fa-solid fa-id-card"></i> <strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
                                             </li>
                                             <li class="list-group-item"><i class="fa-solid fa-chart-area"></i> <strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
+                                            <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Customer Name')}} :</strong> <span id="modalCustomerName"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span>
                                             </li>
                                             <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
@@ -688,6 +689,7 @@
                         $('#modalEmployeeName').text(report.employee_name);
                         $('#modalIdCard').text(report.staff_id_card);
                         $('#modalArea').text(report.area);
+                        $('#modalCustomerName').text(report.customer);
                         $('#modalOutlet').text(report.outlet);
                         $('#modalDate').text(report.date);
                         $('#modalOther').text(report.other);

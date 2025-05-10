@@ -156,5 +156,6 @@
     "Select Customer": "ជ្រើសរើសអតិថិជន",
     "Import file Excel to store data" : "បញ្ជូលឯកសារ Excel ដើម្បីរក្សាទិន្នន័យ",
     "Browse to file" : "ជ្រើសរើសឯកសារ",
-    "You are selecting a file" : "អ្នកកំពុងជ្រើសរើសឯកសារ Excel មួយ"
+    "You are selecting a file" : "អ្នកកំពុងជ្រើសរើសឯកសារ Excel មួយ",
+    "Select area first": "ជ្រើសរើសតំបន់ជាមុនសិន"
 }

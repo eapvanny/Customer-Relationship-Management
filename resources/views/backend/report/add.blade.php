@@ -447,11 +447,11 @@
                                 <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
                                     <option value="">{{ __('Select Area') }}</option>
-                                    @foreach(\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                    @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
                                         <optgroup label="{{ $area }}">
-                                            @foreach($subItems as $area_id => $subItem)
+                                            @foreach ($subItems as $area_id => $subItem)
                                                 <option value="{{ $area_id }}"
-                                                    @if(old('area', $report->area_id ?? '') == $area_id) selected @endif>
+                                                    @if (old('area', $report->area_id ?? '') == $area_id) selected @endif>
                                                     {{ $subItem }}
                                                 </option>
                                             @endforeach
@@ -478,14 +478,15 @@
                             <div class="form-group has-feedback">
                                 <label for="customer_id">{{ __('Customer') }} <span class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
-                                    <option value="">{{ __('Select Customer') }}</option>
+                                    <option value="">{{ __('Select area first') }}</option>
                                     @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
                                         <option value="{{ $report->customer_id }}" selected>
                                             {{ $report->customer->name }} (Current)
                                         </option>
                                     @endif
-                                    @foreach($customers as $c)
-                                        <option value="{{ $c->id }}" {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
+                                    @foreach ($customers as $c)
+                                        <option value="{{ $c->id }}"
+                                            {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
                                             {{ $c->name }}
                                         </option>
                                     @endforeach
@@ -982,37 +983,49 @@
             }
 
             $('#area').on('change', function() {
-    var areaId = $(this).val();
-    var selectedCustomerId = $('#customer_id').val(); // Store current customer_id
-    if (areaId) {
-        $.ajax({
-            url: '{{ route("customers.byArea") }}',
-            type: 'GET',
-            data: { area_id: areaId },
-            success: function(data) {
-                $('#customer_id').empty();
-                if (data.length === 0) {
-                    $('#customer_id').append('<option value="">{{ __("Customer Not Found!") }}</option>');
-                } else {
-                    $('#customer_id').append('<option value="">{{ __("Select Customer") }}</option>');
-                    $.each(data, function(key, customer) {
-                        var isSelected = (customer.id == selectedCustomerId) ? 'selected' : '';
-                        $('#customer_id').append('<option value="' + customer.id + '" ' + isSelected + '>' + customer.name + '</option>');
+                var areaId = $(this).val();
+                var selectedCustomerId = $('#customer_id').val(); // Store current customer_id
+                if (areaId) {
+                    $.ajax({
+                        url: '{{ route('customers.byArea') }}',
+                        type: 'GET',
+                        data: {
+                            area_id: areaId
+                        },
+                        success: function(data) {
+                            $('#customer_id').empty();
+                            if (data.length === 0) {
+                                $('#customer_id').append(
+                                    '<option value="">{{ __('Customer Not Found!') }}</option>'
+                                    );
+                            } else {
+                                $('#customer_id').append(
+                                    '<option value="">{{ __('Select Customer') }}</option>'
+                                    );
+                                $.each(data, function(key, customer) {
+                                    var isSelected = (customer.id ==
+                                        selectedCustomerId) ? 'selected' : '';
+                                    $('#customer_id').append('<option value="' +
+                                        customer.id + '" ' + isSelected + '>' +
+                                        customer.name + '</option>');
+                                });
+                            }
+                            $('#customer_id').trigger('change');
+                        },
+                        error: function(xhr) {
+                            console.log('Error fetching customers:', xhr);
+                            $('#customer_id').empty().append(
+                                '<option value="">{{ __('Customer Not Found!') }}</option>'
+                                );
+                            $('#customer_id').trigger('change');
+                        }
                     });
+                } else {
+                    $('#customer_id').empty().append(
+                        '<option value="">{{ __('Customer Not Found!') }}</option>');
+                    $('#customer_id').trigger('change');
                 }
-                $('#customer_id').trigger('change');
-            },
-            error: function(xhr) {
-                console.log('Error fetching customers:', xhr);
-                $('#customer_id').empty().append('<option value="">{{ __("Customer Not Found!") }}</option>');
-                $('#customer_id').trigger('change');
-            }
-        });
-    } else {
-        $('#customer_id').empty().append('<option value="">{{ __("Customer Not Found!") }}</option>');
-        $('#customer_id').trigger('change');
-    }
-});
+            });
 
             // Trigger change on page load if area is pre-selected
             if ($('#area').val()) {
@@ -1088,6 +1101,5 @@
         //         $('input[name="other"]').val('');
         //     }
         // });
-
     </script>
 @endsection
