@@ -9,7 +9,7 @@
 <section class="content-header">
     <ol class="breadcrumb">
         <li><a href="{{ route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }}</a></li>
-        <li class="active">{{ __('Customer List') }}</li>
+        <li class="active">{{ __('Customer') }}</li>
     </ol>
 </section>
 
@@ -18,26 +18,35 @@
     <div class="row">
         <div class="col-md-12">
             <div class="wrap-outter-header-title">
-                <h1>{{ __('Customer List') }}</h1>
+                 <h1>
+                    {{ __('Customer') }}
+                    <small class="toch"> {{ __('List') }} </small>
+                </h1>
                 <div class="action-btn-top none_fly_action_btn">
-                    <a href="{{ route('customer.create') }}" class="btn btn-primary"> {{ __('Add New') }}</a>
+                    <a href="{{ route('customer.create') }}" class="btn btn-primary">
+                        <i class="fa fa-plus-circle"></i> 
+                        {{ __('Add New') }}
+                    </a>
                 </div>
             </div>
             <div class="wrap-outter-box">
                 <div class="box box-info">
                     <div class="box-body">
-                        <table id="datatable" class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>{{ __('Area') }}</th>
-                                    <th>{{ __('Name') }}</th>
-                                    <th>{{ __('Phone') }}</th>
-                                    <th style="max-width: 82px">{{ __('Action') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-responsive mt-4">
+                            <table id="datatable" class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
+                                    width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>{{ __('Area') }}</th>
+                                        <th>{{ __('Name') }}</th>
+                                        <th>{{ __('Phone') }}</th>
+                                        <th style="max-width: 82px">{{ __('Action') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="btn-group">

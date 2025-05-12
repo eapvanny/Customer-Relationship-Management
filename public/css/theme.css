@@ -4160,13 +4160,96 @@ table.text-center th {
   font-size: 25px;
   padding-top: 30px;
 }
-
 @media (max-width: 991px) {
   .error-page>.error-content>h3 {
     text-align: center;
   }
+  .content-header {
+      position: relative;
+      padding: 15px 24px 0 25px;
+  }
+  .btn-success{
+    font-size: 9px;
+  }
+  .btn-info{
+    font-size: 9px !important;
+  }
+  .btn-default{
+    font-size: 9px !important;
+  }
 }
-
+@media (max-width: 375px) {
+  .content-header {
+      position: relative;
+      padding: 15px 24px 0 25px;
+  }
+  .btn-success{
+    font-size: 8px;
+    padding: 7px;
+  }
+  .btn-info{
+    font-size: 8px !important;
+    padding: 7px;
+  }
+  .btn-default{
+    font-size: 8px !important;
+    padding: 7px;
+  }
+}
+@media (max-width: 390px) {
+  .content-header {
+      position: relative;
+      padding: 15px 24px 0 25px;
+  }
+  .btn-success{
+    font-size: 9px;
+    padding: 7px;
+  }
+  .btn-info{
+    font-size: 9px !important;
+    padding: 7px;
+  }
+  .btn-default{
+    font-size: 9px !important;
+    padding: 7px;
+  }
+}
+@media (max-width: 360px) {
+  .content-header {
+      position: relative;
+      padding: 15px 24px 0 25px;
+  }
+  .btn-success{
+    font-size: 8px;
+    padding: 7px;
+  }
+  .btn-info{
+    font-size: 8px !important;
+    padding: 7px;
+  }
+  .btn-default{
+    font-size: 8px !important;
+    padding: 7px;
+  }
+}
+@media (max-width: 344px) {
+  .content-header {
+      position: relative;
+      padding: 15px 24px 0 25px;
+  }
+  .btn-success{
+    font-size: 7px;
+    padding: 6px;
+  }
+  .btn-info{
+    font-size: 7px !important;
+    padding: 6px;
+  }
+  .btn-default{
+    font-size: 7px !important;
+    padding: 6px;
+  }
+}
 /*
   * Page: Invoice
   * -------------

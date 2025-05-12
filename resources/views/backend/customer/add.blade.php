@@ -1,16 +1,25 @@
 @extends('backend.layouts.master')
 
 <!-- Page title -->
-@section('pageTitle') Customer @endsection
+@section('pageTitle') {{__('Customer')}} @endsection
 <!-- End block -->
+@section('extraStyle')
+    <style>
+       @media (max-width: 414px) {
+            .btn-default .btn-info .btn-success{
+                font-size: 10px !important;
+           }
+        }
 
+    </style>
+@endsection
 <!-- BEGIN PAGE CONTENT-->
 @section('pageContent')
     <!-- Section header -->
     <section class="content-header">
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li><a href="{{ URL::route('customer.index') }}"> {{ __('Customer List') }} </a></li>
+            <li><a href="{{ URL::route('customer.index') }}"> {{ __('Customer') }} </a></li>
             <li class="active">@if($customer) {{ __('Update') }} @else {{ __('Add') }} @endif</li>
         </ol>
     </section>

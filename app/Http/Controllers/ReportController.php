@@ -439,7 +439,7 @@ class ReportController extends Controller
             return [
                 'family_name' => $report->user->family_name ?? 'N/A',
                 'name' => $report->user->name ?? 'N/A',
-                'area' => $report->area ?? 'Unknown',
+                'area' => AppHelper::getAreaName($report->area_id) ?? 'Unknown',
                 'photo' => $report->user->photo ? asset('storage/' . $report->user->photo) : asset('images/avatar.png')
             ];
         });
