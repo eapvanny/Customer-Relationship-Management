@@ -464,14 +464,23 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="outlet"> {{ __('Outlet') }} <span class="text-danger">*</span></label>
-                                <textarea id="outlet" name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
-@if ($report)
-{{ old('outlet') ?? $report->outlet }}@else{{ old('outlet') }}
-@endif
-</textarea>
+                                <label for="outlet_id">{{ __('Outlet') }} <span class="text-danger">*</span></label>
+                                <select name="outlet_id" class="form-control select2" id="outlet_id" required>
+                                    <option value="">{{ __('Select area first') }}</option>
+                                    @if ($report && $report->outlet && !$customers->contains('id', $report->outlet_id))
+                                        <option value="{{ $report->outlet_id }}" selected>
+                                            {{ $report->customer->outlet }} (Current)
+                                        </option>
+                                    @endif
+                                    @foreach ($customers as $c)
+                                        <option value="{{ $c->id }}"
+                                            {{ old('outlet_id', $report->outlet_id ?? '') == $c->id ? 'selected' : '' }}>
+                                            {{ $c->outlet }}
+                                        </option>
+                                    @endforeach
+                                </select>
                                 <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('outlet') }}</span>
+                                <span class="text-danger">{{ $errors->first('outlet_id') }}</span>
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
@@ -985,6 +994,8 @@
             $('#area').on('change', function() {
                 var areaId = $(this).val();
                 var selectedCustomerId = $('#customer_id').val(); // Store current customer_id
+                var selectedOutletId = $('#outlet_id').val(); // Store current outlet_id
+
                 if (areaId) {
                     $.ajax({
                         url: '{{ route('customers.byArea') }}',
@@ -993,16 +1004,17 @@
                             area_id: areaId
                         },
                         success: function(data) {
+                            // Handle Customers Dropdown
                             $('#customer_id').empty();
-                            if (data.length === 0) {
+                            if (data.customers.length === 0) {
                                 $('#customer_id').append(
                                     '<option value="">{{ __('Customer Not Found!') }}</option>'
-                                    );
+                                );
                             } else {
                                 $('#customer_id').append(
                                     '<option value="">{{ __('Select Customer') }}</option>'
-                                    );
-                                $.each(data, function(key, customer) {
+                                );
+                                $.each(data.customers, function(key, customer) {
                                     var isSelected = (customer.id ==
                                         selectedCustomerId) ? 'selected' : '';
                                     $('#customer_id').append('<option value="' +
@@ -1011,19 +1023,54 @@
                                 });
                             }
                             $('#customer_id').trigger('change');
+
+                            // Handle Outlets Dropdown
+                            $('#outlet_id').empty();
+                            if (data.outlets.length === 0) {
+                                $('#outlet_id').append(
+                                    '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                                );
+                            } else {
+                                $('#outlet_id').append(
+                                    '<option value="">{{ __('Select outlet') }}</option>'
+                                );
+                                $.each(data.outlets, function(key, outlet) {
+                                    var isSelected = (outlet.id == selectedOutletId) ?
+                                        'selected' : '';
+                                    $('#outlet_id').append('<option value="' + outlet
+                                        .id + '" ' + isSelected + '>' + outlet
+                                        .name + '</option>');
+                                });
+                            }
+                            $('#outlet_id').trigger('change');
                         },
                         error: function(xhr) {
-                            console.log('Error fetching customers:', xhr);
+                            console.log('Error fetching data:', xhr);
+                            //orney Handle Customers Dropdown on Error
                             $('#customer_id').empty().append(
                                 '<option value="">{{ __('Customer Not Found!') }}</option>'
-                                );
+                            );
                             $('#customer_id').trigger('change');
+
+                            // Handle Outlets Dropdown on Error
+                            $('#outlet_id').empty().append(
+                                '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                            );
+                            $('#outlet_id').trigger('change');
                         }
                     });
                 } else {
+                    // Clear Customers Dropdown
                     $('#customer_id').empty().append(
-                        '<option value="">{{ __('Customer Not Found!') }}</option>');
+                        '<option value="">{{ __('Customer Not Found!') }}</option>'
+                    );
                     $('#customer_id').trigger('change');
+
+                    // Clear Outlets Dropdown
+                    $('#outlet_id').empty().append(
+                        '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                    );
+                    $('#outlet_id').trigger('change');
                 }
             });
 

@@ -21,10 +21,11 @@ class CustomerController extends Controller
     public function index(Request $request)
 {
     if ($request->ajax()) {
-        $customers = Customer::select(['id', 'name', 'area_id', 'phone']);
+        $customers = Customer::query();
         return DataTables::of($customers)
             ->addIndexColumn()
             ->addColumn('area_id', fn($customer) => AppHelper::getAreaName($customer->area_id))
+            ->addColumn('outlet', fn($customer) => $customer->outlet)
             ->addColumn('action', function ($customer) {
                 $button = '<div class="change-action-item">';
                 $actions = false;
@@ -66,7 +67,8 @@ class CustomerController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'phone' => 'nullable',
+            'phone' => 'required',
+            'phone' => 'required',
             'area' => 'required|in:' . implode(',', $areaIds),
         ]);
 
@@ -79,6 +81,7 @@ class CustomerController extends Controller
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'area_id' => $request->area,
+                'outlet' => $request->outlet,
             ]);
 
             if ($request->has('saveandcontinue')) {
@@ -105,7 +108,8 @@ class CustomerController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'phone' => 'required|nullable',
+            'phone' => 'required',
+            'outlet' => 'required',
             'area' => 'required|in:' . implode(',', $areaIds),
         ]);
 
@@ -118,6 +122,7 @@ class CustomerController extends Controller
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'area_id' => $request->area,
+                'outlet' => $request->outlet,
             ]);
             return redirect()->route('customer.index')->with('success', 'Customer updated successfully.');
         } catch (Exception $e) {

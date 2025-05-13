@@ -39,6 +39,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>{{ __('Area') }}</th>
+                                        <th>{{ __('Outlet') }}</th>
                                         <th>{{ __('Name') }}</th>
                                         <th>{{ __('Phone') }}</th>
                                         <th style="max-width: 82px">{{ __('Action') }}</th>
@@ -80,6 +81,10 @@
                 {
                     data: 'area_id',
                     name: 'area_id'
+                },
+                {
+                    data: 'outlet',
+                    name: 'outlet'
                 },
                 {
                     data: 'name',

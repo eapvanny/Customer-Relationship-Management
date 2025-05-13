@@ -75,7 +75,7 @@ class ReportController extends Controller
 
             return DataTables::of($reports)
                 ->addColumn('photo', function ($data) {
-                    $photoUrl = $data->user->photo ? asset('storage/' . $data->user->photo) : asset('images/avatar.png');
+                    $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
                     return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" src="' . $photoUrl . '" >';
                 })
                 ->addColumn('id_card', function ($data) {
@@ -88,10 +88,10 @@ class ReportController extends Controller
                         : ($user->getFullNameAttribute() ?? 'N/A');
                 })
                 ->addColumn('area', function ($data) {
-                    return __(AppHelper::getAreaName($data->area_id));  
+                    return __(AppHelper::getAreaName($data->area_id));
                 })
-                ->addColumn('outlet', function ($data) {
-                    return __($data->outlet);
+                ->addColumn('outlet_id', function ($data) {
+                    return $data->customer ? $data->customer->outlet : 'N/A';
                 })
                 ->addColumn('customer', function ($data) {
                     return $data->customer ? $data->customer->name : 'N/A';
@@ -174,10 +174,10 @@ class ReportController extends Controller
         // If there's old input or a pre-selected area, fetch customers
         $areaId = old('area', $customer->area_id ?? '');
         if ($areaId) {
-            $customers = Customer::where('area_id', $areaId)->get(['id', 'name']);
+            $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
         }
 
-        return view('backend.report.add', compact('customer', 'customers','report','customerType'));
+        return view('backend.report.add', compact('customer', 'customers', 'report', 'customerType'));
     }
 
     public function show($id)
@@ -205,7 +205,7 @@ class ReportController extends Controller
                 'employee_name' => $employee_name,
                 'staff_id_card' => $user->staff_id_card ?? 'N/A',
                 'area' => AppHelper::getAreaName($report->area_id),
-                'outlet' => $report->outlet,
+                'outlet' => $report->customer->outlet ?? 'N/A',
                 'customer' => $report->customer->name ?? 'N/A',
                 'customer_type' => $report->customer_type,
                 'date' => $report->date,
@@ -225,8 +225,19 @@ class ReportController extends Controller
     public function getCustomersByArea(Request $request)
     {
         $areaId = $request->query('area_id');
-        $customers = Customer::where('area_id', $areaId)->get(['id', 'name']);
-        return response()->json($customers);
+        $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
+
+        // Extract unique outlet values
+        $outlets = $customers->pluck('outlet')->unique()->filter()->map(function ($outlet, $index) {
+            return ['id' => $index + 1, 'name' => $outlet];
+        })->values();
+
+        return response()->json([
+            'customers' => $customers->map(function ($customer) {
+                return ['id' => $customer->id, 'name' => $customer->name];
+            }),
+            'outlets' => $outlets
+        ]);
     }
 
     public function store(Request $request)
@@ -237,7 +248,7 @@ class ReportController extends Controller
         }
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
-            'outlet' => 'required',
+            'outlet_id' => 'required',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
@@ -278,7 +289,7 @@ class ReportController extends Controller
         Report::create([
             'user_id' => auth()->id(),
             'area_id' => $request->area,
-            'outlet' => $request->outlet,
+            'outlet_id' => $request->outlet_id,
             'customer_id' => $request->customer_id,
             'customer_type' => $request->customer_type,
             'date' => Carbon::now('Asia/Phnom_Penh'),
@@ -320,18 +331,18 @@ class ReportController extends Controller
     }
 
     public function edit($id)
-{
-    $report = Report::with('customer')->find($id);
-    if (!$report) {
-        return redirect()->route('report.index')->with('error', 'Report not found.');
-    }
+    {
+        $report = Report::with('customer')->find($id);
+        if (!$report) {
+            return redirect()->route('report.index')->with('error', 'Report not found.');
+        }
 
-    // Fetch customers for the report's area
-    $customers = Customer::where('area_id', $report->area_id)->get(['id', 'name']);
-    $customer = $report->customer; // The related customer for the report
-    $customerType = AppHelper::CUSTOMER_TYPE;
-    return view('backend.report.add', compact('report', 'customers', 'customer','customerType'));
-}
+        // Fetch customers for the report's area
+        $customers = Customer::where('area_id', $report->area_id)->get(['id', 'name']);
+        $customer = $report->customer; // The related customer for the report
+        $customerType = AppHelper::CUSTOMER_TYPE;
+        return view('backend.report.add', compact('report', 'customers', 'customer', 'customerType'));
+    }
 
 
     public function update(Request $request, $id)
@@ -349,7 +360,7 @@ class ReportController extends Controller
         // Validation rules
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
-            'outlet' => 'required',
+            'outlet_id' => 'required',
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
             'latitude' => 'required|numeric',
@@ -364,7 +375,7 @@ class ReportController extends Controller
 
         $data = [
             'area_id' => $request->area,
-            'outlet' => $request->outlet,
+            'outlet_id' => $request->outlet_id,
             'customer_id' => $request->customer_id,
             'customer_type' => $request->customer_type,
             'date' => Carbon::now('Asia/Phnom_Penh'),
@@ -382,18 +393,21 @@ class ReportController extends Controller
         ];
 
         // Handle base64 image if provided
-        if ($request->photo_base64) {
+        if ($request->has('photo_base64')) {
             if ($report->photo && Storage::exists($report->photo)) {
                 Storage::delete($report->photo);
             }
+
             $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
             $image = str_replace(' ', '+', $image);
             $imageData = base64_decode($image);
 
-            $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
-            Storage::put($fileName, $imageData);
+            // Use a consistent naming convention similar to the second block
+            $fileName = time() . '_' . md5(uniqid()) . '.png';
+            $filePath = 'uploads/' . $fileName;
+            Storage::put($filePath, $imageData);
 
-            $data['photo'] = $fileName;
+            $data['photo'] = $filePath;
         } else {
             $data['photo'] = $report->photo;
         }

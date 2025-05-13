@@ -11,7 +11,7 @@ class Customer extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name','phone', 'area_id'];
+    protected $fillable = ['name','phone', 'area_id','outlet'];
 
     public static function getAreas()
     {

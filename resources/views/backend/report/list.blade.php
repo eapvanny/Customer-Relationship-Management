@@ -613,8 +613,8 @@
                         name: 'area'
                     },
                     {
-                        data: 'outlet',
-                        name: 'outlet'
+                        data: 'outlet_id',
+                        name: 'outlet_id'
                     },
                     {
                         data: 'customer',

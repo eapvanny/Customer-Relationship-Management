@@ -1,16 +1,17 @@
 @extends('backend.layouts.master')
 
 <!-- Page title -->
-@section('pageTitle') {{__('Customer')}} @endsection
+@section('pageTitle')
+    {{ __('Customer') }}
+@endsection
 <!-- End block -->
 @section('extraStyle')
     <style>
-       @media (max-width: 414px) {
-            .btn-default .btn-info .btn-success{
+        @media (max-width: 414px) {
+            .btn-default .btn-info .btn-success {
                 font-size: 10px !important;
-           }
+            }
         }
-
     </style>
 @endsection
 <!-- BEGIN PAGE CONTENT-->
@@ -20,14 +21,22 @@
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
             <li><a href="{{ URL::route('customer.index') }}"> {{ __('Customer') }} </a></li>
-            <li class="active">@if($customer) {{ __('Update') }} @else {{ __('Add') }} @endif</li>
+            <li class="active">
+                @if ($customer)
+                    {{ __('Update') }}
+                @else
+                    {{ __('Add') }}
+                @endif
+            </li>
         </ol>
     </section>
     <!-- ./Section header -->
 
     <!-- Main content -->
     <section class="content">
-        <form id="entryForm" action="@if($customer) {{ URL::Route('customer.update', $customer->id) }} @else {{ URL::Route('customer.store') }} @endif" method="post" autocomplete="off">
+        <form id="entryForm"
+            action="@if ($customer) {{ URL::Route('customer.update', $customer->id) }} @else {{ URL::Route('customer.store') }} @endif"
+            method="post" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
@@ -35,10 +44,14 @@
                         <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('customer.index') }}" class="btn btn-default"> {{ __('Cancel') }} </a>
                             <button type="submit" class="submitClick btn btn-info pull-right text-white">
-                                <i class="fa @if($customer) fa-refresh @else fa-check-circle @endif"></i>
-                                @if($customer) {{ __('Update') }} @else {{ __('Save') }} @endif
+                                <i class="fa @if ($customer) fa-refresh @else fa-check-circle @endif"></i>
+                                @if ($customer)
+                                    {{ __('Update') }}
+                                @else
+                                    {{ __('Save') }}
+                                @endif
                             </button>
-                            @if(!$customer)
+                            @if (!$customer)
                                 <button type="submit" class="submitClick submitAndContinue btn btn-success text-white">
                                     <i class="fa fa-plus-circle"></i> {{ __('Save & Add New') }}
                                 </button>
@@ -50,22 +63,24 @@
             </div>
 
             @csrf
-            @if($customer)
+            @if ($customer)
                 @method('PUT')
             @endif
             <div class="wrap-outter-box">
                 <div class="box box-info">
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-md-4 col-xl-4">
+                            <div class="col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
                                     <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                     <select name="area" id="area" class="form-control select2" required>
                                         <option value="">{{ __('Select Area') }}</option>
-                                        @foreach(\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                        @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
                                             <optgroup label="{{ $area }}">
-                                                @foreach($subItems as $area_id => $subItem)
-                                                    <option value="{{ $area_id }}" @if(old('area', $customer->area_id ?? '') == $area_id) selected @endif>{{ "$subItem" }}</option>
+                                                @foreach ($subItems as $area_id => $subItem)
+                                                    <option value="{{ $area_id }}"
+                                                        @if (old('area', $customer->area_id ?? '') == $area_id) selected @endif>
+                                                        {{ "$subItem" }}</option>
                                                 @endforeach
                                             </optgroup>
                                         @endforeach
@@ -74,15 +89,29 @@
                                     <span class="text-danger">{{ $errors->first('area') }}</span>
                                 </div>
                             </div>
-                            <div class="col-md-4 col-xl-4">
+                            <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="name">{{ __('Customer Name') }} <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" class="form-control" value="{{ old('name', $customer->name ?? '') }}" required>
+                                    <label for="outlet"> {{ __('Outlet') }} <span class="text-danger">*</span></label>
+                                    <textarea id="outlet" name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
+@if ($customer)
+{{ old('outlet') ?? $customer->outlet }}@else{{ old('outlet') }}
+@endif
+</textarea>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('outlet') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="name">{{ __('Customer Name') }} <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" name="name" class="form-control"
+                                        value="{{ old('name', $customer->name ?? '') }}" required>
                                     <span class="fa fa-user form-control-feedback"></span>
                                     <span class="text-danger">{{ $errors->first('name') }}</span>
                                 </div>
                             </div>
-                            <div class="col-lg-4 col-md-4 col-xl-4">
+                            <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
                                     <label for="phone"> {{ __('Phone Number') }}</label>
                                     <input type="tel" class="form-control" name="phone"
@@ -103,7 +132,7 @@
 <!-- BEGIN PAGE JS-->
 @section('extraScript')
     <script type="text/javascript">
-        $(document).ready(function () {
+        $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

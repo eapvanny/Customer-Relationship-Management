@@ -12,7 +12,7 @@ class Report extends Model
 
     protected $fillable = [
         'area_id',
-        'outlet',
+        'outlet_id',
         'customer_id',
         'customer_type',
         'date',
