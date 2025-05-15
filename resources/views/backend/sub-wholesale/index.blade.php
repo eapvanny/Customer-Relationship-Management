@@ -101,7 +101,7 @@
                             <div class="row">
                                 <div class="col-12 mb-2">
                                     <form action="{{ route('sub-wholesale.index') }}" method="GET" id="filterForm">
-                                        <div class="wrap_filter_form collapse "
+                                        <div class="wrap_filter_form @if (!$is_filter) collapse @endif "
                                             id="filterContainer">
                                             <a id="close_filter" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse"
                                             data-bs-target="#filterContainer">
@@ -168,7 +168,7 @@
                                     width="100%">
                                     <thead>
                                         <tr>
-                                            <th> {{ __('Photo') }} </th>
+                                            {{-- <th> {{ __('Photo') }} </th> --}}
                                             <th> {{ __('Staff ID') }} </th>
                                             <th> {{ __('Name') }} </th>
                                             <th> {{ __('Area') }} </th>
@@ -183,6 +183,7 @@
                                             <th> {{ __('Other') }} </th>
                                             <th> {{ __('Material Type') }} </th>
                                             <th> {{ __('Qty') }} </th>
+                                            <th> {{ __('Foc Qty') }} </th>
                                             <th> {{ __('Address') }} </th>
                                             <th> {{ __('Date') }} </th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
@@ -219,10 +220,8 @@
                 </div>
                 <div class="modal-body img-popup">
                     <div class="row">
-                        <div class="col-md-12 col-sm-12 col-lg-12 col-xl-4 mt-2">
-                            <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
-                        </div>
-                        <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
+                       
+                        <div class="col-md-12">
                             <div class="report-details">
                                 <div class="row">
                                     <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
@@ -232,11 +231,13 @@
                                             <li class="list-group-item"><i class="fa-solid fa-id-card"></i> <strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
                                             </li>
                                             <li class="list-group-item"><i class="fa-solid fa-chart-area"></i> <strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span>
-                                            </li>
+                                            <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer')}} :</strong> <span id="modalCustomer"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer Type')}} :</strong> <span id="modalCustomerType"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
         
                                             <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Address')}} :</strong> <span id="modalCity"></span></li>
+
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
@@ -249,9 +250,24 @@
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('Other')}} :</strong> <span id="modalOther"></span></li>
                                             <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i> <strong>{{__('Material Type')}} :</strong> <span id="modalPosm"></span></li>
                                             <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('Quantity')}} :</strong> <span id="modalQty"></span>
+                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('FOC Qty')}} :</strong> <span id="modalQtyFoc"></span>
                                             </li>
                                         </ul>
                                     </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                         <div class="col-md-12 my-2">
+                            <div class="row">
+                                 <div class="col-md-6">
+                                    <img  style="border: 1px solid #cfcfcf;" id="modalPhotoFoc" src="" class="img-fluid photo-detail" alt="Photo Detail">
+                                    <p class="text-center">{{__('FOC Image')}}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
+                                    <p class="text-center">{{__('POSM Image')}}</p>
+
                                 </div>
                                 
                             </div>
@@ -378,11 +394,12 @@
                     url: "{!! route('sub-wholesale.index', request()->all()) !!}",
                 },
                 pageLength: 10,
-                columns: [{
-                        data: 'photo',
-                        name: 'photo',
-                        orderable: false
-                    },
+                columns: [
+                    // {
+                    //     data: 'photo',
+                    //     name: 'photo',
+                    //     orderable: false
+                    // },
                     {
                         data: 'id_card',
                         name: 'id_card'
@@ -396,8 +413,8 @@
                         name: 'area'
                     },
                     {
-                        data: 'outlet',
-                        name: 'outlet'
+                        data: 'outlet_id',
+                        name: 'outlet_id'
                     },
                     {
                         data: 'customer',
@@ -440,6 +457,10 @@
                         name: 'qty'
                     },
                     {
+                        data: 'foc_qty',
+                        name: 'foc_qty'
+                    },
+                    {
                         data: 'location',
                         name: 'location'
                     },
@@ -469,10 +490,11 @@
                         var report = response.report;
 
                         $('#modalPhoto').attr('src', report.photo);
+                        $('#modalPhotoFoc').attr('src', report.photo_foc);
                         $('#modalEmployeeName').text(report.employee_name);
                         $('#modalIdCard').text(report.staff_id_card);
                         $('#modalArea').text(report.area);
-                        $('#modalOutlet').text(report.outlet);
+                        $('#modalOutlet').text(report.outlet_id);
                         $('#modalDate').text(report.date);
                         $('#modalOther').text(report.other);
                         $('#modal250ml').text(report['250_ml']);
@@ -482,7 +504,11 @@
                         $('#modalCity').text(report.city);
                         $('#modalPosm').text(report.posm);
                         $('#modalQty').text(report.qty);
+                        $('#modalQtyFoc').text(report.foc_qty);
+                        $('#modalCustomer').text(report.customer);
+                        $('#modalCustomerType').text(report.customer_type);
                         $('#viewModal').modal('show');
+                        
                     },
                     error: function(xhr) {
                         console.log('Error:', xhr);

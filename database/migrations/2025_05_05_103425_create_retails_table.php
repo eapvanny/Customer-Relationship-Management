@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('retails', function (Blueprint $table) {
             $table->id();  
-            $table->string('area'); 
-            $table->string('outlet');
+            $table->string('area_id'); 
+            $table->string('outlet_id');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('customer')->nullable();
+            $table->string('customer_id')->nullable();
             $table->string('customer_type')->nullable();
             $table->string('phone')->nullable();
             $table->datetime('date'); 

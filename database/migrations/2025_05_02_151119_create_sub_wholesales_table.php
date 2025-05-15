@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('sub_wholesales', function (Blueprint $table) {
             $table->id();  
-            $table->string('area'); 
-            $table->string('outlet');
+            $table->string('area_id'); 
+            $table->string('outlet_id');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->datetime('date'); 
             $table->string('250_ml')->nullable();  

@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sub_wholesales', function (Blueprint $table) {
-            $table->string('customer')->nullable()->after('user_id');
-            $table->string('customer_type')->nullable()->after('customer');
+            $table->string('customer_id')->nullable()->after('user_id');
+            $table->string('customer_type')->nullable()->after('customer_id');
             $table->string('phone')->nullable()->after('customer_type');
 
         });
@@ -25,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('sub_wholesales', function (Blueprint $table) {
-            $table->string('customer')->nullable()->after('user_id');
+            $table->string('customer_id')->nullable()->after('user_id');
             $table->string('customer_type')->nullable()->after('customer');
             $table->string('phone')->nullable()->after('customer_type');
 

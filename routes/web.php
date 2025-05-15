@@ -5,6 +5,7 @@ use App\Http\Controllers\AsmprogramController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GetmanagerController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RetailController;
@@ -29,8 +30,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('backend.login');
+    if(auth()->check()) {
+        return redirect()->back();
+    }else{
+        return view('backend.login');
+    }
 })->middleware('auth');
+
 Route::get('/login', function () {
     return view('backend.login');
 })->name('login');
@@ -52,7 +58,8 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/profile', [UserController::class, 'profile'])->name('profile');
 
     //User
-    Route::resource('user', UserController::class)->except('show');
+    Route::resource('user', UserController::class)->except(['show']);
+
     Route::get('change-password', [UserController::class, 'showChangePasswordForm'])->name('change_password');
     Route::post('change-password', [UserController::class, 'changePassword'])->name('update_password');
     Route::get('/lock', [UserController::class, 'lock'])->name('lockscreen');
@@ -62,9 +69,6 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/user/enable/{id}', [UserController::class, 'enable'])->name('user.enable');
     Route::post('/users/{id}/update-profile-photo', [UserController::class, 'updateProfilePhoto'])
         ->name('users.updateProfilePhoto');
-
-    Route::get('/user/fetch-managers', [UserController::class, 'fetchManagers'])
-        ->name('user.fetchManagers');
 
     // Route for switching languages
     Route::get('/set-lang/{lang}', [UserController::class, 'setLanguage'])->name('user.set_lang');
@@ -90,12 +94,15 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     // SE section start
     Route::resource('sub-wholesale', SubwholesaleController::class);
     Route::get('/subwholesale-export', [SubwholesaleController::class, 'export'])->name('subwholesale.export');
+    Route::get('/subwholesale/by-area', [SubwholesaleController::class, 'getCustomersByArea'])->name('subwholesale.byArea');
 
 
     Route::resource('retail', RetailController::class);
     Route::get('/retail-export', [RetailController::class, 'export'])->name('retail.export');
+    Route::get('/retail/by-area', [RetailController::class, 'getCustomersByArea'])->name('retail.byArea');
     
 
+    
     Route::resource('asm', AsmprogramController::class);
     Route::post('/asm-import', [AsmimportController::class, 'import'])->name('asm.import');
     Route::get('/asm-export', [AsmprogramController::class, 'export'])->name('asm.export');
@@ -105,7 +112,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/se-import', [SeimportController::class, 'import'])->name('se.import');
     Route::get('/se-export', [SeprogramController::class, 'export'])->name('se.export');
 
-    
+    Route::get('/user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
 // SE section end 
 
     // Translation Routes

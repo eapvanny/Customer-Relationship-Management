@@ -176,7 +176,7 @@ class SeprogramController extends Controller
                 ->make(true);
         }
         // dd($query->get());
-        return view('backend.se.index', compact('is_filter', 'full_name'));
+        return view('backend.se.dev', compact('is_filter', 'full_name'));
         // dd('HI Wholesale');
         // return view('backend.retail.index');
     }

@@ -175,7 +175,7 @@ class AsmprogramController extends Controller
                 ->make(true);
         }
         // dd($query->get());
-        return view('backend.asm.index', compact('is_filter', 'full_name'));
+        return view('backend.asm.dev', compact('is_filter', 'full_name'));
         // dd('HI Wholesale');
         // return view('backend.retail.index');
     }
