@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Helpers\AppHelper;
 use App\Models\Contact;
+use App\Models\Customer;
 use App\Models\Report; // Assuming Report model represents chat reports
 use Illuminate\Http\Request;
 use App\Models\Ticket;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -30,6 +32,20 @@ class DashboardController extends Controller
             $query->where('user_id', $user->id);
         }
        
+        // Get All Reports count (total reports based on the filtered query)
+        $allReports = $query->count();
+
+        // Get Today's Reports count (filtered query with date constraint)
+        $todayReports = (clone $query)
+            ->whereDate('created_at', today())
+            ->count();
+
+        // Get All Users count (from the User table)
+        $allUsers = User::count();
+
+        // Get All Customers count (from the Customer table)
+        $allCustomers = Customer::count();
+
         // Get monthly chat report data
         $monthlyChatReports = (clone $query)
             ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(id) as count')
@@ -45,7 +61,11 @@ class DashboardController extends Controller
         }
         
         // Pass a flag to show the popup (if needed)
-        return view('backend.dashboard', [
+            return view('backend.dashboard', [
+            'allReports' => $allReports,
+            'todayReports' => $todayReports,
+            'allUsers' => $allUsers,
+            'allCustomers' => $allCustomers,
             'monthlyData' => $monthlyData,
             'show_popup' => true // Optional: control the loader visibility
         ]);

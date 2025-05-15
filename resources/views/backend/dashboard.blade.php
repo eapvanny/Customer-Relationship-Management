@@ -6,6 +6,9 @@
 
 @section('extraStyle')
     <style>
+        h6{
+            font-size: 19px;
+        }
         .infinity {
             width: 120px;
             height: 60px;
@@ -325,8 +328,8 @@
             <div class="col-md-12">
                 <div class="sub-head">
                     <div class="row w-100">
-                        <div class="col-md-8">
-                            <h4>{{__('Customer Relationship Management')}}</h4>
+                        <div class="col-12 col-md-12 col-xxl-6 d-flex justify-content-left">
+                            <h4 style="font-weight: 900">{{__('Customer Relationship Management')}}</h4>
                         </div>
                         {{-- <div class="col-md-4 date-container">
                             <input class="select2" type="date">
@@ -335,7 +338,30 @@
                     </div>
                 </div>
             </div>
-            
+            <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
+                    <h6 style="font-weight: 900;">{{ __('All Report') }}</h6>
+                    <h3 id="all-report" style="font-weight: 900;">{{ $allReports }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #2aaa91;">
+                    <h6 style="font-weight: 900;">{{ __('Today Report') }}</h6>
+                    <h3 id="today-report" style="font-weight: 900;">{{ $todayReports }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #95d1d4;">
+                    <h6 style="font-weight: 900;">{{ __('All Customer') }}</h6>
+                    <h3 id="all-customer" style="font-weight: 900;">{{ $allCustomers }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #feb559;">
+                    <h6 style="font-weight: 900;">{{ __('All User') }}</h6>
+                    <h3 id="all-user" style="font-weight: 900;">{{ $allUsers }}</h3>
+                </div>
+            </div>
         </div>
     </section>
     <section>

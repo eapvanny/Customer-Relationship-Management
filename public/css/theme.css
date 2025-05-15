@@ -6263,7 +6263,7 @@ div.dataTables_wrapper div.dataTables_filter input {
     /* Stack elements */
     align-items: center;
     text-align: center;
-    margin-top: -29px;
+    /* margin-top: -29px; */
   }
 
   .date-container {
@@ -6312,6 +6312,16 @@ div.dataTables_wrapper div.dataTables_filter input {
     width: 100%;
     text-align: start;
     margin-left: -12px;
+  }
+}
+@media (min-width: 375px) and (max-width: 430px) {
+  .sub-head {
+    margin-top: -29px;
+  }
+}
+@media(max-width: 360px) or (max-width: 540px) {
+  .sub-head {
+    margin-top: -29px;
   }
 }
 
