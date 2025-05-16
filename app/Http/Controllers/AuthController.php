@@ -60,7 +60,7 @@ class AuthController extends Controller
             }
             $request->session()->regenerate();
             // dd(auth()->user()->role_id);
-            if (auth()->user()->role_id == AppHelper::USER_EMPLOYEE && auth()->user()->type == 1) {
+            if (auth()->user()->role_id == AppHelper::USER_EMPLOYEE) {
                 return redirect()->route('report.index')
                     ->with('success', 'Welcome to CRM system.')
                     ->with('show_popup', true);

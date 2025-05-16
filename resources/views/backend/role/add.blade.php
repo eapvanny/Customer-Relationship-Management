@@ -123,7 +123,7 @@
                         @method('PUT')
                     @endif
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6 col-sm-6 col-lg-4 col-xl-4">
                             <div class="form-group has-feedback">
                                 <label for="role_id">{{ __('Role') }}
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -142,7 +142,7 @@
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-4 co-xl-4">
+                        <div class="col-md-6 col-sm-6 col-lg-4 col-xl-4">
                             <div class="form-group has-feedback">
                                 <label for="type">{{ __('Role Type') }}
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"

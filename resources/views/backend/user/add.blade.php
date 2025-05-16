@@ -29,7 +29,18 @@
                 display: inline-flex;
             }
         }
-
+        @media (max-width: 375px){
+            fieldset>#photo-preview {
+                width: 200px !important;
+                height: 210px !important;
+            }
+        }
+        @media (max-width: 390px){
+            fieldset>#photo-preview {
+                width: 200px !important;
+                height: 210px !important;
+            }
+        }
         .checkbox,
         .radio {
             display: inline-block;
@@ -196,7 +207,7 @@
                     <div class="wrap-outter-header-title">
                         <h1>
                             {{ __('User') }}
-                            <small>
+                            <small class="toch">
                                 @if ($user)
                                     {{ __('Update') }}
                                 @else
@@ -237,7 +248,7 @@
                         <div class="row">
                             <div class="form-group has-feedback">
                                 <div class="row">
-                                    <div class="row-span-6 col-sm-12 col-md-6 col-lg-6 col-xl-6 mt-1">
+                                    <div class="row-span-12 col-sm-12 col-md-12 col-lg-12 col-xl-6 mt-1">
                                         <div class="form-group has-feedback position-relative">
                                             <input type="file" id="photo" name="photo" style="display: none" accept="image/*">
                                             <button type="button" class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1" id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
@@ -255,9 +266,9 @@
                                             </fieldset>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-12 col-lg-12 col-xl-12z">
                                         <div class="row">
-                                            <div class="col-md-6 col-xl-6">
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="staff_id_card"> {{ __('Staff ID') }} <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="staff_id_card" placeholder="staff_id_card"
@@ -267,7 +278,7 @@
                                                     <span class="text-danger">{{ $errors->first('staff_id_card') }}</span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6 col-xl-6">
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="phone_no"> {{ __('Phone No.') }}</label>
                                                     <input type="text" class="form-control" name="phone_no"
@@ -277,7 +288,7 @@
                                                     <span class="text-danger">{{ $errors->first('phone_no') }}</span>
                                                 </div>
                                             </div> 
-                                            <div class="col-md-6 col-xl-6">
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="family_name"> {{ __('Family Name') }} <span
                                                             class="text-danger">*</span></label>
@@ -288,7 +299,7 @@
                                                     <span class="text-danger">{{ $errors->first('family_name') }}</span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6 col-xl-6">
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="name"
@@ -298,7 +309,7 @@
                                                     <span class="text-danger">{{ $errors->first('name') }}</span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6 col-xl-6">
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="family_name_latin"> {{ __('Family Name Latin') }} <span
                                                             class="text-danger">*</span></label>
@@ -309,7 +320,7 @@
                                                     <span class="text-danger">{{ $errors->first('family_name_latin') }}</span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6 col-xl-6">
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="name_latin"> {{ __('Name Latin') }} <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="name_latin"
@@ -319,7 +330,7 @@
                                                     <span class="text-danger">{{ $errors->first('name_latin') }}</span>
                                                 </div>
                                             </div>
-                                           <div class="col-md-6 col-xl-6"> 
+                                           <div class="col-md-6 co-xl-6 col-lg-6"> 
                                                 <div class="form-group has-feedback">
                                                     <label for="position"> {{ __('Position') }} <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="position"
@@ -329,7 +340,7 @@
                                                     <span class="text-danger">{{ $errors->first('position') }}</span>
                                                 </div>
                                             </div>
-                                           <div class="col-md-6 col-xl-6"> 
+                                           <div class="col-md-6 co-xl-6 col-lg-6"> 
                                                 <div class="form-group has-feedback">
                                                     <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="area"
@@ -347,7 +358,7 @@
                         
                     </div>
                     <div class="row">
-                        <div class="col-md-4 co-xl-4">
+                        <div class="col-md-6 co-xl-6 col-lg-6">
                             <div class="form-group has-feedback">
                                 <label for="type"> {{ __('User Type') }}
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -364,7 +375,7 @@
                                 <span class="text-danger">{{ $errors->first('type') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-4 co-xl-4">
+                        <div class="col-md-6 co-xl-6 col-lg-6">
                             <div class="form-group has-feedback">
                                 <label for="id"> {{ __('User Role') }}
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -381,7 +392,7 @@
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-4 col-xl-4 d-none" id="area-manager-section">
+                        <div class="col-md-12 co-xl-6 col-lg-6 d-none" id="area-manager-section">
                             <div class="form-group has-feedback">
                                 <label for="area_manager"> {{ __('Area Manager') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
@@ -438,7 +449,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6 co-xl-6 col-lg-6">
                             <div class="form-group has-feedback">
                                 <label for="email"> {{ __('Email') }} <span class=""></span></label>
                                 <input type="email" class="form-control" name="email" placeholder="email address"
@@ -448,7 +459,7 @@
                                 <span class="text-danger">{{ $errors->first('email') }}</span> --}}
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6 co-xl-6 col-lg-6">
                             <div class="form-group has-feedback">
                                 <label for="username"> {{ __('Username') }} <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control"
@@ -459,7 +470,7 @@
                             </div>
                         </div>
                         @if (!$user)
-                            <div class="col-md-4">
+                            <div class="col-md-6 co-xl-6 col-lg-6">
                                 <div class="form-group has-feedback">
                                     <label for="password"> {{ __('Password') }} <span
                                             class="text-danger">*</span></label>

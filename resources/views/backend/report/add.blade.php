@@ -116,7 +116,17 @@
                 display: inline-flex;
             }
         }
-
+        @media (max-width: 414px) {
+            .wrap-outter-header-title h1 {
+                font-size: 15px;
+            }
+            .btn-info{
+                font-size: 9px !important;
+            }
+            .btn-default{
+                font-size: 9px !important;
+            }
+        }
         fieldset>#open-camera-btn {
             overflow: hidden;
             cursor: pointer;
