@@ -3,17 +3,21 @@
     use App\Http\Helpers\AppHelper;
     $roleId = auth()->user()->role_id;
     $type = auth()->user()->type ?? null;
+
+
+    // echo AppHelper::USER_SE_MANAGER;
+    // // echo auth()->user()->type;
+
+    // exit;
 @endphp
 <aside class="main-sidebar shadow">
     <section class="sidebar">
         <!-- sidebar menu -->
         <ul class="sidebar-menu" data-widget="tree">
-            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE &&
-                    auth()->user()->role_id != AppHelper::USER_SE &&
-                    auth()->user()->role_id != AppHelper::USER_SE_MANAGER)
+            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE)
                 <li>
-                    <a href="{{ route('dashboard.index') }}" class="text-decoration-none">
-                        <i class="fa fa-solid fa-chart-line"></i> <span>{{ __('Dashboard') }}</span>
+                    <a href="{{ URL::route('dashboard.index') }}" class="text-decoration-none">
+                        <i class="fa fa-solid fa-chart-line"></i> <span> {{ __('Dashboard') }}</span>
                     </a>
                 </li>
             @endif
@@ -31,9 +35,8 @@
                     </a>
                 </li>
             @endcan
-            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE)
-                @can('view user')
-                    <li class="treeview">
+            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE && auth()->user()->role_id != AppHelper::USER_SE)
+                <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         <i class="fa fa-solid fa-people-roof"></i>
                         <span>{{ __('Administrator') }}</span>
@@ -67,17 +70,17 @@
                         @endif
                     </ul>
                 </li>
-                @endcan
             @endif
 
             {{-- SE section  start --}}
 
-            @if ($type != AppHelper::SALE)
+            {{-- @if ($type != AppHelper::SALE) --}}
+            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE || auth()->user()->role_id != AppHelper::USER_MANAGER)
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
                         <i class="fas fa-bullhorn"></i>
-                        <span>{{ __('Sale promotion') }}</span>
+                        <span>{{ __('Display program') }}</span>
                         <span class="pull-right-container">
                             <i class="fa fa-angle-left pull-right"></i>
                         </span>
@@ -107,7 +110,7 @@
                         {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
                         {{-- <i class="fas fa-bullhorn"></i> --}}
                         <i class="fas fa-object-group"></i>
-                        <span>{{ __('Display program') }}</span>
+                        <span>{{ __('Sale promotion') }}</span>
                         <span class="pull-right-container">
                             <i class="fa fa-angle-left pull-right"></i>
                         </span>
