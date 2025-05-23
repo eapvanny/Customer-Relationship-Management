@@ -581,13 +581,13 @@
 
                         <div class="col-lg-12 col-md-12 col-xl-12">
                             <div class="form-group has-feedback">
-                                
+
                                 <input type="hidden" class="form-control" name="old_photo" placeholder="photo"
                                     value="@if ($report) {{ $report->photo }}@else{{ old('old_photo') }} @endif">
                                 <input type="hidden" class="form-control" name="old_photo_foc" placeholder="photo foc"
                                     value="@if ($report) {{ $report->photo_foc }}@else{{ old('old_photo_foc') }} @endif">
                             </div>
-                        </div>  
+                        </div>
 
 
 
@@ -1084,7 +1084,7 @@
                 $('#area').trigger('change');
             }
 
-            
+
         });
 
         // $('#outlet').on('input', function() {
@@ -1172,7 +1172,7 @@
 
             // POSM START
             $(document).on('click', '#btn-upload-photo', function () {
-                // POSM START 
+                // POSM START
                     let video = document.getElementById('webcam');
                     let canvas = document.getElementById('canvas');
                     let context = canvas.getContext('2d');
@@ -1305,8 +1305,8 @@
             $(document).on('click', '#btn-upload-photo-foc' , function () {
 
 
-                
-                // FOC START  
+
+                // FOC START
                     let video = document.getElementById('webcam-foc');
                     let canvas = document.getElementById('canvas-foc');
                     let context = canvas.getContext('2d');
@@ -1395,7 +1395,7 @@
                     });
 
                     $('#btn-remove-photo-foc').on('click', function() {
-      
+
                         // console.log('remove');
 
                         $('#photo-foc').val('');
@@ -1434,10 +1434,10 @@
                         video.srcObject = null;
                     }
 
-                // FOC END 
+                // FOC END
             });
         });
     </script>
 
-    
+
 @endsection
