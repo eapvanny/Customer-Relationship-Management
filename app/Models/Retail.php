@@ -11,9 +11,9 @@ class Retail extends Model
     protected $table = 'retails';
 
     protected $fillable = [
-        'area',
-        'outlet',
-        'customer',
+        'area_id',
+        'outlet_id',
+        'customer_id',
         'customer_type',
         'date',
         'other',
@@ -33,11 +33,18 @@ class Retail extends Model
         'customer',
         'customer_type',
         'phone',
+
+        'photo_foc',
+        'foc_qty',
         // 'manager_id'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }

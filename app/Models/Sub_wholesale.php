@@ -13,7 +13,7 @@ class Sub_wholesale extends Model
     protected $table = 'sub_wholesales';
 
     protected $fillable = [
-       'area_id',
+        'area_id',
         'outlet_id',
         'customer_id',
         'customer_type',
@@ -35,6 +35,7 @@ class Sub_wholesale extends Model
         'customer',
         'customer_type',
         'phone',
+
         'photo_foc',
         'foc_qty',
         // 'manager_id'

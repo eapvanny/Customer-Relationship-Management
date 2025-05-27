@@ -164,5 +164,21 @@
     "All Report": "ចំនួនរបាយការណ៍ទាំងអស់",
     "Today Report": "ចំនួនរបាយការណ៍ក្នុងថ្ងៃនេះ",
     "All User": "ចំនួនអ្នកប្រើប្រាស់ទាំងអស់",
-    "All Customer": "ចំនួនអតិថិជនទាំងអស់"
+    "All Customer": "ចំនួនអតិថិជនទាំងអស់",
+    "FOC Image" : "រូបភាព FOC",
+    "POSM Image" : "រូបភាព POSM",
+    "FOC Quantity" : "បរិមាណ FOC",
+    "Import data" : "នាំចូលទិន្នន័យ",
+    "List import" : "បញ្ជីដែលបាននាំចូល",
+    "Manual List" : "បញ្ជីដែល​បញ្ចូលដោយដៃ",
+    "Import List" : "បញ្ជីដែលបាននាំចូល",
+    "Exclusive" : "ផ្តាច់មុខ",
+    "School" : "សាលារៀន",
+    "Sport club" : "កីឡាដ្ឋាន",
+    "Restaurant" : "អាហារដ្ឋាន",
+    "Sub wholesale data import" : "បញ្ជីនាំចូលទិន្នន័យ Sub wholesale",
+    "Retail data import" : "បញ្ជីនាំចូលទិន្នន័យ Retail",
+    " School data import" : "បញ្ជីនាំចូលទិន្នន័យសាលារៀន",
+    "Sport club data import" : "បញ្ជីនាំចូលទិន្នន័យកីឡាដ្ឋាន",
+    "Restaurant data import" : "បញ្ជីនាំចូលទិន្នន័យអាហារដ្ឋាន"
 }

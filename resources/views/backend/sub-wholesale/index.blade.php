@@ -20,6 +20,14 @@
             font-size: small !important;
             min-width: 100px !important;
         }
+        .link-group a{
+            color: grey;
+            padding: 0 5px;
+        }
+        .link-group a.active{
+            color: rgb(0, 121, 190);
+            text-decoration: underline;
+        }
     </style>
 @endsection
 <!-- BEGIN PAGE CONTENT-->
@@ -90,8 +98,12 @@
                             data-bs-target="#filterContainer">
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
-                        <a class="btn btn-info text-white" href="{{ URL::route('sub-wholesale.create') }}"><i
-                                class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
+                        <a class="btn btn-success text-white" href="{{ URL::route('subwholesale.import') }}">
+                            <i class="fa fa-download"></i> {{ __('Import data') }}
+                        </a>
+                        <a class="btn btn-info text-white" href="{{ URL::route('sub-wholesale.create') }}">
+                            <i class="fa fa-plus-circle"></i> {{ __('Add New') }}
+                        </a>
                     </div>
                 </div>
 
@@ -131,7 +143,7 @@
                                                                 'id' => 'full_name',
                                                                 'class' => 'form-control select2',
                                                             ]) !!}
-                                                        </div>      
+                                                        </div>
                                                     </div>
                                                 @endif
                                             </div>
@@ -149,12 +161,19 @@
                                             </div>
                                         </div>
                                     </form>
+                                    <div class="row mb-3">
+                                        <div class="col-12 link-group">
+                                            <a href="{{ route('sub-wholesale.index') }}" class="active"> {{ __('Manual List') }} </a> |
+                                            <a href="{{ route("sub-wholesale-import.index") }}"> {{ __('Import List') }} </a>
+                                        </div>
+                                    </div>
                                     <div class="row" style="margin-bottom: -20px">
                                         <div class="col-12">
                                             <a class="btn btn-success btn-sm" href="{{ route('subwholesale.export') }}"><i
                                                     class="fa-solid fa-download"></i> {{ __('Export') }}</a>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
 
@@ -190,7 +209,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+
                                     </tbody>
                                 </table>
                             </div>
@@ -220,7 +239,7 @@
                 </div>
                 <div class="modal-body img-popup">
                     <div class="row">
-                       
+
                         <div class="col-md-12">
                             <div class="report-details">
                                 <div class="row">
@@ -235,7 +254,7 @@
                                             <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer')}} :</strong> <span id="modalCustomer"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer Type')}} :</strong> <span id="modalCustomerType"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
-        
+
                                             <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Address')}} :</strong> <span id="modalCity"></span></li>
 
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
@@ -255,7 +274,7 @@
                                         </ul>
                                     </div>
                                 </div>
-                                
+
                             </div>
                         </div>
                          <div class="col-md-12 my-2">
@@ -269,7 +288,7 @@
                                     <p class="text-center">{{__('POSM Image')}}</p>
 
                                 </div>
-                                
+
                             </div>
                         </div>
                     </div>
@@ -508,7 +527,7 @@
                         $('#modalCustomer').text(report.customer);
                         $('#modalCustomerType').text(report.customer_type);
                         $('#viewModal').modal('show');
-                        
+
                     },
                     error: function(xhr) {
                         console.log('Error:', xhr);

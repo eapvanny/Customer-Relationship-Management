@@ -1,7 +1,7 @@
 @extends('backend.layouts.master')
 
 @section('pageTitle')
-    Sub Wholesale
+    Sub wholesale
 @endsection
 
 @section('bodyCssClass')

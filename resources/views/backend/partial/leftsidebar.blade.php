@@ -75,11 +75,11 @@
             {{-- SE section  start --}}
 
             {{-- @if ($type != AppHelper::SALE) --}}
-            @if (!in_array($roleId, [AppHelper::USER_EMPLOYEE, AppHelper::USER_MANAGER]))
+            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE || auth()->user()->role_id != AppHelper::USER_MANAGER)
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
-                        <i class="fas fa-bullhorn"></i>
+                        <i class="fas fa-object-group"></i>
                         <span>{{ __('Display program') }}</span>
                         <span class="pull-right-container">
                             <i class="fa fa-angle-left pull-right"></i>
@@ -109,7 +109,7 @@
                     <a href="#" class="text-decoration-none">
                         {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
                         {{-- <i class="fas fa-bullhorn"></i> --}}
-                        <i class="fas fa-object-group"></i>
+                        <i class="fas fa-bullhorn "></i>
                         <span>{{ __('Sale promotion') }}</span>
                         <span class="pull-right-container">
                             <i class="fa fa-angle-left pull-right"></i>
@@ -129,6 +129,43 @@
                                 <a href="{{ URL::route('se.index') }}" class="text-decoration-none">
                                     {{-- <i class="fas fa-circle"></i>  --}}
                                     <span>- {{ __('SE program') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                    </ul>
+                </li>
+
+                <li class="treeview">
+                    <a href="#" class="text-decoration-none">
+                        {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>{{ __('Exclusive') }}</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        @can('view school')
+                            <li>
+                                <a href="{{ URL::route('school.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('School') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('view restaurant')
+                            <li>
+                                <a href="{{ URL::route('restaurant.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('Restaurant') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('view sport club')
+                            <li>
+                                <a href="{{ URL::route('sport-club.index') }}" class="text-decoration-none">
+                                    {{-- <i class="fas fa-circle"></i>  --}}
+                                    <span>- {{ __('Sport club') }}</span>
                                 </a>
                             </li>
                         @endcan

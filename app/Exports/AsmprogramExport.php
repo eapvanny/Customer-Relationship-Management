@@ -19,9 +19,10 @@ class AsmprogramExport implements FromView
     {
         // dd('Hi');
         $user = Auth::user();
-        
-        $query = Asm_program::get();
-        
+
+        $query = Asm_program::with('user', 'customer')->orderBy('id', 'desc')->get();
+        // dd($query);
+
         // if ($user->role_id === AppHelper::USER_MANAGER) {
         //     $query->whereHas('user', function ($q) use ($user) {
         //         $q->where('manager_id', $user->id);

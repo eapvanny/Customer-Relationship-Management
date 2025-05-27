@@ -13,10 +13,12 @@ use App\Exports\ReportsExport;
 use Illuminate\Support\Carbon;
 use App\Http\Helpers\AppHelper;
 use App\Exports\SubwholesaleExport;
+use App\Imports\SubwholesaleImport;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Validator;
 // use Maatwebsite\Excel\Facades\Excel;
 
 
@@ -61,7 +63,7 @@ class SubwholesaleController extends Controller
             ];
         });
 
-        // Filter by date range 
+        // Filter by date range
         if ($request->has(['date1', 'date2']) && !empty($request->date1) && !empty($request->date2)) {
             $is_filter = true;
             $startDate = Carbon::parse($request->date1)->startOfDay();
@@ -74,10 +76,11 @@ class SubwholesaleController extends Controller
             $is_filter = true;
             $query->where('user_id', $request->full_name);
         }
-        
+
         if ($request->ajax()) {
             $reports = $query->get();
             // dd($reports);
+
             return DataTables::of($reports)
                 ->addColumn('photo', function ($data) {
                     $photoUrl = $data->user->photo ? asset('storage/' . $data->user->photo) : asset('images/avatar.png');
@@ -98,7 +101,7 @@ class SubwholesaleController extends Controller
                 })
 
                 ->addColumn('area', function ($data) {
-                    return __(AppHelper::getAreaName($data->area_id));  
+                    return __(AppHelper::getAreaName($data->area_id));
                     // return isset(AppHelper::AREAS[$data->area_id]) ? __(AppHelper::AREAS[$data->area_id]) : __('N/A');
                 })
 
@@ -378,9 +381,9 @@ class SubwholesaleController extends Controller
 
                 'customer' => $report->customer->name ?? 'N/A',
                 // 'customer_type' => $report->customer_type,
-                'customer_type' => isset(AppHelper::CUSTOMER_TYPE[$report->customer_type]) 
-                    ? __(AppHelper::CUSTOMER_TYPE[$report->customer_type]) 
-                    : __('N/A'),                
+                'customer_type' => isset(AppHelper::CUSTOMER_TYPE[$report->customer_type])
+                    ? __(AppHelper::CUSTOMER_TYPE[$report->customer_type])
+                    : __('N/A'),
                 'date' => $report->date,
                 'other' => $report->other ?? 'N/A',
                 '250_ml' => $report->{'250_ml'},
@@ -498,7 +501,7 @@ class SubwholesaleController extends Controller
         $old_photo_foc = $request->old_photo_foc;
 
 
-        
+
         /*
             if ($request->hasFile('photo')) {
 
@@ -536,7 +539,7 @@ class SubwholesaleController extends Controller
 
 
         // dd($request->photo_base64, $request->photo_base64_foc);
-        
+
 
             // dd($data['photo'], $data['photo_foc'] );
 
@@ -589,7 +592,7 @@ class SubwholesaleController extends Controller
 
 
 
-            
+
         /////////////////////////////////////////////////////////
 
 
@@ -639,7 +642,7 @@ class SubwholesaleController extends Controller
                 'foc_qty' => $request->foc_qty,
             ]
         );
-        
+
 
         return redirect()->route('sub-wholesale.index')->with('success', "Report has been updated!");
     }
@@ -658,7 +661,7 @@ class SubwholesaleController extends Controller
     }
 
 
-    
+
     public function export()
     {
         // dd('HI Export');
@@ -712,5 +715,44 @@ class SubwholesaleController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function import(){
+        // dd('Import data here');
+        $report = null;
+        // dd('HI Wholesale');
+        $customer = null; // Assuming $customer is used for editing; null for create
+        $customers = [];
+        $report = null;
+        $customerType = AppHelper::CUSTOMER_TYPE;
+        // If there's old input or a pre-selected area, fetch customers
+        $areaId = old('area', $customer->area_id ?? '');
+        if ($areaId) {
+            $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
+        }
+
+        // dd($customers);
+
+        return view('backend.sub-wholesale.import', compact('customer', 'customers','report','customerType'));
+        // return view('backend.sub-wholesale.import', compact('report', 'customers'));
+    }
+
+    public function saveImport(Request $request){
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048', // Added max size limit
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $file = $request->file('file');
+        // phpinfo();
+
+        // exit;
+        // Import the file
+        Excel::import(new SubwholesaleImport, $file);
+        // dd('File imported successfully.');
+        return redirect()->route('sub-wholesale-import.index')->with('success', 'File imported successfully.');
     }
 }

@@ -60,7 +60,7 @@ class RetailController extends Controller
             ];
         });
 
-        // Filter by date range 
+        // Filter by date range
         if ($request->has(['date1', 'date2']) && !empty($request->date1) && !empty($request->date2)) {
             $is_filter = true;
             $startDate = Carbon::parse($request->date1)->startOfDay();
@@ -73,7 +73,7 @@ class RetailController extends Controller
             $is_filter = true;
             $query->where('user_id', $request->full_name);
         }
-        
+
         if ($request->ajax()) {
             $reports = $query->get();
             // dd($reports);
@@ -97,7 +97,7 @@ class RetailController extends Controller
                 })
 
                 ->addColumn('area', function ($data) {
-                    return __(AppHelper::getAreaName($data->area_id));  
+                    return __(AppHelper::getAreaName($data->area_id));
                     // return isset(AppHelper::AREAS[$data->area_id]) ? __(AppHelper::AREAS[$data->area_id]) : __('N/A');
                 })
 
@@ -377,9 +377,9 @@ class RetailController extends Controller
 
                 'customer' => $report->customer->name ?? 'N/A',
                 // 'customer_type' => $report->customer_type,
-                'customer_type' => isset(AppHelper::CUSTOMER_TYPE[$report->customer_type]) 
-                    ? __(AppHelper::CUSTOMER_TYPE[$report->customer_type]) 
-                    : __('N/A'),                
+                'customer_type' => isset(AppHelper::CUSTOMER_TYPE[$report->customer_type])
+                    ? __(AppHelper::CUSTOMER_TYPE[$report->customer_type])
+                    : __('N/A'),
                 'date' => $report->date,
                 'other' => $report->other ?? 'N/A',
                 '250_ml' => $report->{'250_ml'},
@@ -497,7 +497,7 @@ class RetailController extends Controller
         $old_photo_foc = $request->old_photo_foc;
 
 
-        
+
         /*
             if ($request->hasFile('photo')) {
 
@@ -535,7 +535,7 @@ class RetailController extends Controller
 
 
         // dd($request->photo_base64, $request->photo_base64_foc);
-        
+
 
             // dd($data['photo'], $data['photo_foc'] );
 
@@ -588,7 +588,7 @@ class RetailController extends Controller
 
 
 
-            
+
         /////////////////////////////////////////////////////////
 
 
@@ -638,7 +638,7 @@ class RetailController extends Controller
                 'foc_qty' => $request->foc_qty,
             ]
         );
-        
+
 
         return redirect()->route('retail.index')->with('success', "Report has been updated!");
     }
@@ -657,7 +657,7 @@ class RetailController extends Controller
     }
 
 
-    
+
     public function export()
     {
         // dd('HI Export');
@@ -712,5 +712,7 @@ class RetailController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    
 }
 

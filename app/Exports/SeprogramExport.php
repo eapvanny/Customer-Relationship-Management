@@ -16,9 +16,9 @@ class SeprogramExport implements FromView
     {
         // dd('Hi');
         $user = Auth::user();
-        
-        $query = Se_program::get();
-        
+
+        $query = Se_program::with('user', 'customer')->orderBy('id', 'desc')->get();
+
         // if ($user->role_id === AppHelper::USER_MANAGER) {
         //     $query->whereHas('user', function ($q) use ($user) {
         //         $q->where('manager_id', $user->id);
