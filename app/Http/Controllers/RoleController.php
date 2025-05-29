@@ -55,9 +55,9 @@ class RoleController extends Controller
                         $actions[] = '<a title="Edit" href="' . $editUrl . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                     }
 
-                    if (auth()->user()->hasPermissionTo('delete role', null, AppHelper::ALL)) {
-                        $actions[] = '<a title="Delete" href="' . route('role.destroy', $role->id) . '" class="btn btn-danger btn-sm delete"><i class="fa fa-trash"></i></a>';
-                    }
+                    // if (auth()->user()->hasPermissionTo('delete role', null, AppHelper::ALL)) {
+                    //     $actions[] = '<a title="Delete" href="' . route('role.destroy', $role->id) . '" class="btn btn-danger btn-sm delete"><i class="fa fa-trash"></i></a>';
+                    // }
 
                     return '<div class="change-action-item">' . ($actions ? implode(' ', $actions) : '<span style="font-weight:bold; color:red;">No Action</span>') . '</div>';
                 })
@@ -172,9 +172,9 @@ class RoleController extends Controller
     /**
      * Remove the specified role.
      */
-    public function destroy($id)
-    {
-        Role::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Role deleted successfully.');
-    }
+    // public function destroy($id)
+    // {
+    //     Role::findOrFail($id)->delete();
+    //     return redirect()->back()->with('success', 'Role deleted successfully.');
+    // }
 }

@@ -33,10 +33,10 @@ class CustomerController extends Controller
                     $button .= '<a title="Edit" href="' . route('customer.edit', $customer->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                     $actions = true;
                 }
-                if (auth()->user()->can('delete customer')) {
-                    $button .= '<a href="' . route('customer.destroy', $customer->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                    $actions = true;
-                }
+                // if (auth()->user()->can('delete customer')) {
+                //     $button .= '<a href="' . route('customer.destroy', $customer->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                //     $actions = true;
+                // }
                 if (!$actions) {
                     $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
                 }
@@ -130,10 +130,10 @@ class CustomerController extends Controller
         }
     }
 
-    public function destroy($id)
-    {
-        $customer = Customer::findOrFail($id);
-        $customer->delete();
-        return redirect()->back()->with('success', "Customer has been deleted!");
-    }
+    // public function destroy($id)
+    // {
+    //     $customer = Customer::findOrFail($id);
+    //     $customer->delete();
+    //     return redirect()->back()->with('success', "Customer has been deleted!");
+    // }
 }
