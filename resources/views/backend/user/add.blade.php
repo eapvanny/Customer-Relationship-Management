@@ -266,7 +266,7 @@
                                             </fieldset>
                                         </div>
                                     </div>
-                                    <div class="col-md-12 col-lg-12 col-xl-12z">
+                                    <div class="col-md-12 col-lg-12 col-xl-6">
                                         <div class="row">
                                             <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
