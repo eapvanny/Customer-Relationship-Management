@@ -43,7 +43,13 @@ class UserController extends Controller
             });
         } elseif ($loggedInUserRole == AppHelper::USER_ADMIN) {
             $query->where('role_id', '!=', AppHelper::USER_SUPER_ADMIN);
-        } elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
+        } elseif ($loggedInUserRole == AppHelper::USER_SE_MANAGER){
+            $query->where(function ($q) use ($loggedInUserId) {
+                $q->where('id', $loggedInUserId)
+                    ->orWhere('manager_id', $loggedInUserId);
+            });
+        } 
+        elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
             $query->where('id', $loggedInUserId);
         }
 
