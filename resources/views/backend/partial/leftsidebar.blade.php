@@ -75,7 +75,7 @@
             {{-- SE section  start --}}
 
             {{-- @if ($type != AppHelper::SALE) --}}
-            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE || auth()->user()->role_id != AppHelper::USER_MANAGER)
+            @if (!in_array(auth()->user()->role_id, [AppHelper::USER_EMPLOYEE, AppHelper::USER_MANAGER]))
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         {{-- <i class="fa fa-solid fa-people-roof"></i> --}}
