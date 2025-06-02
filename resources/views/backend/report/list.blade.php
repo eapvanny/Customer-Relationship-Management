@@ -592,7 +592,7 @@
                 processing: false,
                 serverSide: true,
                 ajax: {
-                    url: "{!! route('report.index', request()->all()) !!}",
+                    url: "{{ route('report.index')}}",
                 },
                 pageLength: 10,
                 columns: [{

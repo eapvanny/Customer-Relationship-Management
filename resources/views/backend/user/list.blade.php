@@ -167,7 +167,7 @@
                 processing: false,
                 serverSide: true,
                 ajax: {
-                    url: "{!! route('user.index', Request::query()) !!}",
+                    url: "{{ route('user.index') }}",
                 },
                 columns: [{
                         data: 'photo',
