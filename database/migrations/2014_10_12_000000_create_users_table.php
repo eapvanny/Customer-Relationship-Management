@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('position');
             $table->string('area');
             $table->string('username')->unique();
-            $table->string('email')->unique();
+            $table->string('email')->unique()->nullable();
             $table->string('phone_no')->nullable();
             $table->string('password');
             $table->string('photo')->nullable();
