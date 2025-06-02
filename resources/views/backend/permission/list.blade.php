@@ -41,14 +41,14 @@
                         <!-- /.box-header -->
                         <div class="box-body margin-top-20">
                             <div class="table-responsive mt-3">
-                                <table id="datatabble"
+                                <table id="datatable"
                                     class="table table-bordered table-striped list_view_table display responsive no-wrap"
                                     width="100%">
                                     <thead>
                                         <tr>
                                             <th width="10%">#</th>
-                                            <th > {{ __('Name') }} </th>
-                                            <th > {{ __('Permission Type') }} </th>
+                                            <th> {{ __('Name') }} </th>
+                                            <th> {{ __('Permission Type') }} </th>
                                             <th class="notexport" style="max-width: 80px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
@@ -82,16 +82,18 @@
         $(document).ready(function() {
             Generic.initCommonPageJS();
             Generic.initDeleteDialog();
+
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-            t = $('#datatabble').DataTable({
-                processing: false,
+
+            let t = $('#datatable').DataTable({
+                processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{!! route('permission.index', request()->all()) !!}",
+                    url: "{{ route('permission.index') }}"
                 },
                 pageLength: 10,
                 columns: [{
@@ -111,17 +113,17 @@
                     {
                         data: 'action',
                         name: 'action',
-                        orderable: false
+                        orderable: false,
+                        searchable: false
                     }
-                ],
+                ]
             });
 
-            //delete grade_level
-            $('#datatabble').delegate('.delete', 'click', function(e) {
-                let action = $(this).attr('href');
-                console.log()
-                $('#myAction').attr('action', action);
+            $('#datatable').on('click', '.delete', function(e) {
                 e.preventDefault();
+                let action = $(this).attr('href');
+                $('#myAction').attr('action', action);
+
                 swal({
                     title: 'Are you sure?',
                     text: 'You will not be able to recover this record!',
