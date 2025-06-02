@@ -17,7 +17,7 @@ class ReportsExport implements FromView
     {
         $user = Auth::user();
         
-        $query = Report::with('user');
+        $query = Report::with('user','customer');
         
         if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
