@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Http;
 use App\Exports\ReportsExport;
 use App\Models\Customer;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
@@ -71,95 +72,74 @@ class ReportController extends Controller
         }
 
         if ($request->ajax()) {
-            $reports = $query->get();
+            try {
+                $reports = $query->get();
 
-            return DataTables::of($reports)
-                ->addColumn('photo', function ($data) {
-                    $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
-                    return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" src="' . $photoUrl . '" >';
-                })
-                ->addColumn('id_card', function ($data) {
-                    return $data->user->staff_id_card ?? 'N/A';
-                })
-                ->addColumn('name', function ($data) {
-                    $user = optional($data->user);
-                    return auth()->user()->user_lang == 'en'
-                        ? ($user->getFullNameLatinAttribute() ?? 'N/A')
-                        : ($user->getFullNameAttribute() ?? 'N/A');
-                })
-                ->addColumn('area', function ($data) {
-                    return __(AppHelper::getAreaName($data->area_id));
-                })
-                ->addColumn('outlet_id', function ($data) {
-                    return $data->customer ? $data->customer->outlet : 'N/A';
-                })
-                ->addColumn('customer', function ($data) {
-                    return $data->customer ? $data->customer->name : 'N/A';
-                })
-                ->addColumn('customer_type', function ($data) {
-                    return isset(AppHelper::CUSTOMER_TYPE[$data->customer_type]) ? __(AppHelper::CUSTOMER_TYPE[$data->customer_type]) : __('N/A');
-                })
-                ->addColumn('250ml', function ($data) {
-                    return __($data->{'250_ml'} ?? 'N/A');
-                })
-                ->addColumn('350ml', function ($data) {
-                    return __($data->{'350_ml'} ?? 'N/A');
-                })
-                ->addColumn('600ml', function ($data) {
-                    return __($data->{'600_ml'} ?? 'N/A');
-                })
-                ->addColumn('1500ml', function ($data) {
-                    return __($data->{'1500_ml'} ?? 'N/A');
-                })
-                ->addColumn('phone', function ($data) {
-                    return $data->customer ? $data->customer->phone : 'N/A';
-                })
-                ->addColumn('latitude', function ($data) {
-                    return __($data->latitude ?? 'N/A');
-                })
-                ->addColumn('longitude', function ($data) {
-                    return __($data->longitude ?? 'N/A');
-                })
-                ->addColumn('location', function ($data) {
-                    return __($data->city . ',' . $data->country ?? 'N/A');
-                })
-                ->addColumn('date', function ($data) {
-                    return $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A';
-                })
-                ->addColumn('other', function ($data) {
-                    return __($data->other ?? 'N/A');
-                })
-                ->addColumn('posm', function ($data) {
-                    return isset(AppHelper::MATERIAL[$data->posm]) ? __(AppHelper::MATERIAL[$data->posm]) : __('N/A');
-                })
-                ->addColumn('qty', function ($data) {
-                    return __($data->qty ?? 'N/A');
-                })
-                ->addColumn('action', function ($data) {
-                    $editRoute = route('report.edit', $data->id);
-                    $deleteRoute = route('report.destroy', $data->id);
-
-                    $actionButtons = '
-                    <span class="change-action-item">
-                        <a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal">
-                            <i class="fa fa-fw fa-eye"></i>
-                        </a>
-                    </span>';
-
-                    if (auth()->user()->can('update report')) {
-                        $actionButtons .= '
-                        <span class="change-action-item">
-                            <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
-                                <i class="fa fa-edit"></i>
+                return DataTables::of($reports)
+                    ->addColumn('photo', function ($data) {
+                        $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
+                        return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" src="' . $photoUrl . '" >';
+                    })
+                    ->addColumn('id_card', function ($data) {
+                        return $data->user->staff_id_card ?? 'N/A';
+                    })
+                    ->addColumn('name', function ($data) {
+                        $user = optional($data->user);
+                        return auth()->user()->user_lang == 'en'
+                            ? ($user->getFullNameLatinAttribute() ?? 'N/A')
+                            : ($user->getFullNameAttribute() ?? 'N/A');
+                    })
+                    ->addColumn('area', function ($data) {
+                        return __(AppHelper::getAreaName($data->area_id));
+                    })
+                    ->addColumn('outlet_id', function ($data) {
+                        return $data->customer->outlet ?? 'N/A';
+                    })
+                    ->addColumn('customer', function ($data) {
+                        return $data->customer->name ?? 'N/A';
+                    })
+                    ->addColumn('customer_type', function ($data) {
+                        return AppHelper::CUSTOMER_TYPE[$data->customer_type] ?? 'N/A';
+                    })
+                    ->addColumn('250ml', fn($data) => $data->{'250_ml'} ?? 'N/A')
+                    ->addColumn('350ml', fn($data) => $data->{'350_ml'} ?? 'N/A')
+                    ->addColumn('600ml', fn($data) => $data->{'600_ml'} ?? 'N/A')
+                    ->addColumn('1500ml', fn($data) => $data->{'1500_ml'} ?? 'N/A')
+                    ->addColumn('phone', fn($data) => $data->customer->phone ?? 'N/A')
+                    ->addColumn('latitude', fn($data) => $data->latitude ?? 'N/A')
+                    ->addColumn('longitude', fn($data) => $data->longitude ?? 'N/A')
+                    ->addColumn('location', fn($data) => $data->city && $data->country ? "{$data->city}, {$data->country}" : 'N/A')
+                    ->addColumn('date', fn($data) => $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A')
+                    ->addColumn('other', fn($data) => $data->other ?? 'N/A')
+                    ->addColumn('posm', fn($data) => AppHelper::MATERIAL[$data->posm] ?? 'N/A')
+                    ->addColumn('qty', fn($data) => $data->qty ?? 'N/A')
+                    ->addColumn('action', function ($data) {
+                        $editRoute = route('report.edit', $data->id);
+                        $action = '<span class="change-action-item">
+                            <a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal">
+                                <i class="fa fa-fw fa-eye"></i>
                             </a>
                         </span>';
-                    }
+                        if (auth()->user()->can('update report')) {
+                            $action .= '<span class="change-action-item">
+                                    <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </span>';
+                        }
+                        return $action;
+                    })
+                    ->rawColumns(['photo', 'action'])
+                    ->make(true);
+            } catch (\Exception $e) {
+                Log::error('DataTables error in ReportController@index: ' . $e->getMessage(), [
+                    'stack' => $e->getTraceAsString()
+                ]);
 
-                    return $actionButtons;
-                })
-                ->rawColumns(['photo', 'action'])
-                ->make(true);
+                return response()->json(['error' => 'Server error. Check logs.'], 500);
+            }
         }
+
 
         return view('backend.report.list', compact('is_filter', 'full_name'));
     }
