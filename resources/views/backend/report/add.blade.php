@@ -34,6 +34,12 @@
             border-image: initial;
         }
 
+        .text-danger1 {
+            display: block;
+            text-align: center !important;
+            color: #DC3545;
+        }
+
         fieldset {
             padding: 1em 0.625em 1em;
             border: 1px solid #9a9a9a;
@@ -116,17 +122,58 @@
                 display: inline-flex;
             }
         }
+
         @media (max-width: 414px) {
             .wrap-outter-header-title h1 {
                 font-size: 15px;
             }
-            .btn-info{
+
+            .btn-info {
                 font-size: 9px !important;
             }
-            .btn-default{
+
+            .btn-default {
                 font-size: 9px !important;
             }
         }
+
+        fieldset>#open-outlet-camera-btn {
+            overflow: hidden;
+            cursor: pointer;
+            width: 100%;
+            height: 340px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        fieldset>#open-outlet-camera-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        fieldset>#open-outlet-camera-btn>#btn-upload-outlet-photo {
+            min-width: 100px;
+            min-height: 100px;
+            background-color: #ddd;
+            font-size: 25px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        fieldset>#open-outlet-camera-btn>#btn-upload-outlet-photo:hover {
+            transform: scale(1.05);
+        }
+
+        fieldset>#outlet-photo-preview {
+            height: 238px;
+            width: 238px;
+            position: absolute;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
         fieldset>#open-camera-btn {
             overflow: hidden;
             cursor: pointer;
@@ -602,13 +649,13 @@
                                                 </button>
                                                 <fieldset id="photo-upload"
                                                     class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
+                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto') && !isset($report->photo)) d-none @endif z-1"
                                                         id="photo-preview" name="oldphoto"
-                                                        src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
+                                                        src="@if (isset($report->photo)) {{ asset('storage/' . $report->photo) }} @else {{ old('oldphoto') }} @endif"
                                                         alt="photo">
                                                     <input type="hidden" id="img-preview" name="oldphoto"
-                                                        value="@if (optional($report)->photo) {{ asset($report->photo) }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                        value="@if (isset($report->photo)) {{ $report->photo }} @endif">
+                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview') && !isset($report->photo)) opacity-100 @else opacity-25 @endif"
                                                         id="open-camera-btn">
                                                         <button class="btn p-3 rounded-circle" id="btn-upload-photo"
                                                             type="button" data-action="open-camera">
@@ -617,7 +664,11 @@
                                                     </div>
                                                     <label id="camera-label"
                                                         class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        {{ __('Click to open camera and capture photo') }}
+                                                        @if (isset($report->photo) || old('img-preview'))
+                                                            {{ __('Delete the old photo before you can open the camera') }}
+                                                        @else
+                                                            {{ __('Click to open camera and capture photo') }}
+                                                        @endif
                                                     </label>
                                                 </fieldset>
                                             </div>
@@ -662,9 +713,21 @@
                                                             'posm',
                                                             [
                                                                 AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                                                AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                                                AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
+                                                                AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
+                                                                AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
+                                                                AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
+                                                                AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
+                                                                AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
+                                                                AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
+                                                                AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
+                                                                AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
+                                                                AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
+                                                                AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
+                                                                AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
+                                                                AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
+                                                                AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
+                                                                AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
+                                                                AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
                                                             ],
                                                             old('posm', optional($report)->posm),
                                                             [
@@ -686,6 +749,84 @@
                                                         <span class="fa fa-info form-control-feedback"></span>
                                                         <span class="text-danger">{{ $errors->first('qty') }}</span>
                                                     </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>{{ __('Photo Attachment') }} <span class="text-danger">*
+                                    {{ __('(For the amount of water that has been sold)') }}</span></legend>
+                            <div class="row">
+                                <div class="form-group has-feedback">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group has-feedback position-relative">
+                                                <input type="file" id="outlet_photo" name="outlet_photo"
+                                                    style="display: none" accept="image/*" required>
+                                                <button type="button"
+                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                    id="btn-remove-outlet-photo">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                                <fieldset id="outlet-photo-upload"
+                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                    <img class="rounded mx-auto d-block @if (!old('old_outlet_photo') && !isset($report->outlet_photo)) d-none @endif z-1"
+                                                        id="outlet-photo-preview" name="old_outlet_photo"
+                                                        src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }} @else {{ old('old_outlet_photo') }} @endif"
+                                                        alt="outlet-photo">
+                                                    <input type="hidden" id="outlet-img-preview" name="old_outlet_photo"
+                                                        value="@if (isset($report->outlet_photo)) {{ $report->outlet_photo }} @endif">
+                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('outlet-img-preview') && !isset($report->outlet_photo)) opacity-100 @else opacity-25 @endif"
+                                                        id="open-outlet-camera-btn">
+                                                        <button class="btn p-3 rounded-circle"
+                                                            id="btn-upload-outlet-photo" type="button"
+                                                            data-action="open-outlet-camera">
+                                                            <i class="fa-solid fa-camera-retro"></i>
+                                                        </button>
+                                                    </div>
+                                                    <label id="outlet-camera-label"
+                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                        @if (isset($report->outlet_photo) || old('outlet-img-preview'))
+                                                            {{ __('Delete the old photo before you can open the camera') }}
+                                                        @else
+                                                            {{ __('Click to open camera and capture photo') }}
+                                                        @endif
+                                                    </label>
+                                                </fieldset>
+                                                @error('outlet_photo')
+                                                    <span class="text-danger1">{{ __($message) }}</span>
+                                                @enderror
+                                            </div>
+                                            <div id="outlet-camera-modal" class="camera-modal d-none">
+                                                <div class="camera-content">
+                                                    <div class="video-container position-relative">
+                                                        <video id="outlet-webcam" autoplay playsinline></video>
+                                                        <div class="camera-overlay">
+                                                            <div class="overlay-top"></div>
+                                                            <div class="overlay-bottom"></div>
+                                                            <div class="overlay-left"></div>
+                                                            <div class="overlay-right"></div>
+                                                            <div class="focus-circle"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="camera-controls">
+                                                        <button id="switch-outlet-camera-btn"
+                                                            class="btn switch-camera-btn" type="button">
+                                                            <i class="fa-solid fa-camera-rotate"></i>
+                                                        </button>
+                                                        <button id="capture-outlet-btn" class="btn capture-btn"
+                                                            type="button">
+                                                            <i class="fa-solid fa-camera"></i>
+                                                        </button>
+                                                        <button id="close-outlet-camera-btn" class="btn close-camera-btn"
+                                                            type="button">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                    <canvas id="outlet-canvas" class="d-none"></canvas>
                                                 </div>
                                             </div>
                                         </div>
@@ -1089,18 +1230,187 @@
                 $('#area').trigger('change');
             }
 
+            let outletVideo = document.getElementById('outlet-webcam');
+            let outletCanvas = document.getElementById('outlet-canvas');
+            let outletContext = outletCanvas.getContext('2d');
+            let outletImgPreview = $('#outlet-photo-preview');
+            let outletImgInput = $('#outlet-img-preview');
+            let outletCameraModal = $('#outlet-camera-modal');
+            let outletCameraLabel = $('#outlet-camera-label');
+            let outletCurrentFacingMode = 'user';
+
+            function updateOutletCameraLabel() {
+                if (outletImgPreview.hasClass('d-none')) {
+                    outletCameraLabel.text('{{ __('Click to open camera and capture photo') }}');
+                } else {
+                    outletCameraLabel.text('{{ __('Delete the old photo before you can open the camera') }}');
+                }
+            }
+
+            updateOutletCameraLabel();
+
+            @if ($report && $report->outlet_photo)
+                $('#btn-upload-outlet-photo').addClass('d-none');
+                $('#btn-remove-outlet-photo').removeClass('d-none');
+            @endif
+
+            function startOutletCamera(facingMode) {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    outletVideo.setAttribute('playsinline', 'true');
+                    outletVideo.setAttribute('autoplay', 'true');
+
+                    navigator.mediaDevices.getUserMedia({
+                            video: {
+                                facingMode: facingMode,
+                                width: {
+                                    ideal: 1280
+                                },
+                                height: {
+                                    ideal: 720
+                                }
+                            }
+                        })
+                        .then(function(stream) {
+                            outletVideo.srcObject = stream;
+                            outletVideo.play();
+                        })
+                        .catch(function(error) {
+                            alert('Unable to access camera: ' + error.message);
+                            console.error('Camera error:', error);
+                            outletCameraModal.addClass('d-none');
+                            $('#outlet_photo').click();
+                        });
+                } else {
+                    alert('Camera not supported on this device.');
+                    $('#outlet_photo').click();
+                }
+            }
+
+            $('[data-action="open-outlet-camera"]').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                outletCameraModal.removeClass('d-none');
+                startOutletCamera(outletCurrentFacingMode);
+            });
+
+            $('#switch-outlet-camera-btn').on('click', function() {
+                outletCurrentFacingMode = (outletCurrentFacingMode === 'user') ? 'environment' : 'user';
+                stopOutletCamera();
+                startOutletCamera(outletCurrentFacingMode);
+            });
+
+            $('#capture-outlet-btn').on('click', function(e) {
+                e.preventDefault();
+                outletCanvas.width = outletVideo.videoWidth;
+                outletCanvas.height = outletVideo.videoHeight;
+                outletContext.drawImage(outletVideo, 0, 0, outletCanvas.width, outletCanvas.height);
+                let imageData = outletCanvas.toDataURL('image/png');
+                outletImgPreview.attr('src', imageData).removeClass('d-none');
+                outletImgInput.val(imageData);
+                stopOutletCamera();
+                $('#btn-upload-outlet-photo').addClass('d-none');
+                $('#btn-remove-outlet-photo').removeClass('d-none');
+                outletCameraModal.addClass('d-none');
+                updateOutletCameraLabel();
+            });
+
+            $('#btn-remove-outlet-photo').on('click', function() {
+                $('#outlet_photo').val('');
+                $('#outlet-img-preview').val('');
+                $('#outlet-photo-preview').removeAttr('src').addClass('d-none');
+                $('#btn-remove-outlet-photo').addClass('d-none');
+                $('#btn-upload-outlet-photo').removeClass('d-none');
+                updateOutletCameraLabel();
+            });
+
+            $('#close-outlet-camera-btn').on('click', function(e) {
+                e.preventDefault();
+                stopOutletCamera();
+                outletCameraModal.addClass('d-none');
+            });
+
+            $('#outlet_photo').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        outletImgPreview.attr('src', e.target.result).removeClass('d-none');
+                        outletImgInput.val(e.target.result);
+                        $('#btn-upload-outlet-photo').addClass('d-none');
+                        $('#btn-remove-outlet-photo').removeClass('d-none');
+                        updateOutletCameraLabel();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            function stopOutletCamera() {
+                if (outletVideo.srcObject) {
+                    outletVideo.srcObject.getTracks().forEach(track => track.stop());
+                }
+                outletVideo.srcObject = null;
+            }
+
+            // Update form submission to handle outlet photo
             $('#entryForm').on('submit', function(e) {
+                // Handle main photo
                 let imageData = $('#img-preview').val();
-                if (imageData) {
+                if (imageData && imageData.startsWith('data:image/')) {
                     $('<input>').attr({
                         type: 'hidden',
                         name: 'photo_base64',
                         value: imageData
                     }).appendTo(this);
+                } else {
+                    let existingPhoto =
+                        '@if (isset($report->photo)) {{ $report->photo }} @endif';
+                    if (existingPhoto) {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            name: 'oldphoto',
+                            value: existingPhoto
+                        }).appendTo(this);
+                    }
+                }
+
+                // Handle outlet photo
+                let outletImageData = $('#outlet-img-preview').val();
+                if (outletImageData && outletImageData.startsWith('data:image/')) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'outlet_photo_base64',
+                        value: outletImageData
+                    }).appendTo(this);
+                } else {
+                    let existingOutletPhoto =
+                        '@if (isset($report->outlet_photo)) {{ $report->outlet_photo }} @endif';
+                    if (existingOutletPhoto) {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            name: 'old_outlet_photo',
+                            value: existingOutletPhoto
+                        }).appendTo(this);
+                    }
+                }
+
+                // Validate outlet photo is required
+                if ($('#outlet-photo-preview').hasClass('d-none') && !$('#outlet_photo').val() && !
+                    existingOutletPhoto) {
+                    e.preventDefault();
+                    alert('{{ __('Outlet photo is required') }}');
+                    return false;
                 }
             });
         });
+        $(document).ready(function() {
+            // Check if outlet photo already exists (either old input or from $report)
+            let existingOutletPhoto = "{{ old('old_outlet_photo', $report->outlet_photo ?? '') }}";
 
+            if (existingOutletPhoto) {
+                $('#btn-upload-outlet-photo').addClass('d-none');
+                $('#btn-remove-outlet-photo').removeClass('d-none');
+            }
+        });
         // $('#outlet').on('input', function() {
         //     let outletValue = $(this).val().trim();
 

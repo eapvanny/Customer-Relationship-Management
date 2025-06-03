@@ -226,6 +226,7 @@ class ReportController extends Controller
         foreach (AppHelper::getAreas() as $group) {
             $areaIds = array_merge($areaIds, array_keys($group));
         }
+
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
             'outlet_id' => 'required',
@@ -235,16 +236,24 @@ class ReportController extends Controller
             'country' => 'required|string',
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
             'photo_base64' => 'nullable|string',
+            'outlet_photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'outlet_photo_base64' => 'nullable|string',
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
         ];
 
+        // Make outlet_photo required if neither file nor base64 is provided
+        if (!$request->hasFile('outlet_photo') && !$request->outlet_photo_base64) {
+            $rules['outlet_photo'] = 'required|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50';
+        }
+
         $this->validate($request, $rules);
 
-        $data = $request->except(['photo', 'photo_base64']);
+        $data = $request->except(['photo', 'photo_base64', 'outlet_photo', 'outlet_photo_base64']);
         $data['photo'] = null;
+        $data['outlet_photo'] = null;
 
-        // Handle file upload if exists
+        // Handle main photo file upload if exists
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
@@ -253,7 +262,7 @@ class ReportController extends Controller
             $data['photo'] = $filePath;
         }
 
-        // Handle base64 image if provided
+        // Handle main base64 image if provided
         if ($request->photo_base64) {
             $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
             $image = str_replace(' ', '+', $image);
@@ -263,6 +272,27 @@ class ReportController extends Controller
             Storage::put($fileName, $imageData);
 
             $data['photo'] = $fileName;
+        }
+
+        // Handle outlet photo file upload if exists
+        if ($request->hasFile('outlet_photo')) {
+            $file = $request->file('outlet_photo');
+            $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+            $filePath = 'uploads/' . $fileName;
+            Storage::put($filePath, file_get_contents($file));
+            $data['outlet_photo'] = $filePath;
+        }
+
+        // Handle outlet base64 image if provided
+        if ($request->outlet_photo_base64) {
+            $image = str_replace('data:image/png;base64,', '', $request->outlet_photo_base64);
+            $image = str_replace(' ', '+', $image);
+            $imageData = base64_decode($image);
+
+            $fileName = 'uploads/outlet_' . time() . '_' . Str::random(10) . '.png';
+            Storage::put($fileName, $imageData);
+
+            $data['outlet_photo'] = $fileName;
         }
 
         // Store report data
@@ -285,6 +315,7 @@ class ReportController extends Controller
             'qty' => $request->qty,
             'posm' => $request->posm,
             'photo' => $data['photo'],
+            'outlet_photo' => $data['outlet_photo'],
         ]);
 
         $adminUsers = User::whereIn('role_id', [
@@ -307,8 +338,10 @@ class ReportController extends Controller
             __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
             $notificationUsers
         ));
+
         return redirect()->route('report.index')->with('success', "Report has been created!");
     }
+
 
     public function edit($id)
     {
@@ -331,6 +364,7 @@ class ReportController extends Controller
         if (!$report) {
             return redirect()->route('report.index')->with('error', 'Report not found!');
         }
+
         // Get all valid area IDs (numeric keys)
         $areaIds = [];
         foreach (AppHelper::getAreas() as $group) {
@@ -341,18 +375,29 @@ class ReportController extends Controller
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
             'outlet_id' => 'required',
-            'customer_id' => 'required|exists:customers,id',
-            'customer_type' => 'required',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'city' => 'required|string',
             'country' => 'required|string',
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
             'photo_base64' => 'nullable|string',
+            'outlet_photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'outlet_photo_base64' => 'nullable|string',
+            'customer_id' => 'required|exists:customers,id',
+            'customer_type' => 'required',
         ];
 
-        $this->validate($request, $rules);
+        // Conditionally make outlet_photo required only if it's missing in the request AND in the existing record
+        if (
+            !$request->hasFile('outlet_photo') &&
+            !$request->outlet_photo_base64 &&
+            empty($report->outlet_photo)
+        ) {
+            $rules['outlet_photo'] = 'required|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50';
+        }
 
+
+        $this->validate($request, $rules);
         $data = [
             'area_id' => $request->area,
             'outlet_id' => $request->outlet_id,
@@ -370,32 +415,69 @@ class ReportController extends Controller
             'country' => $request->country,
             'qty' => $request->qty,
             'posm' => $request->posm,
+            'photo' => $report->photo, // Preserve existing photo by default
+            'outlet_photo' => $report->outlet_photo,
         ];
 
-        // Handle base64 image if provided
-        if ($request->has('photo_base64')) {
+        // Handle new photo upload via file input
+        if ($request->hasFile('photo')) {
             if ($report->photo && Storage::exists($report->photo)) {
                 Storage::delete($report->photo);
             }
 
-            $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
-            $image = str_replace(' ', '+', $image);
-            $imageData = base64_decode($image);
-
-            // Use a consistent naming convention similar to the second block
-            $fileName = time() . '_' . md5(uniqid()) . '.png';
-            $filePath = 'uploads/' . $fileName;
-            Storage::put($filePath, $imageData);
-
+            $file = $request->file('photo');
+            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+            $filePath = 'Uploads/' . $fileName;
+            Storage::put($filePath, file_get_contents($file));
             $data['photo'] = $filePath;
-        } else {
-            $data['photo'] = $report->photo;
+        }
+        // Handle base64 image if provided
+        elseif ($request->filled('photo_base64') && preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $request->photo_base64)) {
+            if ($report->photo && Storage::exists($report->photo)) {
+                Storage::delete($report->photo);
+            }
+
+            $imageData = base64_decode(preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $request->photo_base64));
+            $fileName = time() . '_' . md5(uniqid()) . '.png';
+            $filePath = 'Uploads/' . $fileName;
+            Storage::put($filePath, $imageData);
+            $data['photo'] = $filePath;
+        }
+        // Handle existing photo if no new photo is provided
+        elseif ($request->filled('oldphoto') && Storage::exists($request->oldphoto)) {
+            $data['photo'] = $request->oldphoto;
+        }
+        // Handle new photo upload via file input
+        if ($request->hasFile('outlet_photo')) {
+            if ($report->outlet_photo && Storage::exists($report->outlet_photo)) {
+                Storage::delete($report->outlet_photo);
+            }
+
+            $file = $request->file('outlet_photo');
+            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+            $filePath = 'Uploads/' . $fileName;
+            Storage::put($filePath, file_get_contents($file));
+            $data['outlet_photo'] = $filePath;
+        }
+        // Handle base64 image if provided
+        elseif ($request->filled('outlet_photo_base64') && preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $request->outlet_photo_base64)) {
+            if ($report->outlet_photo && Storage::exists($report->outlet_photo)) {
+                Storage::delete($report->outlet_photo);
+            }
+
+            $imageData = base64_decode(preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $request->outlet_photo_base64));
+            $fileName = time() . '_' . md5(uniqid()) . '.png';
+            $filePath = 'Uploads/' . $fileName;
+            Storage::put($filePath, $imageData);
+            $data['outlet_photo'] = $filePath;
+        } elseif ($request->filled('outlet_photo_base64') && Storage::exists($request->old_outlet_photo)) {
+            $data['photo'] = $request->old_outlet_photo;
         }
 
         // Update report
         $report->update($data);
 
-        return redirect()->route('report.index')->with('success', "Report has been updated!");
+        return redirect()->route('report.index')->with('success', 'Report has been updated!');
     }
 
 

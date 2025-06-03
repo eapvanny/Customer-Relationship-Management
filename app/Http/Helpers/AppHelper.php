@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Http\Helpers;
 
 class AppHelper
 {
     // Existing constants and methods...
-    
+
     const USER_SUPER_ADMIN = 1;
     const USER_ADMIN = 2;
     const USER_EMPLOYEE = 3;
@@ -22,15 +23,39 @@ class AppHelper
     ];
 
     const UMBRELLA = 1;
-    const SHIRT = 2;
-    const FAN = 3;
-    const CALENDAR = 4;
-    
+    const TUMBLER = 2;
+    const PARASOL = 3;
+    const JACKET = 4;
+    const BOTTLE_HOLDER = 5;
+    const ICE_BOX_200L = 6;
+    const CAP_BLUE = 7;
+    const HAT = 8;
+    const GLASS_CUP = 9;
+    const ICE_BOX_27L = 10;
+    const ICE_BOX_45L = 11;
+    const T_SHIRT_RUNNING = 12;
+    const LUNCH_BOX = 13;
+    const LSK_FAN_16_DSF_9163 = 14;
+    const PAPER_CUP_250ML = 15;
+    const TISSUE_BOX = 16;
+
     const MATERIAL = [
         self::UMBRELLA => 'Umbrella',
-        self::SHIRT => 'T-Shirt',
-        self::FAN => 'Fan',
-        self::CALENDAR => 'Calendar',
+        self::TUMBLER => 'Tumbler',
+        self::PARASOL => 'Parasol',
+        self::JACKET => 'Jacket',
+        self::BOTTLE_HOLDER => 'Bottle holder',
+        self::ICE_BOX_200L => 'Ice box 200L',
+        self::CAP_BLUE => 'Cap Blue',
+        self::HAT => 'Hat',
+        self::GLASS_CUP => 'Glass cup',
+        self::ICE_BOX_27L => 'Ice Box 27L',
+        self::ICE_BOX_45L => 'Ice Box 45L',
+        self::T_SHIRT_RUNNING => 'T-Shirt (Running)',
+        self::LUNCH_BOX => 'Lunch Box',
+        self::LSK_FAN_16_DSF_9163 => 'LSK Fan 16" DSF-9163',
+        self::PAPER_CUP_250ML => 'Paper Cup (250ml)',
+        self::TISSUE_BOX => 'Tissue Box',
     ];
 
     const GENDER = [
@@ -94,7 +119,7 @@ class AppHelper
             20 => 'S-96',
         ],
     ];
-    
+
 
     public static function getAreas()
     {
@@ -108,13 +133,12 @@ class AppHelper
      * @return string
      */
     public static function getAreaName($area_id)
-{
-    foreach (self::AREAS as $group => $areas) {
-        if (isset($areas[$area_id])) {
-            return "$group: {$areas[$area_id]}";
+    {
+        foreach (self::AREAS as $group => $areas) {
+            if (isset($areas[$area_id])) {
+                return "$group: {$areas[$area_id]}";
+            }
         }
+        return $area_id ?: '-';
     }
-    return $area_id ?: '-';
-}
-
 }

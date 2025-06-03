@@ -17,13 +17,23 @@
 @section('bodyCssClass')
 @endsection
 <!-- End block -->
-
+@php
+    use App\Http\Helpers\AppHelper;
+@endphp
 <!-- BEGIN PAGE CONTENT-->
 @section('pageContent')
     <!-- Main content -->
     <section class="content-header">
         <ol class="breadcrumb">
-            <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
+            @if($user->role_id == AppHelper::USER_SUPER_ADMIN && AppHelper::USER_ADMIN)
+                @can('view dashboard')
+                    <li>
+                        <a href="{{ URL::route('dashboard.index') }}">
+                            <i class="fa fa-dashboard"></i> {{ __('Dashboard') }} 
+                        </a>
+                    </li>
+                @endcan
+            @endif
             <li class="active"> {{ __('User profile') }} </li>
         </ol>
     </section>
@@ -66,19 +76,33 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <h3 class="profile-username text-center my-1"> {{ $user->name }}</h3>
+                                    <h3 class="profile-username text-center my-1">
+                                        @if(auth()->user()->user_lang=='kh')
+                                                {{ $user->getFullNameAttribute() }}
+                                        @else
+                                            {{ $user->getFullNameLatinAttribute() }}
+                                        @endif</h3>
                                     <p class="text-muted text-center">{{ $user->role->name }}</p>
                                     <ul class="list-group list-group-unbordered profile-log">
                                         <li class="list-group-item size">
                                             <strong><i class="fa fa-user margin-r-5"></i> {{ __('Username') }} :</strong>
                                             <span>{{ $user->username }}</span>
                                         </li>
-                                        <li class="list-group-item size">
-                                            <strong><i class="fa fa-info-circle margin-r-5"></i> {{ __('Full name') }}
+                                        {{-- <li class="list-group-item size">
+                                            <strong><i class="fa fa-info-circle margin-r-5"></i> {{ __('Name') }}
                                                 :</strong>
                                             <span>
-                                                {{ $user->name }}
+                                                @if(auth()->user()->user_lang=='kh')
+                                                {{ $user->getFullNameAttribute() }}
+                                                @else
+                                                {{ $user->getFullNameLatinAttribute() }}
+                                                @endif
                                             </span>
+                                        </li> --}}
+                                        <li class="list-group-item size">
+                                            <strong><i class="fa-solid fa-id-card margin-r-5"></i> {{ __('ID Card') }}
+                                                :</strong>
+                                            <span>{{$user->staff_id_card }}</span>
                                         </li>
                                         <li class="list-group-item size">
                                             <strong><i class="fa fa-envelope margin-r-5"></i> {{ __('Email') }}
@@ -86,14 +110,18 @@
                                             <span>{{ $user->email }}</span>
                                         </li>
                                         <li class="list-group-item size">
-                                            <strong><i class="fa fa-phone margin-r-5"></i> {{ __('Phone no') }} :</strong>
-                                            <span>{{ $user->phone_no }}</span>
+                                            <strong><i class="fa-solid fa-chart-area margin-r-5"></i> {{ __('Area') }} :</strong>
+                                            <span>{{ $user->area }}</span>
                                         </li>
                                         <li class="list-group-item size">
+                                            <strong><i class="fa fa-phone margin-r-5"></i> {{ __('Phone') }} :</strong>
+                                            <span>{{ $user->phone_no }}</span>
+                                        </li>
+                                        {{-- <li class="list-group-item size">
                                             <strong><i class="fa-solid fa-clock margin-r-5"></i> {{ __('Created At') }}
                                                 :</strong>
                                             <span>{{ date('F j,Y', strtotime($user->created_at)) }}</span>
-                                        </li>
+                                        </li> --}}
                                         {{-- <div class="mt-3">
                                             <a href="#"
                                                 class="btn btn-primary text-white btn-block btnUpdate float-end"><b>

@@ -30,6 +30,7 @@ class Report extends Model
         'posm',
         'qty',
         'photo',
+        'outlet_photo',
         'manager_id'
     ];
 
