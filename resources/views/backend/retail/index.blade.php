@@ -160,12 +160,12 @@
                                             </div>
                                         </div>
                                     </form>
-                                    <div class="row mb-3">
+                                    {{-- <div class="row mb-3">
                                         <div class="col-12 link-group">
                                             <a href="{{ route('retail.index') }}" class="active"> {{ __('Manual List') }} </a> |
                                             <a href="{{ route('retail-import.index')}}"> {{ __('Import List') }} </a>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="row" style="margin-bottom: -20px">
                                         <div class="col-12">
                                             <a class="btn btn-success btn-sm" href="{{ route('retail.export') }}"><i
@@ -186,7 +186,7 @@
                                     <thead>
                                         <tr>
                                             {{-- <th> {{ __('Photo') }} </th> --}}
-                                            <th> {{ __('Staff ID') }} </th>
+                                            {{-- <th> {{ __('Staff ID') }} </th>
                                             <th> {{ __('Name') }} </th>
                                             <th> {{ __('Area') }} </th>
                                             <th> {{ __('Outlet') }} </th>
@@ -202,7 +202,21 @@
                                             <th> {{ __('Qty') }} </th>
                                             <th> {{ __('Foc Qty') }} </th>
                                             <th> {{ __('Address') }} </th>
-                                            <th> {{ __('Date') }} </th>
+                                            <th> {{ __('Date') }} </th> --}}
+
+                                            <th> {{ __('Staff ID') }} </th>
+                                            <th> {{ __('Name') }} </th>
+                                            <th>{{__('Region')}}</th>
+                                            <th>{{__("ASM's Name")}}</th>
+                                            <th>{{__("SUP's Name")}}</th>
+                                            <th>{{__("SE's Name")}}</th>
+                                            <th>{{__("Customer's Name")}}</th>
+                                            <th>{{__("Contact Number")}}</th>
+                                            <th>{{__('Business Type')}}</th>
+                                            <th>{{__('AMS')}}</th>
+                                            <th>{{__('Display Parasol')}}</th>
+                                            <th>{{__('FOC 600ML')}}</th>
+                                            <th>{{__('Installation')}}</th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
@@ -221,9 +235,12 @@
                         </div>
                     </div>
                 </div>
+
+
             </div>
         </div>
     </section>
+
 
     <!-- Modal photo -->
     <div class="modal modal-xl fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel"
@@ -241,62 +258,49 @@
                         <div class="col-md-12">
                             <div class="report-details">
                                 <div class="row">
-                                    <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
+
+                                    <div class="col-md-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Employee Name')}}:</strong> <span
-                                                    id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i> <strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
-                                            </li>
-                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i> <strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer')}} :</strong> <span id="modalCustomer"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer Type')}} :</strong> <span id="modalCustomerType"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
-
-                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Address')}} :</strong> <span id="modalCity"></span></li>
-
+                                            <li class="list-group-item"><strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span></li>
+                                            <li class="list-group-item"> <strong>{{__('Employee Name')}}:</strong> <span id="modalEmployeeName"></span></li>
+                                            <li class="list-group-item"><strong>{{__('Region')}} :</strong> <span id="modalRegion"></span></li>
+                                            <li class="list-group-item"><strong>{{__("ASM's Name")}} :</strong> <span id="modalAsmName"></span></li>
+                                            <li class="list-group-item"><strong>{{__("SUP's Name")}} :</strong> <span id="modalSupName"></span></li>
+                                            <li class="list-group-item"><strong>{{__("SE's Name")}} :</strong> <span id="modalSeName"></span></li>
+                                            <li class="list-group-item"><strong>{{__("Customer's Name")}} :</strong> <span id="modalCustomerName"></span></li>
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
+
+                                    <div class="col-md-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('250ml')}} :</strong> <span id="modal250ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('350ml')}} :</strong> <span id="modal350ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('600ml')}} :</strong> <span id="modal600ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('1500ml')}} :</strong> <span id="modal1500ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('Other')}} :</strong> <span id="modalOther"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i> <strong>{{__('Material Type')}} :</strong> <span id="modalPosm"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('Quantity')}} :</strong> <span id="modalQty"></span>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('FOC Qty')}} :</strong> <span id="modalQtyFoc"></span>
-                                            </li>
+                                            <li class="list-group-item"><strong>{{__("Contact Number")}} :</strong> <span id="modalContactNumber"></span></li>
+                                            <li class="list-group-item"><strong>{{__('Business Type')}} :</strong> <span id="modalBusinessType"></span></li>
+                                            <li class="list-group-item"><strong>{{__('AMS')}} :</strong> <span id="modalAMS"></span></li>
+                                            <li class="list-group-item"><strong>{{__('Display Parasol')}} :</strong> <span id="modalDisplayParasol"></span></li>
+                                            <li class="list-group-item"><strong>{{__('FOC 600ML')}} :</strong> <span id="modalFOC600ml"></span></li>
+                                            <li class="list-group-item"><strong>{{__('Installation')}} :</strong> <span id="modalInstallation"></span></li></li>
+                                            <li class="list-group-item"><strong>{{__('Create date')}} :</strong> <span id="modalCreateDate"></span></li></li>
                                         </ul>
                                     </div>
-                                </div>
 
+                                </div>
                             </div>
                         </div>
-                         <div class="col-md-12 my-2">
-                            <div class="row">
-                                 <div class="col-md-6">
-                                    <img  style="border: 1px solid #cfcfcf;" id="modalPhotoFoc" src="" class="img-fluid photo-detail" alt="Photo Detail">
-                                    <p class="text-center">{{__('FOC Image')}}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
-                                    <p class="text-center">{{__('POSM Image')}}</p>
-
-                                </div>
-
+                        <div class="col-md-12 my-2">
+                            <div class="row mt-4" id="showPictures">
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btnClose" data-bs-dismiss="modal">{{__('Close')}}</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btnClose" data-bs-dismiss="modal">{{__('Close')}}</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+
 
     <!-- /.content -->
 @endsection
@@ -374,6 +378,7 @@
 @section('extraScript')
     <script type="text/javascript">
         $(document).ready(function() {
+
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -426,64 +431,48 @@
                         name: 'name'
                     },
                     {
-                        data: 'area',
-                        name: 'area'
+                        data: 'region',
+                        name: 'region',
                     },
                     {
-                        data: 'outlet_id',
-                        name: 'outlet_id'
+                        data: 'asm_name',
+                        name: 'asm_name',
                     },
                     {
-                        data: 'customer',
-                        name: 'customer'
+                        data: 'sup_name',
+                        name: 'sup_name',
                     },
                     {
-                        data: 'customer_type',
-                        name: 'customer_type'
+                        data: 'se_name',
+                        name: 'se_name',
                     },
                     {
-                        data: '250ml',
-                        name: '250ml'
+                        data: 'customer_name',
+                        name: 'customer_name',
                     },
                     {
-                        data: '350ml',
-                        name: '350ml'
+                        data: 'contact_number',
+                        name: 'contact_number',
                     },
                     {
-                        data: '600ml',
-                        name: '600ml'
+                        data: 'business_type',
+                        name: 'business_type',
                     },
                     {
-                        data: '1500ml',
-                        name: '1500ml'
+                        data: 'ams',
+                        name: 'ams',
                     },
                     {
-                        data: 'phone',
-                        name: 'phone'
+                        data: 'display_parasol',
+                        name: 'display_parasol',
                     },
                     {
-                        data: 'other',
-                        name: 'other'
+                        data: 'foc',
+                        name: 'foc',
                     },
                     {
-                        data: 'posm',
-                        name: 'posm'
-                    },
-                    {
-                        data: 'qty',
-                        name: 'qty'
-                    },
-                    {
-                        data: 'foc_qty',
-                        name: 'foc_qty'
-                    },
-                    {
-                        data: 'location',
-                        name: 'location'
-                    },
-                    {
-                        data: 'date',
-                        name: 'date'
+                        data: 'installation',
+                        name: 'installation',
                     },
                     {
                         data: 'action',
@@ -499,33 +488,33 @@
 
             $(document).on('click', '.img-detail', function() {
                 var reportId = $(this).data('id');
+                $('#viewModal').modal('show');
 
                 $.ajax({
                     url: '/retail/' + reportId,
                     method: 'GET',
                     success: function(response) {
                         var report = response.report;
-
-                        $('#modalPhoto').attr('src', report.photo);
-                        $('#modalPhotoFoc').attr('src', report.photo_foc);
+                        // $('#modalPhoto').attr('src', report.photo);
+                        // $('#modalPhotoFoc').attr('src', report.photo_foc);
                         $('#modalEmployeeName').text(report.employee_name);
                         $('#modalIdCard').text(report.staff_id_card);
-                        $('#modalArea').text(report.area);
-                        $('#modalOutlet').text(report.outlet_id);
-                        $('#modalDate').text(report.date);
-                        $('#modalOther').text(report.other);
-                        $('#modal250ml').text(report['250_ml']);
-                        $('#modal350ml').text(report['350_ml']);
-                        $('#modal600ml').text(report['600_ml']);
-                        $('#modal1500ml').text(report['1500_ml']);
-                        $('#modalCity').text(report.city);
-                        $('#modalPosm').text(report.posm);
-                        $('#modalQty').text(report.qty);
-                        $('#modalQtyFoc').text(report.foc_qty);
-                        $('#modalCustomer').text(report.customer);
-                        $('#modalCustomerType').text(report.customer_type);
-                        $('#viewModal').modal('show');
 
+                        $('#modalRegion').text(report.modalRegion);
+                        $('#modalAsmName').text(report.modalAsmName);
+                        $('#modalSupName').text(report.modalSupName);
+                        $('#modalSeName').text(report.modalSeName);
+
+                        $('#modalCustomerName').text(report.modalCustomerName);
+                        $('#modalContactNumber').text(report['modalContactNumber']);
+                        $('#modalBusinessType').text(report['modalBusinessType']);
+                        $('#modalAMS').text(report['modalAMS']);
+                        $('#modalDisplayParasol').text(report['modalDisplayParasol']);
+                        $('#modalFOC600ml').text(report['modalFOC600ml']);
+                        $('#modalInstallation').text(report['modalInstallation']);
+                        $('#modalCreateDate').text(report['modalCreateDate']);
+
+                        $('#showPictures').html(response.picture);
                     },
                     error: function(xhr) {
                         console.log('Error:', xhr);
@@ -560,6 +549,10 @@
                     }
                 });
             });
+
+
+            // $('#viewModal').modal('show');
+
         });
     </script>
 @endsection

@@ -8,6 +8,7 @@
 @endsection
 
 @section('extraStyle')
+
     <style>
         /* fieldset .form-group {
                                             margin-bottom: 0px;
@@ -385,6 +386,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
     </style>
+
 @endsection
 
 @php
@@ -399,6 +401,8 @@
             <li class="active">
                 @if ($report)
                     {{ __('Update') }}
+                @elseif ($takePicture)
+                    {{ __("Take picture") }}
                 @else
                     {{ __('Add') }}
                 @endif
@@ -408,7 +412,7 @@
 
     <section class="content">
         <form novalidate id="entryForm"
-            action="@if ($report) {{ URL::Route('retail.update', $report->id) }} @else {{ URL::Route('retail.store') }} @endif"
+            action="@if ($report) {{ URL::Route('retail.update', $report->id) }} @elseif ($takePicture) {{ URL::Route('retail.storePicture', $dataRetail->id) }} @else {{ URL::Route('retail.store') }} @endif"
             method="post" enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
@@ -418,8 +422,10 @@
                             <small class="toch">
                                 @if ($report)
                                     {{ __('Update') }}
+                                @elseif ($takePicture)
+                                    {{ __("Take picture") }}
                                 @else
-                                    {{ __('Add New') }}
+                                    {{ __('Add') }}
                                 @endif
                             </small>
                         </h1>
@@ -429,6 +435,8 @@
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
                                     {{ __('Update') }}
+                                @elseif ($takePicture)
+                                    {{ __("Save picture") }}
                                 @else
                                     {{ __('Add') }}
                                 @endif
@@ -445,112 +453,151 @@
                         @method('PUT')
                     @endif
                     <div class="row">
-                        <div class="col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
-                                <select name="area" id="area" class="form-control select2" required>
-                                    <option value="">{{ __('Select Area') }}</option>
-                                    @foreach(\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
-                                        <optgroup label="{{ $area }}">
-                                            @foreach($subItems as $area_id => $subItem)
-                                                <option value="{{ $area_id }}"
-                                                    @if(old('area', $report->area_id ?? '') == $area_id) selected @endif>
-                                                    {{ $subItem }}
-                                                </option>
-                                            @endforeach
-                                        </optgroup>
-                                    @endforeach
-                                </select>
-                                <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('area') }}</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="outlet_id">{{ __('Outlet') }} <span class="text-danger">*</span></label>
-                                <select name="outlet_id" class="form-control select2" id="outlet_id" required>
-                                    <option value="">{{ __('Select area first') }}</option>
-                                    @if ($report && $report->outlet && !$customers->contains('id', $report->outlet_id))
-                                        <option value="{{ $report->outlet_id }}" selected>
-                                            {{ $report->customer->outlet }} (Current)
-                                        </option>
-                                    @endif
-                                    @foreach ($customers as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ old('outlet_id', $report->outlet_id ?? '') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->outlet }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('outlet_id') }}</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="customer_id">{{ __('Customer') }} <span class="text-danger">*</span></label>
-                                <select name="customer_id" class="form-control select2" id="customer_id" required>
-                                    <option value="">{{ __('Select Customer') }}</option>
-                                    @if ($report && $report->customer_id && !$customers->contains('id', $report->customer_id))
-                                        <option value="{{ $report->customer_id }}" selected>
-                                            {{ $report->customer_id }} (Current)
-                                        </option>
-                                    @endif
-                                    @foreach($customers as $c)
-                                        <option value="{{ $c->id }}" {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('customer_id') }}</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="customer_type"> {{ __('Customer Type') }} <span class="text-danger">*</span>
-                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="Select customer type"></i>
-                                </label>
-                                {!! Form::select('customer_type', $customerType, old('customer_type', optional($report)->customer_type), [
-                                    'placeholder' => __('Select customer type'),
-                                    'id' => 'customer_type',
-                                    'class' => 'form-control select2',
-                                    'required' => true,
-                                ]) !!}
-                                {{-- <select name="customer_type" id="customer_type" class="form-control select2">
-                                    <option selected disabled>{{ __('Select customer type') }}</option>
-                                    <option value="test1"
-                                        @if ($report) @if ($report->customer_type == 'test1')
-                                                selected @endif
-                                        @endif
-                                        >Test1</option>
-                                    <option value="test2"
-                                        @if ($report) @if ($report->customer_type == 'test2')
-                                                selected @endif
-                                        @endif
-                                        >Test2</option>
-                                </select> --}}
-                                <span class="form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('customer_type') }}</span>
-                            </div>
-                        </div>
+                        @if($takePicture == null)
 
-                        <div class="col-lg-6 col-md-6 col-xl-6 d-none">
-                            <div class="form-group has-feedback">
-                                <label for="date"> {{ __('Date') }}</label>
-                                <input type="date" class="form-control" name="date"
-                                    value="{{ isset($report) ? $report['date'] : old('date') }}">
+                            <div class="col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="region">{{ __('Region') }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="region" id="region"
+                                        value="{{ isset($report) ? $report['region'] : old('region') }}" placeholder="{{ __('Region') }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('region') }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
-                            <div class="form-group has-feedback">
-                                <label for="250_ml"> {{ __('250ml') }}</label>
-                                <input type="text" class="form-control" name="250_ml"
-                                    value="{{ isset($report) ? $report['250_ml'] : old('250_ml') }}">
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="asm_name">{{ __("ASM's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="asm_name" id="asm_name"
+                                        value="{{ isset($report) ? $report['asm_name'] : old('asm_name') }}" placeholder="{{ __("ASM's Name") }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('asm_name') }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="sup_name">{{ __("SUP's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="sup_name" id="sup_name"
+                                        value="{{ isset($report) ? $report['sup_name'] : old('sup_name') }}"
+                                        placeholder="{{ __("SUP's Name") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('sup_name') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="se_name">{{ __("SE's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="se_name" id="se_name"
+                                        value="{{ isset($report) ? $report['se_name'] : old('se_name') }}"
+                                        placeholder="{{ __("SE's Name") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('se_name') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6 d-none">
+                                <div class="form-group has-feedback">
+                                    <label for="date"> {{ __('Date') }}</label>
+                                    <input type="date" class="form-control" name="date"
+                                        value="{{ isset($report) ? $report['date'] : old('date') }}">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="customer_name">{{ __("Customer's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="customer_name" id="customer_name"
+                                        value="{{ isset($report) ? $report['customer_name'] : old('customer_name') }}"
+                                        placeholder="{{ __("Customer's Name") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('customer_name') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="contact_number">{{ __("Contact Number") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="contact_number" id="contact_number"
+                                        value="{{ isset($report) ? $report['contact_number'] : old('contact_number') }}"
+                                        placeholder="{{ __("Contact Number") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('contact_number') }}</span>
+                                </div>
+                            </div>
+
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="business_type">{{ __("Business Type") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="business_type" id="business_type"
+                                        value="{{ isset($report) ? $report['business_type'] : old('business_type') }}"
+                                        placeholder="{{ __("Business Type") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('business_type') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="ams">{{ __("AMS") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="ams" id="ams"
+                                        value="{{ isset($report) ? $report['ams'] : old('ams') }}"
+                                        placeholder="{{ __("AMS") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('ams') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="display_parasol">{{ __("Display Parasol") }} <span class="text-danger">*</span></label>
+                                    <input type="number" min="0" class="form-control" name="display_parasol" id="display_parasol"
+                                        value="{{ isset($report) ? $report['display_parasol'] : old('display_parasol') }}"
+                                        placeholder="{{ __("Display Parasol") }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('display_parasol') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="foc">{{ __("FOC 600ML") }} <span class="text-danger">*</span></label>
+                                    <input type="number" min="0" class="form-control" name="foc" id="foc"
+                                        value="{{ isset($report) ? $report['foc'] : old('foc') }}"
+                                        placeholder="{{ __("FOC 600ML") }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('foc') }}</span>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-12">
+                                <div class="form-group has-feedback">
+                                    <label for="installation">{{ __("Installation") }} <span class="text-danger">*</span></label>
+                                    {{-- <input type="text" min="0" class="form-control" name="installation" id="installation"
+                                        value="{{ isset($report) ? $report['installation'] : old('installation') }}"
+                                        placeholder="{{ __("Installation") }}" required> --}}
+                                    <textarea name="installation" id="installation" cols="30" rows="6"
+                                            placeholder="{{ __("Installation") }}" class="form-control"
+                                            required>{{ isset($report) ? $report['installation'] : old('installation') }}</textarea>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('installation') }}</span>
+                                </div>
+                            </div>
+
+                        @endif
+
+
+
+                        {{-- <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="350_ml"> {{ __('350ml') }}</label>
                                 <input type="text" class="form-control" name="350_ml"
@@ -577,133 +624,112 @@
                                 <input type="text" class="form-control" name="other" placeholder="other"
                                     value="@if ($report) {{ $report->other }}@else{{ old('other') }} @endif">
                             </div>
-                        </div>
+                        </div> --}}
+                        @if ($takePicture != null)
 
-                        <div class="col-lg-12 col-md-12 col-xl-12">
-                            <div class="form-group has-feedback">
-                                
-                                <input type="hidden" class="form-control" name="old_photo" placeholder="photo"
-                                    value="@if ($report) {{ $report->photo }}@else{{ old('old_photo') }} @endif">
-                                <input type="hidden" class="form-control" name="old_photo_foc" placeholder="photo foc"
-                                    value="@if ($report) {{ $report->photo_foc }}@else{{ old('old_photo_foc') }} @endif">
-                            </div>
-                        </div>  
-
-
-
-                        {{-- FOC START  --}}
-                        <fieldset>
-                            <legend>{{ __('FOC') }}</legend>
-                            <div class="row">
+                            {{-- <div class="col-lg-12 col-md-12 col-xl-12">
                                 <div class="form-group has-feedback">
-                                    <div class="row">
-                                        <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
-                                            <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo-foc" name="photo_foc"
-                                                    style="display: none" accept="image/*">
-                                                <button type="button"
-                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-photo-foc">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <fieldset id="photo-foc-upload"
-                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto-foc') && !old('img-preview-foc') && !isset($report)) {{ 'd-none' }} @endif z-1"
-                                                        id="photo-foc-preview" name="oldphoto-foc"
-                                                        src="@if (optional($report)->photo_foc) {{ asset('storage/' . $report->photo_foc) }}@else{{ old('oldphoto-foc') }} @endif"
-                                                        alt="photo-foc">
-                                                    <input type="hidden" id="img-preview-foc" name="oldphoto-foc"
-                                                        value="@if (optional($report)->photo_foc) {{ $report->photo_foc }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview-foc')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
-                                                        id="open-camera-btn-foc">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo-foc"
-                                                            type="button" data-action="open-camera-foc">
-                                                            <i class="fa-solid fa-camera-retro"></i>
+
+                                    <input type="hidden" class="form-control" name="old_photo" placeholder="photo"
+                                        value="@if ($report) {{ $report->photo }}@else{{ old('old_photo') }} @endif">
+                                    <input type="hidden" class="form-control" name="old_photo_foc" placeholder="photo foc"
+                                        value="@if ($report) {{ $report->photo_foc }}@else{{ old('old_photo_foc') }} @endif">
+                                </div>
+                            </div> --}}
+
+
+                            {{-- FOC START  --}}
+                            {{-- <fieldset>
+                                <legend>{{ __('FOC') }}</legend>
+                                <div class="row"> --}}
+                                    <div class="col-md-12 ">
+                                        <div class="form-group has-feedback px-2">
+                                            <div class="row bg-light">
+                                                <div class="row-span-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 mx-auto py-2">
+                                                    <div class="form-group has-feedback position-relative bg-white">
+                                                        <input type="file" id="photo-foc" name="photo_foc"
+                                                            style="display: none" accept="image/*">
+                                                        <button type="button"
+                                                            class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                            id="btn-remove-photo-foc">
+                                                            <i class="fa-solid fa-trash"></i>
                                                         </button>
+                                                        <fieldset id="photo-foc-upload"
+                                                            class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                            <img class="rounded mx-auto d-block @if (!old('oldphoto-foc') && !old('img-preview-foc') && !isset($report)) {{ 'd-none' }} @endif z-1"
+                                                                id="photo-foc-preview" name="picture"
+                                                                src="@if (optional($report)->picture) {{ asset('storage/' . $report->picture) }}@else{{ old('picture') }} @endif"
+                                                                alt="Picture">
+                                                            <input type="hidden" id="img-preview-foc" name="picture"
+                                                                value="@if (optional($report)->picture) {{ $report->picture }} @endif">
+                                                            <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview-foc')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                                id="open-camera-btn-foc">
+                                                                <button class="btn p-3 rounded-circle" id="btn-upload-photo-foc"
+                                                                    type="button" data-action="open-camera-foc">
+                                                                    <i class="fa-solid fa-camera-retro"></i>
+                                                                </button>
+                                                            </div>
+                                                            <label id="camera-label-foc"
+                                                                class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                                {{ __('Click to open camera and capture photo') }}
+                                                            </label>
+                                                        </fieldset>
                                                     </div>
-                                                    <label id="camera-label-foc"
-                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        {{ __('Click to open camera and capture photo') }}
-                                                    </label>
-                                                </fieldset>
-                                            </div>
-                                            <div id="camera-modal-foc" class="camera-modal d-none">
-                                                <div class="camera-content">
-                                                    <div class="video-container position-relative">
-                                                        <video id="webcam-foc" autoplay playsinline></video>
-                                                        <div class="camera-overlay">
-                                                            <div class="overlay-top"></div>
-                                                            <div class="overlay-bottom"></div>
-                                                            <div class="overlay-left"></div>
-                                                            <div class="overlay-right"></div>
-                                                            <div class="focus-circle"></div>
+                                                    <div id="camera-modal-foc" class="camera-modal d-none">
+                                                        <div class="camera-content">
+                                                            <div class="video-container position-relative">
+                                                                <video id="webcam-foc" autoplay playsinline></video>
+                                                                <div class="camera-overlay">
+                                                                    <div class="overlay-top"></div>
+                                                                    <div class="overlay-bottom"></div>
+                                                                    <div class="overlay-left"></div>
+                                                                    <div class="overlay-right"></div>
+                                                                    <div class="focus-circle"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="camera-controls">
+                                                                <button id="switch-camera-btn-foc" class="btn switch-camera-btn"
+                                                                    type="button">
+                                                                    <i class="fa-solid fa-camera-rotate"></i>
+                                                                </button>
+                                                                <button id="capture-btn-foc" class="btn capture-btn" type="button">
+                                                                    <i class="fa-solid fa-camera"></i>
+                                                                </button>
+                                                                <button id="close-camera-btn-foc" class="btn close-camera-btn"
+                                                                    type="button">
+                                                                    <i class="fa-solid fa-times"></i>
+                                                                </button>
+                                                            </div>
+                                                            <canvas id="canvas-foc" class="d-none"></canvas>
                                                         </div>
                                                     </div>
-                                                    <div class="camera-controls">
-                                                        <button id="switch-camera-btn-foc" class="btn switch-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera-rotate"></i>
-                                                        </button>
-                                                        <button id="capture-btn-foc" class="btn capture-btn" type="button">
-                                                            <i class="fa-solid fa-camera"></i>
-                                                        </button>
-                                                        <button id="close-camera-btn-foc" class="btn close-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                    <canvas id="canvas-foc" class="d-none"></canvas>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="row">
-                                                {{-- <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('POSM') }}
-                                                            <i class="fa fa-question-circle" data-toggle="tooltip"
-                                                                data-placement="bottom" title="Select POSM"></i>
-                                                        </label>
-                                                        {!! Form::select(
-                                                            'posm',
-                                                            [
-                                                                AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                                                AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                                                AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
-                                                            ],
-                                                            old('posm', optional($report)->posm),
-                                                            [
-                                                                'placeholder' => __('Select material type'),
-                                                                'id' => 'posm',
-                                                                'name' => 'posm',
-                                                                'class' => 'form-control select2',
-                                                            ],
-                                                        ) !!}
-                                                        <span class="form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('posm') }}</span>
+                                                {{-- <div class="col-md-6">
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="qty"> {{ __('Quantity') }} </label>
+                                                                <input type="number" class="form-control" name="foc_qty"
+                                                                    value="{{ old('foc_qty', $report->foc_qty ?? '') }}">
+                                                                <span class="fa fa-info form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div> --}}
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="foc_qty"
-                                                            value="{{ old('foc_qty', $report->foc_qty ?? '') }}">
-                                                        <span class="fa fa-info form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </fieldset>
-                        {{-- FOC END  --}}
+
+                                {{-- </div>
+                            </fieldset> --}}
+                            {{-- FOC END  --}}
+                        @endif
+
 
 
                         {{-- POSM START --}}
-                        <fieldset>
+                        {{-- <fieldset>
                             <legend>{{ __('Photo Attachment') }}</legend>
                             <div class="row">
                                 <div class="form-group has-feedback">
@@ -809,11 +835,11 @@
                                     </div>
                                 </div>
                             </div>
-                        </fieldset>
+                        </fieldset> --}}
                         {{-- POSM END--}}
 
                         <!-- Location Fields and Map -->
-                        <div class="col-lg-12 col-md-12 col-xl-12">
+                        {{-- <div class="col-lg-12 col-md-12 col-xl-12">
                             <fieldset>
                                 <legend>{{ __('Location') }}</legend>
                                 <div class="row">
@@ -866,7 +892,7 @@
                                     </div>
                                 </div>
                             </fieldset>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -1084,7 +1110,7 @@
                 $('#area').trigger('change');
             }
 
-            
+
         });
 
         // $('#outlet').on('input', function() {
@@ -1172,7 +1198,7 @@
 
             // POSM START
             $(document).on('click', '#btn-upload-photo', function () {
-                // POSM START 
+                // POSM START
                     let video = document.getElementById('webcam');
                     let canvas = document.getElementById('canvas');
                     let context = canvas.getContext('2d');
@@ -1305,8 +1331,8 @@
             $(document).on('click', '#btn-upload-photo-foc' , function () {
 
 
-                
-                // FOC START  
+
+                // FOC START
                     let video = document.getElementById('webcam-foc');
                     let canvas = document.getElementById('canvas-foc');
                     let context = canvas.getContext('2d');
@@ -1395,7 +1421,7 @@
                     });
 
                     $('#btn-remove-photo-foc').on('click', function() {
-      
+
                         // console.log('remove');
 
                         $('#photo-foc').val('');
@@ -1434,10 +1460,10 @@
                         video.srcObject = null;
                     }
 
-                // FOC END 
+                // FOC END
             });
         });
     </script>
 
-    
+
 @endsection

@@ -100,21 +100,44 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::resource('customer', CustomerController::class)->except(['show']);
 
     // SE section start
+
+
+    // SUB WHOLESALE Route
     Route::resource('sub-wholesale', SubwholesaleController::class);
-    Route::resource('sub-wholesale-import', SubwholesaleImportController::class);
-    Route::get('/subwholesale-export', [SubwholesaleController::class, 'export'])->name('subwholesale.export');
-    Route::get('/subwholesale-import-export', [SubwholesaleImportController::class, 'export'])->name('subwholesaleimport.export');
-    Route::get('/subwholesale/import', [SubwholesaleController::class, 'import'])->name('subwholesale.import');
+    Route::get('/sub-wholesale/export', [SubwholesaleController::class, 'export'])->name('sub-wholesale.export');
+    Route::get('/sub-wholesale/excel/import', [SubwholesaleController::class, 'import'])->name('sub-wholesale.import');
     Route::post('/subwholesale/import/save', [SubwholesaleController::class, 'saveImport'])->name('import.save');
-    Route::get('/subwholesale/by-area', [SubwholesaleController::class, 'getCustomersByArea'])->name('subwholesale.byArea');
+    Route::get('/sub-wholesale/by-area', [SubwholesaleController::class, 'getCustomersByArea'])->name('subwholesale.byArea');
+    Route::get('sub-wholesale/{id}/pictures', [SubwholesaleController::class, 'getPictures'])->name('sub-wholesale.picture');
+    Route::post('sub-wholesale/{id}/pictures/save', [SubwholesaleController::class, 'storePicture'])->name('sub-wholesale.storePicture');
+    Route::get('/subwholesale-export', [SubwholesaleController::class, 'export'])->name('sub-wholesale.export');
 
 
+
+    Route::resource('sub-wholesale-import', SubwholesaleImportController::class);
+    Route::get('/subwholesale-import-export', [SubwholesaleImportController::class, 'export'])->name('subwholesaleimport.export');
+
+
+
+    // RETAILs
     Route::resource('retail', RetailController::class);
     Route::resource('retail-import', RetailimportController::class);
-    Route::get('/retailimport/import', [RetailimportController::class, 'import'])->name('retail.import');
+    Route::get('/retail/excel/import', [RetailController::class, 'import'])->name('retail.import');
+    Route::post('/retail/excel/import/save', [RetailController::class, 'saveImport'])->name('retail.saveImport');
+
     Route::get('/retailimport/export', [RetailimportController::class, 'export'])->name('retailimport.export');
     Route::get('/retail-export', [RetailController::class, 'export'])->name('retail.export');
     Route::get('/retail/by-area', [RetailController::class, 'getCustomersByArea'])->name('retail.byArea');
+    Route::get('retail/{id}/pictures', [RetailController::class, 'getPictures'])->name('retail.picture');
+    Route::post('retail/{id}/pictures/save', [RetailController::class, 'storePicture'])->name('retail.storePicture');
+
+
+
+
+
+
+
+
 
     Route::resource('school', SchoolController::class);
     Route::get('/school/by-area', [SchoolController::class, 'getCustomersByArea'])->name('school.byArea');

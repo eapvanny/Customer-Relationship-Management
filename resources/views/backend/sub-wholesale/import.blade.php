@@ -419,7 +419,7 @@
                             </small>
                         </h1>
                         <div class="box-tools pull-right">
-                            <a href="{{ URL::route('sub-wholesale.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
+                            <a href="{{ URL::route('retail-import.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)

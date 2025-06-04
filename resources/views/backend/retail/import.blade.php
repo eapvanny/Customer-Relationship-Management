@@ -403,7 +403,7 @@
 
     <section class="content">
         <form novalidate id="entryForm"
-            action="@if ($report) {{ URL::Route('retail-import.update', $report->id) }} @else {{ URL::Route('retail-import.store') }} @endif"
+            action="@if ($report) {{ URL::Route('retail-import.update', $report->id) }} @else {{ URL::Route('retail.saveImport') }} @endif"
             method="post" enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">

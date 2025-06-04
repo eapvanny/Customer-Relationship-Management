@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Retail;
 use App\Models\Retail_import;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -17,25 +18,19 @@ class RetailImport implements ToCollection, WithHeadingRow
     {
         foreach ($rows as $row)
         {
-            Retail_import::create([
-                // 'name' => $row[0],
-                'area_id' => $row['area'],
-                'outlet_id' => $row['outlet'],
-                'customer_id' => $row['customer'],
-                'customer_type' => $row['customer_type'],
-                '250_ml' => $row['250ml'],
-                '350_ml' => $row['350ml'],
-                '600_ml' => $row['600ml'],
-                '1500_ml' => $row['1500ml'],
-                // 'date' => \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['date'])->format('Y-m-d'),
-                // 'date' => !empty($row['date']) ? \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['date'])->format('Y-m-d') : null,
-                'date' => $row['date'],
-                'phone' => $row['phone'],
-                'other' => $row['other'],
-                'latitude' => $row['latitude'],
-                'longitude' => $row['longitude'],
-                'city' => $row['city'],
-                'user_id' => Auth::user()->id,
+            Retail::create([
+                'region' => $row["region"],
+                'asm_name' => $row["asmname"],
+                'sup_name' => $row["supname"],
+                'se_name' => $row["sename"],
+                'customer_name' => $row["customername"],
+                'contact_number' => $row["contactnumber"],
+                'business_type' => $row["businesstype"],
+                'ams' => $row["ams"],
+                'display_parasol' => $row["displayparasol"],
+                'foc' => $row["foc600ml"],
+                'installation' => $row["installation"],
+                'user_id' => Auth::id(),
             ]);
         }
     }

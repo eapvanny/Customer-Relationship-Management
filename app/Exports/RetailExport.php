@@ -16,9 +16,8 @@ class RetailExport implements FromView
     public function view(): View
     {
         $user = Auth::user();
-        
-        $query = Retail::with('user', 'customer');
-        
+        $query = Retail::with('user')->orderBy('id', 'desc');
+
         if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('manager_id', $user->id);

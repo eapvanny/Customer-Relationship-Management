@@ -19,7 +19,7 @@ class SubwholesaleExport implements FromView
         // dd('Hi');
         $user = Auth::user();
 
-        $query = Sub_wholesale::with('user', 'customer');
+        $query = Sub_wholesale::with('user');
 
         if ($user->role_id === AppHelper::USER_SE_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
