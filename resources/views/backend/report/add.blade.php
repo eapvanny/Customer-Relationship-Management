@@ -633,207 +633,211 @@
                                     value="@if ($report) {{ $report->other }}@else{{ old('other') }} @endif">
                             </div>
                         </div>
-                        <fieldset>
-                            <legend>{{ __('Photo Attachment') }}</legend>
-                            <div class="row">
-                                <div class="form-group has-feedback">
-                                    <div class="row">
-                                        <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
-                                            <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo" name="photo"
-                                                    style="display: none" accept="image/*">
-                                                <button type="button"
-                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-photo">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <fieldset id="photo-upload"
-                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto') && !isset($report->photo)) d-none @endif z-1"
-                                                        id="photo-preview" name="oldphoto"
-                                                        src="@if (isset($report->photo)) {{ asset('storage/' . $report->photo) }} @else {{ old('oldphoto') }} @endif"
-                                                        alt="photo">
-                                                    <input type="hidden" id="img-preview" name="oldphoto"
-                                                        value="@if (isset($report->photo)) {{ $report->photo }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview') && !isset($report->photo)) opacity-100 @else opacity-25 @endif"
-                                                        id="open-camera-btn">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo"
-                                                            type="button" data-action="open-camera">
-                                                            <i class="fa-solid fa-camera-retro"></i>
-                                                        </button>
-                                                    </div>
-                                                    <label id="camera-label"
-                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        @if (isset($report->photo) || old('img-preview'))
-                                                            {{ __('Delete the old photo before you can open the camera') }}
-                                                        @else
-                                                            {{ __('Click to open camera and capture photo') }}
-                                                        @endif
-                                                    </label>
-                                                </fieldset>
-                                            </div>
-                                            <div id="camera-modal" class="camera-modal d-none">
-                                                <div class="camera-content">
-                                                    <div class="video-container position-relative">
-                                                        <video id="webcam" autoplay playsinline></video>
-                                                        <div class="camera-overlay">
-                                                            <div class="overlay-top"></div>
-                                                            <div class="overlay-bottom"></div>
-                                                            <div class="overlay-left"></div>
-                                                            <div class="overlay-right"></div>
-                                                            <div class="focus-circle"></div>
+                        <div class="col-xl-12 col-lg-12 col-md-12">
+                            <fieldset>
+                                <legend>{{ __('Photo Attachment') }}</legend>
+                                <div class="row">
+                                    <div class="form-group has-feedback">
+                                        <div class="row">
+                                            <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
+                                                <div class="form-group has-feedback position-relative">
+                                                    <input type="file" id="photo" name="photo"
+                                                        style="display: none" accept="image/*">
+                                                    <button type="button"
+                                                        class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                        id="btn-remove-photo">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                    <fieldset id="photo-upload"
+                                                        class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                        <img class="rounded mx-auto d-block @if (!old('oldphoto') && !isset($report->photo)) d-none @endif z-1"
+                                                            id="photo-preview" name="oldphoto"
+                                                            src="@if (isset($report->photo)) {{ asset('storage/' . $report->photo) }} @else {{ old('oldphoto') }} @endif"
+                                                            alt="photo">
+                                                        <input type="hidden" id="img-preview" name="oldphoto"
+                                                            value="@if (isset($report->photo)) {{ $report->photo }} @endif">
+                                                        <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview') && !isset($report->photo)) opacity-100 @else opacity-25 @endif"
+                                                            id="open-camera-btn">
+                                                            <button class="btn p-3 rounded-circle" id="btn-upload-photo"
+                                                                type="button" data-action="open-camera">
+                                                                <i class="fa-solid fa-camera-retro"></i>
+                                                            </button>
                                                         </div>
-                                                    </div>
-                                                    <div class="camera-controls">
-                                                        <button id="switch-camera-btn" class="btn switch-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera-rotate"></i>
-                                                        </button>
-                                                        <button id="capture-btn" class="btn capture-btn" type="button">
-                                                            <i class="fa-solid fa-camera"></i>
-                                                        </button>
-                                                        <button id="close-camera-btn" class="btn close-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                    <canvas id="canvas" class="d-none"></canvas>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="row">
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('POSM') }}
-                                                            <i class="fa fa-question-circle" data-toggle="tooltip"
-                                                                data-placement="bottom" title="Select POSM"></i>
+                                                        <label id="camera-label"
+                                                            class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                            @if (isset($report->photo) || old('img-preview'))
+                                                                {{ __('Delete the old photo before you can open the camera') }}
+                                                            @else
+                                                                {{ __('Click to open camera and capture photo') }}
+                                                            @endif
                                                         </label>
-                                                        {!! Form::select(
-                                                            'posm',
-                                                            [
-                                                                AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
-                                                                AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
-                                                                AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
-                                                                AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
-                                                                AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
-                                                                AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
-                                                                AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
-                                                                AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
-                                                                AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
-                                                                AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
-                                                                AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
-                                                                AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
-                                                                AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
-                                                                AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
-                                                                AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
-                                                            ],
-                                                            old('posm', optional($report)->posm),
-                                                            [
-                                                                'placeholder' => __('Select material type'),
-                                                                'id' => 'posm',
-                                                                'name' => 'posm',
-                                                                'class' => 'form-control select2',
-                                                            ],
-                                                        ) !!}
-                                                        <span class="form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('posm') }}</span>
-                                                    </div>
+                                                    </fieldset>
                                                 </div>
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="qty"
-                                                            value="{{ old('qty', $report->qty ?? '') }}">
-                                                        <span class="fa fa-info form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('qty') }}</span>
+                                                <div id="camera-modal" class="camera-modal d-none">
+                                                    <div class="camera-content">
+                                                        <div class="video-container position-relative">
+                                                            <video id="webcam" autoplay playsinline></video>
+                                                            <div class="camera-overlay">
+                                                                <div class="overlay-top"></div>
+                                                                <div class="overlay-bottom"></div>
+                                                                <div class="overlay-left"></div>
+                                                                <div class="overlay-right"></div>
+                                                                <div class="focus-circle"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="camera-controls">
+                                                            <button id="switch-camera-btn" class="btn switch-camera-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera-rotate"></i>
+                                                            </button>
+                                                            <button id="capture-btn" class="btn capture-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera"></i>
+                                                            </button>
+                                                            <button id="close-camera-btn" class="btn close-camera-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <canvas id="canvas" class="d-none"></canvas>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>{{ __('Photo Attachment') }} <span class="text-danger">*
-                                    {{ __('(For the amount of water that has been sold)') }}</span></legend>
-                            <div class="row">
-                                <div class="form-group has-feedback">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="outlet_photo" name="outlet_photo"
-                                                    style="display: none" accept="image/*" required>
-                                                <button type="button"
-                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-outlet-photo">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <fieldset id="outlet-photo-upload"
-                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('old_outlet_photo') && !isset($report->outlet_photo)) d-none @endif z-1"
-                                                        id="outlet-photo-preview" name="old_outlet_photo"
-                                                        src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }} @else {{ old('old_outlet_photo') }} @endif"
-                                                        alt="outlet-photo">
-                                                    <input type="hidden" id="outlet-img-preview" name="old_outlet_photo"
-                                                        value="@if (isset($report->outlet_photo)) {{ $report->outlet_photo }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('outlet-img-preview') && !isset($report->outlet_photo)) opacity-100 @else opacity-25 @endif"
-                                                        id="open-outlet-camera-btn">
-                                                        <button class="btn p-3 rounded-circle"
-                                                            id="btn-upload-outlet-photo" type="button"
-                                                            data-action="open-outlet-camera">
-                                                            <i class="fa-solid fa-camera-retro"></i>
-                                                        </button>
-                                                    </div>
-                                                    <label id="outlet-camera-label"
-                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        @if (isset($report->outlet_photo) || old('outlet-img-preview'))
-                                                            {{ __('Delete the old photo before you can open the camera') }}
-                                                        @else
-                                                            {{ __('Click to open camera and capture photo') }}
-                                                        @endif
-                                                    </label>
-                                                </fieldset>
-                                                @error('outlet_photo')
-                                                    <span class="text-danger1">{{ __($message) }}</span>
-                                                @enderror
-                                            </div>
-                                            <div id="outlet-camera-modal" class="camera-modal d-none">
-                                                <div class="camera-content">
-                                                    <div class="video-container position-relative">
-                                                        <video id="outlet-webcam" autoplay playsinline></video>
-                                                        <div class="camera-overlay">
-                                                            <div class="overlay-top"></div>
-                                                            <div class="overlay-bottom"></div>
-                                                            <div class="overlay-left"></div>
-                                                            <div class="overlay-right"></div>
-                                                            <div class="focus-circle"></div>
+                                            <div class="col-md-12 col-lg-12 col-xl-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="posm"> {{ __('POSM') }}
+                                                                <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                    data-placement="bottom" title="Select POSM"></i>
+                                                            </label>
+                                                            {!! Form::select(
+                                                                'posm',
+                                                                [
+                                                                    AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
+                                                                    AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
+                                                                    AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
+                                                                    AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
+                                                                    AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
+                                                                    AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
+                                                                    AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
+                                                                    AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
+                                                                    AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
+                                                                    AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
+                                                                    AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
+                                                                    AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
+                                                                    AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
+                                                                    AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
+                                                                    AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
+                                                                    AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
+                                                                ],
+                                                                old('posm', optional($report)->posm),
+                                                                [
+                                                                    'placeholder' => __('Select material type'),
+                                                                    'id' => 'posm',
+                                                                    'name' => 'posm',
+                                                                    'class' => 'form-control select2',
+                                                                ],
+                                                            ) !!}
+                                                            <span class="form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('posm') }}</span>
                                                         </div>
                                                     </div>
-                                                    <div class="camera-controls">
-                                                        <button id="switch-outlet-camera-btn"
-                                                            class="btn switch-camera-btn" type="button">
-                                                            <i class="fa-solid fa-camera-rotate"></i>
-                                                        </button>
-                                                        <button id="capture-outlet-btn" class="btn capture-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera"></i>
-                                                        </button>
-                                                        <button id="close-outlet-camera-btn" class="btn close-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-times"></i>
-                                                        </button>
+                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="qty"> {{ __('Quantity') }} </label>
+                                                            <input type="number" class="form-control" name="qty"
+                                                                value="{{ old('qty', $report->qty ?? '') }}">
+                                                            <span class="fa fa-info form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('qty') }}</span>
+                                                        </div>
                                                     </div>
-                                                    <canvas id="outlet-canvas" class="d-none"></canvas>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </fieldset>
+                            </fieldset>
+                            <fieldset>
+                                <legend>{{ __('Photo Attachment') }} <span class="text-danger">*
+                                        {{ __('(For the amount of water that has been sold)') }}</span></legend>
+                                <div class="row">
+                                    <div class="form-group has-feedback">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group has-feedback position-relative">
+                                                    <input type="file" id="outlet_photo" name="outlet_photo"
+                                                        style="display: none" accept="image/*" required>
+                                                    <button type="button"
+                                                        class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                        id="btn-remove-outlet-photo">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                    <fieldset id="outlet-photo-upload"
+                                                        class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                        <img class="rounded mx-auto d-block @if (!old('old_outlet_photo') && !isset($report->outlet_photo)) d-none @endif z-1"
+                                                            id="outlet-photo-preview" name="old_outlet_photo"
+                                                            src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }} @else {{ old('old_outlet_photo') }} @endif"
+                                                            alt="outlet-photo">
+                                                        <input type="hidden" id="outlet-img-preview"
+                                                            name="old_outlet_photo"
+                                                            value="@if (isset($report->outlet_photo)) {{ $report->outlet_photo }} @endif">
+                                                        <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('outlet-img-preview') && !isset($report->outlet_photo)) opacity-100 @else opacity-25 @endif"
+                                                            id="open-outlet-camera-btn">
+                                                            <button class="btn p-3 rounded-circle"
+                                                                id="btn-upload-outlet-photo" type="button"
+                                                                data-action="open-outlet-camera">
+                                                                <i class="fa-solid fa-camera-retro"></i>
+                                                            </button>
+                                                        </div>
+                                                        <label id="outlet-camera-label"
+                                                            class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                            @if (isset($report->outlet_photo) || old('outlet-img-preview'))
+                                                                {{ __('Delete the old photo before you can open the camera') }}
+                                                            @else
+                                                                {{ __('Click to open camera and capture photo') }}
+                                                            @endif
+                                                        </label>
+                                                    </fieldset>
+                                                    @error('outlet_photo')
+                                                        <span class="text-danger1">{{ __($message) }}</span>
+                                                    @enderror
+                                                </div>
+                                                <div id="outlet-camera-modal" class="camera-modal d-none">
+                                                    <div class="camera-content">
+                                                        <div class="video-container position-relative">
+                                                            <video id="outlet-webcam" autoplay playsinline></video>
+                                                            <div class="camera-overlay">
+                                                                <div class="overlay-top"></div>
+                                                                <div class="overlay-bottom"></div>
+                                                                <div class="overlay-left"></div>
+                                                                <div class="overlay-right"></div>
+                                                                <div class="focus-circle"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="camera-controls">
+                                                            <button id="switch-outlet-camera-btn"
+                                                                class="btn switch-camera-btn" type="button">
+                                                                <i class="fa-solid fa-camera-rotate"></i>
+                                                            </button>
+                                                            <button id="capture-outlet-btn" class="btn capture-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera"></i>
+                                                            </button>
+                                                            <button id="close-outlet-camera-btn"
+                                                                class="btn close-camera-btn" type="button">
+                                                                <i class="fa-solid fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <canvas id="outlet-canvas" class="d-none"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
                         <!-- Location Fields and Map -->
                         <div class="col-lg-12 col-md-12 col-xl-12">
                             <fieldset>

@@ -34,73 +34,123 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
         $user = auth()->user();
+        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
+
+        // Role-based filtering
         if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('manager_id', $user->id);
             });
-        } elseif ($user->role_id !== AppHelper::USER_SUPER_ADMIN && $user->role_id !== AppHelper::USER_ADMIN) {
+        } elseif (!in_array($user->role_id, [AppHelper::USER_ADMIN, AppHelper::USER_SUPER_ADMIN])) {
             $query->where('user_id', $user->id);
         }
 
-        $is_filter = false;
-        $authUser = auth()->user();
-
-        $userRole = User::where('role_id', AppHelper::USER_EMPLOYEE);
-        if ($authUser->role_id === AppHelper::USER_MANAGER) {
-            $userRole->where('manager_id', $authUser->id);
+        // Load employee list (for filtering)
+        $employeeQuery = User::where('role_id', AppHelper::USER_EMPLOYEE);
+        if ($user->role_id === AppHelper::USER_MANAGER) {
+            $employeeQuery->where('manager_id', $user->id);
         }
-        $full_name = $userRole->get()->mapWithKeys(function ($names) use ($authUser) {
-            return [
-                $names->id => $authUser->user_lang === 'en'
-                    ? $names->family_name_latin . ' ' . $names->name_latin
-                    : $names->family_name . ' ' . $names->name
-            ];
+
+        $full_name = $employeeQuery->get()->mapWithKeys(function ($u) use ($user) {
+            $name = $user->user_lang === 'en'
+                ? "{$u->family_name_latin} {$u->name_latin}"
+                : "{$u->family_name} {$u->name}";
+            return [$u->id => $name];
         });
 
-        if ($request->has(['date1', 'date2']) && !empty($request->date1) && !empty($request->date2)) {
+        $is_filter = false;
+
+        // Date filtering
+        if ($request->filled(['date1', 'date2'])) {
             $is_filter = true;
             $startDate = Carbon::parse($request->date1)->startOfDay();
             $endDate = Carbon::parse($request->date2)->endOfDay();
             $query->whereBetween('date', [$startDate, $endDate]);
         }
 
-        if ($request->has('full_name') && !empty($request->full_name)) {
+        // User filter
+        if ($request->filled('full_name')) {
             $is_filter = true;
             $query->where('user_id', $request->full_name);
         }
 
+        // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                $reports = $query->get();
+                if (!empty($request->search['value'])) {
+                    $searchTerms = explode(' ', $request->search['value']);
+                    $query->where(function ($query) use ($searchTerms) {
+                        foreach ($searchTerms as $word) {
+                            $query->where(function ($subQuery) use ($word) {
+                                $subQuery->whereHas('customer', function ($q) use ($word) {
+                                    $q->where('outlet', 'like', "%$word%")
+                                        ->orWhere('name', 'like', "%$word%");
+                                })->orWhereHas('user', function ($q) use ($word) {
+                                    $q->where('staff_id_card', 'like', "%$word%")
+                                        ->orWhere('name', 'like', "%$word%")
+                                        ->orWhere('family_name', 'like', "%$word%")
+                                        ->orWhere('name_latin', 'like', "%$word%")
+                                        ->orWhere('family_name_latin', 'like', "%$word%");
+                                });
+
+                                // Search by customer_type string
+                                foreach (AppHelper::CUSTOMER_TYPE as $typeId => $typeName) {
+                                    if (stripos($typeName, $word) !== false) {
+                                        $subQuery->orWhere('customer_type', $typeId);
+                                    }
+                                }
+
+                                // Search by area label name and sub-area code
+                                foreach (AppHelper::AREAS as $areaLabel => $areaList) {
+                                    if (stripos($areaLabel, $word) !== false) {
+                                        $subQuery->orWhereIn('area_id', array_keys($areaList));
+                                    }
+                                    foreach ($areaList as $areaId => $code) {
+                                        if (stripos($code, $word) !== false) {
+                                            $subQuery->orWhere('area_id', $areaId);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+                $totalRecords = $query->count();
+                $start = $request->input('start', 0);
+                $length = $request->input('length', 10);
+
+                // Handle ordering
+               $columnNameOrder = $request->columns[$request->order[0]['column']]['name'];
+                $columnOrder = $request->order[0]['dir'];
+                if ($columnNameOrder == 'name') {
+                    $query = $query->whereHas('user')->orderBy('family_name', $columnOrder);
+                } elseif ($columnNameOrder == 'name_latin') {
+                    $query = $query->orderBy('family_name_in_latin', $columnOrder);
+                } elseif ($columnNameOrder == 'id') {
+                    $query = $query->orderBy('id', $columnOrder);
+                }
+
+                // Get paginated data
+                $reports = $query->offset($start)->limit($length)->get();
 
                 return DataTables::of($reports)
-                    ->addColumn('photo', function ($data) {
-                        $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');
-                        return '<img class="img-responsive center" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" src="' . $photoUrl . '" >';
-                    })
-                    ->addColumn('id_card', function ($data) {
-                        return $data->user->staff_id_card ?? 'N/A';
-                    })
-                    ->addColumn('name', function ($data) {
-                        $user = optional($data->user);
-                        return auth()->user()->user_lang == 'en'
-                            ? ($user->getFullNameLatinAttribute() ?? 'N/A')
-                            : ($user->getFullNameAttribute() ?? 'N/A');
-                    })
-                    ->addColumn('area', function ($data) {
-                        return __(AppHelper::getAreaName($data->area_id));
-                    })
-                    ->addColumn('outlet_id', function ($data) {
-                        return $data->customer->outlet ?? 'N/A';
-                    })
-                    ->addColumn('customer', function ($data) {
-                        return $data->customer->name ?? 'N/A';
-                    })
-                    ->addColumn('customer_type', function ($data) {
-                        return AppHelper::CUSTOMER_TYPE[$data->customer_type] ?? 'N/A';
-                    })
+                    ->setTotalRecords($totalRecords)
+                    ->setFilteredRecords($totalRecords)
+                    ->addColumn('photo', fn($data) =>
+                    '<img src="' . asset($data->photo ? 'storage/' . $data->photo : 'images/avatar.png') .
+                        '" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" />')
+                    ->addColumn('id_card', fn($data) => $data->user->staff_id_card ?? 'N/A')
+                    ->addColumn('name', fn($data) =>
+                    auth()->user()->user_lang === 'en'
+                        ? $data->user->getFullNameLatinAttribute() ?? 'N/A'
+                        : $data->user->getFullNameAttribute() ?? 'N/A')
+                    ->addColumn('area', fn($data) => __(AppHelper::getAreaName($data->area_id)))
+                    ->addColumn('outlet_id', fn($data) => $data->customer->outlet ?? 'N/A')
+                    ->addColumn('customer', fn($data) => $data->customer->name ?? 'N/A')
+                    ->addColumn('customer_type', fn($data) =>
+                    AppHelper::CUSTOMER_TYPE[$data->customer_type] ?? 'N/A')
                     ->addColumn('250ml', fn($data) => $data->{'250_ml'} ?? 'N/A')
                     ->addColumn('350ml', fn($data) => $data->{'350_ml'} ?? 'N/A')
                     ->addColumn('600ml', fn($data) => $data->{'600_ml'} ?? 'N/A')
@@ -108,26 +158,23 @@ class ReportController extends Controller
                     ->addColumn('phone', fn($data) => $data->customer->phone ?? 'N/A')
                     ->addColumn('latitude', fn($data) => $data->latitude ?? 'N/A')
                     ->addColumn('longitude', fn($data) => $data->longitude ?? 'N/A')
-                    ->addColumn('location', fn($data) => $data->city && $data->country ? "{$data->city}, {$data->country}" : 'N/A')
-                    ->addColumn('date', fn($data) => $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A')
+                    ->addColumn('location', fn($data) =>
+                    $data->city && $data->country ? "{$data->city}, {$data->country}" : 'N/A')
+                    ->addColumn('date', fn($data) =>
+                    $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A')
                     ->addColumn('other', fn($data) => $data->other ?? 'N/A')
                     ->addColumn('posm', fn($data) => AppHelper::MATERIAL[$data->posm] ?? 'N/A')
                     ->addColumn('qty', fn($data) => $data->qty ?? 'N/A')
                     ->addColumn('action', function ($data) {
-                        $editRoute = route('report.edit', $data->id);
-                        $action = '<span class="change-action-item">
-                            <a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal">
+                        $show = '<span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show">
                                 <i class="fa fa-fw fa-eye"></i>
-                            </a>
-                        </span>';
-                        if (auth()->user()->can('update report')) {
-                            $action .= '<span class="change-action-item">
-                                    <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
-                                </span>';
-                        }
-                        return $action;
+                             </a>';
+                        $edit = auth()->user()->can('update report')
+                            ? '<a title="Edit" href="' . route('report.edit', $data->id) . '" class="btn btn-primary btn-sm">
+                               <i class="fa fa-edit"></i>
+                           </a></span>'
+                            : '';
+                        return $show . ' ' . $edit;
                     })
                     ->rawColumns(['photo', 'action'])
                     ->make(true);
@@ -135,11 +182,9 @@ class ReportController extends Controller
                 Log::error('DataTables error in ReportController@index: ' . $e->getMessage(), [
                     'stack' => $e->getTraceAsString()
                 ]);
-
                 return response()->json(['error' => 'Server error. Check logs.'], 500);
             }
         }
-
 
         return view('backend.report.list', compact('is_filter', 'full_name'));
     }

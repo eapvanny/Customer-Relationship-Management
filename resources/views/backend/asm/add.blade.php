@@ -591,7 +591,8 @@
 
 
 
-                        {{-- FOC START  --}}
+                       <div class="col-xl-12 col-lg-12 col-md-12">
+                         {{-- FOC START  --}}
                         <fieldset>
                             <legend>{{ __('FOC') }}</legend>
                             <div class="row">
@@ -779,9 +780,21 @@
                                                             'posm',
                                                             [
                                                                 AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                                                AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                                                AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
+                                                                AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
+                                                                AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
+                                                                AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
+                                                                AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
+                                                                AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
+                                                                AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
+                                                                AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
+                                                                AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
+                                                                AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
+                                                                AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
+                                                                AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
+                                                                AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
+                                                                AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
+                                                                AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
+                                                                AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
                                                             ],
                                                             old('posm', optional($report)->posm),
                                                             [
@@ -811,6 +824,7 @@
                             </div>
                         </fieldset>
                         {{-- POSM END--}}
+                       </div>
 
                         <!-- Location Fields and Map -->
                         <div class="col-lg-12 col-md-12 col-xl-12">

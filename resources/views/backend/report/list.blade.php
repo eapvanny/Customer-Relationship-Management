@@ -591,10 +591,10 @@
             t = $('#datatabble').DataTable({
                 processing: false,
                 serverSide: true,
+                bLengthChange: false,
                 ajax: {
                     url: "{{ route('report.index')}}",
                 },
-                pageLength: 10,
                 columns: [{
                         data: 'photo',
                         name: 'photo',

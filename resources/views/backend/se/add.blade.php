@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                                            margin-bottom: 0px;
-                                        }
-
-                                        fieldset .iradio .error,
-                                        fieldset .icheck .error {
-                                            display: none !important;
-                                        }
-
-                                        @media (max-width: 600px) {
-                                            .display-flex {
-                                                display: inline-flex;
+                                                margin-bottom: 0px;
                                             }
-                                        } */
+
+                                            fieldset .iradio .error,
+                                            fieldset .icheck .error {
+                                                display: none !important;
+                                            }
+
+                                            @media (max-width: 600px) {
+                                                .display-flex {
+                                                    display: inline-flex;
+                                                }
+                                            } */
 
         .checkbox,
         .radio {
@@ -149,7 +149,7 @@
         }
 
         fieldset>#open-camera-btn>#btn-upload-photo,
-        fieldset>#open-camera-btn-foc>#btn-upload-photo-foc  {
+        fieldset>#open-camera-btn-foc>#btn-upload-photo-foc {
             min-width: 100px;
             min-height: 100px;
             background-color: #ddd;
@@ -165,7 +165,7 @@
         }
 
         fieldset>#photo-preview,
-         fieldset>#photo-foc-preview {
+        fieldset>#photo-foc-preview {
             height: 238px;
             width: 238px;
             position: absolute;
@@ -450,11 +450,11 @@
                                 <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
                                     <option value="">{{ __('Select Area') }}</option>
-                                    @foreach(\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                    @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
                                         <optgroup label="{{ $area }}">
-                                            @foreach($subItems as $area_id => $subItem)
+                                            @foreach ($subItems as $area_id => $subItem)
                                                 <option value="{{ $area_id }}"
-                                                    @if(old('area', $report->area_id ?? '') == $area_id) selected @endif>
+                                                    @if (old('area', $report->area_id ?? '') == $area_id) selected @endif>
                                                     {{ $subItem }}
                                                 </option>
                                             @endforeach
@@ -496,8 +496,9 @@
                                             {{ $report->customer_id }} (Current)
                                         </option>
                                     @endif
-                                    @foreach($customers as $c)
-                                        <option value="{{ $c->id }}" {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
+                                    @foreach ($customers as $c)
+                                        <option value="{{ $c->id }}"
+                                            {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
                                             {{ $c->name }}
                                         </option>
                                     @endforeach
@@ -590,75 +591,77 @@
                         </div>
 
 
-
-                        {{-- FOC START  --}}
-                        <fieldset>
-                            <legend>{{ __('FOC') }}</legend>
-                            <div class="row">
-                                <div class="form-group has-feedback">
-                                    <div class="row">
-                                        <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
-                                            <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo-foc" name="photo_foc"
-                                                    style="display: none" accept="image/*">
-                                                <button type="button"
-                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-photo-foc">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <fieldset id="photo-foc-upload"
-                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto-foc') && !old('img-preview-foc') && !isset($report)) {{ 'd-none' }} @endif z-1"
-                                                        id="photo-foc-preview" name="oldphoto-foc"
-                                                        src="@if (optional($report)->photo_foc) {{ asset('storage/' . $report->photo_foc) }}@else{{ old('oldphoto-foc') }} @endif"
-                                                        alt="photo-foc">
-                                                    <input type="hidden" id="img-preview-foc" name="oldphoto-foc"
-                                                        value="@if (optional($report)->photo_foc) {{ $report->photo_foc }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview-foc')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
-                                                        id="open-camera-btn-foc">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo-foc"
-                                                            type="button" data-action="open-camera-foc">
-                                                            <i class="fa-solid fa-camera-retro"></i>
-                                                        </button>
-                                                    </div>
-                                                    <label id="camera-label-foc"
-                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        {{ __('Click to open camera and capture photo') }}
-                                                    </label>
-                                                </fieldset>
-                                            </div>
-                                            <div id="camera-modal-foc" class="camera-modal d-none">
-                                                <div class="camera-content">
-                                                    <div class="video-container position-relative">
-                                                        <video id="webcam-foc" autoplay playsinline></video>
-                                                        <div class="camera-overlay">
-                                                            <div class="overlay-top"></div>
-                                                            <div class="overlay-bottom"></div>
-                                                            <div class="overlay-left"></div>
-                                                            <div class="overlay-right"></div>
-                                                            <div class="focus-circle"></div>
+                        <div class="col-xl-12 col-lg-12 col-md-12">
+                            {{-- FOC START  --}}
+                            <fieldset>
+                                <legend>{{ __('FOC') }}</legend>
+                                <div class="row">
+                                    <div class="form-group has-feedback">
+                                        <div class="row">
+                                            <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
+                                                <div class="form-group has-feedback position-relative">
+                                                    <input type="file" id="photo-foc" name="photo_foc"
+                                                        style="display: none" accept="image/*">
+                                                    <button type="button"
+                                                        class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                        id="btn-remove-photo-foc">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                    <fieldset id="photo-foc-upload"
+                                                        class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                        <img class="rounded mx-auto d-block @if (!old('oldphoto-foc') && !old('img-preview-foc') && !isset($report)) {{ 'd-none' }} @endif z-1"
+                                                            id="photo-foc-preview" name="oldphoto-foc"
+                                                            src="@if (optional($report)->photo_foc) {{ asset('storage/' . $report->photo_foc) }}@else{{ old('oldphoto-foc') }} @endif"
+                                                            alt="photo-foc">
+                                                        <input type="hidden" id="img-preview-foc" name="oldphoto-foc"
+                                                            value="@if (optional($report)->photo_foc) {{ $report->photo_foc }} @endif">
+                                                        <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview-foc')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                            id="open-camera-btn-foc">
+                                                            <button class="btn p-3 rounded-circle"
+                                                                id="btn-upload-photo-foc" type="button"
+                                                                data-action="open-camera-foc">
+                                                                <i class="fa-solid fa-camera-retro"></i>
+                                                            </button>
                                                         </div>
+                                                        <label id="camera-label-foc"
+                                                            class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                            {{ __('Click to open camera and capture photo') }}
+                                                        </label>
+                                                    </fieldset>
+                                                </div>
+                                                <div id="camera-modal-foc" class="camera-modal d-none">
+                                                    <div class="camera-content">
+                                                        <div class="video-container position-relative">
+                                                            <video id="webcam-foc" autoplay playsinline></video>
+                                                            <div class="camera-overlay">
+                                                                <div class="overlay-top"></div>
+                                                                <div class="overlay-bottom"></div>
+                                                                <div class="overlay-left"></div>
+                                                                <div class="overlay-right"></div>
+                                                                <div class="focus-circle"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="camera-controls">
+                                                            <button id="switch-camera-btn-foc"
+                                                                class="btn switch-camera-btn" type="button">
+                                                                <i class="fa-solid fa-camera-rotate"></i>
+                                                            </button>
+                                                            <button id="capture-btn-foc" class="btn capture-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera"></i>
+                                                            </button>
+                                                            <button id="close-camera-btn-foc" class="btn close-camera-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <canvas id="canvas-foc" class="d-none"></canvas>
                                                     </div>
-                                                    <div class="camera-controls">
-                                                        <button id="switch-camera-btn-foc" class="btn switch-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera-rotate"></i>
-                                                        </button>
-                                                        <button id="capture-btn-foc" class="btn capture-btn" type="button">
-                                                            <i class="fa-solid fa-camera"></i>
-                                                        </button>
-                                                        <button id="close-camera-btn-foc" class="btn close-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                    <canvas id="canvas-foc" class="d-none"></canvas>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="row">
-                                                {{-- <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                            <div class="col-md-6">
+                                                <div class="row">
+                                                    {{-- <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
                                                         <label for="posm"> {{ __('POSM') }}
                                                             <i class="fa fa-question-circle" data-toggle="tooltip"
@@ -684,133 +687,149 @@
                                                         <span class="text-danger">{{ $errors->first('posm') }}</span>
                                                     </div>
                                                 </div> --}}
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="foc_qty"
-                                                            value="{{ old('foc_qty', $report->foc_qty ?? '') }}">
-                                                        <span class="fa fa-info form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </fieldset>
-                        {{-- FOC END  --}}
-
-
-                        {{-- POSM START --}}
-                        <fieldset>
-                            <legend>{{ __('Photo Attachment') }}</legend>
-                            <div class="row">
-                                <div class="form-group has-feedback">
-                                    <div class="row">
-                                        <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
-                                            <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo" name="photo"
-                                                    style="display: none" accept="image/*">
-                                                <button type="button"
-                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-photo">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <fieldset id="photo-upload"
-                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
-                                                        id="photo-preview" name="oldphoto"
-                                                        src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
-                                                        alt="photo">
-                                                    <input type="hidden" id="img-preview" name="oldphoto"
-                                                        value="@if (optional($report)->photo) {{$report->photo}} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
-                                                        id="open-camera-btn">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo"
-                                                            type="button" data-action="open-camera">
-                                                            <i class="fa-solid fa-camera-retro"></i>
-                                                        </button>
-                                                    </div>
-                                                    <label id="camera-label"
-                                                        class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        {{ __('Click to open camera and capture photo') }}
-                                                    </label>
-                                                </fieldset>
-                                            </div>
-                                            <div id="camera-modal" class="camera-modal d-none">
-                                                <div class="camera-content">
-                                                    <div class="video-container position-relative">
-                                                        <video id="webcam" autoplay playsinline></video>
-                                                        <div class="camera-overlay">
-                                                            <div class="overlay-top"></div>
-                                                            <div class="overlay-bottom"></div>
-                                                            <div class="overlay-left"></div>
-                                                            <div class="overlay-right"></div>
-                                                            <div class="focus-circle"></div>
+                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="qty"> {{ __('Quantity') }} </label>
+                                                            <input type="number" class="form-control" name="foc_qty"
+                                                                value="{{ old('foc_qty', $report->foc_qty ?? '') }}">
+                                                            <span class="fa fa-info form-control-feedback"></span>
+                                                            <span
+                                                                class="text-danger">{{ $errors->first('foc_qty') }}</span>
                                                         </div>
                                                     </div>
-                                                    <div class="camera-controls">
-                                                        <button id="switch-camera-btn" class="btn switch-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera-rotate"></i>
-                                                        </button>
-                                                        <button id="capture-btn" class="btn capture-btn" type="button">
-                                                            <i class="fa-solid fa-camera"></i>
-                                                        </button>
-                                                        <button id="close-camera-btn" class="btn close-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                    <canvas id="canvas" class="d-none"></canvas>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="row">
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('POSM') }}
-                                                            <i class="fa fa-question-circle" data-toggle="tooltip"
-                                                                data-placement="bottom" title="Select POSM"></i>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            {{-- FOC END  --}}
+
+
+                            {{-- POSM START --}}
+                            <fieldset>
+                                <legend>{{ __('Photo Attachment') }}</legend>
+                                <div class="row">
+                                    <div class="form-group has-feedback">
+                                        <div class="row">
+                                            <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
+                                                <div class="form-group has-feedback position-relative">
+                                                    <input type="file" id="photo" name="photo"
+                                                        style="display: none" accept="image/*">
+                                                    <button type="button"
+                                                        class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                        id="btn-remove-photo">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                    <fieldset id="photo-upload"
+                                                        class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                        <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
+                                                            id="photo-preview" name="oldphoto"
+                                                            src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
+                                                            alt="photo">
+                                                        <input type="hidden" id="img-preview" name="oldphoto"
+                                                            value="@if (optional($report)->photo) {{ $report->photo }} @endif">
+                                                        <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                            id="open-camera-btn">
+                                                            <button class="btn p-3 rounded-circle" id="btn-upload-photo"
+                                                                type="button" data-action="open-camera">
+                                                                <i class="fa-solid fa-camera-retro"></i>
+                                                            </button>
+                                                        </div>
+                                                        <label id="camera-label"
+                                                            class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                            {{ __('Click to open camera and capture photo') }}
                                                         </label>
-                                                        {!! Form::select(
-                                                            'posm',
-                                                            [
-                                                                AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                                                AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                                                AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
-                                                            ],
-                                                            old('posm', optional($report)->posm),
-                                                            [
-                                                                'placeholder' => __('Select material type'),
-                                                                'id' => 'posm',
-                                                                'name' => 'posm',
-                                                                'class' => 'form-control select2',
-                                                            ],
-                                                        ) !!}
-                                                        <span class="form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('posm') }}</span>
+                                                    </fieldset>
+                                                </div>
+                                                <div id="camera-modal" class="camera-modal d-none">
+                                                    <div class="camera-content">
+                                                        <div class="video-container position-relative">
+                                                            <video id="webcam" autoplay playsinline></video>
+                                                            <div class="camera-overlay">
+                                                                <div class="overlay-top"></div>
+                                                                <div class="overlay-bottom"></div>
+                                                                <div class="overlay-left"></div>
+                                                                <div class="overlay-right"></div>
+                                                                <div class="focus-circle"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="camera-controls">
+                                                            <button id="switch-camera-btn" class="btn switch-camera-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera-rotate"></i>
+                                                            </button>
+                                                            <button id="capture-btn" class="btn capture-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera"></i>
+                                                            </button>
+                                                            <button id="close-camera-btn" class="btn close-camera-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <canvas id="canvas" class="d-none"></canvas>
                                                     </div>
                                                 </div>
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="qty"
-                                                            value="{{ old('qty', $report->qty ?? '') }}">
-                                                        <span class="fa fa-info form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('qty') }}</span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="posm"> {{ __('POSM') }}
+                                                                <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                    data-placement="bottom" title="Select POSM"></i>
+                                                            </label>
+                                                            {!! Form::select(
+                                                                'posm',
+                                                                [
+                                                                    AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
+                                                                    AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
+                                                                    AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
+                                                                    AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
+                                                                    AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
+                                                                    AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
+                                                                    AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
+                                                                    AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
+                                                                    AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
+                                                                    AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
+                                                                    AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
+                                                                    AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
+                                                                    AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
+                                                                    AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
+                                                                    AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
+                                                                    AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
+                                                                ],
+                                                                old('posm', optional($report)->posm),
+                                                                [
+                                                                    'placeholder' => __('Select material type'),
+                                                                    'id' => 'posm',
+                                                                    'name' => 'posm',
+                                                                    'class' => 'form-control select2',
+                                                                ],
+                                                            ) !!}
+                                                            <span class="form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('posm') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="qty"> {{ __('Quantity') }} </label>
+                                                            <input type="number" class="form-control" name="qty"
+                                                                value="{{ old('qty', $report->qty ?? '') }}">
+                                                            <span class="fa fa-info form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('qty') }}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </fieldset>
-                        {{-- POSM END--}}
+                            </fieldset>
+                            {{-- POSM END --}}
+                        </div>
+
 
                         <!-- Location Fields and Map -->
                         <div class="col-lg-12 col-md-12 col-xl-12">
@@ -1144,7 +1163,6 @@
         //         $('input[name="other"]').val('');
         //     }
         // });
-
     </script>
 
     <script>
@@ -1171,273 +1189,273 @@
             });
 
             // POSM START
-            $(document).on('click', '#btn-upload-photo', function () {
+            $(document).on('click', '#btn-upload-photo', function() {
                 // POSM START
-                    let video = document.getElementById('webcam');
-                    let canvas = document.getElementById('canvas');
-                    let context = canvas.getContext('2d');
-                    let imgPreview = $('#photo-preview');
-                    let imgInput = $('#img-preview');
-                    let cameraModal = $('#camera-modal');
-                    let cameraLabel = $('#camera-label');
-                    let currentFacingMode = 'user';
+                let video = document.getElementById('webcam');
+                let canvas = document.getElementById('canvas');
+                let context = canvas.getContext('2d');
+                let imgPreview = $('#photo-preview');
+                let imgInput = $('#img-preview');
+                let cameraModal = $('#camera-modal');
+                let cameraLabel = $('#camera-label');
+                let currentFacingMode = 'user';
 
-                    // Function to update camera label based on photo presence
-                    function updateCameraLabel() {
-                        if (imgPreview.hasClass('d-none')) {
-                            cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
-                        } else {
-                            cameraLabel.text('{{ __('Delete the old photo before you can open the camera') }}');
-                        }
+                // Function to update camera label based on photo presence
+                function updateCameraLabel() {
+                    if (imgPreview.hasClass('d-none')) {
+                        cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
+                    } else {
+                        cameraLabel.text(
+                            '{{ __('Delete the old photo before you can open the camera') }}');
                     }
+                }
 
-                    // Initialize label on page load
-                    updateCameraLabel();
+                // Initialize label on page load
+                updateCameraLabel();
 
-                    @if ($report && $report->photo)
-                        $('#btn-upload-photo').addClass('d-none');
-                        $('#btn-remove-photo').removeClass('d-none');
-                    @endif
+                @if ($report && $report->photo)
+                    $('#btn-upload-photo').addClass('d-none');
+                    $('#btn-remove-photo').removeClass('d-none');
+                @endif
 
-                    function startCamera(facingMode) {
-                        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                            video.setAttribute('playsinline', 'true');
-                            video.setAttribute('autoplay', 'true');
+                function startCamera(facingMode) {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        video.setAttribute('playsinline', 'true');
+                        video.setAttribute('autoplay', 'true');
 
-                            navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        facingMode: facingMode,
-                                        width: {
-                                            ideal: 1280
-                                        },
-                                        height: {
-                                            ideal: 720
-                                        }
+                        navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    facingMode: facingMode,
+                                    width: {
+                                        ideal: 1280
+                                    },
+                                    height: {
+                                        ideal: 720
                                     }
-                                })
-                                .then(function(stream) {
-                                    video.srcObject = stream;
-                                    video.play();
-                                })
-                                .catch(function(error) {
-                                    alert('Unable to access camera: ' + error.message);
-                                    console.error('Camera error:', error);
-                                    cameraModal.addClass('d-none');
-                                    $('#photo').click();
-                                });
-                        } else {
-                            alert('Camera not supported on this device.');
-                            $('#photo').click();
-                        }
+                                }
+                            })
+                            .then(function(stream) {
+                                video.srcObject = stream;
+                                video.play();
+                            })
+                            .catch(function(error) {
+                                alert('Unable to access camera: ' + error.message);
+                                console.error('Camera error:', error);
+                                cameraModal.addClass('d-none');
+                                $('#photo').click();
+                            });
+                    } else {
+                        alert('Camera not supported on this device.');
+                        $('#photo').click();
                     }
+                }
 
-                    // Use click event only, targeting the button specifically
-                    $('[data-action="open-camera"]').on('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        cameraModal.removeClass('d-none');
-                        startCamera(currentFacingMode);
-                    });
+                // Use click event only, targeting the button specifically
+                $('[data-action="open-camera"]').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cameraModal.removeClass('d-none');
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#switch-camera-btn').on('click', function() {
-                        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-                        stopCamera();
-                        startCamera(currentFacingMode);
-                    });
+                $('#switch-camera-btn').on('click', function() {
+                    currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+                    stopCamera();
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#capture-btn').on('click', function(e) {
-                        e.preventDefault();
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        let imageData = canvas.toDataURL('image/png');
-                        imgPreview.attr('src', imageData).removeClass('d-none');
-                        imgInput.val(imageData);
-                        stopCamera();
-                        $('#btn-upload-photo').addClass('d-none');
-                        $('#btn-remove-photo').removeClass('d-none');
-                        cameraModal.addClass('d-none');
-                        updateCameraLabel(); // Update label after capturing photo
-                    });
+                $('#capture-btn').on('click', function(e) {
+                    e.preventDefault();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    let imageData = canvas.toDataURL('image/png');
+                    imgPreview.attr('src', imageData).removeClass('d-none');
+                    imgInput.val(imageData);
+                    stopCamera();
+                    $('#btn-upload-photo').addClass('d-none');
+                    $('#btn-remove-photo').removeClass('d-none');
+                    cameraModal.addClass('d-none');
+                    updateCameraLabel(); // Update label after capturing photo
+                });
 
-                    $('#btn-remove-photo').on('click', function() {
-                        $('#photo').val('');
-                        $('#img-preview').val('');
-                        $('#photo-preview').removeAttr('src').addClass('d-none');
-                        $('#btn-remove-photo').addClass('d-none');
-                        $('#btn-upload-photo').removeClass('d-none');
-                        updateCameraLabel(); // Update label after removing photo
-                    });
+                $('#btn-remove-photo').on('click', function() {
+                    $('#photo').val('');
+                    $('#img-preview').val('');
+                    $('#photo-preview').removeAttr('src').addClass('d-none');
+                    $('#btn-remove-photo').addClass('d-none');
+                    $('#btn-upload-photo').removeClass('d-none');
+                    updateCameraLabel(); // Update label after removing photo
+                });
 
-                    $('#close-camera-btn').on('click', function(e) {
-                        e.preventDefault();
-                        stopCamera();
-                        cameraModal.addClass('d-none');
-                    });
+                $('#close-camera-btn').on('click', function(e) {
+                    e.preventDefault();
+                    stopCamera();
+                    cameraModal.addClass('d-none');
+                });
 
-                    $('#photo').on('change', function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                imgPreview.attr('src', e.target.result).removeClass('d-none');
-                                imgInput.val(e.target.result);
-                                $('#btn-upload-photo').addClass('d-none');
-                                $('#btn-remove-photo').removeClass('d-none');
-                                updateCameraLabel(); // Update label after uploading photo
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-
-                    function stopCamera() {
-                        if (video.srcObject) {
-                            video.srcObject.getTracks().forEach(track => track.stop());
-                        }
-                        video.srcObject = null;
+                $('#photo').on('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imgPreview.attr('src', e.target.result).removeClass('d-none');
+                            imgInput.val(e.target.result);
+                            $('#btn-upload-photo').addClass('d-none');
+                            $('#btn-remove-photo').removeClass('d-none');
+                            updateCameraLabel(); // Update label after uploading photo
+                        };
+                        reader.readAsDataURL(file);
                     }
+                });
+
+                function stopCamera() {
+                    if (video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                    video.srcObject = null;
+                }
                 // POSM END
             });
 
 
             // FOC START
 
-            $(document).on('click', '#btn-upload-photo-foc' , function () {
+            $(document).on('click', '#btn-upload-photo-foc', function() {
 
 
 
                 // FOC START
-                    let video = document.getElementById('webcam-foc');
-                    let canvas = document.getElementById('canvas-foc');
-                    let context = canvas.getContext('2d');
-                    let imgPreview = $('#photo-foc-preview');
-                    let imgInput = $('#img-preview-foc');
-                    let cameraModal = $('#camera-modal-foc');
-                    let cameraLabel = $('#camera-label-foc');
-                    let currentFacingMode = 'user';
+                let video = document.getElementById('webcam-foc');
+                let canvas = document.getElementById('canvas-foc');
+                let context = canvas.getContext('2d');
+                let imgPreview = $('#photo-foc-preview');
+                let imgInput = $('#img-preview-foc');
+                let cameraModal = $('#camera-modal-foc');
+                let cameraLabel = $('#camera-label-foc');
+                let currentFacingMode = 'user';
 
-                    // Function to update camera label based on photo presence
-                    function updateCameraLabel() {
-                        if (imgPreview.hasClass('d-none')) {
-                            cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
-                        } else {
-                            cameraLabel.text('{{ __('Delete the old photo before you can open the camera') }}');
-                        }
+                // Function to update camera label based on photo presence
+                function updateCameraLabel() {
+                    if (imgPreview.hasClass('d-none')) {
+                        cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
+                    } else {
+                        cameraLabel.text(
+                            '{{ __('Delete the old photo before you can open the camera') }}');
                     }
+                }
 
-                    // Initialize label on page load
-                    updateCameraLabel();
+                // Initialize label on page load
+                updateCameraLabel();
 
-                    @if ($report && $report->photo)
-                        $('#btn-upload-photo-foc').addClass('d-none');
-                        $('#btn-remove-photo-foc').removeClass('d-none');
-                    @endif
+                @if ($report && $report->photo)
+                    $('#btn-upload-photo-foc').addClass('d-none');
+                    $('#btn-remove-photo-foc').removeClass('d-none');
+                @endif
 
-                    function startCamera(facingMode) {
-                        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                            video.setAttribute('playsinline', 'true');
-                            video.setAttribute('autoplay', 'true');
+                function startCamera(facingMode) {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        video.setAttribute('playsinline', 'true');
+                        video.setAttribute('autoplay', 'true');
 
-                            navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        facingMode: facingMode,
-                                        width: {
-                                            ideal: 1280
-                                        },
-                                        height: {
-                                            ideal: 720
-                                        }
+                        navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    facingMode: facingMode,
+                                    width: {
+                                        ideal: 1280
+                                    },
+                                    height: {
+                                        ideal: 720
                                     }
-                                })
-                                .then(function(stream) {
-                                    video.srcObject = stream;
-                                    video.play();
-                                })
-                                .catch(function(error) {
-                                    alert('Unable to access camera: ' + error.message);
-                                    console.error('Camera error:', error);
-                                    cameraModal.addClass('d-none');
-                                    $('#photo-foc').click();
-                                });
-                        } else {
-                            alert('Camera not supported on this device.');
-                            $('#photo-foc').click();
-                        }
+                                }
+                            })
+                            .then(function(stream) {
+                                video.srcObject = stream;
+                                video.play();
+                            })
+                            .catch(function(error) {
+                                alert('Unable to access camera: ' + error.message);
+                                console.error('Camera error:', error);
+                                cameraModal.addClass('d-none');
+                                $('#photo-foc').click();
+                            });
+                    } else {
+                        alert('Camera not supported on this device.');
+                        $('#photo-foc').click();
                     }
+                }
 
-                    // Use click event only, targeting the button specifically
-                    $('[data-action="open-camera-foc"]').on('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        cameraModal.removeClass('d-none');
-                        startCamera(currentFacingMode);
-                    });
+                // Use click event only, targeting the button specifically
+                $('[data-action="open-camera-foc"]').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cameraModal.removeClass('d-none');
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#switch-camera-btn-foc').on('click', function() {
-                        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-                        stopCamera();
-                        startCamera(currentFacingMode);
-                    });
+                $('#switch-camera-btn-foc').on('click', function() {
+                    currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+                    stopCamera();
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#capture-btn-foc').on('click', function(e) {
-                        e.preventDefault();
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        let imageData = canvas.toDataURL('image/png');
-                        imgPreview.attr('src', imageData).removeClass('d-none');
-                        imgInput.val(imageData);
-                        stopCamera();
-                        $('#btn-upload-photo-foc').addClass('d-none');
-                        $('#btn-remove-photo-foc').removeClass('d-none');
-                        cameraModal.addClass('d-none');
-                        updateCameraLabel(); // Update label after capturing photo
-                    });
+                $('#capture-btn-foc').on('click', function(e) {
+                    e.preventDefault();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    let imageData = canvas.toDataURL('image/png');
+                    imgPreview.attr('src', imageData).removeClass('d-none');
+                    imgInput.val(imageData);
+                    stopCamera();
+                    $('#btn-upload-photo-foc').addClass('d-none');
+                    $('#btn-remove-photo-foc').removeClass('d-none');
+                    cameraModal.addClass('d-none');
+                    updateCameraLabel(); // Update label after capturing photo
+                });
 
-                    $('#btn-remove-photo-foc').on('click', function() {
+                $('#btn-remove-photo-foc').on('click', function() {
 
-                        // console.log('remove');
+                    // console.log('remove');
 
-                        $('#photo-foc').val('');
-                        $('#img-preview-foc').val('');
-                        $('#photo-foc-preview').removeAttr('src').addClass('d-none');
-                        $('#btn-remove-photo-foc').addClass('d-none');
-                        $('#btn-upload-photo-foc').removeClass('d-none');
-                        updateCameraLabel(); // Update label after removing photo
-                    });
+                    $('#photo-foc').val('');
+                    $('#img-preview-foc').val('');
+                    $('#photo-foc-preview').removeAttr('src').addClass('d-none');
+                    $('#btn-remove-photo-foc').addClass('d-none');
+                    $('#btn-upload-photo-foc').removeClass('d-none');
+                    updateCameraLabel(); // Update label after removing photo
+                });
 
-                    $('#close-camera-btn-foc').on('click', function(e) {
-                        e.preventDefault();
-                        stopCamera();
-                        cameraModal.addClass('d-none');
-                    });
+                $('#close-camera-btn-foc').on('click', function(e) {
+                    e.preventDefault();
+                    stopCamera();
+                    cameraModal.addClass('d-none');
+                });
 
-                    $('#photo-foc').on('change', function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                imgPreview.attr('src', e.target.result).removeClass('d-none');
-                                imgInput.val(e.target.result);
-                                $('#btn-upload-photo-foc').addClass('d-none');
-                                $('#btn-remove-photo-foc').removeClass('d-none');
-                                updateCameraLabel(); // Update label after uploading photo
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-
-                    function stopCamera() {
-                        if (video.srcObject) {
-                            video.srcObject.getTracks().forEach(track => track.stop());
-                        }
-                        video.srcObject = null;
+                $('#photo-foc').on('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imgPreview.attr('src', e.target.result).removeClass('d-none');
+                            imgInput.val(e.target.result);
+                            $('#btn-upload-photo-foc').addClass('d-none');
+                            $('#btn-remove-photo-foc').removeClass('d-none');
+                            updateCameraLabel(); // Update label after uploading photo
+                        };
+                        reader.readAsDataURL(file);
                     }
+                });
+
+                function stopCamera() {
+                    if (video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                    video.srcObject = null;
+                }
 
                 // FOC END
             });
         });
     </script>
-
-
 @endsection
