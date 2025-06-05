@@ -122,7 +122,7 @@
                                                             class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
-                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
+                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_SE_MANAGER]))
                                                     <div class="col-xl-4">
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>
@@ -151,14 +151,56 @@
                                     </form>
                                     <div class="row" style="margin-bottom: -20px">
                                         <div class="col-12">
-                                            <a class="btn btn-success btn-sm" href="{{ route('asm.export') }}"><i
-                                                    class="fa-solid fa-download"></i> {{ __('Export') }}</a>
+                                            {{-- <a class="btn btn-success btn-sm" href="{{ route('asm.export') }}"><i class="fa-solid fa-download"></i> {{ __('Export') }}</a> --}}
+                                            <a class="btn btn-success btn-sm"
+                                                href="{{ route('asm.export') }}{{ request()->has('date1') ? '?date1=' . request('date1') . '&date2=' . request('date2') . '&full_name=' . request('full_name') : '' }}">
+                                                <i class="fa-solid fa-download"></i> {{ __('Export') }}
+                                            </a>
+                                            {{-- <a type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exportFilterModal"><i class="fa-solid fa-download"></i> {{ __('Export') }}</a> --}}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
+
+                        <!-- Modal -->
+                        {{-- <div class="modal fade" id="exportFilterModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <form action="">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="staticBackdropLabel">{{__("Optional Exporting data")}}</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" value="" name="" id="radioDefault1">
+                                                <label class="form-check-label" for="radioDefault1">
+                                                    {{ __('Export all data') }}
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="" id="radioDefault2" checked>
+                                                <label class="form-check-label" for="radioDefault2">
+                                                    {{ __('Export data in this Month') }}
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="" id="radioDefault3" checked>
+                                                <label class="form-check-label" for="radioDefault3">
+                                                    {{ __("Export with Custom data") }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-primary">Understood</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div> --}}
 
                         <!-- /.box-header -->
                         <div class="box-body margin-top-20">

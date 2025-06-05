@@ -122,7 +122,7 @@
                                                             class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
-                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
+                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_SE_MANAGER]))
                                                     <div class="col-xl-4">
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>

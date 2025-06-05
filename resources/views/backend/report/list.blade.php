@@ -503,13 +503,10 @@
                 </div>
                 <div class="modal-body img-popup">
                     <div class="row">
-                        <div class="col-md-12 col-sm-12 col-lg-12 col-xl-4 mt-2">
-                            <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
-                        </div>
-                        <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
+                        <div class="col-md-12 col-sm-12 col-lg-12 col-xl-12">
                             <div class="report-details">
                                 <div class="row">
-                                    <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
+                                    <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6">
                                         <ul class="list-group list-group-unbordered profile-log">
                                             <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Employee Name')}}:</strong> <span
                                                     id="modalEmployeeName"></span></li>
@@ -539,6 +536,18 @@
                                     </div>
                                 </div>
                                 
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
+                            <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
+                            <div class="text-center mt-3">
+                                <b>{{__('POSM Photo')}}</b>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
+                            <img  style="border: 1px solid #cfcfcf;" id="modalPhotoOutlet" src="" class="img-fluid photo-detail" alt="Photo_outlet Detail">
+                             <div class="text-center mt-3">
+                                <b>{{__('Outlet Photo')}}</b>
                             </div>
                         </div>
                     </div>
@@ -686,6 +695,7 @@
                         var report = response.report;
 
                         $('#modalPhoto').attr('src', report.photo);
+                        $('#modalPhotoOutlet').attr('src', report.outlet_photo);
                         $('#modalEmployeeName').text(report.employee_name);
                         $('#modalIdCard').text(report.staff_id_card);
                         $('#modalArea').text(report.area);

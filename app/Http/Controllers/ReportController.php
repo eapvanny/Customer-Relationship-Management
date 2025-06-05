@@ -68,7 +68,6 @@ class ReportController extends Controller
             $endDate = Carbon::parse($request->date2)->endOfDay();
             $query->whereBetween('date', [$startDate, $endDate]);
         }
-
         // User filter
         if ($request->filled('full_name')) {
             $is_filter = true;
@@ -227,6 +226,7 @@ class ReportController extends Controller
         return response()->json([
             'report' => [
                 'photo' => $report->photo ? asset('storage/' . $report->photo) : asset('images/avatar.png'),
+                'outlet_photo' => $report->outlet_photo ? asset('storage/' . $report->outlet_photo) : asset('images/avatar.png'),
                 'employee_name' => $employee_name,
                 'staff_id_card' => $user->staff_id_card ?? 'N/A',
                 'area' => AppHelper::getAreaName($report->area_id),
@@ -567,9 +567,17 @@ class ReportController extends Controller
 
         return response()->json($reports);
     }
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
+         if($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
+            $startDate = Carbon::parse($request->date1)->startOfDay();
+            $endDate = Carbon::parse($request->date2)->endOfDay();
+            return Excel::download(new ReportsExport($request->date1, $request->date2, $request->full_name), 'reports_asmprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+        } else {
+            return Excel::download(new ReportsExport($request->date1, $request->date2, $request->full_name), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
+        }
+
+        // return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 
     public function markAsSeen()

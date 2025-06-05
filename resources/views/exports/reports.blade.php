@@ -1,27 +1,33 @@
 @php
     use App\Http\Helpers\AppHelper;
+    use Illuminate\Support\Facades\Request;
+    // $hostname = Request::getHost();
+    $fullDomain = url('/');
 @endphp
 <table border="1">
     <thead>
         <tr>
-            <th>{{__('Staff ID')}}</th>
-            <th>{{__('Name')}}</th>
-            <th>{{__('Area')}}</th>
-            <th>{{__('Outlet')}}</th>
-            <th>{{__('Customer')}}</th>
-            <th>{{__('Customer Type')}}</th>
-            <th>{{__('250ml')}}</th>
-            <th>{{__('350ml')}}</th>
-            <th>{{__('600ml')}}</th>
-            <th>{{__('1500ml')}}</th>
-            <th>{{__('Phone number')}}</th>
-            <th>{{__('Other')}}</th>
-            <th>{{__('Latitude')}}</th>
-            <th>{{__('Longitude')}}</th>
-            <th>{{__('Address')}}</th>
-            <th>{{__('Date')}}</th>
-            <th>{{__('Material Type')}}</th>
-            <th>{{__('Quantity')}}</th>
+            <th>{{ __('Staff ID') }}</th>
+            <th>{{ __('Name') }}</th>
+            <th>{{ __('Area') }}</th>
+            <th>{{ __('Outlet') }}</th>
+            <th>{{ __('Customer') }}</th>
+            <th>{{ __('Customer Type') }}</th>
+            <th>{{ __('250ml') }}</th>
+            <th>{{ __('350ml') }}</th>
+            <th>{{ __('600ml') }}</th>
+            <th>{{ __('1500ml') }}</th>
+            <th>{{ __('Phone number') }}</th>
+            <th>{{ __('POSM qty') }}</th>
+            <th>{{ __('POSM Img (link)') }}</th>
+            <th>{{ __('Outlet Img (link)') }}</th>
+            <th>{{ __('Other') }}</th>
+            <th>{{ __('Latitude') }}</th>
+            <th>{{ __('Longitude') }}</th>
+            <th>{{ __('Address') }}</th>
+            <th>{{ __('Date') }}</th>
+            <th>{{ __('Material Type') }}</th>
+            {{-- <th>{{ __('Quantity') }}</th> --}}
         </tr>
     </thead>
     <tbody>
@@ -38,7 +44,14 @@
                 <td>{{ $row->{'350_ml'} ?? 0 }}</td>
                 <td>{{ $row->{'600_ml'} ?? 0 }}</td>
                 <td>{{ $row->{'1500_ml'} ?? 0 }}</td>
-                <td>{{ $row->customer->phone ?? 'N/A'}}</td>
+                <td>{{ $row->customer->phone ?? 'N/A' }}</td>
+                <td>{{ $row->qty ?? 'N/A' }}</td>
+                <td>
+                    {{ $fullDomain . '/storage/' . $row->photo ?? 'N/A' }}
+                </td>
+                <td>
+                    {{ $fullDomain . '/storage/' . $row->outlet_photo ?? 'N/A' }}
+                </td>
                 <td>{{ $row->other ?? 'N/A' }}</td>
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
@@ -48,7 +61,7 @@
                     ? __(App\Http\Helpers\AppHelper::MATERIAL[$row->posm])
                     : __('N/A') }}
                 </td>
-                <td>{{ $row->qty ?? 'N/A' }}</td>
+                {{-- <td>{{ $row->qty ?? 'N/A' }}</td> --}}
             </tr>
         @endforeach
     </tbody>

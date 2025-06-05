@@ -146,7 +146,7 @@ class seprogramController extends Controller
                     return __($data->city . ',' . $data->country) ?? 'N/A';
                 })
                 ->addColumn('date', function ($data) {
-                    return $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A';
+                    return $data->created_at ? Carbon::parse($data->created_at)->format('d-M-Y h:i A') : 'N/A';
                 })
                 ->addColumn('other', function ($data) {
                     return __($data->other) ?? 'N/A';
@@ -660,10 +660,17 @@ class seprogramController extends Controller
 
 
 
-    public function export()
+    public function export(Request $request)
     {
         // dd('HI Export');
-        return Excel::download(new SeprogramExport(), 'reports_seprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+         // dd($request->all());
+        if($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
+            $startDate = Carbon::parse($request->date1)->startOfDay();
+            $endDate = Carbon::parse($request->date2)->endOfDay();
+            return Excel::download(new SeprogramExport($request->date1, $request->date2, $request->full_name), 'reports_seprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+        } else {
+            return Excel::download(new SeprogramExport($request->date1, $request->date2, $request->full_name), 'reports_seprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+        }
     }
 
     public function getReports()

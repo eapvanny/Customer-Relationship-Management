@@ -37,6 +37,8 @@ class AsmprogramController extends Controller
 
     public function index(Request $request)
     {
+
+
         $query = Asm_program::with('user', 'customer')->orderBy('id', 'desc');
         $user = auth()->user();
         if ($user->role_id === AppHelper::USER_SE_MANAGER) {
@@ -146,7 +148,7 @@ class AsmprogramController extends Controller
                     return __($data->city . ',' . $data->country) ?? 'N/A';
                 })
                 ->addColumn('date', function ($data) {
-                    return $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A';
+                    return $data->created_at ? Carbon::parse($data->created_at)->format('d-M-Y h:i A') : 'N/A';
                 })
                 ->addColumn('other', function ($data) {
                     return __($data->other) ?? 'N/A';
@@ -401,48 +403,25 @@ class AsmprogramController extends Controller
 
 
      public function getCustomersByArea(Request $request)
-{
-    try {
-        $areaId = $request->query('area_id');
-        dd($areaId);
-        // Validate area_id
-        if (!$areaId) {
-            return response()->json([
-                'customers' => [],
-                'outlets' => [],
-                'message' => 'Area ID is required'
-            ], 400);
-        }
+    {
+        // dd($request->all());
 
-        // Fetch customers
-        $customers = Customer::where('area_id', $areaId)
-            ->get(['id', 'name', 'outlet']);
+
+        $areaId = $request->query('area_id');
+        $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
 
         // Extract unique outlet values
-        $outlets = $customers->pluck('outlet')
-            ->unique()
-            ->filter()
-            ->map(function ($outlet, $index) {
-                return ['id' => $index + 1, 'name' => $outlet];
-            })
-            ->values();
-
-        // Return formatted response
+        $outlets = $customers->pluck('outlet')->unique()->filter()->map(function ($outlet, $index) {
+            return ['id' => $index + 1, 'name' => $outlet];
+        })->values();
+        // dd($outlets);
         return response()->json([
             'customers' => $customers->map(function ($customer) {
                 return ['id' => $customer->id, 'name' => $customer->name];
             }),
             'outlets' => $outlets
-        ], 200);
-    } catch (\Exception $e) {
-        \Log::error('Error fetching customers by area: ' . $e->getMessage());
-        return response()->json([
-            'customers' => [],
-            'outlets' => [],
-            'message' => 'An error occurred while fetching data'
-        ], 500);
+        ]);
     }
-}
 
 
     /**
@@ -686,10 +665,16 @@ class AsmprogramController extends Controller
 
 
 
-    public function export()
+    public function export(Request $request)
     {
-        // dd('HI Export');
-        return Excel::download(new AsmprogramExport(), 'reports_asmprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+        // dd($request->all());
+        if($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
+            $startDate = Carbon::parse($request->date1)->startOfDay();
+            $endDate = Carbon::parse($request->date2)->endOfDay();
+            return Excel::download(new AsmprogramExport($request->date1, $request->date2, $request->full_name), 'reports_asmprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+        } else {
+            return Excel::download(new AsmprogramExport($request->date1, $request->date2, $request->full_name), 'reports_asmprogram_' . now()->format('Y_m_d_His') . '.xlsx');
+        }
     }
 
     public function getReports()
