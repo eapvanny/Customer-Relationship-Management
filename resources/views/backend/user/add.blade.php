@@ -519,14 +519,19 @@
                     data: { role_id: roleId },
                     success: function(response) {
                         var managerSelect = $('#manager_id');
-                        managerSelect.empty(); // Clear existing options
+                        var oldValue = "{{ old('manager_id', optional($user)->manager_id) }}";
+                        managerSelect.empty();
                         managerSelect.append('<option value="">{{ __("Select a manager") }}</option>');
 
                         $.each(response.managers, function(id, name) {
                             managerSelect.append('<option value="' + id + '">' + name + '</option>');
                         });
 
-                        managerSelect.trigger('change'); // Refresh Select2
+                        if (oldValue) {
+                            managerSelect.val(oldValue).trigger('change');
+                        } else {
+                            managerSelect.trigger('change');
+                        }
                     },
                     error: function(xhr) {
                         console.error('Error fetching managers:', xhr);

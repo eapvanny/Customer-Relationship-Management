@@ -17,10 +17,14 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create or retrieve roles
-        $roles = collect(AppHelper::USER)->mapWithKeys(function ($roleName, $roleId) {
-            return [$roleId => Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web'])];
-        });
+        // Create or update roles
+            $roles = collect(AppHelper::USER)->mapWithKeys(function ($roleName, $roleId) {
+                $role = Role::updateOrCreate(
+                    ['id' => $roleId], // Match by ID
+                    ['name' => $roleName, 'guard_name' => 'web']
+                );
+                return [$roleId => $role];
+            });
 
         // Create superadmin user if it doesn't exist
         if (!User::where('email', 'superadmin@gmail.com')->exists()) {

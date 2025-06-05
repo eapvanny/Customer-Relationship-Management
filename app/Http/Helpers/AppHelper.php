@@ -16,10 +16,10 @@ class AppHelper
     const USER = [
         self::USER_SUPER_ADMIN => 'Super Admin',
         self::USER_ADMIN => 'Admin',
-        self::USER_EMPLOYEE => 'Employee',
-        self::USER_MANAGER => 'Manager',
-        self::USER_SE => 'SE',
-        self::USER_SE_MANAGER => 'SE Manager',
+        self::USER_EMPLOYEE => 'Employee (Sale)',
+        self::USER_MANAGER => 'Sale Manager',
+        self::USER_SE => 'SE (Marketing)',
+        self::USER_SE_MANAGER => 'ASM',
     ];
 
     const UMBRELLA = 1;
@@ -81,7 +81,7 @@ class AppHelper
     const SE = 3;
     const USER_TYPE = [
         self::ALL => 'All',
-        self::SALE => 'Sale',
+        self::SALE => 'SSP',
         self::SE => 'SE',
     ];
 
