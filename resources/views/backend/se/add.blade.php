@@ -490,10 +490,10 @@
                             <div class="form-group has-feedback">
                                 <label for="customer_id">{{ __('Customer') }} <span class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
-                                    <option value="">{{ __('Select Customer') }}</option>
-                                    @if ($report && $report->customer_id && !$customers->contains('id', $report->customer_id))
+                                    <option value="">{{ __('Select area first') }}</option>
+                                    @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
                                         <option value="{{ $report->customer_id }}" selected>
-                                            {{ $report->customer_id }} (Current)
+                                            {{ $report->customer->name }} (Current)
                                         </option>
                                     @endif
                                     @foreach ($customers as $c)
@@ -1022,7 +1022,7 @@
 
                 if (areaId) {
                     $.ajax({
-                        url: '{{ route('subwholesale.byArea') }}',
+                        url: '{{ route('customers.byArea') }}',
                         type: 'GET',
                         data: {
                             area_id: areaId

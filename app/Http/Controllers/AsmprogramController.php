@@ -401,22 +401,48 @@ class AsmprogramController extends Controller
 
 
      public function getCustomersByArea(Request $request)
-    {
+{
+    try {
         $areaId = $request->query('area_id');
-        $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
+        dd($areaId);
+        // Validate area_id
+        if (!$areaId) {
+            return response()->json([
+                'customers' => [],
+                'outlets' => [],
+                'message' => 'Area ID is required'
+            ], 400);
+        }
+
+        // Fetch customers
+        $customers = Customer::where('area_id', $areaId)
+            ->get(['id', 'name', 'outlet']);
 
         // Extract unique outlet values
-        $outlets = $customers->pluck('outlet')->unique()->filter()->map(function ($outlet, $index) {
-            return ['id' => $index + 1, 'name' => $outlet];
-        })->values();
-        // dd($outlets);
+        $outlets = $customers->pluck('outlet')
+            ->unique()
+            ->filter()
+            ->map(function ($outlet, $index) {
+                return ['id' => $index + 1, 'name' => $outlet];
+            })
+            ->values();
+
+        // Return formatted response
         return response()->json([
             'customers' => $customers->map(function ($customer) {
                 return ['id' => $customer->id, 'name' => $customer->name];
             }),
             'outlets' => $outlets
-        ]);
+        ], 200);
+    } catch (\Exception $e) {
+        \Log::error('Error fetching customers by area: ' . $e->getMessage());
+        return response()->json([
+            'customers' => [],
+            'outlets' => [],
+            'message' => 'An error occurred while fetching data'
+        ], 500);
     }
+}
 
 
     /**
