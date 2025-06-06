@@ -366,7 +366,7 @@
                                     <span class="text-danger">*</span>
                                 </label>
                                 {!! Form::select('type', $type, old('type', optional($user)->type), [
-                                    'placeholder' => __('Select Type'),
+                                    'placeholder' => __('Select User Type'),
                                     'id' => 'type',
                                     'class' => 'form-control select2',
                                     'required' => true,

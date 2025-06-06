@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CustomerExport;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerController extends Controller
 {
@@ -19,36 +21,46 @@ class CustomerController extends Controller
         $this->middleware('permission:delete customer', ['only' => ['destroy']]);
     }
     public function index(Request $request)
-{
-    if ($request->ajax()) {
-        $customers = Customer::query();
-        return DataTables::of($customers)
-            ->addIndexColumn()
-            ->addColumn('area_id', fn($customer) => AppHelper::getAreaName($customer->area_id))
-            ->addColumn('outlet', fn($customer) => $customer->outlet)
-            ->addColumn('action', function ($customer) {
-                $button = '<div class="change-action-item">';
-                $actions = false;
-                if (auth()->user()->can('update customer')) {
-                    $button .= '<a title="Edit" href="' . route('customer.edit', $customer->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
-                    $actions = true;
-                }
-                // if (auth()->user()->can('delete customer')) {
-                //     $button .= '<a href="' . route('customer.destroy', $customer->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                //     $actions = true;
-                // }
-                if (!$actions) {
-                    $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
-                }
-                $button .= '</div>';
-                return $button;
-            })
-            ->rawColumns(['action'])
-            ->make(true);
-    }
+    {
+        if ($request->ajax()) {
+            $customers = Customer::query();
+            $currentUser = auth()->check() ? auth()->user() : null;
+            return DataTables::of($customers)
+                ->addIndexColumn()
+                ->addColumn('created_by', function ($customer) use ($currentUser) {
+                    if (!$currentUser) {
+                        return 'N/A';
+                    }
+                    return $currentUser->user_lang === 'en'
+                        ? ($currentUser->full_name_latin ?? 'N/A')
+                        : ($currentUser->user_lang === 'kh' ? ($currentUser->full_name ?? 'N/A') : 'N/A');
+                })
+                ->addColumn('creator_id', fn($customer) => $currentUser ? ($currentUser->staff_id_card ?? 'N/A') : 'N/A')
+                ->addColumn('area_id', fn($customer) => AppHelper::getAreaName($customer->area_id))
+                ->addColumn('outlet', fn($customer) => $customer->outlet)
+                ->addColumn('action', function ($customer) {
+                    $button = '<div class="change-action-item">';
+                    $actions = false;
+                    if (auth()->user()->can('update customer')) {
+                        $button .= '<a title="Edit" href="' . route('customer.edit', $customer->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
+                        $actions = true;
+                    }
+                    // if (auth()->user()->can('delete customer')) {
+                    //     $button .= '<a href="' . route('customer.destroy', $customer->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                    //     $actions = true;
+                    // }
+                    if (!$actions) {
+                        $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
+                    }
+                    $button .= '</div>';
+                    return $button;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
 
-    return view('backend.customer.list');
-}
+        return view('backend.customer.list');
+    }
 
 
     public function create()
@@ -128,6 +140,11 @@ class CustomerController extends Controller
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update customer: ' . $e->getMessage())->withInput();
         }
+    }
+
+    public function export()
+    {
+        return Excel::download(new CustomerExport(), 'customers_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 
     // public function destroy($id)

@@ -92,13 +92,13 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     //Report
     Route::resource('report', ReportController::class);
     Route::get('/get-reports', [ReportController::class, 'getReports'])->name('get-reports');
-    Route::get('/export', [ReportController::class, 'export'])->name('report.export');
+    Route::get('/export-report', [ReportController::class, 'export'])->name('report.export');
     Route::post('/reports/mark-as-seen', [ReportController::class, 'markAsSeen'])->name('reports.markAsSeen');
 
     //customer
     Route::get('/customers/by-area', [ReportController::class, 'getCustomersByArea'])->name('customers.byArea');
     Route::resource('customer', CustomerController::class)->except(['show']);
-
+    Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');
     // SE section start
 
 

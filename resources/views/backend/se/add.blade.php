@@ -594,7 +594,7 @@
                         <div class="col-xl-12 col-lg-12 col-md-12">
                             {{-- FOC START  --}}
                             <fieldset>
-                                <legend>{{ __('FOC') }}</legend>
+                                <legend>{{ __('FOC From Company') }}</legend>
                                 <div class="row">
                                     <div class="form-group has-feedback">
                                         <div class="row">

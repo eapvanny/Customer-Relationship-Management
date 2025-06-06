@@ -32,12 +32,20 @@
             <div class="wrap-outter-box">
                 <div class="box box-info">
                     <div class="box-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <a class="btn btn-success btn-sm" href="{{ route('customer.export') }}"><i
+                                        class="fa-solid fa-download"></i> {{ __('Export') }}</a>
+                            </div>
+                        </div>
                         <div class="table-responsive mt-4">
                             <table id="datatable" class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
                                     width="100%">
                                 <thead>
                                     <tr>
                                         <th>#</th>
+                                        <th>{{ __('Created by') }}</th>
+                                        <th>{{ __('Creator ID') }}</th>
                                         <th>{{ __('Area') }}</th>
                                         <th>{{ __('Outlet') }}</th>
                                         <th>{{ __('Name') }}</th>
@@ -67,9 +75,11 @@
 <script>
     $(document).ready(function() {
         const table = $('#datatable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: "{{ route('customer.index') }}",
+            processing: false,
+            serverSide: false,
+             ajax:{
+                    url: "{!! route('customer.index',Request::query()) !!}",
+                },
             pageLength: 10,
             columns: [
                 {
@@ -77,6 +87,14 @@
                     name: 'DT_RowIndex',
                     orderable: false,
                     searchable: false
+                },
+                {
+                    data: 'created_by',
+                    name: 'created_by'
+                },
+                {
+                    data: 'creator_id',
+                    name: 'creator_id'
                 },
                 {
                     data: 'area_id',
