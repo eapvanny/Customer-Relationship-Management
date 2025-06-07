@@ -521,7 +521,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="outlet_id">{{ __('Outlet') }} <span class="text-danger">*</span></label>
+                                <label for="outlet_id">{{ __("Depo's Name") }} <span class="text-danger">*</span></label>
                                 <select name="outlet_id" class="form-control select2" id="outlet_id" required>
                                     <option value="">{{ __('Select area first') }}</option>
                                     @if ($report && $report->outlet && !$customers->contains('id', $report->outlet_id))
@@ -703,7 +703,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-12 col-lg-12 col-xl-12">
+                                            <div class="col-md-12 col-lg-12 col-xl-6 col-sm-12">
                                                 <div class="row">
                                                     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                         <div class="form-group has-feedback">
@@ -1190,12 +1190,10 @@
                                     '<option value="">{{ __('Select outlet') }}</option>'
                                 );
                                 $.each(data.outlets, function(key, outlet) {
-                                    var isSelected = (outlet.id == selectedOutletId) ?
-                                        'selected' : '';
-                                    $('#outlet_id').append('<option value="' + outlet
-                                        .id + '" ' + isSelected + '>' + outlet
-                                        .name + '</option>');
+                                    var isSelected = (outlet.id == selectedOutletId) ? 'selected' : '';
+                                    $('#outlet_id').append('<option value="' + outlet.id + '" ' + isSelected + '>' + outlet.name + '</option>');
                                 });
+
                             }
                             $('#outlet_id').trigger('change');
                         },

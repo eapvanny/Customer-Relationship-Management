@@ -35,8 +35,7 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
-
+        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc')->first();
         // Role-based filtering
         if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -77,93 +76,25 @@ class ReportController extends Controller
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                if (!empty($request->search['value'])) {
-                    $searchTerms = explode(' ', $request->search['value']);
-                    $query->where(function ($query) use ($searchTerms) {
-                        foreach ($searchTerms as $word) {
-                            $query->where(function ($subQuery) use ($word) {
-                                $subQuery->whereHas('customer', function ($q) use ($word) {
-                                    $q->where('outlet', 'like', "%$word%")
-                                        ->orWhere('name', 'like', "%$word%");
-                                })->orWhereHas('user', function ($q) use ($word) {
-                                    $q->where('staff_id_card', 'like', "%$word%")
-                                        ->orWhere('name', 'like', "%$word%")
-                                        ->orWhere('family_name', 'like', "%$word%")
-                                        ->orWhere('name_latin', 'like', "%$word%")
-                                        ->orWhere('family_name_latin', 'like', "%$word%");
-                                });
-
-                                // Search by customer_type string
-                                foreach (AppHelper::CUSTOMER_TYPE as $typeId => $typeName) {
-                                    if (stripos($typeName, $word) !== false) {
-                                        $subQuery->orWhere('customer_type', $typeId);
-                                    }
-                                }
-
-                                // Search by area label name and sub-area code
-                                foreach (AppHelper::AREAS as $areaLabel => $areaList) {
-                                    if (stripos($areaLabel, $word) !== false) {
-                                        $subQuery->orWhereIn('area_id', array_keys($areaList));
-                                    }
-                                    foreach ($areaList as $areaId => $code) {
-                                        if (stripos($code, $word) !== false) {
-                                            $subQuery->orWhere('area_id', $areaId);
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    });
-                }
-
-                $totalRecords = $query->count();
-                $start = $request->input('start', 0);
-                $length = $request->input('length', 10);
-
-                // Handle ordering
-               $columnNameOrder = $request->columns[$request->order[0]['column']]['name'];
-                $columnOrder = $request->order[0]['dir'];
-                if ($columnNameOrder == 'name') {
-                    $query = $query->whereHas('user')->orderBy('family_name', $columnOrder);
-                } elseif ($columnNameOrder == 'name_latin') {
-                    $query = $query->orderBy('family_name_in_latin', $columnOrder);
-                } elseif ($columnNameOrder == 'id') {
-                    $query = $query->orderBy('id', $columnOrder);
-                }
-
                 // Get paginated data
-                $reports = $query->offset($start)->limit($length)->get();
+                $reports = $query->orderBy('id','desc');
 
                 return DataTables::of($reports)
-                    ->setTotalRecords($totalRecords)
-                    ->setFilteredRecords($totalRecords)
-                    ->addColumn('photo', fn($data) =>
-                    '<img src="' . asset($data->photo ? 'storage/' . $data->photo : 'images/avatar.png') .
-                        '" style="height: 35px; width: 35px; object-fit: cover; border-radius: 50%;" />')
-                    ->addColumn('id_card', fn($data) => $data->user->staff_id_card ?? 'N/A')
-                    ->addColumn('name', fn($data) =>
-                    auth()->user()->user_lang === 'en'
-                        ? $data->user->getFullNameLatinAttribute() ?? 'N/A'
-                        : $data->user->getFullNameAttribute() ?? 'N/A')
-                    ->addColumn('area', fn($data) => __(AppHelper::getAreaName($data->area_id)))
+                    ->addColumn('area', fn($data) => __(AppHelper::getAreaNameById($data->area_id)))
                     ->addColumn('outlet_id', fn($data) => $data->customer->outlet ?? 'N/A')
                     ->addColumn('customer', fn($data) => $data->customer->name ?? 'N/A')
-                    ->addColumn('customer_type', fn($data) =>
-                    AppHelper::CUSTOMER_TYPE[$data->customer_type] ?? 'N/A')
+                     ->addColumn('customer_code', fn($data) => $data->customer->code ?? 'N/A')
                     ->addColumn('250ml', fn($data) => $data->{'250_ml'} ?? 'N/A')
                     ->addColumn('350ml', fn($data) => $data->{'350_ml'} ?? 'N/A')
                     ->addColumn('600ml', fn($data) => $data->{'600_ml'} ?? 'N/A')
                     ->addColumn('1500ml', fn($data) => $data->{'1500_ml'} ?? 'N/A')
-                    ->addColumn('phone', fn($data) => $data->customer->phone ?? 'N/A')
-                    ->addColumn('latitude', fn($data) => $data->latitude ?? 'N/A')
-                    ->addColumn('longitude', fn($data) => $data->longitude ?? 'N/A')
-                    ->addColumn('location', fn($data) =>
-                    $data->city && $data->country ? "{$data->city}, {$data->country}" : 'N/A')
-                    ->addColumn('date', fn($data) =>
-                    $data->date ? Carbon::parse($data->date)->format('d-M-Y h:i A') : 'N/A')
-                    ->addColumn('other', fn($data) => $data->other ?? 'N/A')
-                    ->addColumn('posm', fn($data) => AppHelper::MATERIAL[$data->posm] ?? 'N/A')
-                    ->addColumn('qty', fn($data) => $data->qty ?? 'N/A')
+                    ->addColumn('default', function($data) {
+                        $val_250ml = intval($data->{"250_ml"} ?? 0);
+                        $val_350ml = intval($data->{"350_ml"} ?? 0);
+                        $val_600ml = intval($data->{"600_ml"} ?? 0);
+                        $val_1500ml = intval($data->{"1500_ml"} ?? 0);
+                        return $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
+                    })
                     ->addColumn('action', function ($data) {
                         $show = '<span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show">
                                 <i class="fa fa-fw fa-eye"></i>
@@ -247,23 +178,30 @@ class ReportController extends Controller
         ]);
     }
 
-    public function getCustomersByArea(Request $request)
+   public function getCustomersByArea(Request $request)
     {
         $areaId = $request->query('area_id');
-        $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
+        $customers = Customer::where('area_id', $areaId)->get();
 
-        // Extract unique outlet values
-        $outlets = $customers->pluck('outlet')->unique()->filter()->map(function ($outlet, $index) {
-            return ['id' => $index + 1, 'name' => $outlet];
-        })->values();
+        // Map outlets with both id and outlet name
+        $outlets = $customers->map(function ($customer) {
+            return [
+                'id' => $customer->id,
+                'name' => $customer->outlet
+            ];
+        });
 
         return response()->json([
             'customers' => $customers->map(function ($customer) {
-                return ['id' => $customer->id, 'name' => $customer->name];
+                return [
+                    'id' => $customer->id,
+                    'name' => $customer->name
+                ];
             }),
             'outlets' => $outlets
         ]);
     }
+
 
     public function store(Request $request)
     {

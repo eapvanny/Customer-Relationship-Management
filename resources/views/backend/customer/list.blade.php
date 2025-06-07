@@ -45,10 +45,11 @@
                                     <tr>
                                         <th>#</th>
                                         <th>{{ __('Created by') }}</th>
-                                        <th>{{ __('Creator ID') }}</th>
                                         <th>{{ __('Area') }}</th>
-                                        <th>{{ __('Outlet') }}</th>
-                                        <th>{{ __('Name') }}</th>
+                                        <th>{{ __("Depo's Name") }}</th>
+                                        <th>{{ __('Customer Code') }}</th>
+                                        <th>{{ __('Customer Name') }}</th>
+                                        <th>{{ __('Customer Type') }}</th>
                                         <th>{{ __('Phone') }}</th>
                                         <th style="max-width: 82px">{{ __('Action') }}</th>
                                     </tr>
@@ -93,10 +94,6 @@
                     name: 'created_by'
                 },
                 {
-                    data: 'creator_id',
-                    name: 'creator_id'
-                },
-                {
                     data: 'area_id',
                     name: 'area_id'
                 },
@@ -105,8 +102,16 @@
                     name: 'outlet'
                 },
                 {
-                    data: 'name',
-                    name: 'name'
+                    data: 'customer_code',
+                    name: 'customer_code'
+                },
+                {
+                    data: 'customer_name',
+                    name: 'customer_name'
+                },
+                {
+                    data: 'customer_type',
+                    name: 'customer_type'
                 },
                 {
                     data: 'phone',

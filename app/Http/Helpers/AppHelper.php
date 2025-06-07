@@ -121,10 +121,21 @@ class AppHelper
     ];
 
 
-    public static function getAreas()
+    public static function getAreaNameById($areaId)
+    {
+    foreach (self::AREAS as $area => $rooms) {
+            if (isset($rooms[$areaId])) {
+                return $rooms[$areaId];
+            }
+        }
+        return 'Unknown Area'; // fallback if not found
+    }
+
+     public static function getAreas()
     {
         return self::AREAS;
     }
+
 
     /**
      * Resolve area_id to a display name (e.g., 'S-04' to 'Ussa (R1-01): S-04').

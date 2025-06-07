@@ -264,29 +264,29 @@
         }
 
         /* .table-responsive {
-                        display: block;
-                        width: 100%;
-                        overflow-x: auto;
-                        -webkit-overflow-scrolling: touch;
-                    }
+                            display: block;
+                            width: 100%;
+                            overflow-x: auto;
+                            -webkit-overflow-scrolling: touch;
+                        }
 
-                    .table {
-                        width: 100%;
-                        table-layout: fixed;
-                    }
+                        .table {
+                            width: 100%;
+                            table-layout: fixed;
+                        }
 
-                    .table td,
-                    .table th {
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                    }
+                        .table td,
+                        .table th {
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
 
-                    .table th,
-                    .table td {
-                        min-width: 0;
-                        max-width: none;
-                    } */
+                        .table th,
+                        .table td {
+                            min-width: 0;
+                            max-width: none;
+                        } */
         .list-group-unbordered .list-group-item {
             padding: 10px 0;
             font-size: 0.95rem;
@@ -297,7 +297,8 @@
             width: 20px;
             text-align: center;
         }
-        .col-lg-8{
+
+        .col-lg-8 {
             flex: 1;
         }
     </style>
@@ -406,7 +407,7 @@
                                                             class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
-                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
+                                                @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
                                                     <div class="col-xl-4">
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>
@@ -415,7 +416,7 @@
                                                                 'id' => 'full_name',
                                                                 'class' => 'form-control select2',
                                                             ]) !!}
-                                                        </div>      
+                                                        </div>
                                                     </div>
                                                 @endif
                                             </div>
@@ -433,42 +434,44 @@
                                             </div>
                                         </div>
                                     </form>
-                                    <div class="row" style="margin-bottom: -20px">
-                                        <div class="col-12">
-                                            <a class="btn btn-success btn-sm" href="{{ route('report.export') }}"><i
-                                                    class="fa-solid fa-download"></i> {{ __('Export') }}</a>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
                         </div>
 
                         <!-- /.box-header -->
-                        <div class="box-body margin-top-20">
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <a class="btn btn-success btn-sm" href="{{ route('report.export') }}"><i
+                                                class="fa-solid fa-download"></i> {{ __('Export') }}</a>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="table-responsive mt-4">
                                 <table id="datatabble"
                                     class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
                                     width="100%">
                                     <thead>
                                         <tr>
-                                            <th> {{ __('Photo') }} </th>
+                                            {{-- <th> {{ __('Photo') }} </th>
                                             <th> {{ __('Staff ID') }} </th>
-                                            <th> {{ __('Name') }} </th>
+                                            <th> {{ __('Name') }} </th> --}}
                                             <th> {{ __('Area') }} </th>
-                                            <th> {{ __('Outlet') }} </th>
+                                            <th> {{ __("Depo's Name") }} </th>
                                             <th> {{ __('Customer Name') }} </th>
-                                            <th> {{ __('Customer Type') }} </th>
+                                            <th> {{ __('Customer Code') }} </th>
                                             <th> {{ __('250ml') }} </th>
                                             <th> {{ __('350ml') }} </th>
                                             <th> {{ __('600ml') }} </th>
                                             <th> {{ __('1500ml') }} </th>
-                                            <th> {{ __('Phone Number') }} </th>
-                                            <th> {{ __('Other') }} </th>
+                                            <th> {{ __('Default') }} </th>
+                                            {{-- <th> {{ __('Other') }} </th>
                                             <th> {{ __('Material Type') }} </th>
                                             <th> {{ __('Qty') }} </th>
                                             <th> {{ __('Address') }} </th>
-                                            <th> {{ __('Date') }} </th>
+                                            <th> {{ __('Date') }} </th> --}}
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
@@ -508,52 +511,71 @@
                                 <div class="row">
                                     <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Employee Name')}}:</strong> <span
+                                            <li class="list-group-item"><i class="fa fa-user"></i>
+                                                <strong>{{ __('Employee Name') }}:</strong> <span
                                                     id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i> <strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i>
+                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span>
                                             </li>
-                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i> <strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
-                                            <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Customer Name')}} :</strong> <span id="modalCustomerName"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i>
+                                                <strong>{{ __('Area') }} :</strong> <span id="modalArea"></span></li>
+                                            <li class="list-group-item"><i class="fa fa-user"></i>
+                                                <strong>{{ __('Customer Name') }} :</strong> <span
+                                                    id="modalCustomerName"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-home"></i>
+                                                <strong>{{ __('Outlet') }} :</strong> <span id="modalOutlet"></span>
                                             </li>
-                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
-        
-                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Address')}} :</strong> <span id="modalCity"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i>
+                                                <strong>{{ __('Date') }} :</strong> <span id="modalDate"></span></li>
+
+                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i>
+                                                <strong>{{ __('Address') }} :</strong> <span id="modalCity"></span></li>
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
                                     <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('250ml')}} :</strong> <span id="modal250ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('350ml')}} :</strong> <span id="modal350ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('600ml')}} :</strong> <span id="modal600ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('1500ml')}} :</strong> <span id="modal1500ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('Other')}} :</strong> <span id="modalOther"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i> <strong>{{__('Material Type')}} :</strong> <span id="modalPosm"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('Quantity')}} :</strong> <span id="modalQty"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('250ml') }} :</strong> <span id="modal250ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('350ml') }} :</strong> <span id="modal350ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('600ml') }} :</strong> <span id="modal600ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('1500ml') }} :</strong> <span id="modal1500ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('Other') }} :</strong> <span id="modalOther"></span></li>
+                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i>
+                                                <strong>{{ __('Material Type') }} :</strong> <span id="modalPosm"></span>
+                                            </li>
+                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
+                                                <strong>{{ __('Quantity') }} :</strong> <span id="modalQty"></span>
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
-                                
+
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
-                            <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
+                            <img style="border: 1px solid #cfcfcf;" id="modalPhoto" src=""
+                                class="img-fluid photo-detail" alt="Photo Detail">
                             <div class="text-center mt-3">
-                                <b>{{__('POSM Photo')}}</b>
+                                <b>{{ __('POSM Photo') }}</b>
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
-                            <img  style="border: 1px solid #cfcfcf;" id="modalPhotoOutlet" src="" class="img-fluid photo-detail" alt="Photo_outlet Detail">
-                             <div class="text-center mt-3">
-                                <b>{{__('Outlet Photo')}}</b>
+                            <img style="border: 1px solid #cfcfcf;" id="modalPhotoOutlet" src=""
+                                class="img-fluid photo-detail" alt="Photo_outlet Detail">
+                            <div class="text-center mt-3">
+                                <b>{{ __('Outlet Photo') }}</b>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btnClose" data-bs-dismiss="modal">{{__('Close')}}</button>
+                    <button type="button" class="btn btn-secondary btnClose"
+                        data-bs-dismiss="modal">{{ __('Close') }}</button>
                 </div>
             </div>
         </div>
@@ -600,23 +622,25 @@
             t = $('#datatabble').DataTable({
                 processing: false,
                 serverSide: true,
-                bLengthChange: false,
+                pageLength: 10,
+
                 ajax: {
-                    url: "{{ route('report.index')}}",
+                    url: "{{ route('report.index') }}",
                 },
-                columns: [{
-                        data: 'photo',
-                        name: 'photo',
-                        orderable: false
-                    },
-                    {
-                        data: 'id_card',
-                        name: 'id_card'
-                    },
-                    {
-                        data: 'name',
-                        name: 'name'
-                    },
+                columns: [
+                    // {
+                    //     data: 'photo',
+                    //     name: 'photo',
+                    //     orderable: false
+                    // },
+                    // {
+                    //     data: 'id_card',
+                    //     name: 'id_card'
+                    // },
+                    // {
+                    //     data: 'name',
+                    //     name: 'name'
+                    // },
                     {
                         data: 'area',
                         name: 'area'
@@ -630,8 +654,8 @@
                         name: 'customer'
                     },
                     {
-                        data: 'customer_type',
-                        name: 'customer_type'
+                        data: 'customer_code',
+                        name: 'customer_code'
                     },
                     {
                         data: '250ml',
@@ -650,29 +674,29 @@
                         name: '1500ml'
                     },
                     {
-                        data: 'phone',
-                        name: 'phone'
+                        data: 'default',
+                        name: 'default'
                     },
-                    {
-                        data: 'other',
-                        name: 'other'
-                    },
-                    {
-                        data: 'posm',
-                        name: 'posm'
-                    },
-                    {
-                        data: 'qty',
-                        name: 'qty'
-                    },
-                    {
-                        data: 'location',
-                        name: 'location'
-                    },
-                    {
-                        data: 'date',
-                        name: 'date'
-                    },
+                    // {
+                    //     data: 'other',
+                    //     name: 'other'
+                    // },
+                    // {
+                    //     data: 'posm',
+                    //     name: 'posm'
+                    // },
+                    // {
+                    //     data: 'qty',
+                    //     name: 'qty'
+                    // },
+                    // {
+                    //     data: 'location',
+                    //     name: 'location'
+                    // },
+                    // {
+                    //     data: 'date',
+                    //     name: 'date'
+                    // },
                     {
                         data: 'action',
                         name: 'action',
