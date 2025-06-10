@@ -35,7 +35,7 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc')->first();
+        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
         // Role-based filtering
         if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {

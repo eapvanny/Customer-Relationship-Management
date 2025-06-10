@@ -71,18 +71,20 @@ class RoleController extends Controller
     /**
      * Show the form for creating a new role permission assignment.
      */
-    public function create()
+public function create(Request $request)
     {
+        $selectedType = $request->input('type', AppHelper::ALL); // Default to ALL if no type is selected
+        $permissions = Permission::all(); // Fetch all permissions
+
         return view('backend.role.add', [
             'role' => null,
-            'typeGet' => null,
+            'typeGet' => $selectedType,
             'all_role' => Role::pluck('name', 'id'),
-            'permissions' => Permission::where('type', AppHelper::ALL)->get(), // Filter for ALL type
+            'permissions' => $permissions,
             'hasPermission' => [],
             'type' => AppHelper::USER_TYPE,
         ]);
     }
-
     /**
      * Store a newly created role permission assignment.
      */

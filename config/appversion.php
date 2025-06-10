@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'major_version' => '1.01',
+    'major_version' => '1.02',
 ];

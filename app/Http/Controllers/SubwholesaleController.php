@@ -44,7 +44,7 @@ class SubwholesaleController extends Controller
         // dd('HI Wholesale');
         $query = Sub_wholesale::with('user')->orderBy('id', 'desc');
         $user = auth()->user();
-        if ($user->role_id === AppHelper::USER_SE_MANAGER) {
+        if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('manager_id', $user->id);
             });
@@ -56,8 +56,8 @@ class SubwholesaleController extends Controller
         $authUser = auth()->user();
 
 
-        $userRole = User::where('role_id', AppHelper::USER_SE);
-        if ($authUser->role_id === AppHelper::USER_SE_MANAGER) {
+        $userRole = User::where('role_id', AppHelper::USER_EMPLOYEE);
+        if ($authUser->role_id === AppHelper::USER_MANAGER) {
             $userRole->where('manager_id', $authUser->id);
         }
         $full_name = $userRole->get()->mapWithKeys(function ($names) use ($authUser) {

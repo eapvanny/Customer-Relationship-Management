@@ -15,11 +15,13 @@
         <!-- sidebar menu -->
         <ul class="sidebar-menu" data-widget="tree">
             @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE)
-                <li>
+               @can('view dashboard')
+                 <li>
                     <a href="{{ URL::route('dashboard.index') }}" class="text-decoration-none">
                         <i class="fa fa-solid fa-chart-line"></i> <span> {{ __('Dashboard') }}</span>
                     </a>
                 </li>
+               @endcan
             @endif
             @can('view customer')
                 <li>
