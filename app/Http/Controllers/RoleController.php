@@ -77,7 +77,7 @@ class RoleController extends Controller
             'role' => null,
             'typeGet' => null,
             'all_role' => Role::pluck('name', 'id'),
-            'permissions' => Permission::all(),
+            'permissions' => Permission::where('type', AppHelper::ALL)->get(), // Filter for ALL type
             'hasPermission' => [],
             'type' => AppHelper::USER_TYPE,
         ]);
@@ -126,10 +126,10 @@ class RoleController extends Controller
         }
 
         $permissions = match ((int) $typeGet) {
-            AppHelper::ALL => Permission::all(),
+            AppHelper::ALL => Permission::where('type', AppHelper::ALL)->get(),
             AppHelper::SALE => Permission::where('type', AppHelper::SALE)->get(),
             AppHelper::SE => Permission::where('type', AppHelper::SE)->get(),
-            default => Permission::all(),
+            default => Permission::where('type', AppHelper::ALL)->get(), // Default to ALL for consistency
         };
 
         return view('backend.role.add', [
@@ -137,7 +137,7 @@ class RoleController extends Controller
             'typeGet' => $typeGet,
             'all_role' => Role::pluck('name', 'id'),
             'permissions' => $permissions,
-            'hasPermission' => $role->permissions()->wherePivot('type', $typeGet)->pluck('permissions.id')->toArray(),
+            'hasPermission' => $role->permissions()->pluck('permissions.id')->toArray(),
             'type' => AppHelper::USER_TYPE,
         ]);
     }

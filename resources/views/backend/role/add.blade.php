@@ -170,6 +170,7 @@
                         <hr>
                         <div class="col-md-12">
                             <!-- All Permissions Section -->
+                            <!-- All Permissions Section -->
                             <div class="form-group permission-section" id="all-permissions" style="display: none;">
                                 <label class="fw-bold">{{ __('Manage All Permissions') }}</label>
                                 <div class="row">
@@ -184,25 +185,27 @@
                                         @if ($permissions->count() > 0)
                                             @php $counter = 0; @endphp
                                             @foreach ($permissions as $permission)
-                                                @if ($counter % 4 == 0 && $counter > 0)
-                                                    </div><div class="row">
-                                                @endif
-                                                <div class="col-md-3">
-                                                    <div class="form-check">
-                                                        <input {{ in_array($permission->id, $hasPermission) ? 'checked' : '' }}
-                                                            class="form-check-input permission-checkbox-all" type="checkbox"
-                                                            id="permission-all-{{ $permission->id }}" name="permissions[]"
-                                                            value="{{ $permission->id }}">
-                                                        <label class="form-check-label" for="permission-all-{{ $permission->id }}">
-                                                            {{ $permission->name }}
-                                                        </label>
+                                                @if ($permission->type == AppHelper::ALL) <!-- Ensure only ALL type permissions -->
+                                                    @if ($counter % 4 == 0 && $counter > 0)
+                                                        </div><div class="row">
+                                                    @endif
+                                                    <div class="col-md-3">
+                                                        <div class="form-check">
+                                                            <input {{ in_array($permission->id, $hasPermission) ? 'checked' : '' }}
+                                                                class="form-check-input permission-checkbox-all" type="checkbox"
+                                                                id="permission-all-{{ $permission->id }}" name="permissions[]"
+                                                                value="{{ $permission->id }}">
+                                                            <label class="form-check-label" for="permission-all-{{ $permission->id }}">
+                                                                {{ $permission->name }}
+                                                            </label>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                @php $counter++; @endphp
+                                                    @php $counter++; @endphp
+                                                @endif
                                             @endforeach
                                         @else
                                             <div class="col-md-12">
-                                                <p>No permissions available.</p>
+                                                <p>No permissions available for All.</p>
                                             </div>
                                         @endif
                                     </div>

@@ -37,6 +37,8 @@ class User extends Authenticatable
         'area',
         'type',
         'manager_id',
+        'rsm_id',
+        'asm_id',
         'created_by',
         'deleted_by'
     ];

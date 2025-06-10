@@ -35,7 +35,7 @@
                     </a>
                 </li>
             @endcan
-            @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE && auth()->user()->role_id != AppHelper::USER_SE)
+            @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id === AppHelper::USER_ADMIN)
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         <i class="fa fa-solid fa-people-roof"></i>

@@ -161,9 +161,14 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/se-import', [SeimportController::class, 'import'])->name('se.import');
     Route::get('/se-export', [SeprogramController::class, 'export'])->name('se.export');
 
-    Route::get('/user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
+    // Route::get('/user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
+    Route::get('/user/fetch-hierarchy-users', [UserController::class, 'fetchHierarchyUsers'])->name('user.fetchHierarchyUsers');
+Route::get('/users/fetch-roles', [UserController::class, 'fetchRolesByType'])->name('user.fetchRolesByType');
+Route::get('user/fetch-asms', [UserController::class, 'fetchAsms'])->name('user.fetchAsms');
+Route::get('user/fetch-rsms', [UserController::class, 'fetchRsms'])->name('user.fetchRsms');
+Route::get('user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
 
-
+Route::get('/users/fetch-manager', [UserController::class, 'fetchManagersOnly'])->name('user.fetchManagersOnly');
     // sport club
     Route::resource('sport-club', SportclubController::class);
     Route::get('/sport-club/by-area', [SportclubController::class, 'getCustomersByArea'])->name('sport-club.byArea');

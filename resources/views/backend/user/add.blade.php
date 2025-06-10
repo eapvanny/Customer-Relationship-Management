@@ -29,18 +29,21 @@
                 display: inline-flex;
             }
         }
-        @media (max-width: 375px){
+
+        @media (max-width: 375px) {
             fieldset>#photo-preview {
                 width: 200px !important;
                 height: 210px !important;
             }
         }
-        @media (max-width: 390px){
+
+        @media (max-width: 390px) {
             fieldset>#photo-preview {
                 width: 200px !important;
                 height: 210px !important;
             }
         }
+
         .checkbox,
         .radio {
             display: inline-block;
@@ -110,6 +113,7 @@
             height: 50px;
             opacity: 0.4;
         }
+
         fieldset {
             padding: 1em 0.625em 1em;
             border: 1px solid #ddd;
@@ -250,18 +254,29 @@
                                 <div class="row">
                                     <div class="row-span-12 col-sm-12 col-md-12 col-lg-12 col-xl-6 mt-1">
                                         <div class="form-group has-feedback position-relative">
-                                            <input type="file" id="photo" name="photo" style="display: none" accept="image/*">
-                                            <button type="button" class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1" id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
-                                            <fieldset id="photo-upload" class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                <img class="rounded mx-auto d-block @if(!old('oldphoto') && !old('img-preview') && !isset($user)){{'d-none'}}@endif z-1" id="photo-preview" name="oldphoto" src="@if(optional($user)->photo){{asset('storage/' . $user->photo)}}@else{{old('oldphoto')}}@endif" alt="photo">
-                                                <input type="hidden" id="img-preview" name="oldphoto" value="@if(optional($user)->photo){{asset($user->photo)}}@endif">
-                                                <div class="d-flex align-items-center justify-content-center bg-transparent z-2  @if(!old('img-preview')){{'opacity-100'}} @else {{'opacity-25'}}@endif" id="student-photo">
-                                                    <button class="btn p-3 rounded-circle" id="btn-upload-photo" type="button" onclick="" >
+                                            <input type="file" id="photo" name="photo" style="display: none"
+                                                accept="image/*">
+                                            <button type="button"
+                                                class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                id="btn-remove-photo"><i class="fa-solid fa-trash"></i></button>
+                                            <fieldset id="photo-upload"
+                                                class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($user)) {{ 'd-none' }} @endif z-1"
+                                                    id="photo-preview" name="oldphoto"
+                                                    src="@if (optional($user)->photo) {{ asset('storage/' . $user->photo) }}@else{{ old('oldphoto') }} @endif"
+                                                    alt="photo">
+                                                <input type="hidden" id="img-preview" name="oldphoto"
+                                                    value="@if (optional($user)->photo) {{ asset($user->photo) }} @endif">
+                                                <div class="d-flex align-items-center justify-content-center bg-transparent z-2  @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                    id="student-photo">
+                                                    <button class="btn p-3 rounded-circle" id="btn-upload-photo"
+                                                        type="button" onclick="">
                                                         <i class="fa-solid fa-camera-retro"></i>
                                                     </button>
                                                 </div>
-                                                <label class="position-absolute bottom-0 text-center w-100 mb-2" for="photo">
-                                                    {{__('User photo only accept jpg, png, jpeg images')}}
+                                                <label class="position-absolute bottom-0 text-center w-100 mb-2"
+                                                    for="photo">
+                                                    {{ __('User photo only accept jpg, png, jpeg images') }}
                                                 </label>
                                             </fieldset>
                                         </div>
@@ -270,8 +285,10 @@
                                         <div class="row">
                                             <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="staff_id_card"> {{ __('Staff ID') }} <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="staff_id_card" placeholder="staff_id_card"
+                                                    <label for="staff_id_card"> {{ __('Staff ID') }} <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" name="staff_id_card"
+                                                        placeholder="staff_id_card"
                                                         value="@if ($user) {{ $user->staff_id_card }}@else{{ old('staff_id_card') }} @endif"
                                                         required minlength="3" maxlength="10">
                                                     <span class="fa fa-info form-control-feedback"></span>
@@ -280,19 +297,21 @@
                                             </div>
                                             <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="phone_no"> {{ __('Phone No.') }}</label>
+                                                    <label for="phone_no"> {{ __('Phone No.') }} <span
+                                                            class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="phone_no"
                                                         value="@if ($user) {{ $user->phone_no }}@else{{ old('phone_no') }} @endif"
                                                         maxlength="15">
                                                     <span class="fa fa-phone form-control-feedback"></span>
                                                     <span class="text-danger">{{ $errors->first('phone_no') }}</span>
                                                 </div>
-                                            </div> 
+                                            </div>
                                             <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
                                                     <label for="family_name"> {{ __('Family Name') }} <span
                                                             class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="family_name" placeholder="family_name"
+                                                    <input type="text" class="form-control" name="family_name"
+                                                        placeholder="family_name"
                                                         value="@if ($user) {{ $user->family_name }}@else{{ old('family_name') }} @endif"
                                                         required minlength="2" maxlength="255">
                                                     <span class="fa fa-info form-control-feedback"></span>
@@ -301,7 +320,8 @@
                                             </div>
                                             <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="name"> {{ __('Name') }} <span class="text-danger">*</span></label>
+                                                    <label for="name"> {{ __('Name') }} <span
+                                                            class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="name"
                                                         value="@if ($user) {{ $user->name }}@else{{ old('name') }} @endif"
                                                         required minlength="2" maxlength="255">
@@ -317,12 +337,14 @@
                                                         value="@if ($user) {{ $user->family_name_latin }}@else{{ old('family_name_latin') }} @endif"
                                                         required minlength="2" maxlength="255">
                                                     <span class="fa fa-info form-control-feedback"></span>
-                                                    <span class="text-danger">{{ $errors->first('family_name_latin') }}</span>
+                                                    <span
+                                                        class="text-danger">{{ $errors->first('family_name_latin') }}</span>
                                                 </div>
                                             </div>
                                             <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="name_latin"> {{ __('Name Latin') }} <span class="text-danger">*</span></label>
+                                                    <label for="name_latin"> {{ __('Name Latin') }} <span
+                                                            class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="name_latin"
                                                         value="@if ($user) {{ $user->name_latin }}@else{{ old('name_latin') }} @endif"
                                                         required minlength="2" maxlength="255">
@@ -330,9 +352,10 @@
                                                     <span class="text-danger">{{ $errors->first('name_latin') }}</span>
                                                 </div>
                                             </div>
-                                           <div class="col-md-6 co-xl-6 col-lg-6"> 
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="position"> {{ __('Position') }} <span class="text-danger">*</span></label>
+                                                    <label for="position"> {{ __('Position') }} <span
+                                                            class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="position"
                                                         value="@if ($user) {{ $user->position }}@else{{ old('position') }} @endif"
                                                         required>
@@ -340,31 +363,28 @@
                                                     <span class="text-danger">{{ $errors->first('position') }}</span>
                                                 </div>
                                             </div>
-                                           <div class="col-md-6 co-xl-6 col-lg-6"> 
+                                            <div class="col-md-6 co-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
+                                                    <label for="area"> {{ __('Area') }} <span
+                                                            class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="area"
                                                         value="@if ($user) {{ $user->area }}@else{{ old('area') }} @endif"
                                                         required>
                                                     <span class="fa fa-info form-control-feedback"></span>
                                                     <span class="text-danger">{{ $errors->first('area') }}</span>
                                                 </div>
-                                            </div>                                               
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                     </div>
                     <div class="row">
-                        <div class="col-md-6 co-xl-6 col-lg-6">
+                        <div class="col-md-6">
                             <div class="form-group has-feedback">
-                                <label for="type"> {{ __('User Type') }}
-                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="" data-original-title="Set a user type"></i>
-                                    <span class="text-danger">*</span>
-                                </label>
+                                <label for="type">{{ __('User Type') }} <span class="text-danger">*</span></label>
                                 {!! Form::select('type', $type, old('type', optional($user)->type), [
                                     'placeholder' => __('Select User Type'),
                                     'id' => 'type',
@@ -375,15 +395,12 @@
                                 <span class="text-danger">{{ $errors->first('type') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-6 co-xl-6 col-lg-6">
+
+                        <div class="col-md-6">
                             <div class="form-group has-feedback">
-                                <label for="id"> {{ __('User Role') }}
-                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="" data-original-title="Set a user role"></i>
-                                    <span class="text-danger">*</span>
-                                </label>
-                                {!! Form::select('role_id', $roles, old('role_id', optional($user)->role_id), [
-                                    'placeholder' => __('Select Role'),
+                                <label for="role_id">{{ __('User Role') }} <span class="text-danger">*</span></label>
+                                {!! Form::select('role_id', [], old('role_id', optional($user)->role_id), [
+                                    'placeholder' => __('Select User Type First'),
                                     'id' => 'role_id',
                                     'class' => 'form-control select2',
                                     'required' => true,
@@ -392,14 +409,49 @@
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-12 co-xl-6 col-lg-6 d-none" id="area-manager-section">
+
+                        <div class="col-md-12 col-xl-6 col-lg-6 d-none" id="asm-section">
                             <div class="form-group has-feedback">
-                                <label for="area_manager"> {{ __('Area Manager') }} <span class="text-danger">*</span>
+                                <label for="asm_id">{{ __('ASM') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="Select area manager"></i>
+                                        title="Select ASM"></i>
                                 </label>
-                                {!! Form::select('manager_id', $areaManager, old('manager_id', optional($user)->manager_id), [
-                                    'placeholder' => __('Select a manager'),
+                                {!! Form::select('asm_id', [], old('asm_id', optional($user)->asm_id), [
+                                    'placeholder' => __('Select an ASM'),
+                                    'id' => 'asm_id',
+                                    'name' => 'asm_id',
+                                    'class' => 'form-control select2',
+                                ]) !!}
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('asm_id') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 col-xl-6 col-lg-6 d-none" id="rsm-section">
+                            <div class="form-group has-feedback">
+                                <label for="rsm_id">{{ __('RSM') }} <span class="text-danger">*</span>
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                        title="Select RSM"></i>
+                                </label>
+                                {!! Form::select('rsm_id', [], old('rsm_id', optional($user)->rsm_id), [
+                                    'placeholder' => __('Select an ASM first'),
+                                    'id' => 'rsm_id',
+                                    'name' => 'rsm_id',
+                                    'class' => 'form-control select2',
+                                ]) !!}
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('rsm_id') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 col-xl-6 col-lg-6 d-none" id="manager-section">
+                            <div class="form-group has-feedback">
+                                <label for="manager_id">{{ __('Manager') }} <span class="text-danger">*</span>
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
+                                        title="Select Manager"></i>
+                                </label>
+                                {!! Form::select('manager_id', [], old('manager_id', optional($user)->manager_id), [
+                                    'placeholder' => __('Select an RSM first'),
                                     'id' => 'manager_id',
                                     'name' => 'manager_id',
                                     'class' => 'form-control select2',
@@ -496,56 +548,189 @@
         $(document).ready(function() {
             Generic.initCommonPageJS();
 
-            function toggleAreaManagerField() {
-                var selectedRole = $('#role_id').val();
-                var employeeRoleId = "{{ AppHelper::USER_EMPLOYEE }}"; // Role ID for Employee
-                var seRoleId = "{{ AppHelper::USER_SE }}"; // Role ID for SE
+            const SALE = "{{ AppHelper::SALE }}";
+            const SE = "{{ AppHelper::SE }}";
+            const EMPLOYEE = "{{ AppHelper::USER_EMPLOYEE }}";
+            const ASM = "{{ AppHelper::USER_ASM }}";
+            const RSM = "{{ AppHelper::USER_RSM }}";
 
-                if (selectedRole == employeeRoleId || selectedRole == seRoleId) {
-                    $('#area-manager-section').removeClass('d-none');
-                    $('#manager_id').prop('required', true);
-                    fetchManagers(selectedRole); // Fetch managers based on role
-                } else {
-                    $('#area-manager-section').addClass('d-none');
-                    $('#manager_id').prop('required', false);
-                    $('#manager_id').val(null).trigger('change'); // Clear manager selection
-                }
-            }
+            function toggleHierarchyFields() {
+                const selectedType = $('#type').val();
 
-            function fetchManagers(roleId) {
+                // Reset all role/hierarchy fields
+                $('#role_id').empty().append('<option value="">{{ __('Select User Type First') }}</option>')
+                    .trigger('change');
+                $('#asm-section, #rsm-section, #manager-section').addClass('d-none');
+                $('#asm_id, #rsm_id, #manager_id').empty().append('<option value="">{{ __('Select') }}</option>')
+                    .val(null).trigger('change').prop('required', false);
+
+                if (!selectedType) return;
+
+                // Fetch roles for selected type
                 $.ajax({
-                    url: "{{ route('user.fetchManagers') }}", // Route to fetch managers
+                    url: "{{ route('user.fetchRolesByType') }}",
                     method: 'GET',
-                    data: { role_id: roleId },
+                    data: {
+                        type_id: selectedType
+                    },
                     success: function(response) {
-                        var managerSelect = $('#manager_id');
-                        var oldValue = "{{ old('manager_id', optional($user)->manager_id) }}";
-                        managerSelect.empty();
-                        managerSelect.append('<option value="">{{ __("Select a manager") }}</option>');
-
-                        $.each(response.managers, function(id, name) {
-                            managerSelect.append('<option value="' + id + '">' + name + '</option>');
+                        const roleSelect = $('#role_id');
+                        roleSelect.empty().append('<option value="">{{ __('Select Role') }}</option>');
+                        $.each(response.roles, function(id, name) {
+                            roleSelect.append(`<option value="${id}">${name}</option>`);
                         });
 
-                        if (oldValue) {
-                            managerSelect.val(oldValue).trigger('change');
-                        } else {
-                            managerSelect.trigger('change');
+                        const oldRole = "{{ old('role_id', optional($user)->role_id) }}";
+                        if (oldRole) {
+                            roleSelect.val(oldRole).trigger('change');
                         }
-                    },
-                    error: function(xhr) {
-                        console.error('Error fetching managers:', xhr);
                     }
                 });
             }
 
-            // Initialize the area manager field visibility and fetch managers if needed
-            toggleAreaManagerField();
+            function handleRoleChange() {
+                const selectedType = $('#type').val();
+                const selectedRole = $('#role_id').val();
 
-            // Trigger fetchManagers when role_id changes
-            $('#role_id').on('change', function() {
-                toggleAreaManagerField();
+                // Reset all hierarchy fields
+                $('#asm-section, #rsm-section, #manager-section').addClass('d-none');
+                $('#asm_id, #rsm_id, #manager_id').empty().append('<option value="">{{ __('Select') }}</option>')
+                    .val(null).trigger('change').prop('required', false);
+
+                if (selectedType == SALE || selectedType == SE) {
+                    if (selectedRole == EMPLOYEE) {
+                        $('#asm-section, #rsm-section, #manager-section').removeClass('d-none');
+                        $('#asm_id, #rsm_id, #manager_id').prop('required', true);
+                        $('#rsm_id').empty().append('<option value="">{{ __('Select an ASM first') }}</option>');
+                        $('#manager_id').empty().append(
+                            '<option value="">{{ __('Select an RSM first') }}</option>');
+                        fetchAsms(selectedType); // Fetch ASMs initially
+                    } else if (selectedRole == ASM) {
+                        $('#rsm-section, #manager-section').removeClass('d-none');
+                        $('#rsm_id, #manager_id').prop('required', true);
+                        $('#manager_id').empty().append(
+                            '<option value="">{{ __('Select an RSM first') }}</option>');
+                        fetchRsms(selectedType,selectedRole); // Fetch RSMs initially
+                    } else if (selectedRole == RSM) {
+                        $('#manager-section').removeClass('d-none');
+                        $('#manager_id').prop('required', true);
+                        fetchManagers(selectedType,selectedRole); // Fetch Managers directly
+                    }
+                }
+
+                // Trigger ASM change if there's an existing ASM ID for EMPLOYEE
+                const oldAsm = "{{ old('asm_id', optional($user)->asm_id) }}";
+                if (selectedRole == EMPLOYEE && oldAsm) {
+                    $('#asm_id').val(oldAsm).trigger('change');
+                }
+            }
+
+            function fetchAsms(typeId) {
+                $.ajax({
+                    url: "{{ route('user.fetchAsms') }}",
+                    method: 'GET',
+                    data: {
+                        type_id: typeId
+                    },
+                    success: function(response) {
+                        const asmSelect = $('#asm_id');
+                        asmSelect.empty().append(
+                        '<option value="">{{ __('Select an ASM') }}</option>');
+                        $.each(response.asms, (id, name) => {
+                            asmSelect.append(`<option value="${id}">${name}</option>`);
+                        });
+                        const oldAsm = "{{ old('asm_id', optional($user)->asm_id) }}";
+                        if (oldAsm) {
+                            asmSelect.val(oldAsm).trigger('change');
+                        }
+                    }
+                });
+            }
+
+            function fetchRsms(typeId, asmId = null,roleId=$('#role_id').val()) {
+                $.ajax({
+                    url: "{{ route('user.fetchRsms') }}",
+                    method: 'GET',
+                    data: {
+                        type_id: typeId,
+                        asm_id: asmId,
+                        role_id: roleId,
+                    },
+                    success: function(response) {
+                        const rsmSelect = $('#rsm_id');
+                        rsmSelect.empty().append(
+                            '<option value="">{{ __('Select an RSM') }}</option>');
+                        $.each(response.rsms, (id, name) => {
+                            rsmSelect.append(`<option value="${id}">${name}</option>`);
+                        });
+                        const oldRsm = "{{ old('rsm_id', optional($user)->rsm_id) }}";
+                        if (oldRsm) {
+                            rsmSelect.val(oldRsm).trigger('change');
+                        }
+                    }
+                });
+            }
+
+            function fetchManagers(typeId, rsmId = null,roleId=$('#role_id').val()) {
+                $.ajax({
+                    url: "{{ route('user.fetchManagers') }}",
+                    method: 'GET',
+                    data: {
+                        type_id: typeId,
+                        rsm_id: rsmId,
+                        role_id: roleId,
+                    },
+                    success: function(response) {
+                        const managerSelect = $('#manager_id');
+                        managerSelect.empty().append(
+                            '<option value="">{{ __('Select a Manager') }}</option>');
+                        $.each(response.managers, (id, name) => {
+                            managerSelect.append(`<option value="${id}">${name}</option>`);
+                        });
+                        const oldManager = "{{ old('manager_id', optional($user)->manager_id) }}";
+                        if (oldManager) {
+                            managerSelect.val(oldManager).trigger('change');
+                        }
+                    }
+                });
+            }
+
+            // Handle ASM selection for EMPLOYEE role
+            $('#asm_id').on('change', function() {
+                const selectedAsmId = $(this).val();
+                const selectedType = $('#type').val();
+                const selectedRole = $('#role_id').val();
+
+                if (selectedRole == EMPLOYEE && selectedAsmId) {
+                    $('#rsm_id').empty().append('<option value="">{{ __('Select an RSM') }}</option>')
+                        .val(null).trigger('change');
+                    $('#manager_id').empty().append(
+                            '<option value="">{{ __('Select an RSM first') }}</option>')
+                        .val(null).trigger('change');
+                    fetchRsms(selectedType, selectedAsmId);
+                }
             });
+
+            // Handle RSM selection for EMPLOYEE and ASM roles
+            $('#rsm_id').on('change', function() {
+                const selectedRsmId = $(this).val();
+                const selectedType = $('#type').val();
+                const selectedRole = $('#role_id').val();
+
+                if ((selectedRole == EMPLOYEE || selectedRole == ASM) && selectedRsmId) {
+                    $('#manager_id').empty().append(
+                            '<option value="">{{ __('Select a Manager') }}</option>')
+                        .val(null).trigger('change');
+                    fetchManagers(selectedType, selectedRsmId);
+                }
+            });
+
+            // Initial setup
+            toggleHierarchyFields();
+
+            // Events
+            $('#type').on('change', toggleHierarchyFields);
+            $('#role_id').on('change', handleRoleChange);
 
             // Photo upload handling (unchanged)
             $('#photo-upload').on('click', function() {
@@ -580,8 +765,8 @@
 
             // Hide/show image preview
             if ($("#photo-preview").attr("src")) {
-                $('#btn-upload-photo').addClass('d-none');
-                $('#btn-remove-photo').removeClass('d-none');
+                $('#btn-upload-photo').removeClass('d-none');
+                $('#btn-remove-photo').addClass('d-none');
             } else {
                 $('#btn-upload-photo').removeClass('d-none');
                 $('#btn-remove-photo').addClass('d-none');

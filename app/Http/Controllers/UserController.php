@@ -43,35 +43,34 @@ class UserController extends Controller
             });
         } elseif ($loggedInUserRole == AppHelper::USER_ADMIN) {
             $query->where('role_id', '!=', AppHelper::USER_SUPER_ADMIN);
-        } elseif ($loggedInUserRole == AppHelper::USER_SE_MANAGER){
+        } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
             $query->where(function ($q) use ($loggedInUserId) {
                 $q->where('id', $loggedInUserId)
                     ->orWhere('manager_id', $loggedInUserId);
             });
-        } 
-        elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
+        } elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
             $query->where('id', $loggedInUserId);
         }
 
         $authUser = auth()->user();
         $areaManager = User::where('role_id', AppHelper::USER_MANAGER)
-                        ->orWhere('role_id', AppHelper::USER_SE_MANAGER)
-                        ->get()->mapWithKeys(function ($manager) use ($authUser) {
-            return [
-                $manager->id => $authUser->user_lang === 'en'
-                    ? $manager->family_name_latin . ' ' . $manager->name_latin
-                    : $manager->family_name . ' ' . $manager->name
-            ];
-        });
+            ->orWhere('role_id', AppHelper::USER_MANAGER)
+            ->get()->mapWithKeys(function ($manager) use ($authUser) {
+                return [
+                    $manager->id => $authUser->user_lang === 'en'
+                        ? $manager->family_name_latin . ' ' . $manager->name_latin
+                        : $manager->family_name . ' ' . $manager->name
+                ];
+            });
         $full_name = User::where('role_id', AppHelper::USER_EMPLOYEE)
-                        ->orWhere('role_id', AppHelper::USER_SE)
-                        ->get()->mapWithKeys(function ($employee) use ($authUser) {
-            return [
-                $employee->id => $authUser->user_lang === 'en'
-                    ? $employee->family_name_latin . ' ' . $employee->name_latin
-                    : $employee->family_name . ' ' . $employee->name
-            ];
-        });
+            ->orWhere('role_id', AppHelper::USER_EMPLOYEE)
+            ->get()->mapWithKeys(function ($employee) use ($authUser) {
+                return [
+                    $employee->id => $authUser->user_lang === 'en'
+                        ? $employee->family_name_latin . ' ' . $employee->name_latin
+                        : $employee->family_name . ' ' . $employee->name
+                ];
+            });
 
         if ($request->has('manager_id') && !empty($request->manager_id)) {
             $query->where('manager_id', $request->manager_id);
@@ -234,114 +233,257 @@ class UserController extends Controller
         }
     }
 
-   public function create()
+    public function create()
     {
         $user = null;
         $authUser = auth()->user();
         $type = [];
         $roles = [];
-        $areaManager = [];
+        $asm = [];
+        $rsm = [];
+        $manager = [];
 
-        // Determine roles and user types based on the authenticated user's role
+        // Determine roles, user types, and hierarchy users based on the authenticated user's role
         if ($authUser->role_id === AppHelper::USER_SUPER_ADMIN) {
-            // Super Admin can see all roles and user types
             $roles = Role::pluck('name', 'id')->toArray();
             $type = AppHelper::USER_TYPE;
-            $areaManager = User::whereIn('role_id', [AppHelper::USER_MANAGER, AppHelper::USER_SE_MANAGER])
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+            $rsm = User::where('role_id', AppHelper::USER_RSM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+            $asm = User::where('role_id', AppHelper::USER_ASM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
                     ];
                 })->toArray();
         } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
-            // Admin can see all roles except Super Admin and all user types
             $roles = Role::whereNotIn('id', [AppHelper::USER_SUPER_ADMIN])
                 ->pluck('name', 'id')
                 ->toArray();
             $type = AppHelper::USER_TYPE;
-            $areaManager = User::whereIn('role_id', [AppHelper::USER_MANAGER, AppHelper::USER_SE_MANAGER])
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
                     ];
                 })->toArray();
-        } elseif ($authUser->role_id === AppHelper::USER_SE_MANAGER) {
-            // ASM can only see SE role and SE user type
-            $roles = Role::whereIn('id', [AppHelper::USER_SE,AppHelper::USER_SE_MANAGER])
+            $rsm = User::where('role_id', AppHelper::USER_RSM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+            $asm = User::where('role_id', AppHelper::USER_ASM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+        } elseif ($authUser->role_id === AppHelper::USER_RSM) {
+            $roles = Role::whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_RSM])
                 ->pluck('name', 'id')
                 ->toArray();
             $type = [AppHelper::SE => AppHelper::USER_TYPE[AppHelper::SE]];
-            $areaManager = User::where('id', $authUser->id)
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->where('type', AppHelper::SE)
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
+                    ];
+                })->toArray();
+            $rsm = User::where('role_id', AppHelper::USER_RSM)
+                ->where('type', AppHelper::SE)
+                ->where('id', $authUser->id)
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
+                    ];
+                })->toArray();
+            $asm = User::where('role_id', AppHelper::USER_ASM)
+                ->where('type', AppHelper::SE)
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
                     ];
                 })->toArray();
         } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
-            // Sale Manager can only see Employee role and SALE user type
             $roles = Role::where('id', AppHelper::USER_EMPLOYEE)
                 ->pluck('name', 'id')
                 ->toArray();
             $type = [AppHelper::SALE => AppHelper::USER_TYPE[AppHelper::SALE]];
-            $areaManager = User::where('id', $authUser->id)
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->where('type', AppHelper::SALE)
+                ->where('id', $authUser->id)
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
                     ];
                 })->toArray();
+            $rsm = [];
+            $asm = [];
         }
 
-        return view('backend.user.add', compact('user', 'roles', 'areaManager', 'type'));
+        return view('backend.user.add', compact('user', 'type', 'roles', 'manager', 'asm', 'rsm'));
+    }
+
+    public function fetchRolesByType(Request $request)
+    {
+        $typeId = $request->get('type_id');
+        $authUser = auth()->user();
+
+        $query = Role::query();
+
+        if ($authUser->role_id === AppHelper::USER_SUPER_ADMIN) {
+            // Super Admin sees all roles
+        } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
+            $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN]);
+        } elseif ($authUser->role_id === AppHelper::USER_RSM) {
+            $query->whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_ASM]);
+        } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
+            $query->whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_ASM, AppHelper::USER_RSM]);
+        }
+
+        $roles = $query->pluck('name', 'id');
+        return response()->json(['roles' => $roles]);
+    }
+
+    public function fetchAsms(Request $request)
+    {
+        $typeId = $request->get('type_id');
+        $authUser = auth()->user();
+
+        $query = User::where('type', $typeId)
+            ->where('role_id', AppHelper::USER_ASM);
+
+        if ($authUser->role_id === AppHelper::USER_RSM) {
+            $query->where('type', AppHelper::SE);
+        } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
+            $query->where('type', AppHelper::SALE);
+        }
+
+        $asms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            return [
+                $user->id => ($authUser->user_lang === 'en'
+                    ? $user->family_name_latin . ' ' . $user->name_latin
+                    : $user->family_name . ' ' . $user->name)
+            ];
+        })->toArray();
+
+        return response()->json(['asms' => $asms]);
+    }
+
+
+    public function fetchRsms(Request $request)
+    {
+        $typeId = $request->get('type_id');
+        $asmId = $request->get('asm_id');
+        $roleId = $request->get('role_id');
+        // dd($roleId);
+        $authUser = auth()->user();
+        if ($roleId == AppHelper::USER_ASM) {
+            $rsmID = User::where('role_id', AppHelper::USER_RSM)
+                ->where('type', $typeId)
+                ->pluck('id')->toArray();
+        }
+        if ($roleId == AppHelper::USER_EMPLOYEE) {
+            $rsmID = User::where('id', $asmId)
+                ->where('type', $typeId)
+                ->pluck('rsm_id')->toArray();
+        }
+        
+        $query = User::whereIn('id', $rsmID);
+
+
+        $rsms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            return [
+                $user->id => ($authUser->user_lang === 'en'
+                    ? $user->family_name_latin . ' ' . $user->name_latin
+                    : $user->family_name . ' ' . $user->name)
+            ];
+        })->toArray();
+
+        return response()->json(['rsms' => $rsms]);
     }
 
     public function fetchManagers(Request $request)
     {
-        $roleId = $request->query('role_id');
-        // dd($roleId);
+        $typeId = $request->get('type_id');
+        $rsmId = $request->get('rsm_id');
+        $roleId = $request->get('role_id');
         $authUser = auth()->user();
-        $managers = [];
-
-        if ($roleId == AppHelper::USER_EMPLOYEE) {
-            // Fetch managers with type = 2 (Sale)
-            $managers = User::where('role_id', AppHelper::USER_MANAGER)
-                ->where('type', AppHelper::SALE)
-                ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
-                    return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
-                    ];
-                });
-        } elseif ($roleId == AppHelper::USER_SE) {
-            // Fetch managers with type = 3 (SE)
-            $managers = User::where('role_id', AppHelper::USER_SE_MANAGER)
-                ->where('type', AppHelper::SE)
-                ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
-                    return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
-                    ];
-                });
+        // dd($roleId);
+        if ($roleId == AppHelper::USER_RSM) {
+            $managerID = User::where('type', $typeId)
+                ->where('role_id', AppHelper::USER_MANAGER)
+                ->pluck('id')->toArray();
         }
+        if ($roleId == AppHelper::USER_ASM) {
+            $managerID = User::where('id', $rsmId)
+                ->where('type', $typeId)
+                ->pluck('manager_id')->toArray();
+        }
+        if ($roleId == AppHelper::USER_EMPLOYEE) {
+            $managerID = User::where('rsm_id', $rsmId)
+                ->where('type', $typeId)
+                ->pluck('manager_id')->toArray();
+        }
+
+        $query = User::whereIn('id', $managerID);
+        $managers = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            return [
+                $user->id => ($authUser->user_lang === 'en'
+                    ? $user->family_name_latin . ' ' . $user->name_latin
+                    : $user->family_name . ' ' . $user->name)
+            ];
+        })->toArray();
 
         return response()->json(['managers' => $managers]);
     }
-
 
     public function store(Request $request)
     {
@@ -354,7 +496,7 @@ class UserController extends Controller
             // 'email' => 'email|max:255|unique:users,email',
             'username' => 'required|min:5|max:255|unique:users,username',
             'password' => 'required|min:6|max:50',
-            'phone_no' => 'nullable|max:15',
+            'phone_no' => 'required|max:50',
             'role_id' => 'required',
             'gender' => 'required',
             'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card',
@@ -365,6 +507,13 @@ class UserController extends Controller
         ];
 
         if ($request->role_id == AppHelper::USER_EMPLOYEE) {
+            $rules['manager_id'] = 'required';
+            $rules['rsm_id'] = 'required';
+            $rules['asm_id'] = 'required';
+        } elseif ($request->role_id == AppHelper::USER_ASM) {
+            $rules['manager_id'] = 'required';
+            $rules['rsm_id'] = 'required';
+        } elseif ($request->role_id == AppHelper::USER_RSM) {
             $rules['manager_id'] = 'required';
         }
         $this->validate($request, $rules);
@@ -386,6 +535,8 @@ class UserController extends Controller
             'type' => $request->type,
             'password' => bcrypt($request->password),
             'manager_id' => $request->manager_id,
+            'rsm_id' => $request->rsm_id,
+            'asm_id' => $request->asm_id,
             'created_by' => $createdBy,
         ];
 
@@ -414,26 +565,48 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        $user = User::find($id);
-        $roles = Role::pluck('name', 'id');
-        $type = AppHelper::USER_TYPE;
+        $user = User::findOrFail($id);
         $authUser = auth()->user();
         $type = [];
         $roles = [];
-        $areaManager = [];
+        $manager = [];
+        $rsm = [];
+        $asm = [];
 
-        // Determine roles, user types, and area managers based on the authenticated user's role
+        // Determine roles, user types, and hierarchy users based on the authenticated user's role
         if ($authUser->role_id === AppHelper::USER_SUPER_ADMIN) {
             // Super Admin can see all roles and user types
             $roles = Role::pluck('name', 'id')->toArray();
             $type = AppHelper::USER_TYPE;
-            $areaManager = User::whereIn('role_id', [AppHelper::USER_MANAGER, AppHelper::USER_SE_MANAGER])
+            // Fetch Managers, RSMs, and ASMs for both SALE and SE types
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+            $rsm = User::where('role_id', AppHelper::USER_RSM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+            $asm = User::where('role_id', AppHelper::USER_ASM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
                     ];
                 })->toArray();
         } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
@@ -442,48 +615,98 @@ class UserController extends Controller
                 ->pluck('name', 'id')
                 ->toArray();
             $type = AppHelper::USER_TYPE;
-            $areaManager = User::whereIn('role_id', [AppHelper::USER_MANAGER, AppHelper::USER_SE_MANAGER])
+            // Fetch Managers, RSMs, and ASMs for both SALE and SE types
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
                     ];
                 })->toArray();
-        } elseif ($authUser->role_id === AppHelper::USER_SE_MANAGER) {
-            // ASM can only see SE role and SE user type
-            $roles = Role::whereIn('id', [AppHelper::USER_SE,AppHelper::USER_SE_MANAGER])
+            $rsm = User::where('role_id', AppHelper::USER_RSM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+            $asm = User::where('role_id', AppHelper::USER_ASM)
+                ->whereIn('type', [AppHelper::SALE, AppHelper::SE])
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name) . ' (' . AppHelper::USER_TYPE[$user->type] . ')'
+                    ];
+                })->toArray();
+        } elseif ($authUser->role_id === AppHelper::USER_RSM) {
+            // RSM can only see Employee and RSM roles and SE user type
+            $roles = Role::whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_RSM])
                 ->pluck('name', 'id')
                 ->toArray();
             $type = [AppHelper::SE => AppHelper::USER_TYPE[AppHelper::SE]];
-            $areaManager = User::where('id', $authUser->id)
+            // Fetch Managers and ASMs for SE type only
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->where('type', AppHelper::SE)
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
+                    ];
+                })->toArray();
+            $rsm = User::where('role_id', AppHelper::USER_RSM)
+                ->where('type', AppHelper::SE)
+                ->where('id', $authUser->id)
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
+                    ];
+                })->toArray();
+            $asm = User::where('role_id', AppHelper::USER_ASM)
+                ->where('type', AppHelper::SE)
+                ->get()
+                ->mapWithKeys(function ($user) use ($authUser) {
+                    return [
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
                     ];
                 })->toArray();
         } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
-            // Sale Manager can only see Employee role and SALE user type
-            $roles = Role::whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_MANAGER])
+            // Manager can only see Employee role and SALE user type
+            $roles = Role::where('id', AppHelper::USER_EMPLOYEE)
                 ->pluck('name', 'id')
                 ->toArray();
             $type = [AppHelper::SALE => AppHelper::USER_TYPE[AppHelper::SALE]];
-            $areaManager = User::where('id', $authUser->id)
+            // Fetch only the authenticated Manager for SALE type
+            $manager = User::where('role_id', AppHelper::USER_MANAGER)
+                ->where('type', AppHelper::SALE)
+                ->where('id', $authUser->id)
                 ->get()
-                ->mapWithKeys(function ($manager) use ($authUser) {
+                ->mapWithKeys(function ($user) use ($authUser) {
                     return [
-                        $manager->id => $authUser->user_lang === 'en'
-                            ? $manager->family_name_latin . ' ' . $manager->name_latin
-                            : $manager->family_name . ' ' . $manager->name
+                        $user->id => ($authUser->user_lang === 'en'
+                            ? $user->family_name_latin . ' ' . $user->name_latin
+                            : $user->family_name . ' ' . $user->name)
                     ];
                 })->toArray();
+            $rsm = [];
+            $asm = [];
         }
 
-        return view('backend.user.add', compact('user', 'roles', 'areaManager', 'type'));
+        return view('backend.user.add', compact('user', 'type', 'roles', 'manager', 'rsm', 'asm'));
     }
 
 
@@ -497,10 +720,9 @@ class UserController extends Controller
             'name' => 'required|min:2|max:255',
             'family_name_latin' => 'required|min:2|max:255',
             'name_latin' => 'required|min:2|max:255',
-            // 'email' => 'required|email|max:255|unique:users,email,' . $id,
             'username' => 'required|min:5|max:255|unique:users,username,' . $id,
             'password' => 'nullable|min:6|max:50',
-            'phone_no' => 'nullable|max:15',
+            'phone_no' => 'required|max:50',
             'role_id' => 'required',
             'gender' => 'required',
             'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card,' . $id,
@@ -511,7 +733,15 @@ class UserController extends Controller
 
         if ($request->role_id == AppHelper::USER_EMPLOYEE) {
             $rules['manager_id'] = 'required';
+            $rules['rsm_id'] = 'required';
+            $rules['asm_id'] = 'required';
+        } elseif ($request->role_id == AppHelper::USER_ASM) {
+            $rules['manager_id'] = 'required';
+            $rules['rsm_id'] = 'required';
+        } elseif ($request->role_id == AppHelper::USER_RSM) {
+            $rules['manager_id'] = 'required';
         }
+
         $this->validate($request, $rules);
 
         $userData = [
@@ -525,12 +755,13 @@ class UserController extends Controller
             'email' => $request->email,
             'phone_no' => $request->phone_no,
             'status' => $request->status,
-            'photo' => $user->photo,
             'staff_id_card' => $request->staff_id_card,
             'position' => $request->position,
             'area' => $request->area,
             'type' => $request->type,
             'manager_id' => $request->manager_id,
+            'rsm_id' => $request->rsm_id,
+            'asm_id' => $request->asm_id,
         ];
 
         // Handle password update only if provided
@@ -545,9 +776,8 @@ class UserController extends Controller
 
             $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'uploads/' . $fileName;
+            $filePath = 'Uploads/' . $fileName;
             Storage::put($filePath, file_get_contents($file));
-
             $userData['photo'] = $filePath;
         }
 

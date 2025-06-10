@@ -8,18 +8,31 @@ class AppHelper
 
     const USER_SUPER_ADMIN = 1;
     const USER_ADMIN = 2;
-    const USER_EMPLOYEE = 3;
+    const USER_DIRECTOR = 3;
     const USER_MANAGER = 4;
-    const USER_SE = 5;
-    const USER_SE_MANAGER = 6;
+    const USER_RSM = 5;
+    const USER_ASM = 6;
+    const USER_SUP = 7;
+    const USER_EMPLOYEE = 8;
 
     const USER = [
         self::USER_SUPER_ADMIN => 'Super Admin',
         self::USER_ADMIN => 'Admin',
-        self::USER_EMPLOYEE => 'Employee (Sale)',
-        self::USER_MANAGER => 'Sale Manager',
-        self::USER_SE => 'SE (Marketing)',
-        self::USER_SE_MANAGER => 'ASM',
+        self::USER_DIRECTOR => 'Director',
+        self::USER_MANAGER => 'Manager',
+        self::USER_RSM => 'RSM',
+        self::USER_ASM => 'ASM',
+        self::USER_SUP => 'Supervisor',
+        self::USER_EMPLOYEE => 'Employee',
+    ];
+
+    const ALL = 1;
+    const SALE = 2;
+    const SE = 3;
+    const USER_TYPE = [
+        self::ALL => 'All',
+        self::SALE => 'SSP',
+        self::SE => 'SE',
     ];
 
     const UMBRELLA = 1;
@@ -76,14 +89,6 @@ class AppHelper
         5 => 'អ្នកប្រើប្រាស់ចុងក្រោយ',
     ];
 
-    const ALL = 1;
-    const SALE = 2;
-    const SE = 3;
-    const USER_TYPE = [
-        self::ALL => 'All',
-        self::SALE => 'SSP',
-        self::SE => 'SE',
-    ];
 
     const GENDER_MALE = 1;
     const GENDER_FEMALE = 2;
