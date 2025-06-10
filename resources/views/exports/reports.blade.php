@@ -1,6 +1,8 @@
 @php
     use App\Http\Helpers\AppHelper;
     use Illuminate\Support\Facades\Request;
+    $asm = \App\Models\User::find(auth()->user()->asm_id);
+    $rsm = \App\Models\User::find(auth()->user()->rsm_id);
     $fullDomain = url('/');
     // Initialize totals
     $total_250ml = 0;
@@ -47,9 +49,23 @@
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
-                <td>{{ $row->customer->outlet ?? 'N/A' }}</td>
-                <td>{{ $row->customer->outlet ?? 'N/A' }}</td>
-                <td>{{ $row->customer->outlet ?? 'N/A' }}</td>
+                <td>
+                    {{ auth()->user()->user_lang === 'en' ? auth()->user()->getFullNameLatinAttribute() ?? 'N/A' : (auth()->user()->user_lang === 'kh' ? auth()->user()->getFullNameAttribute() ?? 'N/A' : 'N/A') }}
+                </td>
+               <td>
+                    {{ $asm
+                        ? (auth()->user()->user_lang === 'en'
+                            ? $asm->getFullNameLatinAttribute() ?? 'N/A'
+                            : $asm->getFullNameAttribute() ?? 'N/A')
+                        : 'N/A' }}
+                </td>
+                <td>
+                    {{ $rsm
+                        ? (auth()->user()->user_lang === 'en'
+                            ? $rsm->getFullNameLatinAttribute() ?? 'N/A'
+                            : $rsm->getFullNameAttribute() ?? 'N/A')
+                        : 'N/A' }}
+                </td>
                 <td>{{ $row->customer->outlet ?? 'N/A' }}</td>
                 <td>{{ $row->customer->name ?? 'N/A' }}</td>
                 <td>{{ $row->customer->code ?? 'N/A' }}</td>
