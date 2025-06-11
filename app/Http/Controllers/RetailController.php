@@ -29,10 +29,10 @@ class RetailController extends Controller
      */
         public function __construct()
     {
-        $this->middleware('permission:view retail', ['only' => ['index']]);
-        $this->middleware('permission:create retail', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update retail', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete retail', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view retail', ['only' => ['index']]);
+        $this->middleware('type.permission:create retail', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update retail', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete retail', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 

@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedBigInteger('rsm_id')->nullable()->after('manager_id');
-            $table->unsignedBigInteger('asm_id')->nullable()->after('rsm_id');
+            $table->unsignedBigInteger('sup_id')->nullable()->after('rsm_id');
+            $table->unsignedBigInteger('asm_id')->nullable()->after('sup_id');
         });
     }
 
@@ -23,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['rsm_id', 'asm_id']);
+            $table->dropColumn(['rsm_id','sup_id', 'asm_id']);
         });
     }
 };

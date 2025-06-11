@@ -25,10 +25,10 @@ class ReportController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view report', ['only' => ['index']]);
-        $this->middleware('permission:create report', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update report', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete report', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view report', ['only' => ['index']]);
+        $this->middleware('type.permission:create report', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update report', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete report', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 

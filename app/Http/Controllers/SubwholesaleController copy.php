@@ -27,10 +27,10 @@ class SubwholesaleController extends Controller
      */
         public function __construct()
     {
-        $this->middleware('permission:view sub-wholesale', ['only' => ['index']]);
-        $this->middleware('permission:create sub-wholesale', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update sub-wholesale', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete sub-wholesale', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view sub-wholesale', ['only' => ['index']]);
+        $this->middleware('type.permission:create sub-wholesale', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update sub-wholesale', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete sub-wholesale', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 

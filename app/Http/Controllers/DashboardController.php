@@ -14,7 +14,7 @@ class DashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view dashboard', ['only' => ['index']]);
+        $this->middleware('type.permission:view dashboard', ['only' => ['index']]);
     }
     public function index()
     {

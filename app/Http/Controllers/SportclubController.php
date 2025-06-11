@@ -26,10 +26,10 @@ class SportclubController extends Controller
      */
         public function __construct()
     {
-        $this->middleware('permission:view sport club', ['only' => ['index']]);
-        $this->middleware('permission:create sport club', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update sport club', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete sport club', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view sport club', ['only' => ['index']]);
+        $this->middleware('type.permission:create sport club', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update sport club', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete sport club', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 

@@ -24,10 +24,10 @@ class RestaurantimportController extends Controller
      */
         public function __construct()
     {
-        $this->middleware('permission:view school', ['only' => ['index']]);
-        $this->middleware('permission:create school', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update school', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete school', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view school', ['only' => ['index']]);
+        $this->middleware('type.permission:create school', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update school', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete school', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 

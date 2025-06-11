@@ -13,10 +13,10 @@ class RoleController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view role', ['only' => ['index']]);
-        $this->middleware('permission:create role', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update role', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:delete role', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view role', ['only' => ['index']]);
+        $this->middleware('type.permission:create role', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update role', ['only' => ['edit', 'update']]);
+        $this->middleware('type.permission:delete role', ['only' => ['destroy']]);
     }
 
     /**
@@ -94,7 +94,7 @@ public function create(Request $request)
             'role_id' => 'required|exists:roles,id',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
-            'type' => 'required|in:1,2,3',
+            'type' => 'required|in:1,2,3', // ALL, SALE, SE
         ]);
 
         if ($validator->fails()) {
@@ -103,12 +103,22 @@ public function create(Request $request)
 
         $role = Role::findOrFail($request->role_id);
 
+        // Check if the role already has permissions with the given type
         if ($role->permissions()->wherePivot('type', $request->type)->exists()) {
             return redirect()->back()->withInput()->with('error', "Role '{$role->name}' with type '" . (AppHelper::USER_TYPE[$request->type] ?? 'Unknown') . "' already exists.");
         }
 
         $permissions = $request->input('permissions', []);
         if ($permissions) {
+            // Validate that each permission has the same type in the permissions table
+            foreach ($permissions as $permissionId) {
+                $permission = Permission::findOrFail($permissionId);
+                if ($permission->type != $request->type) {
+                    return redirect()->back()->withInput()->with('error', "Permission '{$permission->name}' does not match the selected type '" . (AppHelper::USER_TYPE[$request->type] ?? 'Unknown') . "'.");
+                }
+            }
+
+            // Attach permissions with the type in the pivot table
             $role->permissions()->attach($permissions, ['type' => $request->type]);
         }
 

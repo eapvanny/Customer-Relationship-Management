@@ -165,6 +165,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/user/fetch-hierarchy-users', [UserController::class, 'fetchHierarchyUsers'])->name('user.fetchHierarchyUsers');
 Route::get('/users/fetch-roles', [UserController::class, 'fetchRolesByType'])->name('user.fetchRolesByType');
 Route::get('user/fetch-asms', [UserController::class, 'fetchAsms'])->name('user.fetchAsms');
+Route::get('user/fetch-sups', [UserController::class, 'fetchSupervisors'])->name('user.fetchSupervisors');
 Route::get('user/fetch-rsms', [UserController::class, 'fetchRsms'])->name('user.fetchRsms');
 Route::get('user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
 

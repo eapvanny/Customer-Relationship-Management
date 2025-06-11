@@ -17,10 +17,10 @@ class CustomerController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view customer', ['only' => ['index']]);
-        $this->middleware('permission:create customer', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update customer', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:delete customer', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view customer', ['only' => ['index']]);
+        $this->middleware('type.permission:create customer', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update customer', ['only' => ['edit', 'update']]);
+        $this->middleware('type.permission:delete customer', ['only' => ['destroy']]);
     }
     public function index(Request $request)
     {

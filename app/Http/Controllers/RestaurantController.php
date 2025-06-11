@@ -23,10 +23,10 @@ class RestaurantController extends Controller
      */
         public function __construct()
     {
-        $this->middleware('permission:view restaurant', ['only' => ['index']]);
-        $this->middleware('permission:create restaurant', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update restaurant', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete restaurant', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view restaurant', ['only' => ['index']]);
+        $this->middleware('type.permission:create restaurant', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update restaurant', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete restaurant', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 

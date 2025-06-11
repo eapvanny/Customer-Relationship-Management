@@ -28,10 +28,10 @@ class seprogramController extends Controller
      */
         public function __construct()
     {
-        $this->middleware('permission:view se', ['only' => ['index']]);
-        $this->middleware('permission:create se', ['only' => ['create', 'store']]);
-        $this->middleware('permission:update se', ['only' => ['update', 'edit']]);
-        $this->middleware('permission:delete se', ['only' => ['destroy']]);
+        $this->middleware('type.permission:view se', ['only' => ['index']]);
+        $this->middleware('type.permission:create se', ['only' => ['create', 'store']]);
+        $this->middleware('type.permission:update se', ['only' => ['update', 'edit']]);
+        $this->middleware('type.permission:delete se', ['only' => ['destroy']]);
     }
     public $indexof = 1;
 
