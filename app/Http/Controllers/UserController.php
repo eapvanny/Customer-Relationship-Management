@@ -945,13 +945,15 @@ class UserController extends Controller
             'type' => 'required',
         ];
 
-        if ($request->role_id == AppHelper::USER_EMPLOYEE) {
+       if ($request->role_id == AppHelper::USER_EMPLOYEE) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
+            $rules['sup_id'] = 'required';
             $rules['asm_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_ASM) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
+            $rules['sup_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_RSM) {
             $rules['manager_id'] = 'required';
         }
@@ -975,6 +977,7 @@ class UserController extends Controller
             'type' => $request->type,
             'manager_id' => $request->manager_id,
             'rsm_id' => $request->rsm_id,
+            'sup_id' => $request->sup_id,
             'asm_id' => $request->asm_id,
         ];
 
