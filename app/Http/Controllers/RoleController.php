@@ -73,7 +73,7 @@ class RoleController extends Controller
      */
 public function create(Request $request)
     {
-        $selectedType = $request->input('type', AppHelper::ALL); // Default to ALL if no type is selected
+        $selectedType = $request->input('type'); // Default to ALL if no type is selected
         $permissions = Permission::all(); // Fetch all permissions
 
         return view('backend.role.add', [

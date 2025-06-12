@@ -34,28 +34,125 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
-        // Role-based filtering
-        if ($user->role_id === AppHelper::USER_MANAGER) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('manager_id', $user->id);
-            });
-        } elseif (!in_array($user->role_id, [AppHelper::USER_ADMIN, AppHelper::USER_SUPER_ADMIN])) {
-            $query->where('user_id', $user->id);
+
+        if ($user) {
+            $userRole = $user->role_id;
+            $userId = $user->id;
+            $userType = $user->type;
+
+            // Collect user IDs to filter reports
+            $userIds = [$userId]; // Always include own reports
+
+            // Define allowed user types for subordinates
+            $allowedTypes = [AppHelper::SALE, AppHelper::SE];
+
+            if ($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ])) {
+                // Users with type ALL or roles Super Admin, Admin, Director see all reports
+                // No additional filtering needed
+            } elseif ($userRole == AppHelper::USER_MANAGER) {
+                // Manager sees reports of RSMs, Supervisors, ASMs, Employees under them
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('manager_id', $userId)
+                        ->orWhere('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_RSM) {
+                // RSM sees reports of Supervisors, ASMs, Employees under them
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_SUP) {
+                // Supervisor sees reports of ASMs, Employees under them
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_ASM) {
+                // ASM sees reports of Employees under them
+                $managedUserIds = User::where('asm_id', $userId)
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            }
+
+            // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
+            if (!($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ]))) {
+                $query->whereIn('user_id', array_unique($userIds));
+            }
+
+            // Ensure reports belong to users with allowed types (except for ALL/Super Admin/Admin/Director)
+            if (!($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ]))) {
+                $query->whereHas('user', function ($q) use ($allowedTypes) {
+                    $q->whereIn('type', $allowedTypes);
+                });
+            }
+        } else {
+            // No authenticated user, return no reports
+            $query->where('id', 0);
         }
 
-        // Load employee list (for filtering)
-        $employeeQuery = User::where('role_id', AppHelper::USER_EMPLOYEE);
-        if ($user->role_id === AppHelper::USER_MANAGER) {
-            $employeeQuery->where('manager_id', $user->id);
+        // Load employee list for filtering (based on role hierarchy)
+        $employeeQuery = User::query();
+        if ($user && !($userType == AppHelper::ALL || in_array($userRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
+            if ($userRole == AppHelper::USER_MANAGER) {
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q->where('manager_id', $userId)
+                        ->orWhere('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes);
+            } elseif ($userRole == AppHelper::USER_RSM) {
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q->where('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes);
+            } elseif ($userRole == AppHelper::USER_SUP) {
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q->where('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes);
+            } elseif ($userRole == AppHelper::USER_ASM) {
+                $employeeQuery->where('asm_id', $userId)
+                    ->whereIn('type', $allowedTypes);
+            } else {
+                $employeeQuery->where('id', $userId); // Employee sees only themselves
+            }
         }
 
         $full_name = $employeeQuery->get()->mapWithKeys(function ($u) use ($user) {
-            $name = $user->user_lang === 'en'
-                ? "{$u->family_name_latin} {$u->name_latin}"
-                : "{$u->family_name} {$u->name}";
-            return [$u->id => $name];
+            return [$u->id => $u->user_lang === 'en' ? ($u->full_name_latin ?? 'N/A') : ($u->full_name ?? 'N/A')];
         });
 
         $is_filter = false;
@@ -67,6 +164,7 @@ class ReportController extends Controller
             $endDate = Carbon::parse($request->date2)->endOfDay();
             $query->whereBetween('date', [$startDate, $endDate]);
         }
+
         // User filter
         if ($request->filled('full_name')) {
             $is_filter = true;
@@ -76,37 +174,32 @@ class ReportController extends Controller
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                // Get paginated data
-                $reports = $query->orderBy('id','desc');
+                $reports = $query->orderBy('id', 'desc');
 
                 return DataTables::of($reports)
-                    ->addColumn('area', fn($data) => __(AppHelper::getAreaNameById($data->area_id)))
+                    ->addColumn('area', fn($data) => AppHelper::getAreaNameById($data->area_id) ?? 'N/A')
                     ->addColumn('outlet_id', fn($data) => $data->customer->outlet ?? 'N/A')
                     ->addColumn('customer', fn($data) => $data->customer->name ?? 'N/A')
-                     ->addColumn('customer_code', fn($data) => $data->customer->code ?? 'N/A')
+                    ->addColumn('customer_code', fn($data) => $data->customer->code ?? 'N/A')
                     ->addColumn('250ml', fn($data) => $data->{'250_ml'} ?? 'N/A')
                     ->addColumn('350ml', fn($data) => $data->{'350_ml'} ?? 'N/A')
                     ->addColumn('600ml', fn($data) => $data->{'600_ml'} ?? 'N/A')
                     ->addColumn('1500ml', fn($data) => $data->{'1500_ml'} ?? 'N/A')
-                    ->addColumn('default', function($data) {
-                        $val_250ml = intval($data->{"250_ml"} ?? 0);
-                        $val_350ml = intval($data->{"350_ml"} ?? 0);
-                        $val_600ml = intval($data->{"600_ml"} ?? 0);
-                        $val_1500ml = intval($data->{"1500_ml"} ?? 0);
+                    ->addColumn('default', function ($data) {
+                        $val_250ml = intval($data->{'250_ml'} ?? 0);
+                        $val_350ml = intval($data->{'350_ml'} ?? 0);
+                        $val_600ml = intval($data->{'600_ml'} ?? 0);
+                        $val_1500ml = intval($data->{'1500_ml'} ?? 0);
                         return $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
                     })
                     ->addColumn('action', function ($data) {
-                        $show = '<span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show">
-                                <i class="fa fa-fw fa-eye"></i>
-                             </a>';
+                        $show = '<span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show"><i class="fa fa-fw fa-eye"></i></a>';
                         $edit = auth()->user()->can('update report')
-                            ? '<a title="Edit" href="' . route('report.edit', $data->id) . '" class="btn btn-primary btn-sm">
-                               <i class="fa fa-edit"></i>
-                           </a></span>'
+                            ? '<a title="Edit" href="' . route('report.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></span>'
                             : '';
                         return $show . ' ' . $edit;
                     })
-                    ->rawColumns(['photo', 'action'])
+                    ->rawColumns(['action'])
                     ->make(true);
             } catch (\Exception $e) {
                 Log::error('DataTables error in ReportController@index: ' . $e->getMessage(), [
@@ -178,7 +271,7 @@ class ReportController extends Controller
         ]);
     }
 
-   public function getCustomersByArea(Request $request)
+    public function getCustomersByArea(Request $request)
     {
         $areaId = $request->query('area_id');
         $customers = Customer::where('area_id', $areaId)->get();
@@ -277,10 +370,28 @@ class ReportController extends Controller
 
             $data['outlet_photo'] = $fileName;
         }
+        // Generate unique report number
+        $yearNow = now()->format('y'); // Get last two digits of current year (e.g., 2025 => '25')
+        $prefix = 'NSO' . $yearNow;
+        // Get the last report that starts with the current prefix
+        $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
+            ->orderBy('id', 'desc')
+            ->first();
+        $lastSequenceNumber = 0;
+        if ($lastNumberReport && $lastNumberReport->so_number) {
+            // Extract the numeric part after the dash
+            $parts = explode('-', $lastNumberReport->so_number);
+            if (isset($parts[1])) {
+                $lastSequenceNumber = (int) ltrim($parts[1], '0'); // Remove leading zeros
+            }
+        }
+        $newSequenceNumber = $lastSequenceNumber + 1;
+        $soNumber = $prefix . '-' . str_pad($newSequenceNumber, 7, '0', STR_PAD_LEFT);
 
         // Store report data
         Report::create([
             'user_id' => auth()->id(),
+            'so_number' => $soNumber,
             'area_id' => $request->area,
             'outlet_id' => $request->outlet_id,
             'customer_id' => $request->customer_id,
@@ -401,6 +512,27 @@ class ReportController extends Controller
             'photo' => $report->photo, // Preserve existing photo by default
             'outlet_photo' => $report->outlet_photo,
         ];
+        if (!$report->so_number) {
+            $yearNow = now()->format('y'); 
+            $prefix = 'NSO' . $yearNow;
+
+            $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $lastSequenceNumber = 0;
+            if ($lastNumberReport && $lastNumberReport->so_number) {
+                $parts = explode('-', $lastNumberReport->so_number);
+                if (isset($parts[1])) {
+                    $lastSequenceNumber = (int) ltrim($parts[1], '0');
+                }
+            }
+
+            $newSequenceNumber = $lastSequenceNumber + 1;
+            $soNumber = $prefix . '-' . str_pad($newSequenceNumber, 7, '0', STR_PAD_LEFT);
+
+            $data['so_number'] = $soNumber; 
+        }
 
         // Handle new photo upload via file input
         if ($request->hasFile('photo')) {
@@ -507,7 +639,7 @@ class ReportController extends Controller
     }
     public function export(Request $request)
     {
-         if($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
+        if ($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
             $startDate = Carbon::parse($request->date1)->startOfDay();
             $endDate = Carbon::parse($request->date2)->endOfDay();
             return Excel::download(new ReportsExport($request->date1, $request->date2, $request->full_name), 'reports_asmprogram_' . now()->format('Y_m_d_His') . '.xlsx');

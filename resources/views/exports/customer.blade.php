@@ -1,8 +1,5 @@
 @php
     use App\Http\Helpers\AppHelper;
-    use Illuminate\Support\Facades\Request;
-    $asm = \App\Models\User::find(auth()->user()->asm_id);
-    $rsm = \App\Models\User::find(auth()->user()->rsm_id);
     $fullDomain = url('/');
 @endphp
 
@@ -11,6 +8,7 @@
         <tr>
             <th>{{ __('Area') }}</th>
             <th>{{ __('SPP') }}</th>
+            {{-- <th>{{ __('ASM') }}</th> --}}
             <th>{{ __('SUP') }}</th>
             <th>{{ __('RSM') }}</th>
             <th>{{ __('Depo Name') }}</th>
@@ -26,25 +24,20 @@
     </thead>
     <tbody>
         @foreach ($rows as $row)
+            @php
+                $user = $row->user;
+                $sup = $user?->sup_id ? \App\Models\User::find($user->sup_id) : null;
+                // $asm = $user?->asm_id ? \App\Models\User::find($user->asm_id) : null;
+                $rsm = $user?->rsm_id ? \App\Models\User::find($user->rsm_id) : null;
+                $lang = $user?->user_lang ?? 'en';
+                $getFullName = fn($u) => $lang === 'en' ? ($u?->getFullNameLatinAttribute() ?? 'N/A') : ($u?->getFullNameAttribute() ?? 'N/A');
+            @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
-                <td>
-                    {{ auth()->user()->user_lang === 'en' ? auth()->user()->getFullNameLatinAttribute() ?? 'N/A' : (auth()->user()->user_lang === 'kh' ? auth()->user()->getFullNameAttribute() ?? 'N/A' : 'N/A') }}
-                </td>
-                <td>
-                    {{ $asm
-                        ? (auth()->user()->user_lang === 'en'
-                            ? $asm->getFullNameLatinAttribute() ?? 'N/A'
-                            : $asm->getFullNameAttribute() ?? 'N/A')
-                        : 'N/A' }}
-                </td>
-                <td>
-                    {{ $rsm
-                        ? (auth()->user()->user_lang === 'en'
-                            ? $rsm->getFullNameLatinAttribute() ?? 'N/A'
-                            : $rsm->getFullNameAttribute() ?? 'N/A')
-                        : 'N/A' }}
-                </td>
+                <td>{{ $getFullName($user) }}</td>
+                {{-- <td>{{ $getFullName($asm) }}</td> --}}
+                <td>{{ $getFullName($sup) }}</td>
+                <td>{{ $getFullName($rsm) }}</td>
                 <td>{{ $row->outlet ?? 'N/A' }}</td>
                 <td>{{ $row->name ?? 'N/A' }}</td>
                 <td>{{ $row->code ?? 'N/A' }}</td>
@@ -53,7 +46,7 @@
                 <td>{{ $row->city && $row->country ? "{$row->city}, {$row->country}" : 'N/A' }}</td>
                 <td style="text-align: start">{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
-                <td>{{ $fullDomain . '/storage/' . $row->outlet_photo ?? 'N/A' }}</td>
+                <td>{{ $row->outlet_photo ? $fullDomain . '/storage/' . $row->outlet_photo : 'N/A' }}</td>
             </tr>
         @endforeach
     </tbody>

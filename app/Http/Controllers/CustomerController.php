@@ -24,18 +24,103 @@ class CustomerController extends Controller
     }
     public function index(Request $request)
     {
+        $loggedInUser = auth()->check() ? auth()->user() : null;
+
         if ($request->ajax()) {
-            $customers = Customer::query();
-            $currentUser = auth()->check() ? auth()->user() : null;
+            // Initialize customer query with user relationship
+            $query = Customer::with('user');
+
+            if ($loggedInUser) {
+                $loggedInUserRole = $loggedInUser->role_id;
+                $loggedInUserId = $loggedInUser->id;
+                $loggedInUserType = $loggedInUser->type;
+
+                // Collect user IDs to filter customers
+                $userIds = [$loggedInUserId]; // Always include own customers
+
+                // Define allowed user types for subordinates
+                $allowedTypes = [AppHelper::SALE, AppHelper::SE];
+
+                if ($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+                    AppHelper::USER_SUPER_ADMIN,
+                    AppHelper::USER_ADMIN,
+                    AppHelper::USER_DIRECTOR
+                ])) {
+                    // Users with type ALL or roles Super Admin, Admin, Director see all customers
+                    // No additional filtering needed
+                } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
+                    // Manager sees customers of RSMs, Supervisors, ASMs, Employees under them
+                    $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
+                        $q->where('manager_id', $loggedInUserId)
+                          ->orWhere('rsm_id', $loggedInUserId)
+                          ->orWhere('sup_id', $loggedInUserId)
+                          ->orWhere('asm_id', $loggedInUserId);
+                    })->whereIn('type', $allowedTypes)
+                      ->pluck('id')
+                      ->toArray();
+                    $userIds = array_merge($userIds, $managedUserIds);
+                } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
+                    // RSM sees customers of Supervisors, ASMs, Employees under them
+                    $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
+                        $q->where('rsm_id', $loggedInUserId)
+                          ->orWhere('sup_id', $loggedInUserId)
+                          ->orWhere('asm_id', $loggedInUserId);
+                    })->whereIn('type', $allowedTypes)
+                      ->pluck('id')
+                      ->toArray();
+                    $userIds = array_merge($userIds, $managedUserIds);
+                } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
+                    // Supervisor sees customers of ASMs, Employees under them
+                    $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
+                        $q->where('sup_id', $loggedInUserId)
+                          ->orWhere('asm_id', $loggedInUserId);
+                    })->whereIn('type', $allowedTypes)
+                      ->pluck('id')
+                      ->toArray();
+                    $userIds = array_merge($userIds, $managedUserIds);
+                } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
+                    // ASM sees customers of Employees under them
+                    $managedUserIds = \App\Models\User::where('asm_id', $loggedInUserId)
+                        ->whereIn('type', $allowedTypes)
+                        ->pluck('id')
+                        ->toArray();
+                    $userIds = array_merge($userIds, $managedUserIds);
+                }
+
+                // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
+                if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+                    AppHelper::USER_SUPER_ADMIN,
+                    AppHelper::USER_ADMIN,
+                    AppHelper::USER_DIRECTOR
+                ]))) {
+                    $query->whereIn('user_id', array_unique($userIds));
+                }
+
+                // Ensure customers belong to users with allowed types (except for ALL/Super Admin/Admin/Director)
+                if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+                    AppHelper::USER_SUPER_ADMIN,
+                    AppHelper::USER_ADMIN,
+                    AppHelper::USER_DIRECTOR
+                ]))) {
+                    $query->whereHas('user', function ($q) use ($allowedTypes) {
+                        $q->whereIn('type', $allowedTypes);
+                    });
+                }
+            } else {
+                // No authenticated user, return no customers
+                $query->where('id', 0);
+            }
+
+            $customers = $query->orderBy('id', 'desc');
             return DataTables::of($customers)
                 ->addIndexColumn()
-                ->addColumn('created_by', function ($customer) use ($currentUser) {
-                    if (!$currentUser) {
+                ->addColumn('created_by', function ($customer) {
+                    if (!$customer->user) {
                         return 'N/A';
                     }
-                    return $currentUser->user_lang === 'en'
-                        ? ($currentUser->full_name_latin ?? 'N/A')
-                        : ($currentUser->user_lang === 'kh' ? ($currentUser->full_name ?? 'N/A') : 'N/A');
+                    return $customer->user->user_lang === 'en'
+                        ? ($customer->user->full_name_latin ?? 'N/A')
+                        : ($customer->user->user_lang === 'kh' ? ($customer->user->full_name ?? 'N/A') : 'N/A');
                 })
                 ->addColumn('area_id', fn($customer) => AppHelper::getAreaNameById($customer->area_id))
                 ->addColumn('outlet', fn($customer) => $customer->outlet)
@@ -51,10 +136,10 @@ class CustomerController extends Controller
                         $button .= '<a title="Edit" href="' . route('customer.edit', $customer->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                         $actions = true;
                     }
-                    // if (auth()->user()->can('delete customer')) {
-                    //     $button .= '<a href="' . route('customer.destroy', $customer->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                    //     $actions = true;
-                    // }
+                    if (auth()->user()->can('delete customer')) {
+                        $button .= '<a href="' . route('customer.destroy', $customer->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                        $actions = true;
+                    }
                     if (!$actions) {
                         $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
                     }
@@ -118,6 +203,7 @@ class CustomerController extends Controller
 
     // Prepare data for storage
     $data = [
+        'user_id' => auth()->user()->id,
         'name' => $request->name,
         'phone' => $request->phone,
         'area_id' => $request->area,
@@ -202,6 +288,7 @@ class CustomerController extends Controller
 
     // Prepare data for update
     $data = [
+        'user_id' => auth()->user()->id,
         'name' => $request->name,
         'phone' => $request->phone,
         'area_id' => $request->area,

@@ -5,8 +5,8 @@ namespace App\Exports;
 use App\Http\Helpers\AppHelper;
 use App\Models\Report;
 use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromView;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Concerns\FromView;
 
 class ReportsExport implements FromView
 {
@@ -20,35 +20,103 @@ class ReportsExport implements FromView
         $this->date2 = $date2;
         $this->fullname = $fullname;
     }
-    /**
-    * @return \Illuminate\Contracts\View\View
-    */
+
     public function view(): View
     {
-        $user = Auth::user();
-        
-        $query = Report::with('user','customer')->orderBy('id', 'desc');
-         // Format dates
-        $date1 = $this->date1 ? date('Y-m-d', strtotime($this->date1)) : null;
-        $date2 = $this->date2 ? date('Y-m-d', strtotime($this->date2)) : null;
+        $user = Auth::check() ? Auth::user() : null;
+        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
+
+        if ($user) {
+            $userRole = $user->role_id;
+            $userId = $user->id;
+            $userType = $user->type;
+
+            // Collect user IDs to filter reports
+            $userIds = [$userId]; // Always include own reports
+
+            // Define allowed user types for subordinates
+            $allowedTypes = [AppHelper::SALE, AppHelper::SE];
+
+            if ($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ])) {
+                // Users with type ALL or roles Super Admin, Admin, Director see all reports
+                // No additional filtering needed
+            } elseif ($userRole == AppHelper::USER_MANAGER) {
+                // Manager sees reports of RSMs, Supervisors, ASMs, Employees under them
+                $managedUserIds = \App\Models\User::where(function ($q) use ($userId) {
+                    $q->where('manager_id', $userId)
+                      ->orWhere('rsm_id', $userId)
+                      ->orWhere('sup_id', $userId)
+                      ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes)
+                  ->pluck('id')
+                  ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_RSM) {
+                // RSM sees reports of Supervisors, ASMs, Employees under them
+                $managedUserIds = \App\Models\User::where(function ($q) use ($userId) {
+                    $q->where('rsm_id', $userId)
+                      ->orWhere('sup_id', $userId)
+                      ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes)
+                  ->pluck('id')
+                  ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_SUP) {
+                // Supervisor sees reports of ASMs, Employees under them
+                $managedUserIds = \App\Models\User::where(function ($q) use ($userId) {
+                    $q->where('sup_id', $userId)
+                      ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes)
+                  ->pluck('id')
+                  ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_ASM) {
+                // ASM sees reports of Employees under them
+                $managedUserIds = \App\Models\User::where('asm_id', $userId)
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            }
+
+            // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
+            if (!($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ]))) {
+                $query->whereIn('user_id', array_unique($userIds));
+            }
+
+            // Ensure reports belong to users with allowed types (except for ALL/Super Admin/Admin/Director)
+            if (!($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ]))) {
+                $query->whereHas('user', function ($q) use ($allowedTypes) {
+                    $q->whereIn('type', $allowedTypes);
+                });
+            }
+        } else {
+            // No authenticated user, return no reports
+            $query->where('id', 0);
+        }
 
         // Apply date range filter
-        if ($date1 && $date2) {
-            $query->whereBetween('created_at', [$date1, $date2]);
+        if ($this->date1 && $this->date2) {
+            $startDate = \Carbon\Carbon::parse($this->date1)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($this->date2)->endOfDay();
+            $query->whereBetween('date', [$startDate, $endDate]);
         }
 
         // Apply user filter
         if ($this->fullname) {
             $query->where('user_id', $this->fullname);
-        }
-
-        
-        if ($user->role_id === AppHelper::USER_MANAGER) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('manager_id', $user->id);
-            });
-        } elseif ($user->role_id !== AppHelper::USER_SUPER_ADMIN && $user->role_id !== AppHelper::USER_ADMIN) {
-            $query->where('user_id', $user->id);
         }
 
         return view('exports.reports', [

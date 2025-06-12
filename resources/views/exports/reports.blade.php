@@ -1,8 +1,5 @@
 @php
     use App\Http\Helpers\AppHelper;
-    use Illuminate\Support\Facades\Request;
-    $asm = \App\Models\User::find(auth()->user()->asm_id);
-    $rsm = \App\Models\User::find(auth()->user()->rsm_id);
     $fullDomain = url('/');
     // Initialize totals
     $total_250ml = 0;
@@ -46,25 +43,22 @@
                 $total_350ml += $val_350ml;
                 $total_600ml += $val_600ml;
                 $total_1500ml += $val_1500ml;
+
+                // Fetch SUP and RSM for the report's user
+                $reportUser = $row->user;
+                $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
+                $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
                 <td>
-                    {{ auth()->user()->user_lang === 'en' ? auth()->user()->getFullNameLatinAttribute() ?? 'N/A' : (auth()->user()->user_lang === 'kh' ? auth()->user()->getFullNameAttribute() ?? 'N/A' : 'N/A') }}
-                </td>
-               <td>
-                    {{ $asm
-                        ? (auth()->user()->user_lang === 'en'
-                            ? $asm->getFullNameLatinAttribute() ?? 'N/A'
-                            : $asm->getFullNameAttribute() ?? 'N/A')
-                        : 'N/A' }}
+                    {{ $reportUser ? ($reportUser->user_lang === 'en' ? ($reportUser->full_name_latin ?? 'N/A') : ($reportUser->full_name ?? 'N/A')) : 'N/A' }}
                 </td>
                 <td>
-                    {{ $rsm
-                        ? (auth()->user()->user_lang === 'en'
-                            ? $rsm->getFullNameLatinAttribute() ?? 'N/A'
-                            : $rsm->getFullNameAttribute() ?? 'N/A')
-                        : 'N/A' }}
+                    {{ $sup ? ($sup->user_lang === 'en' ? ($sup->full_name_latin ?? 'N/A') : ($sup->full_name ?? 'N/A')) : 'N/A' }}
+                </td>
+                <td>
+                    {{ $rsm ? ($rsm->user_lang === 'en' ? ($rsm->full_name_latin ?? 'N/A') : ($rsm->full_name ?? 'N/A')) : 'N/A' }}
                 </td>
                 <td>{{ $row->customer->outlet ?? 'N/A' }}</td>
                 <td>{{ $row->customer->name ?? 'N/A' }}</td>
@@ -79,7 +73,7 @@
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
                 <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
-                <td>{{ $fullDomain . '/storage/' . $row->photo ?? 'N/A' }}</td>
+                <td>{{ $row->photo ? $fullDomain . '/storage/' . $row->photo : 'N/A' }}</td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
             </tr>
         @endforeach
@@ -90,7 +84,7 @@
             <td>{{ $total_600ml }}</td>
             <td>{{ $total_1500ml }}</td>
             <td>{{ $total_250ml + $total_350ml + $total_600ml + $total_1500ml }}</td>
-            <td colspan="2"></td>
+            <td colspan="5"></td>
         </tr>
     </tbody>
 </table>

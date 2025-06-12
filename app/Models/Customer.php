@@ -22,7 +22,8 @@ class Customer extends Model
         'city',
         'country',
         'code',
-        'customer_type'
+        'customer_type',
+        'user_id',
     ];
 
     public static function getAreas()
@@ -33,5 +34,10 @@ class Customer extends Model
     public function report()
     {
         return $this->hasMany(Report::class, 'customer_id');
+    }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

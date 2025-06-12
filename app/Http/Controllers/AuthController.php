@@ -60,18 +60,16 @@ class AuthController extends Controller
             }
             $request->session()->regenerate();
             // dd(auth()->user()->role_id);
-            if (
-                auth()->user()->role_id == AppHelper::USER_EMPLOYEE &&
-                auth()->user()->type === AppHelper::SALE
-            ) {
+            if (auth()->user()->type == AppHelper::SALE && in_array(auth()->user()->role_id, [AppHelper::USER_EMPLOYEE, AppHelper::USER_SUP, AppHelper::USER_RSM, AppHelper::USER_ASM])) {
                 return redirect()->route('report.index')
                     ->with('success', 'Welcome to CRM system.')
                     ->with('show_popup', true);
-            } elseif (
-                (auth()->user()->role_id === AppHelper::USER_EMPLOYEE && auth()->user()->type === AppHelper::SE) ||
-                (auth()->user()->role_id === AppHelper::USER_MANAGER && auth()->user()->type === AppHelper::SE)
-            ) {
+            } elseif (auth()->user()->type == AppHelper::SE && in_array(auth()->user()->role_id, [AppHelper::USER_EMPLOYEE, AppHelper::USER_SUP, AppHelper::USER_RSM, AppHelper::USER_ASM])) {
                 return redirect()->route('sub-wholesale.index')
+                    ->with('success', 'Welcome to CRM system.')
+                    ->with('show_popup', true);
+            } elseif ((auth()->user()->type == AppHelper::SE || auth()->user()->type == AppHelper::SALE) && auth()->user()->role_id == AppHelper::USER_MANAGER) {
+                return redirect()->route('dashboard.index')
                     ->with('success', 'Welcome to CRM system.')
                     ->with('show_popup', true);
             } else {

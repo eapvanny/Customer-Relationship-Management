@@ -70,7 +70,7 @@
             @endif
 
             {{-- SE section start --}}
-            @if (!in_array(auth()->user()->role_id, [AppHelper::USER_EMPLOYEE, AppHelper::USER_MANAGER]))
+            @if (in_array(auth()->user()->type, [AppHelper::SE, AppHelper::ALL]))
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         <i class="fas fa-object-group"></i>

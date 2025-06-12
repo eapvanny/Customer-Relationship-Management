@@ -31,7 +31,8 @@ class Report extends Model
         'qty',
         'photo',
         'outlet_photo',
-        'manager_id'
+        'manager_id',
+        'so_number',
     ];
 
     public function user()

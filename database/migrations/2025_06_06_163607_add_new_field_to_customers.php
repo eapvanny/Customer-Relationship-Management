@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->string('code')->nullable()->after('id');
+            $table->unsignedBigInteger('user_id')->nullable()->after('id');
+            $table->string('code')->nullable()->after('user_id');
             $table->string('customer_type')->nullable()->after('outlet');
             $table->text('outlet_photo')->nullable()->after('customer_type');
             $table->decimal('latitude', 10, 7)->nullable()->after('outlet_photo');
