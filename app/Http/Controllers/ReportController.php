@@ -371,8 +371,8 @@ class ReportController extends Controller
             $data['outlet_photo'] = $fileName;
         }
         // Generate unique report number
-        $yearNow = now()->format('y'); // Get last two digits of current year (e.g., 2025 => '25')
-        $prefix = 'NSO' . $yearNow;
+        $authUser = auth()->user();
+        $prefix = $authUser->username;
         // Get the last report that starts with the current prefix
         $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
             ->orderBy('id', 'desc')
@@ -513,26 +513,25 @@ class ReportController extends Controller
             'outlet_photo' => $report->outlet_photo,
         ];
         if (!$report->so_number) {
-            $yearNow = now()->format('y'); 
-            $prefix = 'NSO' . $yearNow;
-
+            $authUser = auth()->user();
+            $prefix = $authUser->username;
+            // Get the last report that starts with the current prefix
             $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
                 ->orderBy('id', 'desc')
                 ->first();
-
             $lastSequenceNumber = 0;
             if ($lastNumberReport && $lastNumberReport->so_number) {
+                // Extract the numeric part after the dash
                 $parts = explode('-', $lastNumberReport->so_number);
                 if (isset($parts[1])) {
-                    $lastSequenceNumber = (int) ltrim($parts[1], '0');
+                    $lastSequenceNumber = (int) ltrim($parts[1], '0'); // Remove leading zeros
                 }
             }
-
             $newSequenceNumber = $lastSequenceNumber + 1;
             $soNumber = $prefix . '-' . str_pad($newSequenceNumber, 7, '0', STR_PAD_LEFT);
 
-            $data['so_number'] = $soNumber; 
-        }
+                $data['so_number'] = $soNumber; 
+            }
 
         // Handle new photo upload via file input
         if ($request->hasFile('photo')) {

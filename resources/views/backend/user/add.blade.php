@@ -533,7 +533,7 @@
                                 <label for="username"> {{ __('Username') }} <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control"
                                     value="@if ($user) {{ $user->username }}@else{{ old('username') }} @endif"
-                                    name="username" required minlength="5" maxlength="255" autocomplete="new-password">
+                                    name="username" required minlength="2" maxlength="255" autocomplete="new-password">
                                 <span class="glyphicon glyphicon-info-sign form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('username') }}</span>
                             </div>

@@ -7,16 +7,18 @@ class AppHelper
     // Existing constants and methods...
 
     const USER_SUPER_ADMIN = 1;
-    const USER_ADMIN = 2;
-    const USER_DIRECTOR = 3;
-    const USER_MANAGER = 4;
-    const USER_RSM = 5;
-    const USER_ASM = 6;
-    const USER_SUP = 7;
-    const USER_EMPLOYEE = 8;
+    const USER_ADMINISTRATOR = 2;
+    const USER_ADMIN = 3;
+    const USER_DIRECTOR = 4;
+    const USER_MANAGER = 5;
+    const USER_RSM = 6;
+    const USER_ASM = 7;
+    const USER_SUP = 8;
+    const USER_EMPLOYEE = 9;
 
     const USER = [
-        self::USER_SUPER_ADMIN => 'Super Admin',
+        self::USER_SUPER_ADMIN => 'Super Administrator',
+        self::USER_ADMINISTRATOR => 'Administrator',
         self::USER_ADMIN => 'Admin',
         self::USER_DIRECTOR => 'Director',
         self::USER_MANAGER => 'Manager',

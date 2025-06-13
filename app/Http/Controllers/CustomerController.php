@@ -194,12 +194,24 @@ class CustomerController extends Controller
     if ($validator->fails()) {
         return redirect()->back()->withErrors($validator)->withInput();
     }
-
-    // Generate unique customer code
+    $userType = auth()->user()->type;
+    // Determine prefix based on user type
+    switch ($userType) {
+        case AppHelper::SALE:
+            $prefix = 'CPP';
+            break;
+        case AppHelper::SE:
+            $prefix = 'CPV';
+            break;
+        default:
+            $prefix = 'CUS'; // fallback/default prefix
+            break;
+    }
+        // Generate unique customer code
     $lastCustomer = Customer::orderBy('id', 'desc')->first();
     $lastCodeNumber = $lastCustomer && $lastCustomer->code ? (int) substr($lastCustomer->code, 4) : 0;
     $newCodeNumber = $lastCodeNumber + 1;
-    $code = 'CUS-' . str_pad($newCodeNumber, 5, '0', STR_PAD_LEFT);
+    $code = $prefix .'-' . str_pad($newCodeNumber, 5, '0', STR_PAD_LEFT);
 
     // Prepare data for storage
     $data = [
@@ -288,7 +300,7 @@ class CustomerController extends Controller
 
     // Prepare data for update
     $data = [
-        'user_id' => auth()->user()->id,
+        // 'user_id' => auth()->user()->id,
         'name' => $request->name,
         'phone' => $request->phone,
         'area_id' => $request->area,
@@ -302,10 +314,24 @@ class CustomerController extends Controller
 
     // Generate code if none exists
     if (!$customer->code) {
-        $lastCustomer = Customer::whereNotNull('code')->orderBy('id', 'desc')->first();
+        $userType = auth()->user()->type;
+        // Determine prefix based on user type
+        switch ($userType) {
+            case AppHelper::SALE:
+                $prefix = 'CPP';
+                break;
+            case AppHelper::SE:
+                $prefix = 'CPV';
+                break;
+            default:
+                $prefix = 'CUS'; // fallback/default prefix
+                break;
+        }
+            // Generate unique customer code
+        $lastCustomer = Customer::orderBy('id', 'desc')->first();
         $lastCodeNumber = $lastCustomer && $lastCustomer->code ? (int) substr($lastCustomer->code, 4) : 0;
         $newCodeNumber = $lastCodeNumber + 1;
-        $data['code'] = 'CUS-' . str_pad($newCodeNumber, 5, '0', STR_PAD_LEFT);
+        $data['code'] = $prefix .'-' . str_pad($newCodeNumber, 5, '0', STR_PAD_LEFT);
     }
 
     // Handle outlet photo file upload if exists

@@ -41,10 +41,10 @@
                                 <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                             </button>
                         @endif
-                        @can('create user')
+                        @hasTypePermission('create user')
                             <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i
                                     class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
-                        @endcan
+                        @endHasTypePermission
                     </div>
                 </div>
                 <div class="wrap-outter-box">

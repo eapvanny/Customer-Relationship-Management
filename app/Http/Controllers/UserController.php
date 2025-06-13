@@ -42,76 +42,106 @@ class UserController extends Controller
         if ($loggedInUserType == AppHelper::SE) {
             if ($loggedInUserRole == AppHelper::USER_MANAGER) {
                 // SE Manager can see RSM, ASM, Supervisor, Employee
-                $query->whereIn('role_id', [
-                    AppHelper::USER_RSM,
-                    AppHelper::USER_ASM,
-                    AppHelper::USER_SUP,
-                    AppHelper::USER_EMPLOYEE
-                ])->where('type', AppHelper::SE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->whereIn('role_id', [
+                        AppHelper::USER_RSM,
+                        AppHelper::USER_ASM,
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
+                    ])->where('type', AppHelper::SE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
-                // RSM can see ASM, Supervisor, Employee
-                $query->whereIn('role_id', [
-                    AppHelper::USER_ASM,
-                    AppHelper::USER_SUP,
-                    AppHelper::USER_EMPLOYEE
-                ])->where('type', AppHelper::SE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->whereIn('role_id', [
+                        AppHelper::USER_ASM,
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
+                    ])->where('type', AppHelper::SE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
-                // ASM can see Supervisor, Employee
-                $query->whereIn('role_id', [
-                    AppHelper::USER_SUP,
-                    AppHelper::USER_EMPLOYEE
-                ])->where('type', AppHelper::SE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->whereIn('role_id', [
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
+                    ])->where('type', AppHelper::SE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
-                // Supervisor can see Employee
-                $query->where('role_id', AppHelper::USER_EMPLOYEE)
-                    ->where('type', AppHelper::SE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->where('role_id', AppHelper::USER_EMPLOYEE)
+                    ->where('type', AppHelper::SE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_EMPLOYEE) {
-                // Employee can see only themselves
                 $query->where('id', $loggedInUserId);
             }
         } elseif ($loggedInUserType == AppHelper::SALE) {
             if ($loggedInUserRole == AppHelper::USER_MANAGER) {
-                // SALE Manager can see RSM, ASM, Supervisor, Employee
-                $query->whereIn('role_id', [
-                    AppHelper::USER_RSM,
-                    AppHelper::USER_ASM,
-                    AppHelper::USER_SUP,
-                    AppHelper::USER_EMPLOYEE
-                ])->where('type', AppHelper::SALE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->whereIn('role_id', [
+                        AppHelper::USER_RSM,
+                        AppHelper::USER_ASM,
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
+                    ])->where('type', AppHelper::SALE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
-                // RSM can see ASM, Supervisor, Employee
-                $query->whereIn('role_id', [
-                    AppHelper::USER_ASM,
-                    AppHelper::USER_SUP,
-                    AppHelper::USER_EMPLOYEE
-                ])->where('type', AppHelper::SALE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->whereIn('role_id', [
+                        AppHelper::USER_ASM,
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
+                    ])->where('type', AppHelper::SALE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
-                // ASM can see Supervisor, Employee
-                $query->whereIn('role_id', [
-                    AppHelper::USER_SUP,
-                    AppHelper::USER_EMPLOYEE
-                ])->where('type', AppHelper::SALE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->whereIn('role_id', [
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
+                    ])->where('type', AppHelper::SALE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
-                // Supervisor can see Employee
-                $query->where('role_id', AppHelper::USER_EMPLOYEE)
-                    ->where('type', AppHelper::SALE);
+                $query->where(function ($q) use ($loggedInUserId) {
+                    $q->where('role_id', AppHelper::USER_EMPLOYEE)
+                    ->where('type', AppHelper::SALE)
+                    ->orWhere('id', $loggedInUserId);
+                });
             } elseif ($loggedInUserRole == AppHelper::USER_EMPLOYEE) {
-                // Employee can see only themselves
                 $query->where('id', $loggedInUserId);
             }
         } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
             // Non-SE/SALE Manager logic
             $query->where(function ($q) use ($loggedInUserId) {
                 $q->where('id', $loggedInUserId)
-                    ->orWhere('manager_id', $loggedInUserId);
+                ->orWhere('manager_id', $loggedInUserId);
+            });
+        } elseif($loggedInUserRole == AppHelper::USER_ADMINISTRATOR){
+              // Adminministrator can see all except Super Admin
+            $query->where(function ($q) use ($loggedInUserId) {
+                $q->whereNotIn('role_id', [AppHelper::USER_SUPER_ADMIN])
+                ->orWhere('id', $loggedInUserId);
             });
         } elseif ($loggedInUserRole == AppHelper::USER_ADMIN) {
-            // Admin can see all except Super Admin
-            $query->where('role_id', '!=', AppHelper::USER_SUPER_ADMIN);
-        } elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
-            // Other roles see only themselves
+            // Admin can see all except Super Admin and administrator
+            $query->where(function ($q) use ($loggedInUserId) {
+                $q->whereNotIn('role_id', [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR])
+                ->orWhere('id', $loggedInUserId);
+            });
+        }elseif ($loggedInUserRole == AppHelper::USER_DIRECTOR) {
+            // Director can see all except Super Admin administrator admin
+            $query->where(function ($q) use ($loggedInUserId) {
+                $q->whereNotIn('role_id', [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR, AppHelper::USER_ADMIN])
+                ->orWhere('id', $loggedInUserId);
+            }); 
+        }elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
             $query->where('id', $loggedInUserId);
         }
+
 
         // Fetch Area Managers for Filter Dropdown (filtered by type)
         $areaManager = User::whereIn('role_id', [AppHelper::USER_MANAGER])
@@ -301,7 +331,16 @@ class UserController extends Controller
     {
         $user = null;
         $authUser = auth()->user();
-        $type = AppHelper::USER_TYPE;
+
+        if (in_array($authUser->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR, AppHelper::USER_DIRECTOR])) {
+            $type = AppHelper::USER_TYPE; // See all
+        } elseif ($authUser->type == AppHelper::SALE) {
+            $type = [AppHelper::SALE => AppHelper::USER_TYPE[AppHelper::SALE]]; // Only SSP
+        } elseif ($authUser->type == AppHelper::SE) {
+            $type = [AppHelper::SE => AppHelper::USER_TYPE[AppHelper::SE]]; // Only SE
+        } else {
+            $type = []; // Optional: fallback or restrict entirely
+        }
 
         return view('backend.user.add', compact('user', 'type'));
     }
@@ -315,8 +354,12 @@ class UserController extends Controller
 
         if ($authUser->role_id === AppHelper::USER_SUPER_ADMIN) {
             // Super Admin sees all roles
-        } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
+        } elseif($authUser->role_id === AppHelper::USER_ADMINISTRATOR){
             $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN]);
+        } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
+            $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR]);
+        } elseif($authUser->role_id === AppHelper::USER_DIRECTOR){
+            $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR, AppHelper::USER_ADMIN]);
         } elseif ($authUser->role_id === AppHelper::USER_RSM) {
             $query->whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_ASM, AppHelper::USER_SUP]);
         } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
@@ -343,10 +386,20 @@ class UserController extends Controller
         }
 
         $asms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            if ($user->type == AppHelper::SALE) {
+                $suffix = 'PP';
+            } elseif ($user->type == AppHelper::SE) {
+                $suffix = 'PV';
+            } else {
+                $suffix = AppHelper::USER_TYPE[$user->type] ?? '';
+            }
+
+            $fullName = $authUser->user_lang === 'en'
+                ? $user->family_name_latin . ' ' . $user->name_latin
+                : $user->family_name . ' ' . $user->name;
+
             return [
-                $user->id => ($authUser->user_lang === 'en'
-                    ? $user->family_name_latin . ' ' . $user->name_latin
-                    : $user->family_name . ' ' . $user->name)
+                $user->id => "{$fullName} ({$suffix})"
             ];
         })->toArray();
 
@@ -377,10 +430,20 @@ class UserController extends Controller
         }
 
         $supervisors = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            if ($user->type == AppHelper::SALE) {
+                $suffix = 'PP';
+            } elseif ($user->type == AppHelper::SE) {
+                $suffix = 'PV';
+            } else {
+                $suffix = AppHelper::USER_TYPE[$user->type] ?? '';
+            }
+
+            $fullName = $authUser->user_lang === 'en'
+                ? $user->family_name_latin . ' ' . $user->name_latin
+                : $user->family_name . ' ' . $user->name;
+
             return [
-                $user->id => ($authUser->user_lang === 'en'
-                    ? $user->family_name_latin . ' ' . $user->name_latin
-                    : $user->family_name . ' ' . $user->name)
+                $user->id => "{$fullName} ({$suffix})"
             ];
         })->toArray();
 
@@ -409,10 +472,20 @@ class UserController extends Controller
         $query = User::whereIn('id', $rsmIds);
 
         $rsms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            if ($user->type == AppHelper::SALE) {
+                $suffix = 'PP';
+            } elseif ($user->type == AppHelper::SE) {
+                $suffix = 'PV';
+            } else {
+                $suffix = AppHelper::USER_TYPE[$user->type] ?? '';
+            }
+
+            $fullName = $authUser->user_lang === 'en'
+                ? $user->family_name_latin . ' ' . $user->name_latin
+                : $user->family_name . ' ' . $user->name;
+
             return [
-                $user->id => ($authUser->user_lang === 'en'
-                    ? $user->family_name_latin . ' ' . $user->name_latin
-                    : $user->family_name . ' ' . $user->name)
+                $user->id => "{$fullName} ({$suffix})"
             ];
         })->toArray();
 
@@ -448,10 +521,20 @@ class UserController extends Controller
 
         $query = User::whereIn('id', $managerID);
         $managers = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            if ($user->type == AppHelper::SALE) {
+                $suffix = 'PP';
+            } elseif ($user->type == AppHelper::SE) {
+                $suffix = 'PV';
+            } else {
+                $suffix = AppHelper::USER_TYPE[$user->type] ?? '';
+            }
+
+            $fullName = $authUser->user_lang === 'en'
+                ? $user->family_name_latin . ' ' . $user->name_latin
+                : $user->family_name . ' ' . $user->name;
+
             return [
-                $user->id => ($authUser->user_lang === 'en'
-                    ? $user->family_name_latin . ' ' . $user->name_latin
-                    : $user->family_name . ' ' . $user->name)
+                $user->id => "{$fullName} ({$suffix})"
             ];
         })->toArray();
 
@@ -466,7 +549,7 @@ class UserController extends Controller
             'name' => 'required|min:2|max:255',
             'family_name_latin' => 'required|min:2|max:255',
             'name_latin' => 'required|min:2|max:255',
-            'username' => 'required|min:5|max:255|unique:users,username',
+            'username' => 'required|min:2|max:255|unique:users,username',
             'password' => 'required|min:6|max:50',
             'phone_no' => 'required|max:50',
             'role_id' => 'required',
@@ -542,10 +625,20 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $authUser = auth()->user();
-        $type = AppHelper::USER_TYPE;
+
+        if (in_array($authUser->type, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR, AppHelper::USER_DIRECTOR])) {
+            $type = AppHelper::USER_TYPE; // See all
+        } elseif ($authUser->type == AppHelper::SALE) {
+            $type = [AppHelper::SALE => AppHelper::USER_TYPE[AppHelper::SALE]]; // Only SSP
+        } elseif ($authUser->type == AppHelper::SE) {
+            $type = [AppHelper::SE => AppHelper::USER_TYPE[AppHelper::SE]]; // Only SE
+        } else {
+            $type = []; // Optional: no options or restricted
+        }
 
         return view('backend.user.add', compact('user', 'type'));
     }
+
 
 
     public function update(Request $request, $id)
@@ -558,7 +651,7 @@ class UserController extends Controller
             'name' => 'required|min:2|max:255',
             'family_name_latin' => 'required|min:2|max:255',
             'name_latin' => 'required|min:2|max:255',
-            'username' => 'required|min:5|max:255|unique:users,username,' . $id,
+            'username' => 'required|min:2|max:255|unique:users,username,' . $id,
             'password' => 'nullable|min:6|max:50',
             'phone_no' => 'required|max:50',
             'role_id' => 'required',
@@ -569,7 +662,7 @@ class UserController extends Controller
             'type' => 'required',
         ];
 
-       if ($request->role_id == AppHelper::USER_EMPLOYEE) {
+         if ($request->role_id == AppHelper::USER_EMPLOYEE) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
             $rules['sup_id'] = 'required';
