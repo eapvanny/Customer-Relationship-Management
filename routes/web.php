@@ -25,7 +25,8 @@ use App\Http\Controllers\TranslationController;
 use App\Http\Controllers\UserController;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -188,7 +189,29 @@ Route::get('/users/fetch-manager', [UserController::class, 'fetchManagersOnly'])
     Route::resource('restaurant-import', RestaurantimportController::class);
     Route::get('/import-restaurant/import', [RestaurantimportController::class, 'import'])->name('restaurant.import');
     Route::get('/import-restaurant/export', [RestaurantimportController::class, 'export'])->name('restaurantimport.export');
-
+    
+    //photo preview
+    Route::get('/photo/{encryptedPath}', function ($encryptedPath) {
+    try {
+        // Decrypt the path
+        $decryptedPath = Crypt::decryptString(urldecode($encryptedPath));
+        
+        // Construct the full storage path
+        $filePath = storage_path('app/public/' . $decryptedPath);
+        
+        // Check if the file exists
+        if (file_exists($filePath)) {
+            // Return the file as a response
+            return response()->file($filePath);
+        } else {
+            // Return a 404 if the file doesn't exist
+            abort(404, 'Image not found');
+        }
+    } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+        // Handle invalid encryption
+        abort(403, 'Invalid or corrupted photo URL');
+    }
+})->name('photo.view');
 
 // SE section end
 

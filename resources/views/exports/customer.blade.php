@@ -1,5 +1,6 @@
 @php
     use App\Http\Helpers\AppHelper;
+    use Illuminate\Support\Facades\Crypt;
     $fullDomain = url('/');
 @endphp
 
@@ -31,6 +32,8 @@
                 $rsm = $user?->rsm_id ? \App\Models\User::find($user->rsm_id) : null;
                 $lang = $user?->user_lang ?? 'en';
                 $getFullName = fn($u) => $lang === 'en' ? ($u?->getFullNameLatinAttribute() ?? 'N/A') : ($u?->getFullNameAttribute() ?? 'N/A');
+                // Generate a URL with encrypted outlet_photo path
+                $photoUrl = $row->outlet_photo ? $fullDomain . '/photo/' . urlencode(Crypt::encryptString($row->outlet_photo)) : 'N/A';
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
@@ -46,7 +49,7 @@
                 <td>{{ $row->city && $row->country ? "{$row->city}, {$row->country}" : 'N/A' }}</td>
                 <td style="text-align: start">{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
-                <td>{{ $row->outlet_photo ? $fullDomain . '/storage/' . $row->outlet_photo : 'N/A' }}</td>
+                <td>{{ $photoUrl }}</td>
             </tr>
         @endforeach
     </tbody>
