@@ -345,7 +345,7 @@ class UserController extends Controller
         return view('backend.user.add', compact('user', 'type'));
     }
 
-    public function fetchRolesByType(Request $request)
+     public function fetchRolesByType(Request $request)
     {
         $typeId = $request->get('type_id');
         $authUser = auth()->user();
@@ -354,11 +354,11 @@ class UserController extends Controller
 
         if ($authUser->role_id === AppHelper::USER_SUPER_ADMIN) {
             // Super Admin sees all roles
-        } elseif($authUser->role_id === AppHelper::USER_ADMINISTRATOR){
+        } elseif ($authUser->role_id === AppHelper::USER_ADMINISTRATOR) {
             $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN]);
         } elseif ($authUser->role_id === AppHelper::USER_ADMIN) {
             $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR]);
-        } elseif($authUser->role_id === AppHelper::USER_DIRECTOR){
+        } elseif ($authUser->role_id === AppHelper::USER_DIRECTOR) {
             $query->whereNotIn('id', [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMINISTRATOR, AppHelper::USER_ADMIN]);
         } elseif ($authUser->role_id === AppHelper::USER_RSM) {
             $query->whereIn('id', [AppHelper::USER_EMPLOYEE, AppHelper::USER_ASM, AppHelper::USER_SUP]);
@@ -368,42 +368,6 @@ class UserController extends Controller
 
         $roles = $query->pluck('name', 'id');
         return response()->json(['roles' => $roles]);
-    }
-
-    public function fetchAsms(Request $request)
-    {
-        $typeId = $request->get('type_id');
-        $roleId = $request->get('role_id');
-        $authUser = auth()->user();
-
-        $query = User::where('type', $typeId)
-            ->where('role_id', AppHelper::USER_ASM);
-
-        if ($authUser->role_id === AppHelper::USER_RSM) {
-            $query->where('type', AppHelper::SE);
-        } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
-            $query->where('type', AppHelper::SALE);
-        }
-
-        $asms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
-            if ($user->type == AppHelper::SALE) {
-                $suffix = 'PP';
-            } elseif ($user->type == AppHelper::SE) {
-                $suffix = 'PV';
-            } else {
-                $suffix = AppHelper::USER_TYPE[$user->type] ?? '';
-            }
-
-            $fullName = $authUser->user_lang === 'en'
-                ? $user->family_name_latin . ' ' . $user->name_latin
-                : $user->family_name . ' ' . $user->name;
-
-            return [
-                $user->id => "{$fullName} ({$suffix})"
-            ];
-        })->toArray();
-
-        return response()->json(['asms' => $asms]);
     }
 
     public function fetchSupervisors(Request $request)
@@ -417,10 +381,11 @@ class UserController extends Controller
             ->where('role_id', AppHelper::USER_SUP);
 
         if ($roleId == AppHelper::USER_EMPLOYEE && $asmId) {
-            $supIds = User::where('id', $asmId)
-                ->where('type', $typeId)
-                ->pluck('sup_id')->toArray();
-            $query->whereIn('id', $supIds);
+            // For Employee: get supervisors assigned to the selected ASM
+            $query->where('asm_id', $asmId);
+        } elseif ($roleId == AppHelper::USER_ASM) {
+            // For ASM: get all supervisors
+            $query->where('type', $typeId);
         }
 
         if ($authUser->role_id === AppHelper::USER_RSM) {
@@ -450,25 +415,76 @@ class UserController extends Controller
         return response()->json(['supervisors' => $supervisors]);
     }
 
-    public function fetchRsms(Request $request)
+    public function fetchAsms(Request $request)
     {
         $typeId = $request->get('type_id');
         $supId = $request->get('sup_id');
         $roleId = $request->get('role_id');
         $authUser = auth()->user();
 
+        if ($roleId == AppHelper::USER_EMPLOYEE) {
+            $asmIds = User::where('id', $supId)
+                ->where('type', $typeId)
+                ->pluck('asm_id')->toArray();
+        }elseif ($roleId == AppHelper::USER_SUP) {
+            $asmIds = User::where('type', $typeId)
+                ->where('role_id', AppHelper::USER_ASM)
+                ->pluck('id')->toArray();
+        }elseif ($authUser->role_id === AppHelper::USER_RSM) {
+             $asmIds = User::where('type', $typeId)
+                ->where('role_id', $roleId)
+                ->pluck('id')->toArray();
+        } elseif ($authUser->role_id === AppHelper::USER_MANAGER) {
+             $asmIds = User::where('type', $typeId)
+                ->pluck('rsm_id')->toArray();
+        }
+
+        $query = User::whereIn('id', $asmIds);
+
+        $asms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+            if ($user->type == AppHelper::SALE) {
+                $suffix = 'PP';
+            } elseif ($user->type == AppHelper::SE) {
+                $suffix = 'PV';
+            } else {
+                $suffix = AppHelper::USER_TYPE[$user->type] ?? '';
+            }
+
+            $fullName = $authUser->user_lang === 'en'
+                ? $user->family_name_latin . ' ' . $user->name_latin
+                : $user->family_name . ' ' . $user->name;
+
+            return [
+                $user->id => "{$fullName} ({$suffix})"
+            ];
+        })->toArray();
+
+        return response()->json(['asms' => $asms]);
+    }
+
+    public function fetchRsms(Request $request)
+    {
+        $typeId = $request->get('type_id');
+        $asmId = $request->get('asm_id');
+        $roleId = $request->get('role_id');
+        $authUser = auth()->user();
+
         $rsmIds = [];
 
-        if ($roleId == AppHelper::USER_EMPLOYEE && $supId) {
-            $rsmIds = User::where('id', $supId)
+        if ($roleId == AppHelper::USER_EMPLOYEE) {
+            $rsmIds = User::where('id', $asmId)
                 ->where('type', $typeId)
                 ->pluck('rsm_id')->toArray();
-        } elseif ($roleId == AppHelper::USER_SUP || $roleId == AppHelper::USER_ASM) {
+        } elseif ($roleId == AppHelper::USER_SUP) {
+            $rsmIds = User::where('type', $typeId)
+                ->where('id', $asmId)
+                ->pluck('rsm_id')->toArray();
+        } elseif ($roleId == AppHelper::USER_ASM) {
             $rsmIds = User::where('type', $typeId)
                 ->where('role_id', AppHelper::USER_RSM)
                 ->pluck('id')->toArray();
         }
-
+ 
         $query = User::whereIn('id', $rsmIds);
 
         $rsms = $query->get()->mapWithKeys(function ($user) use ($authUser) {
@@ -491,7 +507,8 @@ class UserController extends Controller
 
         return response()->json(['rsms' => $rsms]);
     }
-    public function fetchManagers(Request $request)
+
+     public function fetchManagers(Request $request)
     {
         $typeId = $request->get('type_id');
         $rsmId = $request->get('rsm_id');
@@ -541,6 +558,7 @@ class UserController extends Controller
         return response()->json(['managers' => $managers]);
     }
 
+
     public function store(Request $request)
     {
         $rules = [
@@ -565,10 +583,14 @@ class UserController extends Controller
             $rules['rsm_id'] = 'required';
             $rules['sup_id'] = 'required';
             $rules['asm_id'] = 'required';
+        }  elseif ($request->role_id == AppHelper::USER_SUP) {
+            $rules['asm_id'] = 'required';
+            $rules['rsm_id'] = 'required';
+            $rules['manager_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_ASM) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
-            $rules['sup_id'] = 'required';
+            // $rules['sup_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_RSM) {
             $rules['manager_id'] = 'required';
         }
@@ -662,15 +684,19 @@ class UserController extends Controller
             'type' => 'required',
         ];
 
-         if ($request->role_id == AppHelper::USER_EMPLOYEE) {
+        if ($request->role_id == AppHelper::USER_EMPLOYEE) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
             $rules['sup_id'] = 'required';
             $rules['asm_id'] = 'required';
+        }  elseif ($request->role_id == AppHelper::USER_SUP) {
+            $rules['asm_id'] = 'required';
+            $rules['rsm_id'] = 'required';
+            $rules['manager_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_ASM) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
-            $rules['sup_id'] = 'required';
+            // $rules['sup_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_RSM) {
             $rules['manager_id'] = 'required';
         }
