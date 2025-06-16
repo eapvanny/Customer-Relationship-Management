@@ -193,22 +193,20 @@ Route::get('/users/fetch-manager', [UserController::class, 'fetchManagersOnly'])
     //photo preview
     Route::get('/photo/{encryptedPath}', function ($encryptedPath) {
     try {
-        // Decrypt the path
-        $decryptedPath = Crypt::decryptString(urldecode($encryptedPath));
-        
-        // Construct the full storage path
+        $key = substr(hash('sha256', config('app.key')), 0, 32);
+        $data = base64_decode(strtr($encryptedPath, '-_', '+/'));
+        $iv = substr($data, 0, 16);
+        $encrypted = substr($data, 16);
+        $decryptedPath = openssl_decrypt($encrypted, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
         $filePath = storage_path('app/public/' . $decryptedPath);
-        
-        // Check if the file exists
+
         if (file_exists($filePath)) {
-            // Return the file as a response
             return response()->file($filePath);
         } else {
-            // Return a 404 if the file doesn't exist
             abort(404, 'Image not found');
         }
-    } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-        // Handle invalid encryption
+    } catch (\Exception $e) {
         abort(403, 'Invalid or corrupted photo URL');
     }
 })->name('photo.view');

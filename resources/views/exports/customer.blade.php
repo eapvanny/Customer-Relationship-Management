@@ -1,7 +1,17 @@
 @php
     use App\Http\Helpers\AppHelper;
-    use Illuminate\Support\Facades\Crypt;
+    use Illuminate\Support\Facades\URL;
+
     $fullDomain = url('/');
+
+    // Custom short encryption for file path
+    function shortEncrypt($string) {
+        $key = substr(hash('sha256', config('app.key')), 0, 32); // 256-bit key
+        $iv = random_bytes(16); // 128-bit IV
+        $encrypted = openssl_encrypt($string, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+        $result = base64_encode($iv . $encrypted);
+        return rtrim(strtr($result, '+/', '-_'), '='); // URL safe
+    }
 @endphp
 
 <table border="1">
@@ -33,7 +43,7 @@
                 $lang = $user?->user_lang ?? 'en';
                 $getFullName = fn($u) => $lang === 'en' ? ($u?->getFullNameLatinAttribute() ?? 'N/A') : ($u?->getFullNameAttribute() ?? 'N/A');
                 // Generate a URL with encrypted outlet_photo path
-                $photoUrl = $row->outlet_photo ? $fullDomain . '/photo/' . urlencode(Crypt::encryptString($row->outlet_photo)) : 'N/A';
+                 $photoUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
