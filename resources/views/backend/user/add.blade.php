@@ -301,7 +301,7 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="phone_no"
                                                         value="@if ($user) {{ $user->phone_no }}@else{{ old('phone_no') }} @endif"
-                                                        maxlength="15">
+                                                        required>
                                                     <span class="fa fa-phone form-control-feedback"></span>
                                                     <span class="text-danger">{{ $errors->first('phone_no') }}</span>
                                                 </div>
