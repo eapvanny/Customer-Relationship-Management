@@ -414,7 +414,7 @@
                             <div class="form-group has-feedback">
                                 <label for="sup_id">{{ __('Supervisor') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="Select Supervisor"></i>
+                                        title="Select a Supervisor"></i>
                                 </label>
                                 {!! Form::select('sup_id', [], old('sup_id', optional($user)->sup_id), [
                                     'placeholder' => __('Select a Supervisor'),
@@ -431,7 +431,7 @@
                             <div class="form-group has-feedback">
                                 <label for="asm_id">{{ __('ASM') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="Select ASM"></i>
+                                        title="Select an ASM"></i>
                                 </label>
                                 {!! Form::select('asm_id', [], old('asm_id', optional($user)->asm_id), [
                                     'placeholder' => __('Select a Supervisor first'),
@@ -448,7 +448,7 @@
                             <div class="form-group has-feedback">
                                 <label for="rsm_id">{{ __('RSM') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
-                                        title="Select RSM"></i>
+                                        title="Select an RSM"></i>
                                 </label>
                                 {!! Form::select('rsm_id', [], old('rsm_id', optional($user)->rsm_id), [
                                     'placeholder' => __('Select an ASM first'),
@@ -623,11 +623,11 @@
                         // For Employee: show Supervisor first, then ASM, RSM, Manager
                         $('#sup-section, #asm-section, #rsm-section, #manager-section').removeClass('d-none');
                         $('#sup_id').prop('required', true);
-                        $('#sup_id').empty().append('<option value="">{{ __('Select Supervisor') }}</option>');
+                        $('#sup_id').empty().append('<option value="">{{ __('Select a Supervisor') }}</option>');
                         $('#asm_id').empty().append(
                             '<option value="">{{ __('Select a Supervisor first') }}</option>');
-                        $('#rsm_id').empty().append('<option value="">{{ __('Select ASM first') }}</option>');
-                        $('#manager_id').empty().append('<option value="">{{ __('Select RSM first') }}</option>');
+                        $('#rsm_id').empty().append('<option value="">{{ __('Select an ASM first') }}</option>');
+                        $('#manager_id').empty().append('<option value="">{{ __('Select an RSM first') }}</option>');
 
                         fetchSupervisors(selectedType, selectedRole);
                     } else if (selectedRole == SUP) {
@@ -635,9 +635,9 @@
                         $('#asm-section, #rsm-section, #manager-section').removeClass('d-none');
                         $('#asm_id, #rsm_id, #manager_id').prop('required', true);
 
-                        $('#asm_id').empty().append('<option value="">{{ __('Select ASM') }}</option>');
-                        $('#rsm_id').empty().append('<option value="">{{ __('Select ASM first') }}</option>');
-                        $('#manager_id').empty().append('<option value="">{{ __('Select RSM first') }}</option>');
+                        $('#asm_id').empty().append('<option value="">{{ __('Select an ASM') }}</option>');
+                        $('#rsm_id').empty().append('<option value="">{{ __('Select an ASM first') }}</option>');
+                        $('#manager_id').empty().append('<option value="">{{ __('Select an RSM first') }}</option>');
 
                         fetchAsms(selectedType, selectedRole);
                     } else if (selectedRole == ASM) {
@@ -645,8 +645,8 @@
                         $('#rsm-section, #manager-section').removeClass('d-none');
                         $('#rsm_id, #manager_id').prop('required', true);
 
-                        $('#rsm_id').empty().append('<option value="">{{ __('Select RSM') }}</option>');
-                        $('#manager_id').empty().append('<option value="">{{ __('Select RSM first') }}</option>');
+                        $('#rsm_id').empty().append('<option value="">{{ __('Select an RSM') }}</option>');
+                        $('#manager_id').empty().append('<option value="">{{ __('Select an RSM first') }}</option>');
 
                         fetchRsms(selectedType, selectedRole);
                     } else if (selectedRole == RSM) {
@@ -691,7 +691,7 @@
                     success: function(response) {
                         const supSelect = $('#sup_id');
                         supSelect.empty().append(
-                            '<option value="">{{ __('Select Supervisor') }}</option>');
+                            '<option value="">{{ __('Select a Supervisor') }}</option>');
                         $.each(response.supervisors, (id, name) => {
                             supSelect.append(`<option value="${id}">${name}</option>`);
                         });
@@ -714,7 +714,7 @@
                     },
                     success: function(response) {
                         const asmSelect = $('#asm_id');
-                        asmSelect.empty().append('<option value="">{{ __('Select ASM') }}</option>');
+                        asmSelect.empty().append('<option value="">{{ __('Select an ASM') }}</option>');
                         $.each(response.asms, (id, name) => {
                             asmSelect.append(`<option value="${id}">${name}</option>`);
                         });
@@ -737,7 +737,7 @@
                     },
                     success: function(response) {
                         const rsmSelect = $('#rsm_id');
-                        rsmSelect.empty().append('<option value="">{{ __('Select RSM') }}</option>');
+                        rsmSelect.empty().append('<option value="">{{ __('Select an RSM') }}</option>');
                         $.each(response.rsms, (id, name) => {
                             rsmSelect.append(`<option value="${id}">${name}</option>`);
                         });
@@ -783,10 +783,10 @@
                     // For Employee: when Supervisor is selected, show and fetch ASMs
                     $('#asm-section').removeClass('d-none');
                     $('#asm_id').prop('required', true);
-                    $('#asm_id').empty().append('<option value="">{{ __('Select ASM') }}</option>');
-                    $('#rsm_id').empty().append('<option value="">{{ __('Select ASM first') }}</option>');
+                    $('#asm_id').empty().append('<option value="">{{ __('Select an ASM') }}</option>');
+                    $('#rsm_id').empty().append('<option value="">{{ __('Select an ASM first') }}</option>');
                     $('#manager_id').empty().append(
-                        '<option value="">{{ __('Select RSM first') }}</option>');
+                        '<option value="">{{ __('Select an RSM first') }}</option>');
                     fetchAsms(selectedType, selectedRole, selectedSupId);
                 } else {
                     $('#asm-section').addClass('d-none');
@@ -803,9 +803,9 @@
                     // For Supervisor or Employee: when ASM is selected, show and fetch RSM
                     $('#rsm-section').removeClass('d-none');
                     $('#rsm_id').prop('required', true);
-                    $('#rsm_id').empty().append('<option value="">{{ __('Select RSM') }}</option>');
+                    $('#rsm_id').empty().append('<option value="">{{ __('Select an RSM') }}</option>');
                     $('#manager_id').empty().append(
-                        '<option value="">{{ __('Select RSM first') }}</option>');
+                        '<option value="">{{ __('Select an RSM first') }}</option>');
                     fetchRsms(selectedType, selectedRole, selectedAsmId);
                 } else {
                     $('#rsm-section').addClass('d-none');

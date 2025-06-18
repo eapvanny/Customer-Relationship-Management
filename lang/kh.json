@@ -228,5 +228,13 @@
     "Active": "សកម្ម",
     "Inactive": "អសកម្ម",
     "User photo only accept jpg, png, jpeg images": "រូបថតអ្នកប្រើប្រាស់ទទួលយកតែរូបភាព jpg, png, jpeg ប៉ុណ្ណោះ។",
-    "(Boxes)": "(កេស)"
+    "(Boxes)": "(កេស)",
+    "Select User Type First": "ជ្រើសរើសប្រភេទអ្នកប្រើប្រាស់ជាមុនសិន",
+    "Select a Supervisor": "ជ្រើសរើស Supervisor",
+    "Select a Supervisor first": "ជ្រើសរើស Supervisor មុនសិន",
+    "Select an ASM": "ជ្រើសរើស ASM",
+    "Select an ASM first": "ជ្រើសរើស ASM មុនសិន",
+    "Select an RSM first": "ជ្រើសរើស RSM មុនសិន",
+    "Select an RSM": "ជ្រើសរើស RSM",
+    "Select Manager": "ជ្រើសរើសអ្នកគ្រប់គ្រង"
 }
