@@ -30,10 +30,9 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
-                    <h1>
-                        {{ __('User') }}
-                        <small> {{ __('List') }} </small>
-                    </h1>
+                    <h4>
+                        {{ __('User List') }}
+                    </h4>
                     <div class="box-tools pull-right">
                         @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
                             <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"

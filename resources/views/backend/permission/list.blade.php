@@ -27,10 +27,9 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
-                    <h1>
-                        {{ __('Permission') }}
-                        <small> {{ __('List') }} </small>
-                    </h1>
+                    <h4>
+                        {{ __('Permission List') }}
+                    </h4>
                     <div class="box-tools pull-right">
                         <a class="btn btn-info text-white" href="{{ URL::route('permission.create') }}"><i
                                 class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>

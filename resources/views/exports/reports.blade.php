@@ -24,7 +24,7 @@
     <thead>
         <tr>
             <th>{{ __('Area') }}</th>
-            <th>{{ __('SPP') }}</th>
+            <th>{{ __('SSP') }}</th>
             <th>{{ __('SUP') }}</th>
             <th>{{ __('RSM') }}</th>
             <th>{{ __('Depo Name') }}</th>

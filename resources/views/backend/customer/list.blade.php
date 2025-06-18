@@ -18,10 +18,9 @@
     <div class="row">
         <div class="col-md-12">
             <div class="wrap-outter-header-title">
-                 <h1>
-                    {{ __('Customer') }}
-                    <small class="toch"> {{ __('List') }} </small>
-                </h1>
+                 <h4>
+                    {{ __('Customer List') }}
+                </h4>
                 <div class="action-btn-top none_fly_action_btn">
                     <a href="{{ route('customer.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus-circle"></i> 

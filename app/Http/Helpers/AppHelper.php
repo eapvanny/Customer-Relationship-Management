@@ -25,7 +25,7 @@ class AppHelper
         self::USER_RSM => 'RSM',
         self::USER_ASM => 'ASM',
         self::USER_SUP => 'Supervisor',
-        self::USER_EMPLOYEE => 'Employee',
+        self::USER_EMPLOYEE => 'Sale Support',
     ];
 
     const ALL = 1;

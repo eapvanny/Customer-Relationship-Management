@@ -96,17 +96,13 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
-                        <h1>
-                            {{ __('Permission') }}
-                            <small>
-                                @if ($permission)
-                                    {{__('Update')}}
-                                @else
-                                    {{ __('Add New') }}
-                                @endif
-                            </small>
-                        </h1>
-
+                        <h4>
+                            @if ($permission)
+                                {{__('Update Permission')}}
+                            @else
+                                {{ __('Add New Permission') }}
+                            @endif
+                        </h4>   
                         <div class="box-tools pull-right">
                             <a href="{{ URL::route('permission.index') }}" class="btn btn-default">{{__('Cancel')}}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
@@ -151,7 +147,7 @@
                                     <span class="text-danger">*</span>
                                 </label>
                                 {!! Form::select('type', $type, old('type', optional($permission)->type), [
-                                    'placeholder' => __('Select Type'),
+                                    'placeholder' => __('Select Permission Type'),
                                     'id' => 'type',
                                     'class' => 'form-control select2',
                                     'required' => true,

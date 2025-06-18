@@ -90,16 +90,13 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
-                        <h1>
-                            {{ __('Role') }}
-                            <small>
-                                @if ($role)
-                                    {{ __('Update') }}
-                                @else
-                                    {{ __('Add New') }}
-                                @endif
-                            </small>
-                        </h1>
+                        <h4>
+                            @if ($role)
+                                {{ __('Update Role') }}
+                            @else
+                                {{ __('Add New Role') }}
+                            @endif
+                        </h4>
 
                         <div class="box-tools pull-right">
                             <a href="{{ URL::route('role.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>

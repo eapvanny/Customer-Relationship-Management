@@ -238,5 +238,17 @@
     "Select an RSM": "ជ្រើសរើស RSM",
     "Select Manager": "ជ្រើសរើសអ្នកគ្រប់គ្រង",
     "Depo's Name": "ឈ្មោះដេប៉ូ",
-    "Customer Code": "លេខកូដអតិថិជន"
+    "Customer Code": "លេខកូដអតិថិជន",
+    "User Status": "ស្ថានភាពអ្នកប្រើប្រាស់",
+    "Permission Type": "ប្រភេទការអនុញ្ញាត",
+    "Select Permission Type": "ជ្រើសរើសប្រភេទការអនុញ្ញាត",
+    "Add New Role": "បន្ថែមតួនាទីថ្មី",
+    "Add New User": "បន្ថែមអ្នកប្រើប្រាស់ថ្មី",
+    "Customer List": "បញ្ជីអតិថិជន",
+    "Add New Report": "បន្ថែមរបាយការណ៍ថ្មី",
+    "Add New Permission": "បន្ថែមការអនុញ្ញាតថ្មី",
+    "Reports List": "បញ្ជីរបាយការណ៍",
+    "User List": "បញ្ជីអ្នកប្រើប្រាស់",
+    "Role List": "បញ្ជីតួនាទី",
+    "Permission List": "បញ្ជីការអនុញ្ញាត"
 }

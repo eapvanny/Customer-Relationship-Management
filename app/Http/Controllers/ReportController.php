@@ -372,7 +372,8 @@ class ReportController extends Controller
         }
         // Generate unique report number
         $authUser = auth()->user();
-        $prefix = $authUser->username;
+        $areaName = $request->area;
+        $prefix = AppHelper::getAreaNameById($areaName);
         // Get the last report that starts with the current prefix
         $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
             ->orderBy('id', 'desc')
@@ -514,7 +515,8 @@ class ReportController extends Controller
         ];
         if (!$report->so_number) {
             $authUser = auth()->user();
-            $prefix = $authUser->username;
+            $areaName = $request->area;
+            $prefix = AppHelper::getAreaNameById($areaName);
             // Get the last report that starts with the current prefix
             $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
                 ->orderBy('id', 'desc')

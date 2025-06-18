@@ -419,7 +419,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
-                        <h1>{{ __('Customer') }}</h1>
+                        <h4>{{ __('Customer') }}</h4>
                         <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('customer.index') }}" class="btn btn-default"> {{ __('Cancel') }} </a>
                             <button type="submit" class="submitClick btn btn-info pull-right text-white">

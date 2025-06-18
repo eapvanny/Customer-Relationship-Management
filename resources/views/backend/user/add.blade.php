@@ -209,16 +209,13 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
-                        <h1>
-                            {{ __('User') }}
-                            <small class="toch">
-                                @if ($user)
-                                    {{ __('Update') }}
-                                @else
-                                    {{ __('Add New') }}
-                                @endif
-                            </small>
-                        </h1>
+                        <h4>
+                            @if ($user)
+                                {{ __('Update User') }}
+                            @else 
+                                {{ __('Add New User') }} 
+                            @endif
+                        </h4>
 
                         <div class="box-tools pull-right">
                             <a href="{{ URL::route('user.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
@@ -481,7 +478,7 @@
                     <div class="row">
                         <div class="col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="status"> {{ __('Status') }} <span class="text-danger">*</span></label>
+                                <label for="status"> {{ __('User Status') }} <span class="text-danger">*</span></label>
                                 <select name="status" class="form-select bg-light select2" id="status">
                                     <option value="1"
                                         {{ old('status', optional($user)->status) == 1 || is_null($user) ? 'selected' : '' }}>
@@ -518,16 +515,16 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 co-xl-6 col-lg-6">
+                        {{-- <div class="col-md-6 co-xl-6 col-lg-6">
                             <div class="form-group has-feedback">
                                 <label for="email"> {{ __('Email') }} <span class=""></span></label>
                                 <input type="email" class="form-control" name="email" placeholder="email address"
                                     value="@if ($user) {{ $user->email }}@else{{ old('email') }} @endif"
                                     maxlength="100">
-                                {{-- <span class="fa fa-envelope form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('email') }}</span> --}}
+                                <span class="fa fa-envelope form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('email') }}</span>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="col-md-6 co-xl-6 col-lg-6">
                             <div class="form-group has-feedback">
                                 <label for="username"> {{ __('Username') }} <span class="text-danger">*</span></label>

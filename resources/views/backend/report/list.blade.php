@@ -368,8 +368,7 @@
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
                     <h1>
-                        {{ __('Reports') }}
-                        <small class="toch"> {{ __('List') }} </small>
+                        {{ __('Reports List') }}
                     </h1>
                     <div class="box-tools pull-right">
                         <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"

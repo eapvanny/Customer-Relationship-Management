@@ -467,16 +467,14 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
-                        <h1>
-                            {{ __('Customer Data') }}
-                            <small class="toch">
-                                @if ($report)
-                                    {{ __('Update') }}
-                                @else
-                                    {{ __('Add New') }}
-                                @endif
-                            </small>
-                        </h1>
+                        <h4>
+                            @if ($report)
+                                {{ __('Update Report') }}
+                            @else
+                                {{ __('Add New Report') }}
+                            @endif
+                            {{-- {{ __('Customer Data') }} --}}
+                        </h4>
                         <div class="box-tools pull-right">
                             <a href="{{ URL::route('report.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
@@ -542,7 +540,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="customer_id">{{ __('Customer') }} <span class="text-danger">*</span></label>
+                                <label for="customer_id">{{ __('Customer Name') }} <span class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
                                     <option value="">{{ __('Select area first') }}</option>
                                     @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
