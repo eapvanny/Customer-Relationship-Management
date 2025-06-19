@@ -585,7 +585,6 @@ class UserController extends Controller
         } elseif ($request->role_id == AppHelper::USER_ASM) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
-            // $rules['sup_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_RSM) {
             $rules['manager_id'] = 'required';
         }
@@ -611,7 +610,7 @@ class UserController extends Controller
             'manager_id' => $request->manager_id,
             'rsm_id' => $request->rsm_id,
             'sup_id' => $request->sup_id,
-            'asm_id' => $request->asm_id,
+            'asm_id' => $request->asm_id ? json_encode($request->asm_id) : null,
             'created_by' => $createdBy,
         ];
 
@@ -625,9 +624,8 @@ class UserController extends Controller
 
         $user = User::create($userData);
 
-        // Fetch the role name before assigning it
         $role = Role::findOrFail($request->role_id);
-        $user->syncRoles($role->name); // Assign role using name
+        $user->syncRoles($role->name);
 
         UserRole::create([
             'user_id' => $user->id,
@@ -696,7 +694,6 @@ class UserController extends Controller
         } elseif ($request->role_id == AppHelper::USER_ASM) {
             $rules['manager_id'] = 'required';
             $rules['rsm_id'] = 'required';
-            // $rules['sup_id'] = 'required';
         } elseif ($request->role_id == AppHelper::USER_RSM) {
             $rules['manager_id'] = 'required';
         }
@@ -721,10 +718,9 @@ class UserController extends Controller
             'manager_id' => $request->manager_id,
             'rsm_id' => $request->rsm_id,
             'sup_id' => $request->sup_id,
-            'asm_id' => $request->asm_id,
+            'asm_id' => $request->asm_id ? json_encode($request->asm_id) : null,
         ];
 
-        // Handle password update only if provided
         if ($request->filled('password')) {
             $userData['password'] = bcrypt($request->password);
         }
@@ -743,7 +739,7 @@ class UserController extends Controller
 
         $user->update($userData);
         $role = Role::findOrFail($request->role_id);
-        $user->syncRoles($role->name); // Assign role using name
+        $user->syncRoles($role->name);
         UserRole::updateOrCreate(
             ['user_id' => $user->id],
             ['role_id' => $request->role_id]
