@@ -19,7 +19,6 @@
     $total_600ml = 0;
     $total_1500ml = 0;
 @endphp
-
 <table border="1">
     <thead>
         <tr>
@@ -32,10 +31,10 @@
             <th>{{ __('Customer Code') }}</th>
             <th>{{ __('SO Number') }}</th>
             <th>{{ __('SO Date') }}</th>
-            <th>{{ __('250ml') }}</th>
-            <th>{{ __('350ml') }}</th>
-            <th>{{ __('600ml') }}</th>
-            <th>{{ __('1500ml') }}</th>
+            <th>{{ __('250ml') }}<span>{{__('(Case)')}}</span></th>
+            <th>{{ __('350ml') }}<span>{{__('(Case)')}}</span></th>
+            <th>{{ __('600ml') }}<span>{{__('(Case)')}}</span></th>
+            <th>{{ __('1500ml') }}<span>{{__('(Case)')}}</span></th>
             <th>{{ __('Default') }}</th>
             <th>{{ __('Latitude') }}</th>
             <th>{{ __('Longitude') }}</th>
@@ -82,7 +81,7 @@
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
                 <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
-                <td>{{ $photoUrl }}</td>
+                <td><a href="{{ $photoUrl }}" target="_blank">photoURL</a></td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
             </tr>
         @endforeach

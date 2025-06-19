@@ -374,7 +374,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $areaIds = [];
         foreach (AppHelper::getAreas() as $group) {
@@ -448,24 +448,16 @@ class ReportController extends Controller
 
             $data['outlet_photo'] = $fileName;
         }
+
         // Generate unique report number
         $authUser = auth()->user();
         $areaName = $request->area;
         $prefix = AppHelper::getAreaNameById($areaName);
         // Get the last report that starts with the current prefix
-        $lastNumberReport = Report::where('so_number', 'like', $prefix . '-%')
-            ->orderBy('id', 'desc')
-            ->first();
-        $lastSequenceNumber = 0;
-        if ($lastNumberReport && $lastNumberReport->so_number) {
-            // Extract the numeric part after the dash
-            $parts = explode('-', $lastNumberReport->so_number);
-            if (isset($parts[1])) {
-                $lastSequenceNumber = (int) ltrim($parts[1], '0'); // Remove leading zeros
-            }
-        }
-        $newSequenceNumber = $lastSequenceNumber + 1;
-        $soNumber = $prefix . '-' . str_pad($newSequenceNumber, 7, '0', STR_PAD_LEFT);
+        $lastReport = Report::where('so_number', 'like', $prefix . '-%')->orderBy('id', 'desc')->first();
+        $lastSoNumber = $lastReport && $lastReport->so_number ? (int)substr($lastReport->so_number, 6) : 0;
+        $newSoNumber = $lastSoNumber + 1;
+        $soNumber = $prefix . '-' . str_pad($newSoNumber, 7, '0', STR_PAD_LEFT);
 
         // Store report data
         Report::create([
