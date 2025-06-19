@@ -540,9 +540,10 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="customer_id">{{ __('Customer Name') }} <span class="text-danger">*</span></label>
+                                <label for="customer_id">{{ __('Customer Name') }} <span
+                                        class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
-                                    <option value="">{{ __('Select area first') }}</option>
+                                    <option value="">{{ __('Select outlet first') }}</option>
                                     @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
                                         <option value="{{ $report->customer_id }}" selected>
                                             {{ $report->customer->name }} (Current)
@@ -566,7 +567,7 @@
                                         title="Select customer type"></i>
                                 </label>
                                 {!! Form::select('customer_type', $customerType, old('customer_type', optional($report)->customer_type), [
-                                    'placeholder' => __('Select customer type'),
+                                    'placeholder' => __('Select customer first'),
                                     'id' => 'customer_type',
                                     'class' => 'form-control select2',
                                     'required' => true,
@@ -598,28 +599,28 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="250_ml"> {{ __('250ml') }} <span>{{__('(Boxes)')}}</span></label>
+                                <label for="250_ml"> {{ __('250ml') }} <span>{{ __('(Boxes)') }}</span></label>
                                 <input type="number" class="form-control" name="250_ml"
                                     value="{{ isset($report) ? $report['250_ml'] : old('250_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="350_ml"> {{ __('350ml') }} <span>{{__('(Boxes)')}}</span></label>
+                                <label for="350_ml"> {{ __('350ml') }} <span>{{ __('(Boxes)') }}</span></label>
                                 <input type="number" class="form-control" name="350_ml"
                                     value="{{ isset($report) ? $report['350_ml'] : old('350_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="600_ml"> {{ __('600ml') }} <span>{{__('(Boxes)')}}</span></label>
+                                <label for="600_ml"> {{ __('600ml') }} <span>{{ __('(Boxes)') }}</span></label>
                                 <input type="number" class="form-control" name="600_ml"
                                     value="{{ isset($report) ? $report['600_ml'] : old('600_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="1500_ml"> {{ __('1500ml') }} <span>{{__('(Boxes)')}}</span></label>
+                                <label for="1500_ml"> {{ __('1500ml') }} <span>{{ __('(Boxes)') }}</span></label>
                                 <input type="number" class="form-control" name="1500_ml"
                                     value="{{ isset($report) ? $report['1500_ml'] : old('1500_ml') }}">
                             </div>
@@ -1144,20 +1145,83 @@
                 video.srcObject = null;
             }
 
+            var selectedCustomerId = $('#customer_id').val();
+            var selectedOutletId = $('#outlet_id').val();
+            var selectedCustomerType = $('#customer_type').val();
+
+            // Handle area change
             $('#area').on('change', function() {
                 var areaId = $(this).val();
-                var selectedCustomerId = $('#customer_id').val(); // Store current customer_id
-                var selectedOutletId = $('#outlet_id').val(); // Store current outlet_id
+                selectedOutletId = $('#outlet_id').val(); // Update current outlet_id
 
                 if (areaId) {
                     $.ajax({
-                        url: '{{ route('customers.byArea') }}',
+                        url: '{{ route('customers.outlet') }}',
                         type: 'GET',
                         data: {
                             area_id: areaId
                         },
                         success: function(data) {
-                            // Handle Customers Dropdown
+                            // Handle Outlets Dropdown
+                            $('#outlet_id').empty();
+                            if (data.outlets.length === 0) {
+                                $('#outlet_id').append(
+                                    '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                                );
+                            } else {
+                                $('#outlet_id').append(
+                                    '<option value="">{{ __('Select outlet') }}</option>'
+                                );
+                                $.each(data.outlets, function(key, outlet) {
+                                    var isSelected = (outlet.id == selectedOutletId) ?
+                                        'selected' : '';
+                                    $('#outlet_id').append(
+                                        '<option value="' + outlet.id + '" ' +
+                                        isSelected + '>' + outlet.name + '</option>'
+                                    );
+                                });
+                            }
+                            $('#outlet_id').trigger(
+                            'change'); // Trigger outlet change to populate customers
+                        },
+                        error: function(xhr) {
+                            console.log('Error fetching outlets:', xhr);
+                            $('#outlet_id').empty().append(
+                                '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                            );
+                            $('#customer_id').empty().append(
+                                '<option value="">{{ __('Customer Not Found!') }}</option>'
+                            );
+                            $('#customer_id').trigger('change');
+                        }
+                    });
+                } else {
+                    $('#outlet_id').empty().append(
+                        '<option value="">{{ __('Select area first') }}</option>'
+                    );
+                    $('#customer_id').empty().append(
+                        '<option value="">{{ __('Customer Not Found!') }}</option>'
+                    );
+                    $('#customer_id').trigger('change');
+                }
+
+            });
+
+            // Handle outlet change
+            $('#outlet_id').on('change', function() {
+                var areaId = $('#area').val();
+                var outletId = $(this).val();
+                selectedCustomerId = $('#customer_id').val(); // Update current customer_id
+
+                if (areaId && outletId) {
+                    $.ajax({
+                        url: '{{ route('customers.getName') }}',
+                        type: 'GET',
+                        data: {
+                            area_id: areaId,
+                            outlet_id: outletId
+                        },
+                        success: function(data) {
                             $('#customer_id').empty();
                             if (data.customers.length === 0) {
                                 $('#customer_id').append(
@@ -1170,66 +1234,101 @@
                                 $.each(data.customers, function(key, customer) {
                                     var isSelected = (customer.id ==
                                         selectedCustomerId) ? 'selected' : '';
-                                    $('#customer_id').append('<option value="' +
-                                        customer.id + '" ' + isSelected + '>' +
-                                        customer.name + '</option>');
+                                    $('#customer_id').append(
+                                        '<option value="' + customer.id + '" ' +
+                                        isSelected + '>' + customer.name +
+                                        '</option>'
+                                    );
                                 });
                             }
-                            $('#customer_id').trigger('change');
-
-                            // Handle Outlets Dropdown
-                            $('#outlet_id').empty();
-                            if (data.outlets.length === 0) {
-                                $('#outlet_id').append(
-                                    '<option value="">{{ __('Outlet Not Found!') }}</option>'
-                                );
-                            } else {
-                                $('#outlet_id').append(
-                                    '<option value="">{{ __('Select outlet') }}</option>'
-                                );
-                                $.each(data.outlets, function(key, outlet) {
-                                    var isSelected = (outlet.id == selectedOutletId) ? 'selected' : '';
-                                    $('#outlet_id').append('<option value="' + outlet.id + '" ' + isSelected + '>' + outlet.name + '</option>');
-                                });
-
-                            }
-                            $('#outlet_id').trigger('change');
+                            $('#customer_id').trigger(
+                            'change.select2'); // Ensure Select2 updates the UI
                         },
                         error: function(xhr) {
-                            console.log('Error fetching data:', xhr);
-                            //orney Handle Customers Dropdown on Error
+                            console.error('Error fetching customer details:', xhr);
                             $('#customer_id').empty().append(
                                 '<option value="">{{ __('Customer Not Found!') }}</option>'
                             );
-                            $('#customer_id').trigger('change');
-
-                            // Handle Outlets Dropdown on Error
-                            $('#outlet_id').empty().append(
-                                '<option value="">{{ __('Outlet Not Found!') }}</option>'
-                            );
-                            $('#outlet_id').trigger('change');
+                            $('#customer_id').trigger('change.select2');
                         }
                     });
                 } else {
-                    // Clear Customers Dropdown
                     $('#customer_id').empty().append(
-                        '<option value="">{{ __('Customer Not Found!') }}</option>'
+                        '<option value="">{{ __('Select outlet first') }}</option>'
                     );
-                    $('#customer_id').trigger('change');
-
-                    // Clear Outlets Dropdown
-                    $('#outlet_id').empty().append(
-                        '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                    $('#customer_id').trigger('change.select2');
+                }
+                if ($('#outlet_id').val() === '') {
+                    $('#customer_type').empty().append(
+                        '<option value="">{{ __('Select customer first') }}</option>'
                     );
-                    $('#outlet_id').trigger('change');
+                    $('#customer_type').trigger('change.select2');
                 }
             });
 
-            // Trigger change on page load if area is pre-selected
+            $('#customer_id').on('change', function() {
+                var areaId = $('#area').val();
+                var outletId = $('#outlet_id').val();
+                var customerId = $(this).val();
+                selectedCustomerType = $('#customer_type').val();
+
+                if (areaId && outletId && customerId) {
+                    $.ajax({
+                        url: '{{ route('customers.getCustomerType') }}',
+                        type: 'GET',
+                        data: {
+                            area_id: areaId,
+                            outlet_id: outletId,
+                            customer_id: customerId
+                        },
+                        success: function(data) {
+                            $('#customer_type').empty();
+                            if (data.customer_types.length === 0) {
+                                $('#customer_type').append(
+                                    '<option value="">{{ __('Customer Type Not Found!') }}</option>'
+                                );
+                            } else {
+                                $('#customer_type').append(
+                                    '<option value="">{{ __('Select customer type') }}</option>'
+                                );
+                                $.each(data.customer_types, function(key, customerType) {
+                                    var isSelected = (customerType.id ==
+                                        selectedCustomerType) ? 'selected' : '';
+                                    $('#customer_type').append(
+                                        '<option value="' + customerType.id + '" ' +
+                                        isSelected + '>' +
+                                        customerType.name + '</option>'
+                                    );
+                                });
+                            }
+                            $('#customer_type').trigger('change.select2');
+                        },
+                        error: function(xhr) {
+                            console.error('Error fetching customer type:', xhr);
+                            $('#customer_type').empty().append(
+                                '<option value="">{{ __('Customer Type Not Found!') }}</option>'
+                            );
+                            $('#customer_type').trigger('change.select2');
+                        }
+                    });
+                } else {
+                    $('#customer_type').empty().append(
+                        '<option value="">{{ __('Select customer first') }}</option>'
+                    );
+                    $('#customer_type').trigger('change.select2');
+                }
+            });
+
+            // Trigger change on page load if pre-selected
             if ($('#area').val()) {
                 $('#area').trigger('change');
             }
-
+            if ($('#outlet_id').val()) {
+                $('#outlet_id').trigger('change');
+            }
+            if ($('#customer_id').val()) {
+                $('#customer_id').trigger('change');
+            }
             let outletVideo = document.getElementById('outlet-webcam');
             let outletCanvas = document.getElementById('outlet-canvas');
             let outletContext = outletCanvas.getContext('2d');
