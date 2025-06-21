@@ -122,9 +122,21 @@
         }
 
         @media (max-width: 414px) {
-            .btn-default .btn-info .btn-success {
-                font-size: 10px !important;
+            .wrap-outter-header-title h4{
+                font-size: 16px !important;
             }
+            .btn-default .btn-info .btn-success {
+                font-size: 7px !important;
+            }
+        }
+        @media (max-width: 375px) {
+           .wrap-outter-header-title h4{
+                font-size: 16px !important;
+            }
+            .btn-default .btn-info .btn-success {
+                font-size: 7px !important;
+            }
+           
         }
 
         fieldset>#open-outlet-camera-btn {

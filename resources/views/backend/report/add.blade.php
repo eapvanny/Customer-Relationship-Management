@@ -124,16 +124,30 @@
         }
 
         @media (max-width: 414px) {
-            .wrap-outter-header-title h1 {
+            .wrap-outter-header-title h4 {
                 font-size: 15px;
             }
 
             .btn-info {
-                font-size: 9px !important;
+                font-size: 10px !important;
             }
 
             .btn-default {
-                font-size: 9px !important;
+                font-size: 10px !important;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .wrap-outter-header-title h4 {
+                font-size: 15px;
+            }
+
+            .btn-info {
+                font-size: 10px !important;
+            }
+
+            .btn-default {
+                font-size: 10px !important;
             }
         }
 
@@ -1182,7 +1196,7 @@
                                 });
                             }
                             $('#outlet_id').trigger(
-                            'change'); // Trigger outlet change to populate customers
+                                'change'); // Trigger outlet change to populate customers
                         },
                         error: function(xhr) {
                             console.log('Error fetching outlets:', xhr);
@@ -1242,7 +1256,7 @@
                                 });
                             }
                             $('#customer_id').trigger(
-                            'change.select2'); // Ensure Select2 updates the UI
+                                'change.select2'); // Ensure Select2 updates the UI
                         },
                         error: function(xhr) {
                             console.error('Error fetching customer details:', xhr);
