@@ -395,7 +395,7 @@
                                                             class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
-                                                @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
+                                                {{-- @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
                                                     <div class="col-xl-4">
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>
@@ -406,7 +406,17 @@
                                                             ]) !!}
                                                         </div>
                                                     </div>
-                                                @endif
+                                                @endif --}}
+                                                <div class="col-xl-4">
+                                                    <div class="form-group">
+                                                        <label for="area_id">{{ __('Area') }}</label>
+                                                        {!! Form::select('area_id', $area_id, request('area_id'), [
+                                                            'placeholder' => __('Select area'),
+                                                            'id' => 'area_id',
+                                                            'class' => 'form-control select2',
+                                                        ]) !!}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="row">
                                                 <div class="col-12 mt-2">
@@ -592,7 +602,7 @@
                         // Include existing query parameters
                         d.date1 = "{{ request('date1') }}";
                         d.date2 = "{{ request('date2') }}";
-                        d.full_name = "{{ request('full_name') }}";
+                        d.area_id = "{{ request('area_id') }}";
                     }
                 },
                 columns: [{

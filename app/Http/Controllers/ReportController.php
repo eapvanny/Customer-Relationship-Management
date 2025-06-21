@@ -136,9 +136,7 @@ class ReportController extends Controller
             }
         }
 
-        $full_name = $employeeQuery->get()->mapWithKeys(function ($u) use ($user) {
-            return [$u->id => $u->user_lang === 'en' ? ($u->full_name_latin ?? 'N/A') : ($u->full_name ?? 'N/A')];
-        });
+        $area_id = AppHelper::AREAS;
 
         $is_filter = false;
 
@@ -150,9 +148,9 @@ class ReportController extends Controller
             $query->whereBetween('reports.date', [$startDate, $endDate]);
         }
 
-        if ($request->filled('full_name')) {
+        if ($request->filled('area_id')) {
             $is_filter = true;
-            $query->where('reports.user_id', $request->full_name);
+            $query->where('reports.area_id', $request->area_id);
         }
 
         // Handle DataTables search
@@ -267,7 +265,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('backend.report.list', compact('is_filter', 'full_name'));
+        return view('backend.report.list', compact('is_filter', 'area_id'));
     }
 
 
