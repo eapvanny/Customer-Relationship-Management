@@ -1,4 +1,4 @@
-<!-- Master page  -->
+<!-- Master page -->
 @extends('backend.layouts.master')
 
 <!-- Page title -->
@@ -8,6 +8,7 @@
 <!-- End block -->
 
 @section('extraStyle')
+    <!-- Same styles as provided, no changes needed -->
     <style>
         .chat-container {
             flex-grow: 1;
@@ -264,29 +265,29 @@
         }
 
         /* .table-responsive {
-                            display: block;
-                            width: 100%;
-                            overflow-x: auto;
-                            -webkit-overflow-scrolling: touch;
-                        }
+                                display: block;
+                                width: 100%;
+                                overflow-x: auto;
+                                -webkit-overflow-scrolling: touch;
+                            }
 
-                        .table {
-                            width: 100%;
-                            table-layout: fixed;
-                        }
+                            .table {
+                                width: 100%;
+                                table-layout: fixed;
+                            }
 
-                        .table td,
-                        .table th {
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
+                            .table td,
+                            .table th {
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
 
-                        .table th,
-                        .table td {
-                            min-width: 0;
-                            max-width: none;
-                        } */
+                            .table th,
+                            .table td {
+                                min-width: 0;
+                                max-width: none;
+                            } */
         .list-group-unbordered .list-group-item {
             padding: 10px 0;
             font-size: 0.95rem;
@@ -332,21 +333,13 @@
                         <div></div>
                         <div></div>
                     </div>
-
                     <!-- Safari and others -->
                     <div class="infinity" style="display: none;">
-                        <div>
-                            <span></span>
-                        </div>
-                        <div>
-                            <span></span>
-                        </div>
-                        <div>
-                            <span></span>
-                        </div>
+                        <div><span></span></div>
+                        <div><span></span></div>
+                        <div><span></span></div>
                     </div>
                 </div>
-
                 <!-- Stuff -->
                 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display: none;">
                     <defs>
@@ -358,7 +351,6 @@
                         </filter>
                     </defs>
                 </svg>
-
                 <!-- dribbble -->
                 <a class="dribbble" href="https://dribbble.com/shots/5557955-Infinity-Loader" target="_blank">
                     <img src="https://cdn.dribbble.com/assets/dribbble-ball-mark-2bd45f09c2fb58dbbfb44766d5d1d07c5a12972d602ef8b32204d28fa3dda554.svg"
@@ -367,9 +359,7 @@
             @endif
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
-                    <h1>
-                        {{ __('Reports List') }}
-                    </h1>
+                    <h1>{{ __('Reports List') }}</h1>
                     <div class="box-tools pull-right">
                         <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
                             data-bs-target="#filterContainer">
@@ -379,7 +369,6 @@
                                 class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
                     </div>
                 </div>
-
                 <div class="wrap-outter-box">
                     <div class="box box-info">
                         <div class="box-header">
@@ -435,49 +424,34 @@
                                     </form>
                                 </div>
                             </div>
-
                         </div>
-
                         <!-- /.box-header -->
                         <div class="box-body">
                             <div class="row">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <a class="btn btn-success btn-sm" href="{{ route('report.export') }}"><i
-                                                class="fa-solid fa-download"></i> {{ __('Export') }}</a>
-                                    </div>
+                                <div class="col-12">
+                                    <a class="btn btn-success btn-sm" href="{{ route('report.export') }}"><i
+                                            class="fa-solid fa-download"></i> {{ __('Export') }}</a>
                                 </div>
                             </div>
                             <div class="table-responsive mt-4">
-                                <table id="datatabble"
+                                <table id="datatable"
                                     class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
                                     width="100%">
                                     <thead>
                                         <tr>
-                                            {{-- <th> {{ __('Photo') }} </th>
-                                            <th> {{ __('Staff ID') }} </th>
-                                            <th> {{ __('Name') }} </th> --}}
-                                            <th> {{ __('Area') }} </th>
-                                            <th> {{ __("Depo's Name") }} </th>
-                                            <th> {{ __('Customer Name') }} </th>
-                                            <th> {{ __('Customer Code') }} </th>
-                                            <th> {{ __('250ml') }} </th>
-                                            <th> {{ __('350ml') }} </th>
-                                            <th> {{ __('600ml') }} </th>
-                                            <th> {{ __('1500ml') }} </th>
-                                            <th> {{ __('Default') }} </th>
-                                            {{-- <th> {{ __('Other') }} </th>
-                                            <th> {{ __('Material Type') }} </th>
-                                            <th> {{ __('Qty') }} </th>
-                                            <th> {{ __('Address') }} </th>
-                                            <th> {{ __('Date') }} </th> --}}
-                                            <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
+                                            <th>{{ __('Area') }}</th>
+                                            <th>{{ __("Depo's Name") }}</th>
+                                            <th>{{ __('Customer Name') }}</th>
+                                            <th>{{ __('Customer Code') }}</th>
+                                            <th>{{ __('250ml') }}</th>
+                                            <th>{{ __('350ml') }}</th>
+                                            <th>{{ __('600ml') }}</th>
+                                            <th>{{ __('1500ml') }}</th>
+                                            <th>{{ __('Default') }}</th>
+                                            <th class="notexport" style="max-width: 82px">{{ __('Action') }}</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-
-                                    </tbody>
-
+                                    <tbody></tbody>
                                 </table>
                             </div>
                         </div>
@@ -514,46 +488,40 @@
                                                 <strong>{{ __('Employee Name') }}:</strong> <span
                                                     id="modalEmployeeName"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-id-card"></i>
-                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span>
-                                            </li>
+                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-chart-area"></i>
-                                                <strong>{{ __('Area') }} :</strong> <span id="modalArea"></span></li>
+                                                <strong>{{ __('Area') }}:</strong> <span id="modalArea"></span></li>
                                             <li class="list-group-item"><i class="fa fa-user"></i>
-                                                <strong>{{ __('Customer Name') }} :</strong> <span
+                                                <strong>{{ __('Customer Name') }}:</strong> <span
                                                     id="modalCustomerName"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-home"></i>
-                                                <strong>{{ __('Outlet') }} :</strong> <span id="modalOutlet"></span>
-                                            </li>
+                                                <strong>{{ __('Outlet') }}:</strong> <span id="modalOutlet"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i>
-                                                <strong>{{ __('Date') }} :</strong> <span id="modalDate"></span></li>
-
+                                                <strong>{{ __('Date') }}:</strong> <span id="modalDate"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-location-dot"></i>
-                                                <strong>{{ __('Address') }} :</strong> <span id="modalCity"></span></li>
-                                            {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
+                                                <strong>{{ __('Address') }}:</strong> <span id="modalCity"></span></li>
                                         </ul>
                                     </div>
                                     <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
                                         <ul class="list-group list-group-unbordered profile-log">
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('250ml') }} :</strong> <span id="modal250ml"></span></li>
+                                                <strong>{{ __('250ml') }}:</strong> <span id="modal250ml"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('350ml') }} :</strong> <span id="modal350ml"></span></li>
+                                                <strong>{{ __('350ml') }}:</strong> <span id="modal350ml"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('600ml') }} :</strong> <span id="modal600ml"></span></li>
+                                                <strong>{{ __('600ml') }}:</strong> <span id="modal600ml"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('1500ml') }} :</strong> <span id="modal1500ml"></span></li>
+                                                <strong>{{ __('1500ml') }}:</strong> <span id="modal1500ml"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('Other') }} :</strong> <span id="modalOther"></span></li>
+                                                <strong>{{ __('Other') }}:</strong> <span id="modalOther"></span></li>
                                             <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i>
-                                                <strong>{{ __('Material Type') }} :</strong> <span id="modalPosm"></span>
+                                                <strong>{{ __('Material Type') }}:</strong> <span id="modalPosm"></span>
                                             </li>
                                             <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
-                                                <strong>{{ __('Quantity') }} :</strong> <span id="modalQty"></span>
-                                            </li>
+                                                <strong>{{ __('Quantity') }}:</strong> <span id="modalQty"></span></li>
                                         </ul>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
@@ -579,7 +547,6 @@
             </div>
         </div>
     </div>
-
     <!-- /.content -->
 @endsection
 <!-- END PAGE CONTENT-->
@@ -593,54 +560,42 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
+
             @if (session('show_popup'))
                 var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-
-                // Show appropriate loader based on browser
                 if (isChrome) {
-                    document.getElementsByClassName('infinityChrome')[0].style.display = "block";
-                    document.getElementsByClassName('infinity')[0].style.display = "none";
+                    $('.infinityChrome').show();
+                    $('.infinity').hide();
                 } else {
-                    document.getElementsByClassName('infinityChrome')[0].style.display = "none";
-                    document.getElementsByClassName('infinity')[0].style.display = "block";
+                    $('.infinityChrome').hide();
+                    $('.infinity').show();
                 }
-
-                // Hide loader with fade out effect after 3 seconds
                 setTimeout(function() {
-                    // Add fade-out class to wrapper
                     $('.infinity-wrapper').addClass('fade-out');
-
-                    // Remove the elements from display after animation completes
                     setTimeout(function() {
-                        document.getElementsByClassName('infinityChrome')[0].style.display = "none";
-                        document.getElementsByClassName('infinity')[0].style.display = "none";
-                        $('.infinity-wrapper').removeClass('fade-out').css('display', 'none');
-                    }, 1000); // Matches the animation duration (1s)
+                        $('.infinityChrome').hide();
+                        $('.infinity').hide();
+                        $('.infinity-wrapper').removeClass('fade-out').hide();
+                    }, 1000);
                 }, 3000);
             @endif
-            t = $('#datatabble').DataTable({
+
+            var table = $('#datatable').DataTable({
                 processing: false,
                 serverSide: true,
                 pageLength: 10,
-
                 ajax: {
-                    url: "{{ route('report.index') }}",
+                    url: "{!! route('report.index') !!}",
+                    data: function(d) {
+                        // Include DataTables search parameter
+                        d.search_value = d.search.value;
+                        // Include existing query parameters
+                        d.date1 = "{{ request('date1') }}";
+                        d.date2 = "{{ request('date2') }}";
+                        d.full_name = "{{ request('full_name') }}";
+                    }
                 },
-                columns: [
-                    // {
-                    //     data: 'photo',
-                    //     name: 'photo',
-                    //     orderable: false
-                    // },
-                    // {
-                    //     data: 'id_card',
-                    //     name: 'id_card'
-                    // },
-                    // {
-                    //     data: 'name',
-                    //     name: 'name'
-                    // },
-                    {
+                columns: [{
                         data: 'area',
                         name: 'area'
                     },
@@ -676,47 +631,39 @@
                         data: 'default',
                         name: 'default'
                     },
-                    // {
-                    //     data: 'other',
-                    //     name: 'other'
-                    // },
-                    // {
-                    //     data: 'posm',
-                    //     name: 'posm'
-                    // },
-                    // {
-                    //     data: 'qty',
-                    //     name: 'qty'
-                    // },
-                    // {
-                    //     data: 'location',
-                    //     name: 'location'
-                    // },
-                    // {
-                    //     data: 'date',
-                    //     name: 'date'
-                    // },
                     {
                         data: 'action',
                         name: 'action',
-                        orderable: false
+                        orderable: false,
+                        searchable: false
                     }
-                ],
+                ]
             });
 
+            // Trigger table redraw when search input changes
+            $('#datatable_filter input').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            // Handle filter form submission
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                window.location = "{{ route('report.index') }}?" + $(this).serialize();
+            });
+
+            // Close filter panel
             $('#close_filter').click(function() {
                 $("#filters").trigger('click');
             });
 
+            // Handle view details
             $(document).on('click', '.img-detail', function() {
                 var reportId = $(this).data('id');
-
                 $.ajax({
                     url: '/report/' + reportId,
                     method: 'GET',
                     success: function(response) {
                         var report = response.report;
-
                         $('#modalPhoto').attr('src', report.photo);
                         $('#modalPhotoOutlet').attr('src', report.outlet_photo);
                         $('#modalEmployeeName').text(report.employee_name);
@@ -742,17 +689,17 @@
                 });
             });
 
+            // Handle modal close
             $(document).on('click', '.btnClose', function() {
                 $('#viewModal').modal('hide');
                 $('.img-popup').val('');
             });
 
-            //delete grade_level
-            $('#datatabble').delegate('.delete', 'click', function(e) {
-                let action = $(this).attr('href');
-                console.log()
-                $('#myAction').attr('action', action);
+            // Handle delete
+            $('#datatable').on('click', '.delete', function(e) {
                 e.preventDefault();
+                let action = $(this).attr('href');
+                $('#myAction').attr('action', action);
                 swal({
                     title: 'Are you sure?',
                     text: 'You will not be able to recover this record!',

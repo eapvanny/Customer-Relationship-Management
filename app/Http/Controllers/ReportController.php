@@ -35,17 +35,17 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
+        $query = Report::query()
+            ->select('reports.*')
+            ->leftJoin('customers', 'reports.customer_id', '=', 'customers.id')
+            ->with(['user', 'customer']);
 
         if ($user) {
             $userRole = $user->role_id;
             $userId = $user->id;
             $userType = $user->type;
 
-            // Collect user IDs to filter reports
             $userIds = [$userId]; // Always include own reports
-
-            // Define allowed user types for subordinates
             $allowedTypes = [AppHelper::SALE, AppHelper::SE];
 
             if ($userType == AppHelper::ALL || in_array($userRole, [
@@ -53,10 +53,8 @@ class ReportController extends Controller
                 AppHelper::USER_ADMIN,
                 AppHelper::USER_DIRECTOR
             ])) {
-                // Users with type ALL or roles Super Admin, Admin, Director see all reports
                 // No additional filtering needed
             } elseif ($userRole == AppHelper::USER_MANAGER) {
-                // Manager sees reports of RSMs, Supervisors, ASMs, Employees under them
                 $managedUserIds = User::where(function ($q) use ($userId) {
                     $q->where('manager_id', $userId)
                         ->orWhere('rsm_id', $userId)
@@ -67,7 +65,6 @@ class ReportController extends Controller
                     ->toArray();
                 $userIds = array_merge($userIds, $managedUserIds);
             } elseif ($userRole == AppHelper::USER_RSM) {
-                // RSM sees reports of Supervisors, ASMs, Employees under them
                 $managedUserIds = User::where(function ($q) use ($userId) {
                     $q->where('rsm_id', $userId)
                         ->orWhere('sup_id', $userId)
@@ -77,7 +74,6 @@ class ReportController extends Controller
                     ->toArray();
                 $userIds = array_merge($userIds, $managedUserIds);
             } elseif ($userRole == AppHelper::USER_SUP) {
-                // Supervisor sees reports of ASMs, Employees under them
                 $managedUserIds = User::where(function ($q) use ($userId) {
                     $q->where('sup_id', $userId)
                         ->orWhere('asm_id', $userId);
@@ -86,7 +82,6 @@ class ReportController extends Controller
                     ->toArray();
                 $userIds = array_merge($userIds, $managedUserIds);
             } elseif ($userRole == AppHelper::USER_ASM) {
-                // ASM sees reports of Employees under them
                 $managedUserIds = User::where('asm_id', $userId)
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
@@ -94,31 +89,21 @@ class ReportController extends Controller
                 $userIds = array_merge($userIds, $managedUserIds);
             }
 
-            // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
             if (!($userType == AppHelper::ALL || in_array($userRole, [
                 AppHelper::USER_SUPER_ADMIN,
                 AppHelper::USER_ADMIN,
                 AppHelper::USER_DIRECTOR
             ]))) {
-                $query->whereIn('user_id', array_unique($userIds));
-            }
-
-            // Ensure reports belong to users with allowed types (except for ALL/Super Admin/Admin/Director)
-            if (!($userType == AppHelper::ALL || in_array($userRole, [
-                AppHelper::USER_SUPER_ADMIN,
-                AppHelper::USER_ADMIN,
-                AppHelper::USER_DIRECTOR
-            ]))) {
+                $query->whereIn('reports.user_id', array_unique($userIds));
                 $query->whereHas('user', function ($q) use ($allowedTypes) {
                     $q->whereIn('type', $allowedTypes);
                 });
             }
         } else {
-            // No authenticated user, return no reports
-            $query->where('id', 0);
+            $query->where('reports.id', 0);
         }
 
-        // Load employee list for filtering (based on role hierarchy)
+        // Load employee list for filtering
         $employeeQuery = User::query();
         if ($user && !($userType == AppHelper::ALL || in_array($userRole, [
             AppHelper::USER_SUPER_ADMIN,
@@ -147,7 +132,7 @@ class ReportController extends Controller
                 $employeeQuery->where('asm_id', $userId)
                     ->whereIn('type', $allowedTypes);
             } else {
-                $employeeQuery->where('id', $userId); // Employee sees only themselves
+                $employeeQuery->where('id', $userId);
             }
         }
 
@@ -157,30 +142,103 @@ class ReportController extends Controller
 
         $is_filter = false;
 
-        // Date filtering
+        // Custom filters
         if ($request->filled(['date1', 'date2'])) {
             $is_filter = true;
             $startDate = Carbon::parse($request->date1)->startOfDay();
             $endDate = Carbon::parse($request->date2)->endOfDay();
-            $query->whereBetween('date', [$startDate, $endDate]);
+            $query->whereBetween('reports.date', [$startDate, $endDate]);
         }
 
-        // User filter
         if ($request->filled('full_name')) {
             $is_filter = true;
-            $query->where('user_id', $request->full_name);
+            $query->where('reports.user_id', $request->full_name);
+        }
+
+        // Handle DataTables search
+        if ($request->ajax() && $request->filled('search_value')) {
+            $search = $request->input('search_value');
+            $query->where(function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('customers.name', 'like', '%' . $search . '%')
+                        ->orWhere('customers.code', 'like', '%' . $search . '%')
+                        ->orWhere('customers.outlet', 'like', '%' . $search . '%');
+                })
+                    ->orWhere('reports.250_ml', 'like', '%' . $search . '%')
+                    ->orWhere('reports.350_ml', 'like', '%' . $search . '%')
+                    ->orWhere('reports.600_ml', 'like', '%' . $search . '%')
+                    ->orWhere('reports.1500_ml', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('family_name', 'like', '%' . $search . '%')
+                            ->orWhere('family_name_latin', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        // Handle DataTables sorting
+        if ($request->ajax() && $request->has('order')) {
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDirection = $request->input('order.0.dir');
+
+            $columns = [
+                0 => 'reports.area_id', // area
+                1 => 'customers.outlet', // outlet_id
+                2 => 'customers.name', // customer
+                3 => 'customers.code', // customer_code
+                4 => 'reports.250_ml',
+                5 => 'reports.350_ml',
+                6 => 'reports.600_ml',
+                7 => 'reports.1500_ml',
+                8 => 'default', // computed column
+            ];
+
+            $column = $columns[$orderColumnIndex] ?? null;
+
+            if ($column) {
+                if ($column === 'reports.area_id') {
+                    $query->orderBy('reports.area_id', $orderDirection);
+                } elseif ($column === 'customers.outlet') {
+                    $query->orderBy('customers.outlet', $orderDirection);
+                } elseif ($column === 'customers.name') {
+                    $query->orderBy('customers.name', $orderDirection);
+                } elseif ($column === 'customers.code') {
+                    $query->orderBy('customers.code', $orderDirection);
+                } elseif ($column === 'reports.250_ml') {
+                    $query->orderBy('reports.250_ml', $orderDirection);
+                } elseif ($column === 'reports.350_ml') {
+                    $query->orderBy('reports.350_ml', $orderDirection);
+                } elseif ($column === 'reports.600_ml') {
+                    $query->orderBy('reports.600_ml', $orderDirection);
+                } elseif ($column === 'reports.1500_ml') {
+                    $query->orderBy('reports.1500_ml', $orderDirection);
+                } elseif ($column === 'default') {
+                    $query->orderByRaw('(COALESCE(reports.250_ml, 0) + COALESCE(reports.350_ml, 0) + COALESCE(reports.600_ml, 0) + COALESCE(reports.1500_ml, 0)) ' . $orderDirection);
+                }
+            } else {
+                $query->orderBy('reports.id', 'desc');
+            }
+        } else {
+            $query->orderBy('reports.id', 'desc');
         }
 
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                $reports = $query->orderBy('id', 'desc');
+                $reports = $query;
 
                 return DataTables::of($reports)
-                    ->addColumn('area', fn($data) => AppHelper::getAreaNameById($data->area_id) ?? 'N/A')
-                    ->addColumn('outlet_id', fn($data) => $data->customer->outlet ?? 'N/A')
-                    ->addColumn('customer', fn($data) => $data->customer->name ?? 'N/A')
-                    ->addColumn('customer_code', fn($data) => $data->customer->code ?? 'N/A')
+                    ->addColumn('area', function ($data) {
+                        return $data->customer && $data->customer->area_id ? AppHelper::getAreaNameById($data->customer->area_id) ?? 'N/A' : AppHelper::getAreaNameById($data->area_id) ?? 'N/A';
+                    })
+                    ->addColumn('outlet_id', function ($data) {
+                        return $data->customer ? $data->customer->outlet ?? 'N/A' : 'N/A';
+                    })
+                    ->addColumn('customer', function ($data) {
+                        return $data->customer ? $data->customer->name ?? 'N/A' : 'N/A';
+                    })
+                    ->addColumn('customer_code', function ($data) {
+                        return $data->customer ? $data->customer->code ?? 'N/A' : 'N/A';
+                    })
                     ->addColumn('250ml', fn($data) => $data->{'250_ml'} ?? 'N/A')
                     ->addColumn('350ml', fn($data) => $data->{'350_ml'} ?? 'N/A')
                     ->addColumn('600ml', fn($data) => $data->{'600_ml'} ?? 'N/A')
@@ -188,7 +246,7 @@ class ReportController extends Controller
                     ->addColumn('default', function ($data) {
                         $val_250ml = intval($data->{'250_ml'} ?? 0);
                         $val_350ml = intval($data->{'350_ml'} ?? 0);
-                        $val_600ml = intval($data->{'600_ml'} ?? 0);
+                        $val_600ml = intval($data->{'600_ml '} ?? 0);
                         $val_1500ml = intval($data->{'1500_ml'} ?? 0);
                         return $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
                     })
@@ -374,7 +432,7 @@ class ReportController extends Controller
         ]);
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
         $areaIds = [];
         foreach (AppHelper::getAreas() as $group) {
@@ -457,7 +515,7 @@ class ReportController extends Controller
         $lastReport = Report::orderBy('id', 'desc')->first();
         $lastSoNumber = $lastReport && $lastReport->so_number ? (int) substr($lastReport->so_number, 6) : 0;
         $newSoNumber = $lastSoNumber + 1;
-        $soNumber = $prefix .'-' . str_pad($newSoNumber, 7, '0', STR_PAD_LEFT);
+        $soNumber = $prefix . '-' . str_pad($newSoNumber, 7, '0', STR_PAD_LEFT);
 
         // Store report data
         Report::create([

@@ -868,6 +868,44 @@ class UserController extends Controller
             'photo' => $user->photo,
         ]);
     }
+    public function handleLoginRedirect()
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            
+            if ($user->type == AppHelper::SALE && in_array($user->role_id, [
+                AppHelper::USER_EMPLOYEE, 
+                AppHelper::USER_SUP, 
+                AppHelper::USER_RSM, 
+                AppHelper::USER_ASM
+            ])) {
+                return redirect()->route('report.index')
+                    ->with('success', 'Welcome to CRM system.')
+                    ->with('show_popup', true);
+            } elseif ($user->type == AppHelper::SE && in_array($user->role_id, [
+                AppHelper::USER_EMPLOYEE, 
+                AppHelper::USER_SUP, 
+                AppHelper::USER_RSM, 
+                AppHelper::USER_ASM
+            ])) {
+                return redirect()->route('sub-wholesale.index')
+                    ->with('success', 'Welcome to CRM system.')
+                    ->with('show_popup', true);
+            } elseif (($user->type == AppHelper::SE || $user->type == AppHelper::SALE) && 
+                     $user->role_id == AppHelper::USER_MANAGER) {
+                return redirect()->route('dashboard.index')
+                    ->with('success', 'Welcome to CRM system.')
+                    ->with('show_popup', true);
+            } else {
+                return redirect()->route('dashboard.index')
+                    ->with('success', 'Welcome to AdminPanel.')
+                    ->with('show_popup', true);
+            }
+        }
+
+        return redirect()->route('login')->with('error', 'Please login to continue.');
+    }
+
     public function unlock(Request $request)
     {
         $request->validate([
@@ -878,9 +916,9 @@ class UserController extends Controller
         if (session('locked') && Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
             // Clear the lock session data
             session()->forget(['locked', 'locked_username', 'locked_name', 'locked_photo']);
-            return redirect()->route('dashboard.index')
-                ->with('success', 'Welcome to AdminPanel.')
-                ->with('show_popup', true);
+            
+            // Reuse the login redirect logic
+            return $this->handleLoginRedirect();
         }
 
         return redirect()->route('lockscreen')->with('error', 'Invalid password.');
