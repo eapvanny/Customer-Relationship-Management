@@ -15,7 +15,7 @@ class Customer extends Model
         'name',
         'phone',
         'area_id',
-        'outlet',
+        'depo_id',
         'outlet_photo',
         'latitude',
         'longitude',
@@ -41,5 +41,9 @@ class Customer extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function depo()
+    {
+        return $this->belongsTo(Depo::class, 'depo_id');
     }
 }

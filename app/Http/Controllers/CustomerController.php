@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\CustomerExport;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
+use App\Models\Depo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
@@ -28,7 +29,7 @@ class CustomerController extends Controller
 
         if ($request->ajax()) {
             // Initialize customer query with user relationship
-            $query = Customer::with('user');
+            $query = Customer::with('user','depo');
 
             if ($loggedInUser) {
                 $loggedInUserRole = $loggedInUser->role_id;
@@ -123,7 +124,7 @@ class CustomerController extends Controller
                         : ($customer->user->user_lang === 'kh' ? ($customer->user->full_name ?? 'N/A') : 'N/A');
                 })
                 ->addColumn('area_id', fn($customer) => AppHelper::getAreaNameById($customer->area_id))
-                ->addColumn('outlet', fn($customer) => $customer->outlet)
+                ->addColumn('depo_id', fn($customer) => $customer->depo->name ?? 'N/A')
                 ->addColumn('customer_code', fn($customer) => $customer->code)
                 ->addColumn('customer_name', fn($customer) => $customer->name)
                 ->addColumn('customer_type', fn($customer) =>
@@ -157,8 +158,17 @@ class CustomerController extends Controller
     public function create()
     {
         $customer = null;
+        $depoName = [];
         $customerType = AppHelper::CUSTOMER_TYPE;
-        return view('backend.customer.add', compact('customer', 'customerType'));
+        return view('backend.customer.add', compact('customer', 'customerType','depoName'));
+    }
+
+     public function getDeposByArea(Request $request)
+    {
+        $areaId = $request->get('area_id');
+        $depos = Depo::where('area_id', $areaId)->pluck('name', 'id');
+
+        return response()->json($depos);
     }
 
     public function store(Request $request)
@@ -174,7 +184,7 @@ class CustomerController extends Controller
         'name' => 'required|string|max:255',
         'phone' => 'required|string|max:255',
         'area' => 'required|in:' . implode(',', $areaIds),
-        'outlet' => 'required|string|max:255',
+        'depo_id' => 'required|exists:depos,id',
         'customer_type' => 'required|string',
         'latitude' => 'required|numeric|between:-90,90',
         'longitude' => 'required|numeric|between:-180,180',
@@ -219,7 +229,7 @@ class CustomerController extends Controller
         'name' => $request->name,
         'phone' => $request->phone,
         'area_id' => $request->area,
-        'outlet' => $request->outlet,
+        'depo_id' => $request->depo_id,
         'customer_type' => $request->customer_type,
         'user_type' => auth()->user()->type,
         'latitude' => $request->latitude,
@@ -262,8 +272,15 @@ class CustomerController extends Controller
     public function edit(Customer $customer)
     {
         $customerType = AppHelper::CUSTOMER_TYPE;
-        return view('backend.customer.add', compact('customer','customerType'));
+
+        // Load depos based on the customer's area
+        $depos = [];
+        if ($customer->area_id) {
+            $depos = \App\Models\Depo::where('area_id', $customer->area_id)->pluck('name', 'id');
+        }
+        return view('backend.customer.add', compact('customer', 'customerType', 'depos'));
     }
+
 
     public function update(Request $request, Customer $customer)
 {
@@ -278,7 +295,7 @@ class CustomerController extends Controller
         'name' => 'required|string|max:255',
         'phone' => 'required|string|max:255',
         'area' => 'required|in:' . implode(',', $areaIds),
-        'outlet' => 'required|string|max:255',
+        'depo_id' => 'required|exists:depos,id',
         'customer_type' => 'required|string',
         'latitude' => 'required|numeric|between:-90,90',
         'longitude' => 'required|numeric|between:-180,180',
@@ -305,7 +322,7 @@ class CustomerController extends Controller
         'name' => $request->name,
         'phone' => $request->phone,
         'area_id' => $request->area,
-        'outlet' => $request->outlet,
+        'depo_id' => $request->depo_id,
         'customer_type' => $request->customer_type,
         'user_type' => auth()->user()->type,
         'latitude' => $request->latitude,

@@ -103,7 +103,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/customers/customer-type', [ReportController::class, 'getCustomerType'])->name('customers.getCustomerType');
     Route::resource('customer', CustomerController::class)->except(['show']);
     Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');
-
+    Route::get('/get-depos-by-area', [CustomerController::class, 'getDeposByArea'])->name('get-depos-by-area');
     //Depo
     Route::resource('depo', DepoController::class);
 

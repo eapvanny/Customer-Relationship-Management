@@ -469,9 +469,9 @@
                                         @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
                                             <optgroup label="{{ $area }}">
                                                 @foreach ($subItems as $area_id => $subItem)
-                                                    <option value="{{ $area_id }}"
-                                                        @if (old('area', $customer->area_id ?? '') == $area_id) selected @endif>
-                                                        {{ "$subItem" }}</option>
+                                                    <option value="{{ $area_id }}" {{ old('area', $customer->area_id ?? '') == $area_id ? 'selected' : '' }}>
+                                                        {{ $subItem }}
+                                                    </option>
                                                 @endforeach
                                             </optgroup>
                                         @endforeach
@@ -482,14 +482,19 @@
                             </div>
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="outlet"> {{ __("Depo's Name") }} <span class="text-danger">*</span></label>
-                                    <textarea id="outlet" name="outlet" class="form-control" placeholder="" rows="1" maxlength="500" required>
-@if ($customer)
-{{ old('outlet') ?? $customer->outlet }}@else{{ old('outlet') }}
-@endif
-</textarea>
+                                    <label for="depo_id">{{ __("Depo's Name") }} <span class="text-danger">*</span></label>
+                                    <select name="depo_id" class="form-control select2" id="depo_id" required>
+                                        <option value="">{{ __('Select area first') }}</option>
+                                        @if(!empty($depos))
+                                            @foreach($depos as $id => $name)
+                                                <option value="{{ $id }}" {{ old('depo_id', $customer->depo_id ?? '') == $id ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('outlet') }}</span>
+                                    <span class="text-danger">{{ $errors->first('depo_id') }}</span>
                                 </div>
                             </div>
                             <div class="col-lg-6 col-md-6 col-xl-4">
@@ -691,6 +696,44 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
+
+            $('#area').on('change', function () {
+                const areaId = $(this).val();
+                $('#depo_id').empty().append('<option value="">Loading...</option>');
+
+                if (areaId) {
+                    $.ajax({
+                        url: "{{ route('get-depos-by-area') }}",
+                        method: "GET",
+                        data: { area_id: areaId },
+                        success: function (response) {
+                            $('#depo_id').empty(); // Clear options first
+
+                            if (Object.keys(response).length === 0) {
+                                $('#depo_id').append('<option value="">{{__('Depo Not Found!')}}</option>');
+                            } else {
+                                $('#depo_id').append('<option value="">{{__('Select Depo')}}</option>');
+                                $.each(response, function (id, name) {
+                                    $('#depo_id').append(`<option value="${id}">${name}</option>`);
+                                });
+                            }
+                        },
+                        error: function () {
+                            $('#depo_id').empty().append('<option value="">Error loading depo</option>');
+                        }
+                    });
+                } else {
+                    $('#depo_id').empty().append('<option value="">{{__('Select area first')}}</option>');
+                }
+            });
+
+
+            // let selected = "{{ old('outlet_id', $customer->depo_id ?? '') }}";
+            // $.each(response, function (id, name) {
+            //     let isSelected = selected == id ? 'selected' : '';
+            //     $('#outlet_id').append(`<option value="${id}" ${isSelected}>${name}</option>`);
+            // });
+
 
             // Existing map initialization and geolocation code (unchanged)
             let map;

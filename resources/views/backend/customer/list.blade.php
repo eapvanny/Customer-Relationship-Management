@@ -97,8 +97,8 @@
                     name: 'area_id'
                 },
                 {
-                    data: 'outlet',
-                    name: 'outlet'
+                    data: 'depo_id',
+                    name: 'depo_id'
                 },
                 {
                     data: 'customer_code',
