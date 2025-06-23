@@ -621,6 +621,8 @@
                                             <input type="text" class="form-control" name="latitude" id="latitude"
                                                 value="{{ isset($customer) ? $customer->latitude : old('latitude') }}"
                                                 readonly required>
+                                                <span class="fa fa-info form-control-feedback"></span>
+                                                <span class="text-danger">{{ $errors->first('latitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -630,6 +632,8 @@
                                             <input type="text" class="form-control" name="longitude" id="longitude"
                                                 value="{{ isset($customer) ? $customer->longitude : old('longitude') }}"
                                                 readonly required>
+                                                <span class="fa fa-info form-control-feedback"></span>
+                                                <span class="text-danger">{{ $errors->first('longitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -637,6 +641,8 @@
                                             <label for="city">{{ __('Address') }}<span
                                                     class="text-danger">*</span></label>
                                             <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>{{ isset($customer) ? $customer->city : old('city') }}</textarea>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('city') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -646,6 +652,8 @@
                                             <input type="text" class="form-control" name="country" id="country"
                                                 value="{{ isset($customer) ? $customer->country : old('country') }}" readonly
                                                 required>
+                                                <span class="fa fa-info form-control-feedback"></span>
+                                                <span class="text-danger">{{ $errors->first('country') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12 mt-3">
