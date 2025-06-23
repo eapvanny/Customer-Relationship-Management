@@ -35,7 +35,7 @@
                     </h4>
                     <div class="box-tools pull-right">
                         @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
-                            <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
+                            <button id="filters" class="btn btn-outline-secondary d-none" data-bs-toggle="collapse"
                                 data-bs-target="#filterContainer">
                                 <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                             </button>
@@ -49,7 +49,7 @@
                 <div class="wrap-outter-box">
                     <div class="box box-info">
                         <div class="box-header">
-                            <div class="row">
+                            <div class="row d-none">
                                 <div class="col-12 mb-2">
                                     <form action="{{ route('user.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif"
@@ -99,7 +99,7 @@
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body">
-                            <div class="table-responsive">
+                            <div class="table-responsive mt-3">
                                 <table id="datatabble"
                                     class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
                                     width="100%">
