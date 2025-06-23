@@ -81,7 +81,7 @@
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
                 <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
-                <td><a href="{{ $photoUrl }}" target="_blank">photoURL</a></td>
+                <td><a href="{{ $photoUrl }}" target="_blank">{{__('photoURL')}}</a></td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
             </tr>
         @endforeach

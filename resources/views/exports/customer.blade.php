@@ -30,7 +30,7 @@
             <th>{{ __('Address') }}</th>
             <th>{{ __('Latitude') }}</th>
             <th>{{ __('Longitude') }}</th>
-            <th>{{ __('Picture') }}</th>
+            <th>{{ __('Outlet Photo') }}</th>
         </tr>
     </thead>
     <tbody>
@@ -43,7 +43,7 @@
                 $lang = $user?->user_lang ?? 'en';
                 $getFullName = fn($u) => $lang === 'en' ? ($u?->getFullNameLatinAttribute() ?? 'N/A') : ($u?->getFullNameAttribute() ?? 'N/A');
                 // Generate a URL with encrypted outlet_photo path
-                 $photoUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
+                $photoUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
@@ -59,7 +59,7 @@
                 <td>{{ $row->city && $row->country ? "{$row->city}, {$row->country}" : 'N/A' }}</td>
                 <td style="text-align: start">{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
-                <td>{{ $photoUrl }}</td>
+                <td><a href="{{ $photoUrl }}" target="_blank">{{__('photoURL')}}</a></td>
             </tr>
         @endforeach
     </tbody>
