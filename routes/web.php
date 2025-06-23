@@ -5,6 +5,7 @@ use App\Http\Controllers\AsmprogramController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepoController;
 use App\Http\Controllers\GetmanagerController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ReportController;
@@ -102,6 +103,11 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/customers/customer-type', [ReportController::class, 'getCustomerType'])->name('customers.getCustomerType');
     Route::resource('customer', CustomerController::class)->except(['show']);
     Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');
+
+    //Depo
+    Route::resource('depo', DepoController::class);
+
+
     // SE section start
 
 

@@ -648,6 +648,85 @@
                         </div>
                         <div class="col-xl-12 col-lg-12 col-md-12">
                             <fieldset>
+                                <legend>{{ __('Photo Attachment') }} <span class="text-danger">*
+                                        {{ __('(For the amount of water that has been sold)') }}</span></legend>
+                                <div class="row">
+                                    <div class="form-group has-feedback">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group has-feedback position-relative">
+                                                    <input type="file" id="outlet_photo" name="outlet_photo"
+                                                        style="display: none" accept="image/*" required>
+                                                    <button type="button"
+                                                        class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                        id="btn-remove-outlet-photo">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                    <fieldset id="outlet-photo-upload"
+                                                        class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                        <img class="rounded mx-auto d-block @if (!old('old_outlet_photo') && !isset($report->outlet_photo)) d-none @endif z-1"
+                                                            id="outlet-photo-preview" name="old_outlet_photo"
+                                                            src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }} @else {{ old('old_outlet_photo') }} @endif"
+                                                            alt="outlet-photo">
+                                                        <input type="hidden" id="outlet-img-preview"
+                                                            name="old_outlet_photo"
+                                                            value="@if (isset($report->outlet_photo)) {{ $report->outlet_photo }} @endif">
+                                                        <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('outlet-img-preview') && !isset($report->outlet_photo)) opacity-100 @else opacity-25 @endif"
+                                                            id="open-outlet-camera-btn">
+                                                            <button class="btn p-3 rounded-circle"
+                                                                id="btn-upload-outlet-photo" type="button"
+                                                                data-action="open-outlet-camera">
+                                                                <i class="fa-solid fa-camera-retro"></i>
+                                                            </button>
+                                                        </div>
+                                                        <label id="outlet-camera-label"
+                                                            class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                            @if (isset($report->outlet_photo) || old('outlet-img-preview'))
+                                                                {{ __('Delete the old photo before you can open the camera') }}
+                                                            @else
+                                                                {{ __('Click to open camera and capture photo') }}
+                                                            @endif
+                                                        </label>
+                                                    </fieldset>
+                                                    @error('outlet_photo')
+                                                        <span class="text-danger1">{{ __($message) }}</span>
+                                                    @enderror
+                                                </div>
+                                                <div id="outlet-camera-modal" class="camera-modal d-none">
+                                                    <div class="camera-content">
+                                                        <div class="video-container position-relative">
+                                                            <video id="outlet-webcam" autoplay playsinline></video>
+                                                            <div class="camera-overlay">
+                                                                <div class="overlay-top"></div>
+                                                                <div class="overlay-bottom"></div>
+                                                                <div class="overlay-left"></div>
+                                                                <div class="overlay-right"></div>
+                                                                <div class="focus-circle"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="camera-controls">
+                                                            <button id="switch-outlet-camera-btn"
+                                                                class="btn switch-camera-btn" type="button">
+                                                                <i class="fa-solid fa-camera-rotate"></i>
+                                                            </button>
+                                                            <button id="capture-outlet-btn" class="btn capture-btn"
+                                                                type="button">
+                                                                <i class="fa-solid fa-camera"></i>
+                                                            </button>
+                                                            <button id="close-outlet-camera-btn"
+                                                                class="btn close-camera-btn" type="button">
+                                                                <i class="fa-solid fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <canvas id="outlet-canvas" class="d-none"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <fieldset>
                                 <legend>{{ __('Photo Attachment') }}</legend>
                                 <div class="row">
                                     <div class="form-group has-feedback">
@@ -770,86 +849,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </fieldset>
-                            <fieldset>
-                                <legend>{{ __('Photo Attachment') }} <span class="text-danger">*
-                                        {{ __('(For the amount of water that has been sold)') }}</span></legend>
-                                <div class="row">
-                                    <div class="form-group has-feedback">
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group has-feedback position-relative">
-                                                    <input type="file" id="outlet_photo" name="outlet_photo"
-                                                        style="display: none" accept="image/*" required>
-                                                    <button type="button"
-                                                        class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                        id="btn-remove-outlet-photo">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                    <fieldset id="outlet-photo-upload"
-                                                        class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                        <img class="rounded mx-auto d-block @if (!old('old_outlet_photo') && !isset($report->outlet_photo)) d-none @endif z-1"
-                                                            id="outlet-photo-preview" name="old_outlet_photo"
-                                                            src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }} @else {{ old('old_outlet_photo') }} @endif"
-                                                            alt="outlet-photo">
-                                                        <input type="hidden" id="outlet-img-preview"
-                                                            name="old_outlet_photo"
-                                                            value="@if (isset($report->outlet_photo)) {{ $report->outlet_photo }} @endif">
-                                                        <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('outlet-img-preview') && !isset($report->outlet_photo)) opacity-100 @else opacity-25 @endif"
-                                                            id="open-outlet-camera-btn">
-                                                            <button class="btn p-3 rounded-circle"
-                                                                id="btn-upload-outlet-photo" type="button"
-                                                                data-action="open-outlet-camera">
-                                                                <i class="fa-solid fa-camera-retro"></i>
-                                                            </button>
-                                                        </div>
-                                                        <label id="outlet-camera-label"
-                                                            class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                            @if (isset($report->outlet_photo) || old('outlet-img-preview'))
-                                                                {{ __('Delete the old photo before you can open the camera') }}
-                                                            @else
-                                                                {{ __('Click to open camera and capture photo') }}
-                                                            @endif
-                                                        </label>
-                                                    </fieldset>
-                                                    @error('outlet_photo')
-                                                        <span class="text-danger1">{{ __($message) }}</span>
-                                                    @enderror
-                                                </div>
-                                                <div id="outlet-camera-modal" class="camera-modal d-none">
-                                                    <div class="camera-content">
-                                                        <div class="video-container position-relative">
-                                                            <video id="outlet-webcam" autoplay playsinline></video>
-                                                            <div class="camera-overlay">
-                                                                <div class="overlay-top"></div>
-                                                                <div class="overlay-bottom"></div>
-                                                                <div class="overlay-left"></div>
-                                                                <div class="overlay-right"></div>
-                                                                <div class="focus-circle"></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="camera-controls">
-                                                            <button id="switch-outlet-camera-btn"
-                                                                class="btn switch-camera-btn" type="button">
-                                                                <i class="fa-solid fa-camera-rotate"></i>
-                                                            </button>
-                                                            <button id="capture-outlet-btn" class="btn capture-btn"
-                                                                type="button">
-                                                                <i class="fa-solid fa-camera"></i>
-                                                            </button>
-                                                            <button id="close-outlet-camera-btn"
-                                                                class="btn close-camera-btn" type="button">
-                                                                <i class="fa-solid fa-times"></i>
-                                                            </button>
-                                                        </div>
-                                                        <canvas id="outlet-canvas" class="d-none"></canvas>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </fieldset>
+                            </fieldset> 
                         </div>
                         <!-- Location Fields and Map -->
                         <div class="col-lg-12 col-md-12 col-xl-12">

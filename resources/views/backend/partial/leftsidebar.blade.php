@@ -15,15 +15,31 @@
                     </a>
                 </li>
             @endHasTypePermission
-
-            @hasTypePermission('view customer')
-                <li>
-                    <a href="{{ route('customer.index') }}" class="text-decoration-none">
-                        <i class="fa fa-solid fa-user"></i> <span>{{ __('Customer') }}</span>
-                    </a>
-                </li>
-            @endHasTypePermission
-
+            <li class="treeview">
+                <a href="#" class="text-decoration-none">
+                    <i class="fa fa-solid fa-people-roof"></i>
+                    <span>{{ __('Customer Management') }}</span>
+                    <span class="pull-right-container">
+                        <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                </a>
+                <ul class="treeview-menu">
+                    @hasTypePermission('view depo')
+                        <li>
+                            <a href="{{ route('depo.index') }}" class="text-decoration-none">
+                                <i class="fa fa-solid fa-user"></i> <span>{{ __('Depo') }}</span>
+                            </a>
+                        </li>
+                    @endHasTypePermission
+                    @hasTypePermission('view customer')
+                        <li>
+                            <a href="{{ route('customer.index') }}" class="text-decoration-none">
+                                <i class="fa fa-solid fa-user"></i> <span>{{ __('Customer') }}</span>
+                            </a>
+                        </li>
+                    @endHasTypePermission
+                </ul>
+            </li>
             @hasTypePermission('view report')
                 <li>
                     <a href="{{ route('report.index') }}" class="text-decoration-none">
@@ -32,7 +48,11 @@
                 </li>
             @endHasTypePermission
 
-            @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id === AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id === AppHelper::USER_ADMIN || auth()->user()->role_id === AppHelper::USER_DIRECTOR || auth()->user()->role_id === AppHelper::USER_MANAGER)
+            @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN ||
+                    auth()->user()->role_id === AppHelper::USER_ADMINISTRATOR ||
+                    auth()->user()->role_id === AppHelper::USER_ADMIN ||
+                    auth()->user()->role_id === AppHelper::USER_DIRECTOR ||
+                    auth()->user()->role_id === AppHelper::USER_MANAGER)
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         <i class="fa fa-solid fa-people-roof"></i>
