@@ -111,7 +111,7 @@
                                             <th>{{ __('Position') }}</th>
                                             <th>{{ __('Area') }}</th>
                                             <th>{{ __('Username') }}</th>
-                                            <th>{{ __('Email') }}</th>
+                                            {{-- <th>{{ __('Email') }}</th> --}}
                                             @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
                                                 <th>{{ __('Managed By') }}</th>
                                             @endif
@@ -192,10 +192,10 @@
                         data: 'username',
                         name: 'username',
                     },
-                    {
-                        data: 'email',
-                        name: 'email',
-                    },
+                    // {
+                    //     data: 'email',
+                    //     name: 'email',
+                    // },
                     @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
                         {
                             data: 'managed_by',

@@ -198,9 +198,9 @@ class UserController extends Controller
                 ->addColumn('username', function ($data) {
                     return __($data->username);
                 })
-                ->addColumn('email', function ($data) {
-                    return __($data->email);
-                })
+                // ->addColumn('email', function ($data) {
+                //     return __($data->email);
+                // })
                 ->addColumn('managed_by', function ($data) {
                     return $data->manager
                         ? (auth()->user()->user_lang == 'en' ? $data->manager->getFullNameLatinAttribute() : $data->manager->getFullNameAttribute())
