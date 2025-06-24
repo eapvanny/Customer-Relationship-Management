@@ -142,40 +142,6 @@ class UserController extends Controller
             $query->where('id', $loggedInUserId);
         }
 
-
-        // Fetch Area Managers for Filter Dropdown (filtered by type)
-        $areaManager = User::whereIn('role_id', [AppHelper::USER_MANAGER])
-            ->where('type', $loggedInUserType)
-            ->get()->mapWithKeys(function ($manager) use ($loggedInUser) {
-                return [
-                    $manager->id => $loggedInUser->user_lang === 'en'
-                        ? $manager->family_name_latin . ' ' . $manager->name_latin
-                        : $manager->family_name . ' ' . $manager->name
-                ];
-            });
-
-        // Fetch Employees for Filter Dropdown (filtered by type)
-        $full_name = User::where('role_id', AppHelper::USER_EMPLOYEE)
-            ->where('type', $loggedInUserType)
-            ->get()->mapWithKeys(function ($employee) use ($loggedInUser) {
-                return [
-                    $employee->id => $loggedInUser->user_lang === 'en'
-                        ? $employee->family_name_latin . ' ' . $employee->name_latin
-                        : $employee->family_name . ' ' . $employee->name
-                ];
-            });
-
-        // Apply filters
-        if ($request->has('manager_id') && !empty($request->manager_id)) {
-            $query->where('manager_id', $request->manager_id);
-            $is_filter = true;
-        }
-
-        if ($request->has('full_name') && !empty($request->full_name)) {
-            $query->where('id', $request->full_name);
-            $is_filter = true;
-        }
-
         if ($request->ajax()) {
             $users = $query->get();
             return DataTables::of($users)
@@ -198,9 +164,6 @@ class UserController extends Controller
                 ->addColumn('username', function ($data) {
                     return __($data->username);
                 })
-                // ->addColumn('email', function ($data) {
-                //     return __($data->email);
-                // })
                 ->addColumn('managed_by', function ($data) {
                     return $data->manager
                         ? (auth()->user()->user_lang == 'en' ? $data->manager->getFullNameLatinAttribute() : $data->manager->getFullNameAttribute())
@@ -254,7 +217,7 @@ class UserController extends Controller
         }
 
         // Fetch Area Managers for Filter Dropdown
-        return view('backend.user.list', compact('areaManager', 'is_filter', 'full_name'));
+        return view('backend.user.list', compact('is_filter'));
     }
 
 

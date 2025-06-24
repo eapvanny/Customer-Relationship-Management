@@ -595,57 +595,36 @@
                 serverSide: true,
                 pageLength: 10,
                 ajax: {
-                    url: "{!! route('report.index') !!}",
+                    url: "{{ route('report.index') }}",
+                    type: "GET",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: function(d) {
-                        // Include DataTables search parameter
                         d.search_value = d.search.value;
-                        // Include existing query parameters
                         d.date1 = "{{ request('date1') }}";
                         d.date2 = "{{ request('date2') }}";
                         d.area_id = "{{ request('area_id') }}";
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.log('AJAX Error:', xhr.responseText);
                     }
                 },
-                columns: [{
-                        data: 'area',
-                        name: 'area'
-                    },
-                    {
-                        data: 'outlet_id',
-                        name: 'outlet_id'
-                    },
-                    {
-                        data: 'customer',
-                        name: 'customer'
-                    },
-                    {
-                        data: 'customer_code',
-                        name: 'customer_code'
-                    },
-                    {
-                        data: '250ml',
-                        name: '250ml'
-                    },
-                    {
-                        data: '350ml',
-                        name: '350ml'
-                    },
-                    {
-                        data: '600ml',
-                        name: '600ml'
-                    },
-                    {
-                        data: '1500ml',
-                        name: '1500ml'
-                    },
-                    {
-                        data: 'default',
-                        name: 'default'
-                    },
-                    {
-                        data: 'action',
+                columns: [
+                    { data: 'area', name: 'area' },
+                    { data: 'outlet_id', name: 'outlet_id' },
+                    { data: 'customer', name: 'customer' },
+                    { data: 'customer_code', name: 'customer_code' },
+                    { data: '250ml', name: '250ml' },
+                    { data: '350ml', name: '350ml' },
+                    { data: '600ml', name: '600ml' },
+                    { data: '1500ml', name: '1500ml' },
+                    { data: 'default', name: 'default' },
+                    { 
+                        data: 'action', 
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false 
                     }
                 ]
             });

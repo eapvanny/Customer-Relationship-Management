@@ -51,7 +51,7 @@
                         <div class="box-header">
                             <div class="row d-none">
                                 <div class="col-12 mb-2">
-                                    <form action="{{ route('user.index') }}" method="GET" id="filterForm">
+                                    {{-- <form action="{{ route('user.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif"
                                             id="filterContainer">
                                             <a id="close_filter" class="btn btn-outline-secondary btn-sm">
@@ -92,7 +92,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </form>
+                                    </form> --}}
                                 </div>
                             </div>
 
@@ -157,65 +157,62 @@
             Generic.initDeleteDialog();
             window.filter_org = 1;
             Generic.initFilter();
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
             var t = $('#datatabble').DataTable({
-                processing: false,
+                processing: true,
                 serverSide: true,
                 ajax: {
                     url: "{{ route('user.index') }}",
+                    type: 'GET', // or 'POST' depending on your route method
+                    error: function(xhr, error, thrown) {
+                        console.log(xhr.responseText); // Log the error for debugging
+                    }
                 },
                 columns: [{
                         data: 'photo',
                         name: 'photo',
+                        orderable: false
                     },
                     {
                         data: 'staff_id_card',
-                        name: 'staff_id_card',
+                        name: 'staff_id_card'
                     },
                     {
                         data: 'name',
-                        name: 'name',
+                        name: 'name'
                     },
                     {
                         data: 'position',
-                        name: 'position',
+                        name: 'position'
                     },
                     {
                         data: 'area',
-                        name: 'area',
+                        name: 'area'
                     },
                     {
                         data: 'username',
-                        name: 'username',
+                        name: 'username'
                     },
-                    // {
-                    //     data: 'email',
-                    //     name: 'email',
-                    // },
                     @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
                         {
                             data: 'managed_by',
                             name: 'managed_by',
+                            orderable: false
                         },
                     @endif {
                         data: 'phone_no',
-                        name: 'phone_no',
+                        name: 'phone_no'
                     },
                     {
                         data: 'role',
-                        name: 'role',
+                        name: 'role'
                     },
                     {
                         data: 'type',
-                        name: 'type',
+                        name: 'type'
                     },
                     {
                         data: 'gender',
-                        name: 'gender',
+                        name: 'gender'
                     },
                     {
                         data: 'status',
@@ -227,13 +224,7 @@
                         name: 'action',
                         orderable: false
                     }
-                ],
-                "fnDrawCallback": function() {
-                    $('#datatabble input.statusChange').bootstrapToggle({
-                        on: "<i class='fa fa-check-circle'></i>",
-                        off: "<i class='fa fa-ban'></i>"
-                    });
-                }
+                ]
             });
 
             $(document).on('click', '.disable-user', function() {
