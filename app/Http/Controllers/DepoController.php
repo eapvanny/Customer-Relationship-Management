@@ -20,131 +20,114 @@ class DepoController extends Controller
 
     public function index(Request $request)
     {
-        $loggedInUser = auth()->check() ? auth()->user() : null;
-        
+        try {
+            $loggedInUser = auth()->check() ? auth()->user() : null;
 
-        if ($request->ajax()) {
-            $query = Depo::with('user');
+            if ($request->ajax()) {
+                $query = Depo::with('user');
 
-        if ($loggedInUser) {
-                $loggedInUserRole = $loggedInUser->role_id;
-                $loggedInUserId = $loggedInUser->id;
-                $loggedInUserType = $loggedInUser->type;
+                if ($loggedInUser) {
+                    $loggedInUserRole = $loggedInUser->role_id;
+                    $loggedInUserId = $loggedInUser->id;
+                    $loggedInUserType = $loggedInUser->type;
 
-                // Collect user IDs to filter depos
-                $userIds = [$loggedInUserId]; // Always include own depos
+                    // Collect user IDs to filter depos
+                    $userIds = [$loggedInUserId]; // Always include own depos
 
-                // Define allowed user types for subordinates
-                $allowedTypes = [AppHelper::SALE, AppHelper::SE];
+                    // Define allowed user types for subordinates
+                    $allowedTypes = [AppHelper::SALE, AppHelper::SE];
 
-                if ($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-                    AppHelper::USER_SUPER_ADMIN,
-                    AppHelper::USER_ADMIN,
-                    AppHelper::USER_DIRECTOR
-                ])) {
-                    // Users with type ALL or roles Super Admin, Admin, Director see all depos
-                    // No additional filtering needed
-                } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
-                    // Manager sees depos of RSMs, Supervisors, ASMs, Employees under them
-                    $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
-                        $q->where('manager_id', $loggedInUserId)
-                          ->orWhere('rsm_id', $loggedInUserId)
-                          ->orWhere('sup_id', $loggedInUserId)
-                          ->orWhere('asm_id', $loggedInUserId);
-                    })->whereIn('type', $allowedTypes)
-                      ->pluck('id')
-                      ->toArray();
-                    $userIds = array_merge($userIds, $managedUserIds);
-                } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
-                    // RSM sees depos of Supervisors, ASMs, Employees under them
-                    $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
-                        $q->where('rsm_id', $loggedInUserId)
-                          ->orWhere('sup_id', $loggedInUserId)
-                          ->orWhere('asm_id', $loggedInUserId);
-                    })->whereIn('type', $allowedTypes)
-                      ->pluck('id')
-                      ->toArray();
-                    $userIds = array_merge($userIds, $managedUserIds);
-                } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
-                    // Supervisor sees depos of ASMs, Employees under them
-                    $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
-                        $q->where('sup_id', $loggedInUserId)
-                          ->orWhere('asm_id', $loggedInUserId);
-                    })->whereIn('type', $allowedTypes)
-                      ->pluck('id')
-                      ->toArray();
-                    $userIds = array_merge($userIds, $managedUserIds);
-                } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
-                    // ASM sees depos of Employees under them
-                    $managedUserIds = \App\Models\User::where('asm_id', $loggedInUserId)
-                        ->whereIn('type', $allowedTypes)
-                        ->pluck('id')
-                        ->toArray();
-                    $userIds = array_merge($userIds, $managedUserIds);
+                    if ($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+                        AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMIN,
+                        AppHelper::USER_DIRECTOR
+                    ])) {
+                        // No additional filtering needed
+                    } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
+                        $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
+                            $q->where('manager_id', $loggedInUserId)
+                              ->orWhere('rsm_id', $loggedInUserId)
+                              ->orWhere('sup_id', $loggedInUserId)
+                              ->orWhere('asm_id', $loggedInUserId);
+                        })->whereIn('type', $allowedTypes)
+                          ->pluck('id')
+                          ->toArray();
+                        $userIds = array_merge($userIds, $managedUserIds);
+                    } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
+                        $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
+                            $q->where('rsm_id', $loggedInUserId)
+                              ->orWhere('sup_id', $loggedInUserId)
+                              ->orWhere('asm_id', $loggedInUserId);
+                        })->whereIn('type', $allowedTypes)
+                          ->pluck('id')
+                          ->toArray();
+                        $userIds = array_merge($userIds, $managedUserIds);
+                    } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
+                        $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
+                            $q->where('sup_id', $loggedInUserId)
+                              ->orWhere('asm_id', $loggedInUserId);
+                        })->whereIn('type', $allowedTypes)
+                          ->pluck('id')
+                          ->toArray();
+                        $userIds = array_merge($userIds, $managedUserIds);
+                    } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
+                        $managedUserIds = \App\Models\User::where('asm_id', $loggedInUserId)
+                            ->whereIn('type', $allowedTypes)
+                            ->pluck('id')
+                            ->toArray();
+                        $userIds = array_merge($userIds, $managedUserIds);
+                    }
+
+                    // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
+                    if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+                        AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMIN,
+                        AppHelper::USER_DIRECTOR
+                    ]))) {
+                        $query->whereIn('user_id', array_unique($userIds));
+                    }
+
+                    // Ensure depos belong to users with allowed types
+                    if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+                        AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMIN,
+                        AppHelper::USER_DIRECTOR
+                    ]))) {
+                        $query->whereHas('user', function ($q) use ($allowedTypes) {
+                            $q->whereIn('type', $allowedTypes);
+                        });
+                    }
+                } else {
+                    // No authenticated user, return no depos
+                    $query->where('id', 0);
                 }
 
-                // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
-                if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-                    AppHelper::USER_SUPER_ADMIN,
-                    AppHelper::USER_ADMIN,
-                    AppHelper::USER_DIRECTOR
-                ]))) {
-                    $query->whereIn('user_id', array_unique($userIds));
-                }
-
-                // Ensure depos belong to depos with allowed types (except for ALL/Super Admin/Admin/Director)
-                if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-                    AppHelper::USER_SUPER_ADMIN,
-                    AppHelper::USER_ADMIN,
-                    AppHelper::USER_DIRECTOR
-                ]))) {
-                    $query->whereHas('user', function ($q) use ($allowedTypes) {
-                        $q->whereIn('type', $allowedTypes);
-                    });
-                }
-            } else {
-                // No authenticated user, return no depos
-                $query->where('id', 0);
+                $depos = $query->orderBy('id', 'desc');
+                return DataTables::of($depos)
+                    ->addIndexColumn()
+                    ->addColumn('created_by', function ($depo) {
+                        return $depo->user ? ($depo->user->user_lang === 'en' ? ($depo->user->full_name_latin ?? 'N/A') : ($depo->user->user_lang === 'kh' ? ($depo->user->full_name ?? 'N/A') : 'N/A')) : 'N/A';
+                    })
+                    ->addColumn('area', fn($depo) => AppHelper::getAreaNameById($depo->area_id) ?? 'N/A')
+                    ->addColumn('name', function ($depo) {
+                        return $depo->name ?? 'N/A';
+                    })
+                    ->addColumn('action', function ($depo) {
+                        $button = '<div class="change-action-item">';
+                        $button .= '<a title="Edit" href="' . route('depo.edit', $depo->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
+                        $button .= '<a href="' . route('depo.destroy', $depo->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                        $button .= '</div>';
+                        return $button;
+                    })
+                    ->rawColumns(['action', 'created_by', 'name'])
+                    ->make(true);
             }
 
-            $depos = $query->orderBy('id', 'desc');
-            return DataTables::of($depos)
-                ->addIndexColumn()
-                ->addColumn('created_by', function ($depo) {
-                    if (!$depo->user) {
-                        return 'N/A';
-                    }
-                    return $depo->user->user_lang === 'en'
-                        ? ($depo->user->full_name_latin ?? 'N/A')
-                        : ($depo->user->user_lang === 'kh' ? ($depo->user->full_name ?? 'N/A') : 'N/A');
-                })
-                ->addColumn('area', fn($depo) => AppHelper::getAreaNameById($depo->area_id))
-                ->addColumn('name', function ($depo) {
-                    return $depo->name ? $depo->name : 'N/A';
-                })
-                ->addColumn('action', function ($depo) {
-                    $button = '<div class="change-action-item">';
-                    $actions = false;
-                    // if (auth()->user()->can('update depo')) {
-                        $button .= '<a title="Edit" href="' . route('depo.edit', $depo->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
-                        $actions = true;
-                    // }
-                    // if (auth()->user()->can('delete depo')) {
-                        $button .= '<a href="' . route('depo.destroy', $depo->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
-                        $actions = true;
-                    // }
-                    if (!$actions) {
-                        $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
-                    }
-                    $button .= '</div>';
-                    return $button;
-                })
-                ->rawColumns(['action'], 'created_by', 'name')
-                ->make(true);
+            return view('backend.depo.list');
+        } catch (\Exception $e) {
+            Log::error('DataTables AJAX Error: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred. Please check the server logs.'], 500);
         }
-
-        // Fetch Area Managers for Filter Dropdown
-        return view('backend.depo.list');
     }
 
 
