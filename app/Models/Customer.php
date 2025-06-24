@@ -23,8 +23,7 @@ class Customer extends Model
         'country',
         'code',
         'customer_type',
-        'ef
-        ',
+        'user_type',
         'user_id',
     ];
 

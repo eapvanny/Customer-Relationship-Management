@@ -176,7 +176,10 @@ class CustomerController extends Controller
 
         if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
             // Filter depos accessible by SALE or SE users
-            $query->where('user_type', $authUser->type);
+            $query->where('user_type', $authUser->type)
+                ->where(function ($q) use ($authUser) {
+                    $q->where('user_id', $authUser->id);
+                });
         }
 
         $depos = $query->pluck('name', 'id')->toArray();

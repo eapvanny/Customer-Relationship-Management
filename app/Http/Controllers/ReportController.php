@@ -343,7 +343,10 @@ class ReportController extends Controller
 
     if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
         // Filter outlets accessible by SALE or SE users
-        $query->where('user_type', $authUser->type);
+        $query->where('user_type', $authUser->type)
+                ->where(function ($q) use ($authUser) {
+                    $q->where('user_id', $authUser->id); // Include depos without specific user
+                });
     }
 
     $outlets = $query->pluck('name', 'id')->toArray();
