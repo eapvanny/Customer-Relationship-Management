@@ -179,6 +179,7 @@ class DepoController extends Controller
         Depo::create([
             'user_id' => auth()->id(),
             'area_id' => $request->area,
+            'user_type' => auth()->user()->type,
             'name' => $request->name,
         ]);
         if ($request->has('saveandcontinue')) {

@@ -98,8 +98,8 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/reports/mark-as-seen', [ReportController::class, 'markAsSeen'])->name('reports.markAsSeen');
 
     //customer
-    Route::get('/customers/outlet', [ReportController::class, 'getOutlet'])->name('customers.outlet');
-    Route::get('/customers/name', [ReportController::class, 'getCustomerName'])->name('customers.getName');
+    Route::get('/customers/outlet', [ReportController::class, 'getOutlets'])->name('customers.outlet');
+    Route::get('/customers/get', [ReportController::class, 'getCustomers'])->name('customers.getName');
     Route::get('/customers/customer-type', [ReportController::class, 'getCustomerType'])->name('customers.getCustomerType');
     Route::resource('customer', CustomerController::class)->except(['show']);
     Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');

@@ -17,7 +17,7 @@
             @endHasTypePermission
             <li class="treeview">
                 <a href="#" class="text-decoration-none">
-                    <i class="fa fa-solid fa-people-roof"></i>
+                    <i class="fa fa-solid fa-users"></i>
                     <span>{{ __('Customer Management') }}</span>
                     <span class="pull-right-container">
                         <i class="fa fa-angle-left pull-right"></i>
@@ -27,7 +27,7 @@
                     @hasTypePermission('view depo')
                         <li>
                             <a href="{{ route('depo.index') }}" class="text-decoration-none">
-                                <i class="fa fa-solid fa-user"></i> <span>{{ __('Depo') }}</span>
+                                <i class="fa-solid fa-store"></i> <span>{{ __('Depo') }}</span>
                             </a>
                         </li>
                     @endHasTypePermission

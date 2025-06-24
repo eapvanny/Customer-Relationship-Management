@@ -11,6 +11,7 @@ class Depo extends Model
     protected $fillable = [
         'area_id',
         'user_id',
+        'user_type',
         'name',
     ];
     public function user()

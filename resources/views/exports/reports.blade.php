@@ -39,6 +39,7 @@
             <th>{{ __('Latitude') }}</th>
             <th>{{ __('Longitude') }}</th>
             <th>{{ __('Address') }}</th>
+            <th>{{ __('Photo Outlet') }}</th>
             <th>{{ __('POSM') }}</th>
             <th>{{ __('Quantity') }}</th>
         </tr>
@@ -61,7 +62,8 @@
                 $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
                 $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
 
-                $photoUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
+                $PosmUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
+                $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'N/A';
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
@@ -81,7 +83,8 @@
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
                 <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
-                <td><a href="{{ $photoUrl }}" target="_blank">{{__('photoURL')}}</a></td>
+                <td><a href="{{ $OutletUrl }}" target="_blank">{{__('OUTLET_URL')}}</a></td>
+                <td><a href="{{ $PosmUrl }}" target="_blank">{{__('POSM_URL')}}</a></td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
             </tr>
         @endforeach

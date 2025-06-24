@@ -516,11 +516,11 @@
                                 <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
                                     <option value="">{{ __('Select Area') }}</option>
-                                    @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                    @foreach ($areas as $area => $subItems)
                                         <optgroup label="{{ $area }}">
                                             @foreach ($subItems as $area_id => $subItem)
                                                 <option value="{{ $area_id }}"
-                                                    @if (old('area', $report->area_id ?? '') == $area_id) selected @endif>
+                                                    {{ old('area', $report->area_id ?? '') == $area_id ? 'selected' : '' }}>
                                                     {{ $subItem }}
                                                 </option>
                                             @endforeach
@@ -531,20 +531,15 @@
                                 <span class="text-danger">{{ $errors->first('area') }}</span>
                             </div>
                         </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
+                        <div class="col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="outlet_id">{{ __("Depo's Name") }} <span class="text-danger">*</span></label>
                                 <select name="outlet_id" class="form-control select2" id="outlet_id" required>
                                     <option value="">{{ __('Select area first') }}</option>
-                                    @if ($report && $report->outlet && !$customers->contains('id', $report->outlet_id))
-                                        <option value="{{ $report->outlet_id }}" selected>
-                                            {{ $report->customer->outlet }} (Current)
-                                        </option>
-                                    @endif
-                                    @foreach ($customers as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ old('outlet_id', $report->outlet_id ?? '') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->outlet }}
+                                    @foreach ($depos as $id => $name)
+                                        <option value="{{ $id }}"
+                                            {{ old('outlet_id', $report->outlet_id ?? '') == $id ? 'selected' : '' }}>
+                                            {{ $name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -552,21 +547,16 @@
                                 <span class="text-danger">{{ $errors->first('outlet_id') }}</span>
                             </div>
                         </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
+                        <div class="col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
                                 <label for="customer_id">{{ __('Customer Name') }} <span
                                         class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
                                     <option value="">{{ __('Select outlet first') }}</option>
-                                    @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
-                                        <option value="{{ $report->customer_id }}" selected>
-                                            {{ $report->customer->name }} (Current)
-                                        </option>
-                                    @endif
-                                    @foreach ($customers as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ old('customer_id', $report->customer_id ?? '') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->name }}
+                                    @foreach ($customers as $id => $name)
+                                        <option value="{{ $id }}"
+                                            {{ old('customer_id', $report->customer_id ?? '') == $id ? 'selected' : '' }}>
+                                            {{ $name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -574,32 +564,22 @@
                                 <span class="text-danger">{{ $errors->first('customer_id') }}</span>
                             </div>
                         </div>
-                        <div class="col-lg-6 col-md-6 col-xl-6">
+                        <div class="col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="customer_type"> {{ __('Customer Type') }} <span class="text-danger">*</span>
+                                <label for="customer_type">{{ __('Customer Type') }} <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
                                         title="Select customer type"></i>
                                 </label>
-                                {!! Form::select('customer_type', $customerType, old('customer_type', optional($report)->customer_type), [
-                                    'placeholder' => __('Select customer first'),
-                                    'id' => 'customer_type',
-                                    'class' => 'form-control select2',
-                                    'required' => true,
-                                ]) !!}
-                                {{-- <select name="customer_type" id="customer_type" class="form-control select2">
-                                    <option selected disabled>{{ __('Select customer type') }}</option>
-                                    <option value="test1"
-                                        @if ($report) @if ($report->customer_type == 'test1')
-                                                selected @endif
-                                        @endif
-                                        >Test1</option>
-                                    <option value="test2"
-                                        @if ($report) @if ($report->customer_type == 'test2')
-                                                selected @endif
-                                        @endif
-                                        >Test2</option>
-                                </select> --}}
-                                <span class="form-control-feedback"></span>
+                                <select name="customer_type" id="customer_type" class="form-control select2" required>
+                                    <option value="">{{ __('Select customer first') }}</option>
+                                    @foreach ($customerType as $id => $name)
+                                        <option value="{{ $id }}"
+                                            {{ old('customer_type', $report->customer_type ?? '') == $id ? 'selected' : '' }}>
+                                            {{ $name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('customer_type') }}</span>
                             </div>
                         </div>
@@ -849,7 +829,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </fieldset> 
+                            </fieldset>
                         </div>
                         <!-- Location Fields and Map -->
                         <div class="col-lg-12 col-md-12 col-xl-12">
@@ -863,8 +843,8 @@
                                             <input type="text" class="form-control" name="latitude" id="latitude"
                                                 value="{{ isset($report) ? $report->latitude : old('latitude') }}"
                                                 readonly required>
-                                                <span class="fa fa-info form-control-feedback"></span>
-                                                <span class="text-danger">{{ $errors->first('latitude') }}</span>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('latitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -874,8 +854,8 @@
                                             <input type="text" class="form-control" name="longitude" id="longitude"
                                                 value="{{ isset($report) ? $report->longitude : old('longitude') }}"
                                                 readonly required>
-                                                <span class="fa fa-info form-control-feedback"></span>
-                                                <span class="text-danger">{{ $errors->first('longitude') }}</span>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('longitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -894,8 +874,8 @@
                                             <input type="text" class="form-control" name="country" id="country"
                                                 value="{{ isset($report) ? $report->country : old('country') }}" readonly
                                                 required>
-                                                <span class="fa fa-info form-control-feedback"></span>
-                                                <span class="text-danger">{{ $errors->first('country') }}</span>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('country') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12 mt-3">
@@ -1167,73 +1147,84 @@
                 video.srcObject = null;
             }
 
-            var selectedCustomerId = $('#customer_id').val();
+            var selectedAreaId = $('#area').val();
             var selectedOutletId = $('#outlet_id').val();
+            var selectedCustomerId = $('#customer_id').val();
             var selectedCustomerType = $('#customer_type').val();
 
             // Handle area change
             $('#area').on('change', function() {
-                var areaId = $(this).val();
-                selectedOutletId = $('#outlet_id').val(); // Update current outlet_id
+                const areaId = $(this).val();
+                const $outletSelect = $('#outlet_id');
+                const $customerSelect = $('#customer_id');
+                const $customerTypeSelect = $('#customer_type');
+
+                // Clear dependent selects
+                $outletSelect.empty().append('<option value="">{{ __('Loading...') }}</option>');
+                $customerSelect.empty().append('<option value="">{{ __('Select outlet first') }}</option>')
+                    .trigger('change.select2');
+                $customerTypeSelect.empty().append(
+                    '<option value="">{{ __('Select customer first') }}</option>').trigger(
+                    'change.select2');
 
                 if (areaId) {
                     $.ajax({
-                        url: '{{ route('customers.outlet') }}',
-                        type: 'GET',
+                        url: "{{ route('customers.outlet') }}",
+                        method: "GET",
                         data: {
                             area_id: areaId
                         },
-                        success: function(data) {
-                            // Handle Outlets Dropdown
-                            $('#outlet_id').empty();
-                            if (data.outlets.length === 0) {
-                                $('#outlet_id').append(
-                                    '<option value="">{{ __('Outlet Not Found!') }}</option>'
-                                );
-                            } else {
-                                $('#outlet_id').append(
-                                    '<option value="">{{ __('Select outlet') }}</option>'
-                                );
-                                $.each(data.outlets, function(key, outlet) {
-                                    var isSelected = (outlet.id == selectedOutletId) ?
-                                        'selected' : '';
-                                    $('#outlet_id').append(
-                                        '<option value="' + outlet.id + '" ' +
-                                        isSelected + '>' + outlet.name + '</option>'
+                        success: function(response) {
+                            $outletSelect.empty().append(
+                                '<option value="">{{ __('Select Depo') }}</option>');
+
+                            if (Object.keys(response).length === 0) {
+                                $outletSelect.append(
+                                    '<option value="">{{ __('Depo Not Found!') }}</option>'
                                     );
+                            } else {
+                                $.each(response, function(id, name) {
+                                    // Pre-select outlet if it matches selectedOutletId
+                                    const isSelected = id == selectedOutletId ?
+                                        'selected' : '';
+                                    $outletSelect.append(
+                                        `<option value="${id}" ${isSelected}>${name}</option>`
+                                        );
                                 });
                             }
-                            $('#outlet_id').trigger(
-                                'change'); // Trigger outlet change to populate customers
+                            $outletSelect.trigger('change.select2');
+
+                            // Trigger outlet change if an outlet is selected
+                            if (selectedOutletId && areaId == selectedAreaId) {
+                                $outletSelect.val(selectedOutletId).trigger('change');
+                            }
                         },
-                        error: function(xhr) {
-                            console.log('Error fetching outlets:', xhr);
-                            $('#outlet_id').empty().append(
-                                '<option value="">{{ __('Outlet Not Found!') }}</option>'
-                            );
-                            $('#customer_id').empty().append(
-                                '<option value="">{{ __('Customer Not Found!') }}</option>'
-                            );
-                            $('#customer_id').trigger('change');
+                        error: function() {
+                            $outletSelect.empty().append(
+                                '<option value="">{{ __('Error loading depo') }}</option>'
+                                ).trigger('change.select2');
                         }
                     });
                 } else {
-                    $('#outlet_id').empty().append(
-                        '<option value="">{{ __('Select area first') }}</option>'
-                    );
-                    $('#customer_id').empty().append(
-                        '<option value="">{{ __('Customer Not Found!') }}</option>'
-                    );
-                    $('#customer_id').trigger('change');
+                    $outletSelect.empty().append(
+                        '<option value="">{{ __('Select area first') }}</option>').trigger(
+                        'change.select2');
                 }
-
             });
 
             // Handle outlet change
             $('#outlet_id').on('change', function() {
-                var areaId = $('#area').val();
-                var outletId = $(this).val();
-                selectedCustomerId = $('#customer_id').val(); // Update current customer_id
+                const areaId = $('#area').val();
+                const outletId = $(this).val();
+                const $customerSelect = $('#customer_id');
+                const $customerTypeSelect = $('#customer_type');
+
+                // Clear dependent selects
+                $customerSelect.empty().append('<option value="">{{ __('Select Customer') }}</option>')
+                    .trigger('change.select2');
+                $customerTypeSelect.empty().append(
+                    '<option value="">{{ __('Select customer first') }}</option>').trigger(
+                    'change.select2');
 
                 if (areaId && outletId) {
                     $.ajax({
@@ -1243,113 +1234,89 @@
                             area_id: areaId,
                             outlet_id: outletId
                         },
-                        success: function(data) {
-                            $('#customer_id').empty();
-                            if (data.customers.length === 0) {
-                                $('#customer_id').append(
-                                    '<option value="">{{ __('Customer Not Found!') }}</option>'
-                                );
-                            } else {
-                                $('#customer_id').append(
-                                    '<option value="">{{ __('Select Customer') }}</option>'
-                                );
-                                $.each(data.customers, function(key, customer) {
-                                    var isSelected = (customer.id ==
-                                        selectedCustomerId) ? 'selected' : '';
-                                    $('#customer_id').append(
-                                        '<option value="' + customer.id + '" ' +
-                                        isSelected + '>' + customer.name +
-                                        '</option>'
+                        success: function(response) {
+                            if (response.success && response.customers.length > 0) {
+                                $.each(response.customers, function(index, customer) {
+                                    // Pre-select customer if it matches selectedCustomerId
+                                    const isSelected = customer.id ==
+                                        selectedCustomerId ? 'selected' : '';
+                                    $customerSelect.append(
+                                        `<option value="${customer.id}" ${isSelected}>${customer.name}</option>`
                                     );
                                 });
+                            } else {
+                                $customerSelect.append(
+                                    '<option value="">{{ __('No customers found') }}</option>'
+                                    );
                             }
-                            $('#customer_id').trigger(
-                                'change.select2'); // Ensure Select2 updates the UI
+                            $customerSelect.trigger('change.select2');
+
+                            // Trigger customer change if a customer is selected
+                            if (selectedCustomerId && outletId == selectedOutletId) {
+                                $customerSelect.val(selectedCustomerId).trigger('change');
+                            }
                         },
                         error: function(xhr) {
-                            console.error('Error fetching customer details:', xhr);
-                            $('#customer_id').empty().append(
-                                '<option value="">{{ __('Customer Not Found!') }}</option>'
-                            );
-                            $('#customer_id').trigger('change.select2');
+                            $customerSelect.empty().append(
+                                '<option value="">{{ __('Error loading customers') }}</option>'
+                                ).trigger('change.select2');
+                            console.error('Error:', xhr.responseJSON?.error ||
+                                'Failed to load customers');
                         }
                     });
-                } else {
-                    $('#customer_id').empty().append(
-                        '<option value="">{{ __('Select outlet first') }}</option>'
-                    );
-                    $('#customer_id').trigger('change.select2');
-                }
-                if ($('#outlet_id').val() === '') {
-                    $('#customer_type').empty().append(
-                        '<option value="">{{ __('Select customer first') }}</option>'
-                    );
-                    $('#customer_type').trigger('change.select2');
                 }
             });
 
+            // Handle customer change
             $('#customer_id').on('change', function() {
-                var areaId = $('#area').val();
-                var outletId = $('#outlet_id').val();
-                var customerId = $(this).val();
-                selectedCustomerType = $('#customer_type').val();
+                const areaId = $('#area').val();
+                const outletId = $('#outlet_id').val();
+                const customerId = $(this).val();
+                const $customerTypeSelect = $('#customer_type');
+
+                // Clear customer type select
+                $customerTypeSelect.empty().append(
+                    '<option value="">{{ __('Select customer type') }}</option>').trigger(
+                    'change.select2');
 
                 if (areaId && outletId && customerId) {
                     $.ajax({
                         url: '{{ route('customers.getCustomerType') }}',
                         type: 'GET',
                         data: {
-                            area_id: areaId,
-                            outlet_id: outletId,
                             customer_id: customerId
                         },
                         success: function(data) {
-                            $('#customer_type').empty();
-                            if (data.customer_types.length === 0) {
-                                $('#customer_type').append(
-                                    '<option value="">{{ __('Customer Type Not Found!') }}</option>'
-                                );
-                            } else {
-                                $('#customer_type').append(
-                                    '<option value="">{{ __('Select customer type') }}</option>'
-                                );
-                                $.each(data.customer_types, function(key, customerType) {
-                                    var isSelected = (customerType.id ==
-                                        selectedCustomerType) ? 'selected' : '';
-                                    $('#customer_type').append(
-                                        '<option value="' + customerType.id + '" ' +
-                                        isSelected + '>' +
-                                        customerType.name + '</option>'
+                            if (data.customer_types.length > 0) {
+                                $.each(data.customer_types, function(index, customerType) {
+                                    // Pre-select customer type if it matches selectedCustomerType
+                                    const isSelected = customerType.id ==
+                                        selectedCustomerType ? 'selected' : '';
+                                    $customerTypeSelect.append(
+                                        `<option value="${customerType.id}" ${isSelected}>${customerType.name}</option>`
                                     );
                                 });
+                            } else {
+                                $customerTypeSelect.append(
+                                    '<option value="">{{ __('Customer Type Not Found!') }}</option>'
+                                    );
                             }
-                            $('#customer_type').trigger('change.select2');
+                            $customerTypeSelect.trigger('change.select2');
                         },
                         error: function(xhr) {
-                            console.error('Error fetching customer type:', xhr);
-                            $('#customer_type').empty().append(
-                                '<option value="">{{ __('Customer Type Not Found!') }}</option>'
-                            );
-                            $('#customer_type').trigger('change.select2');
+                            $customerTypeSelect.empty().append(
+                                '<option value="">{{ __('Error loading customer types') }}</option>'
+                                ).trigger('change.select2');
+                            console.error('Error:', xhr.responseJSON?.error ||
+                                'Failed to load customer types');
                         }
                     });
-                } else {
-                    $('#customer_type').empty().append(
-                        '<option value="">{{ __('Select customer first') }}</option>'
-                    );
-                    $('#customer_type').trigger('change.select2');
                 }
             });
 
-            // Trigger change on page load if pre-selected
-            if ($('#area').val()) {
+            // Trigger initial changes if values are pre-selected
+            if (selectedAreaId) {
                 $('#area').trigger('change');
-            }
-            if ($('#outlet_id').val()) {
-                $('#outlet_id').trigger('change');
-            }
-            if ($('#customer_id').val()) {
-                $('#customer_id').trigger('change');
             }
             let outletVideo = document.getElementById('outlet-webcam');
             let outletCanvas = document.getElementById('outlet-canvas');

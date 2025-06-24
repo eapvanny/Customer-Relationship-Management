@@ -165,8 +165,21 @@ class CustomerController extends Controller
 
      public function getDeposByArea(Request $request)
     {
-        $areaId = $request->get('area_id');
-        $depos = Depo::where('area_id', $areaId)->pluck('name', 'id');
+        $areaId = $request->query('area_id');
+        $authUser = auth()->user();
+
+        if (!$areaId) {
+            return response()->json([], 400);
+        }
+
+        $query = Depo::where('area_id', $areaId);
+
+        if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
+            // Filter depos accessible by SALE or SE users
+            $query->where('user_type', $authUser->type);
+        }
+
+        $depos = $query->pluck('name', 'id')->toArray();
 
         return response()->json($depos);
     }
@@ -324,7 +337,7 @@ class CustomerController extends Controller
         'area_id' => $request->area,
         'depo_id' => $request->depo_id,
         'customer_type' => $request->customer_type,
-        'user_type' => auth()->user()->type,
+        // 'user_type' => auth()->user()->type,
         'latitude' => $request->latitude,
         'longitude' => $request->longitude,
         'city' => $request->city,
