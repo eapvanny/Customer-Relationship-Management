@@ -190,15 +190,15 @@ class UserController extends Controller
                     $button = '<div class="change-action-item">';
                     $actions = false;
 
-                    if (auth()->user()->can('update user')) {
+                    if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) {
                         $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                         $actions = true;
                     }
-                    if (auth()->user()->can('update user') && $data->status == 1) {
+                    if ((auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) && $data->status == 1) {
                         $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" title="Disable" data-id="' . $data->id . '"><i class="fa fa-ban"></i></a>';
                         $actions = true;
                     }
-                    if (auth()->user()->can('update user') && $data->status == 0) {
+                    if ((auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) && $data->status == 0) {
                         $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" title="Enable" data-id="' . $data->id . '"><i class="fa fa-check"></i></a>';
                         $actions = true;
                     }
@@ -222,39 +222,44 @@ class UserController extends Controller
 
 
     public function disable($id)
-    {
-        try {
+{
+    try {
+        $user = User::findOrFail($id);
 
-            $user = User::findOrFail($id);
-
-            // Check if user has permission
-            if (!auth()->user()->can('update user')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized action'
-                ], 403);
-            }
-
-            if ($user->status == 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User is already disabled'
-                ]);
-            }
-
-            $user->update(['status' => 0]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'User disabled successfully'
-            ]);
-        } catch (\Exception $e) {
+        // Check if user has specific role
+        if (!in_array(auth()->user()->role_id, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMINISTRATOR,
+            AppHelper::USER_DIRECTOR,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_MANAGER
+        ])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error disabling user: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Unauthorized action'
+            ], 403);
         }
+
+        if ($user->status == 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is already disabled'
+            ]);
+        }
+
+        $user->update(['status' => 0]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User disabled successfully'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error disabling user: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     public function enable($id)
     {
@@ -262,12 +267,18 @@ class UserController extends Controller
             $user = User::findOrFail($id);
 
             // Check if user has permission
-            if (!auth()->user()->can('update user')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized action'
-                ], 403);
-            }
+            if (!in_array(auth()->user()->role_id, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMINISTRATOR,
+                AppHelper::USER_DIRECTOR,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_MANAGER
+            ])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized action'
+            ], 403);
+        }
 
             if ($user->status == 1) {
                 return response()->json([
