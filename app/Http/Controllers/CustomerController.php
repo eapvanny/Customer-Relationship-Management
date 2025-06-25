@@ -133,7 +133,7 @@ class CustomerController extends Controller
                 ->addColumn('action', function ($customer) {
                     $button = '<div class="change-action-item">';
                     $actions = false;
-                    if (auth()->user()->can('update customer')) {
+                    if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) {
                         $button .= '<a title="Edit" href="' . route('customer.edit', $customer->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                         $actions = true;
                     }

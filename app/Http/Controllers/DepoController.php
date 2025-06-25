@@ -46,29 +46,29 @@ class DepoController extends Controller
                     } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
                         $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
                             $q->where('manager_id', $loggedInUserId)
-                              ->orWhere('rsm_id', $loggedInUserId)
-                              ->orWhere('sup_id', $loggedInUserId)
-                              ->orWhere('asm_id', $loggedInUserId);
+                                ->orWhere('rsm_id', $loggedInUserId)
+                                ->orWhere('sup_id', $loggedInUserId)
+                                ->orWhere('asm_id', $loggedInUserId);
                         })->whereIn('type', $allowedTypes)
-                          ->pluck('id')
-                          ->toArray();
+                            ->pluck('id')
+                            ->toArray();
                         $userIds = array_merge($userIds, $managedUserIds);
                     } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
                         $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
                             $q->where('rsm_id', $loggedInUserId)
-                              ->orWhere('sup_id', $loggedInUserId)
-                              ->orWhere('asm_id', $loggedInUserId);
+                                ->orWhere('sup_id', $loggedInUserId)
+                                ->orWhere('asm_id', $loggedInUserId);
                         })->whereIn('type', $allowedTypes)
-                          ->pluck('id')
-                          ->toArray();
+                            ->pluck('id')
+                            ->toArray();
                         $userIds = array_merge($userIds, $managedUserIds);
                     } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
                         $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
                             $q->where('sup_id', $loggedInUserId)
-                              ->orWhere('asm_id', $loggedInUserId);
+                                ->orWhere('asm_id', $loggedInUserId);
                         })->whereIn('type', $allowedTypes)
-                          ->pluck('id')
-                          ->toArray();
+                            ->pluck('id')
+                            ->toArray();
                         $userIds = array_merge($userIds, $managedUserIds);
                     } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
                         $managedUserIds = \App\Models\User::where('asm_id', $loggedInUserId)
@@ -114,8 +114,18 @@ class DepoController extends Controller
                     })
                     ->addColumn('action', function ($depo) {
                         $button = '<div class="change-action-item">';
-                        $button .= '<a title="Edit" href="' . route('depo.edit', $depo->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
-                        $button .= '<a href="' . route('depo.destroy', $depo->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                        $actions = false;
+                        if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) {
+                            $button .= '<a title="Edit" href="' . route('depo.edit', $depo->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
+                            $actions = true;
+                        }
+                        if (auth()->user()->can('delete depo')) {
+                            $button .= '<a href="' . route('depo.destroy', $depo->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
+                            $actions = true;
+                        }
+                        if (!$actions) {
+                            $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
+                        }
                         $button .= '</div>';
                         return $button;
                     })
@@ -227,5 +237,4 @@ class DepoController extends Controller
         }
         return redirect()->back()->with('error', "Depo not found!");
     }
-
 }
