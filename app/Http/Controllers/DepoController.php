@@ -39,6 +39,7 @@ class DepoController extends Controller
 
                     if ($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
                         AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMINISTRATOR,
                         AppHelper::USER_ADMIN,
                         AppHelper::USER_DIRECTOR
                     ])) {
@@ -81,6 +82,7 @@ class DepoController extends Controller
                     // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
                     if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
                         AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMINISTRATOR,
                         AppHelper::USER_ADMIN,
                         AppHelper::USER_DIRECTOR
                     ]))) {
@@ -90,6 +92,7 @@ class DepoController extends Controller
                     // Ensure depos belong to users with allowed types
                     if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
                         AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMINISTRATOR,
                         AppHelper::USER_ADMIN,
                         AppHelper::USER_DIRECTOR
                     ]))) {
