@@ -50,6 +50,7 @@
 
             @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN ||
                     auth()->user()->role_id === AppHelper::USER_ADMINISTRATOR ||
+                    auth()->user()->role_id === AppHelper::USER_SUP ||
                     auth()->user()->role_id === AppHelper::USER_ADMIN ||
                     auth()->user()->role_id === AppHelper::USER_DIRECTOR ||
                     auth()->user()->role_id === AppHelper::USER_MANAGER)
