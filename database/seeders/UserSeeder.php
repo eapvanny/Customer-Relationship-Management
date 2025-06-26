@@ -39,6 +39,7 @@ class UserSeeder extends Seeder
                 'role_id' => AppHelper::USER_SUPER_ADMIN,
                 'phone_no' => '0987876567',
                 'type' => AppHelper::ALL,
+                'user_lang' => 'kh',
             ]);
 
             // Assign superadmin role

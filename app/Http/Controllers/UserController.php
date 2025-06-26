@@ -586,6 +586,7 @@ class UserController extends Controller
             'sup_id' => $request->sup_id,
             'asm_id' => $request->asm_id ? json_encode($request->asm_id) : null,
             'created_by' => $createdBy,
+            'user_lang' => 'kh',
         ];
 
         if ($request->hasFile('photo')) {
