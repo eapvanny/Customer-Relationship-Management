@@ -43,5 +43,10 @@ class Report extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+
+    public function depo()
+    {
+        return $this->belongsTo(Depo::class, 'outlet_id');
+    }
 }
 

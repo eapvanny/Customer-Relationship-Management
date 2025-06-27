@@ -143,7 +143,7 @@ class UserController extends Controller
         }
 
         if ($request->ajax()) {
-            $users = $query->get();
+            $users = $query->orderBy('id','desc')->get();
             return DataTables::of($users)
                 ->addColumn('photo', function ($data) {
                     $photoUrl = $data->photo ? asset('storage/' . $data->photo) : asset('images/avatar.png');

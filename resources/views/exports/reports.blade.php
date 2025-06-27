@@ -40,6 +40,7 @@
             <th>{{ __('Longitude') }}</th>
             <th>{{ __('Address') }}</th>
             <th>{{ __('Photo Outlet') }}</th>
+            <th>{{ __('POSM PHOTO') }}</th>
             <th>{{ __('POSM') }}</th>
             <th>{{ __('Quantity') }}</th>
         </tr>
@@ -61,16 +62,16 @@
                 $reportUser = $row->user;
                 $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
                 $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
-
-                $PosmUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
-                $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'N/A';
+                $posm = isset(AppHelper::MATERIAL[$row->posm])? __(AppHelper::MATERIAL[$row->posm]): 'N/A';
+                $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
+                $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'N/A';
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
                 <td>{{ $reportUser ? ($reportUser->user_lang === 'en' ? ($reportUser->full_name_latin ?? 'N/A') : ($reportUser->full_name ?? 'N/A')) : 'N/A' }}</td>
                 <td>{{ $sup ? ($sup->user_lang === 'en' ? ($sup->full_name_latin ?? 'N/A') : ($sup->full_name ?? 'N/A')) : 'N/A' }}</td>
                 <td>{{ $rsm ? ($rsm->user_lang === 'en' ? ($rsm->full_name_latin ?? 'N/A') : ($rsm->full_name ?? 'N/A')) : 'N/A' }}</td>
-                <td>{{ $row->customer->outlet ?? 'N/A' }}</td>
+                <td>{{ $row->customer->depo->name ?? 'N/A' }}</td>
                 <td>{{ $row->customer->name ?? 'N/A' }}</td>
                 <td>{{ $row->customer->code ?? 'N/A' }}</td>
                 <td>{{ $row->so_number ?? 'N/A' }}</td>
@@ -85,6 +86,7 @@
                 <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
                 <td><a href="{{ $OutletUrl }}" target="_blank">{{__('OUTLET_URL')}}</a></td>
                 <td><a href="{{ $PosmUrl }}" target="_blank">{{__('POSM_URL')}}</a></td>
+                <td>{{ $posm ?? 'N/A' }}</td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
             </tr>
         @endforeach

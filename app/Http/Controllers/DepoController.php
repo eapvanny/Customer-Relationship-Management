@@ -166,7 +166,7 @@ class DepoController extends Controller
 
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
-            'name' => 'required|string|max:255',
+            'name' => 'required|unique:depos,name,NULL,id,area_id,' . $request->area . '|string|max:255',
         ];
 
         $this->validate($request, $rules);
@@ -214,7 +214,7 @@ class DepoController extends Controller
         // Validation rules
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
-            'name' => 'required|string|max:255',
+            'name' => 'required|unique:depos,name,' . $depo->id . ',id,area_id,' . $request->area . '|string|max:255',
         ];
         $this->validate($request, $rules);
         $data = [
