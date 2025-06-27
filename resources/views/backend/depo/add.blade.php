@@ -102,7 +102,7 @@
                                     value="{{ old('name', $depo->name ?? '') }}"
                                     required>
                                 <span class="fa fa-info form-control-feedback"></span>
-                                <span class="text-danger">{{ $errors->first('name') }}</span>
+                                <span class="text-danger">{{ __($errors->first('name')) }}</span>
                             </div>
                         </div>
                     </div>

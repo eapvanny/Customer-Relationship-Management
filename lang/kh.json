@@ -270,5 +270,6 @@
     "No customers found": "មិនមានអតិថិជនទេ!",
     "POSM Photo": "រូបថត POSM",
     "Depo List": "បញ្ជីដេប៉ូ",
-    "Add New Depo": "បន្ថែមដេប៉ូថ្មី"
+    "Add New Depo": "បន្ថែមដេប៉ូថ្មី",
+    "The name has already been taken.": "ឈ្មោះនេះត្រូវបានបញ្ជូលហើយ។"
 }
