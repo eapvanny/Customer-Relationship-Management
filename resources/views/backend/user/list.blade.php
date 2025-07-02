@@ -108,6 +108,7 @@
                                             <th>{{ __('Photo') }}</th>
                                             <th>{{ __('Staff ID') }}</th>
                                             <th>{{ __('Name') }}</th>
+                                            <th>{{ __('Name Latin') }}</th>
                                             <th>{{ __('Position') }}</th>
                                             <th>{{ __('Area') }}</th>
                                             <th>{{ __('Username') }}</th>
@@ -179,6 +180,10 @@
                     {
                         data: 'name',
                         name: 'name'
+                    },
+                    {
+                        data: 'name_latin',
+                        name: 'name_latin'
                     },
                     {
                         data: 'position',

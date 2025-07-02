@@ -154,76 +154,11 @@ class ReportController extends Controller
             $query->where('reports.area_id', $request->area_id);
         }
 
-        // Handle DataTables search
-        if ($request->ajax() && $request->filled('search_value')) {
-            $search = $request->input('search_value');
-            $query->where(function ($q) use ($search) {
-                $q->where(function ($q) use ($search) {
-                    $q->where('customers.name', 'like', '%' . $search . '%')
-                        ->orWhere('customers.code', 'like', '%' . $search . '%')
-                        ->orWhere('customers.outlet', 'like', '%' . $search . '%');
-                })
-                    ->orWhere('reports.250_ml', 'like', '%' . $search . '%')
-                    ->orWhere('reports.350_ml', 'like', '%' . $search . '%')
-                    ->orWhere('reports.600_ml', 'like', '%' . $search . '%')
-                    ->orWhere('reports.1500_ml', 'like', '%' . $search . '%')
-                    ->orWhereHas('user', function ($q) use ($search) {
-                        $q->where('family_name', 'like', '%' . $search . '%')
-                            ->orWhere('family_name_latin', 'like', '%' . $search . '%');
-                    });
-            });
-        }
-
-        // Handle DataTables sorting
-        if ($request->ajax() && $request->has('order')) {
-            $orderColumnIndex = $request->input('order.0.column');
-            $orderDirection = $request->input('order.0.dir');
-
-            $columns = [
-                0 => 'reports.area_id', // area
-                1 => 'customers.outlet', // outlet_id
-                2 => 'customers.name', // customer
-                3 => 'customers.code', // customer_code
-                4 => 'reports.250_ml',
-                5 => 'reports.350_ml',
-                6 => 'reports.600_ml',
-                7 => 'reports.1500_ml',
-                8 => 'default', // computed column
-            ];
-
-            $column = $columns[$orderColumnIndex] ?? null;
-
-            if ($column) {
-                if ($column === 'reports.area_id') {
-                    $query->orderBy('reports.area_id', $orderDirection);
-                } elseif ($column === 'customers.outlet') {
-                    $query->orderBy('customers.outlet', $orderDirection);
-                } elseif ($column === 'customers.name') {
-                    $query->orderBy('customers.name', $orderDirection);
-                } elseif ($column === 'customers.code') {
-                    $query->orderBy('customers.code', $orderDirection);
-                } elseif ($column === 'reports.250_ml') {
-                    $query->orderBy('reports.250_ml', $orderDirection);
-                } elseif ($column === 'reports.350_ml') {
-                    $query->orderBy('reports.350_ml', $orderDirection);
-                } elseif ($column === 'reports.600_ml') {
-                    $query->orderBy('reports.600_ml', $orderDirection);
-                } elseif ($column === 'reports.1500_ml') {
-                    $query->orderBy('reports.1500_ml', $orderDirection);
-                } elseif ($column === 'default') {
-                    $query->orderByRaw('(COALESCE(reports.250_ml, 0) + COALESCE(reports.350_ml, 0) + COALESCE(reports.600_ml, 0) + COALESCE(reports.1500_ml, 0)) ' . $orderDirection);
-                }
-            } else {
-                $query->orderBy('reports.id', 'desc');
-            }
-        } else {
-            $query->orderBy('reports.id', 'desc');
-        }
 
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                $reports = $query->orderBy('id','desc');
+                $reports = $query->orderBy('id','desc')->get();
 
                 return DataTables::of($reports)
                     ->addColumn('area', function ($data) {

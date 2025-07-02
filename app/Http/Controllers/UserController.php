@@ -153,7 +153,11 @@ class UserController extends Controller
                     return __($data->staff_id_card);
                 })
                 ->addColumn('name', function ($data) {
-                    return auth()->user()->user_lang == 'en' ? $data->getFullNameLatinAttribute() : $data->getFullNameAttribute();
+                    // return auth()->user()->user_lang == 'en' ? $data->getFullNameLatinAttribute() : $data->getFullNameAttribute();
+                    return  $data->getFullNameAttribute();
+                })
+                ->addColumn('name_latin', function ($data) {
+                    return  $data->getFullNameLatinAttribute();
                 })
                 ->addColumn('position', function ($data) {
                     return __($data->position);
