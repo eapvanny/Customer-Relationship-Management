@@ -44,6 +44,7 @@ class CustomerController extends Controller
 
                 if ($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
                     AppHelper::USER_SUPER_ADMIN,
+                    AppHelper::USER_ADMINISTRATOR,
                     AppHelper::USER_ADMIN,
                     AppHelper::USER_DIRECTOR
                 ])) {
