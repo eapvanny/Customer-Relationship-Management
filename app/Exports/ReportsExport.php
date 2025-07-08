@@ -12,13 +12,13 @@ class ReportsExport implements FromView
 {
     protected $date1;
     protected $date2;
-    protected $fullname;
+    protected $area_id;
 
-    public function __construct($date1, $date2, $fullname)
+    public function __construct($date1, $date2, $area_id)
     {
         $this->date1 = $date1;
         $this->date2 = $date2;
-        $this->fullname = $fullname;
+        $this->area_id = $area_id;
     }
 
     public function view(): View
@@ -114,9 +114,9 @@ class ReportsExport implements FromView
             $query->whereBetween('date', [$startDate, $endDate]);
         }
 
-        // Apply user filter
-        if ($this->fullname) {
-            $query->where('user_id', $this->fullname);
+        // Apply area_id filter
+        if ($this->area_id) {
+            $query->where('area_id', $this->area_id);
         }
 
         return view('exports.reports', [

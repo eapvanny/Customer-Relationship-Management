@@ -692,13 +692,14 @@ class ReportController extends Controller
     }
     public function export(Request $request)
     {
-        if ($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
-            $startDate = Carbon::parse($request->date1)->startOfDay();
-            $endDate = Carbon::parse($request->date2)->endOfDay();
-            return Excel::download(new ReportsExport($request->date1, $request->date2, $request->full_name), 'reports_asmprogram_' . now()->format('Y_m_d_His') . '.xlsx');
-        } else {
-            return Excel::download(new ReportsExport($request->date1, $request->date2, $request->full_name), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
-        }
+        $date1 = $request->input('date1');
+        $date2 = $request->input('date2');
+        $area_id = $request->input('area_id');
+
+        return Excel::download(
+            new ReportsExport($date1, $date2, $area_id),
+            'reports_' . now()->format('Y_m_d_His') . '.xlsx'
+        );
 
         // return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
     }

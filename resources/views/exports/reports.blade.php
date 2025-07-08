@@ -62,9 +62,11 @@
                 $reportUser = $row->user;
                 $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
                 $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
-                $posm = isset(AppHelper::MATERIAL[$row->posm])? __(AppHelper::MATERIAL[$row->posm]): 'N/A';
-                $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'N/A';
-                $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'N/A';
+                $posm = isset(AppHelper::MATERIAL[$row->posm]) ? __(AppHelper::MATERIAL[$row->posm]) : 'N/A';
+                
+                // Check if outlet_photo or photo exists, otherwise set to 'No_Photo'
+                $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'No_Photo';
+                $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'No_Photo';
             @endphp
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
@@ -84,8 +86,20 @@
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
                 <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
-                <td><a href="{{ $OutletUrl }}" target="_blank">{{__('OUTLET_URL')}}</a></td>
-                <td><a href="{{ $PosmUrl }}" target="_blank">{{__('POSM_URL')}}</a></td>
+                <td>
+                    @if ($OutletUrl === 'No_Photo')
+                        {{ __('No_Photo') }}
+                    @else
+                        <a href="{{ $OutletUrl }}" target="_blank">{{ __('OUTLET_URL') }}</a>
+                    @endif
+                </td>
+                <td>
+                    @if ($PosmUrl === 'No_Photo')
+                        {{ __('No_Photo') }}
+                    @else
+                        <a href="{{ $PosmUrl }}" target="_blank">{{ __('POSM_URL') }}</a>
+                    @endif
+                </td>
                 <td>{{ $posm ?? 'N/A' }}</td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
             </tr>

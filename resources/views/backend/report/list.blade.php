@@ -437,10 +437,12 @@
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body">
-                            <div class="row">
+                           <div class="row">
                                 <div class="col-12">
-                                    <a class="btn btn-success btn-sm" href="{{ route('report.export') }}"><i
-                                            class="fa-solid fa-download"></i> {{ __('Export') }}</a>
+                                    <a class="btn btn-success btn-sm" 
+                                    href="{{ route('report.export') . '?' . http_build_query(request()->only(['date1', 'date2', 'area_id'])) }}">
+                                        <i class="fa-solid fa-download"></i> {{ __('Export') }}
+                                    </a>
                                 </div>
                             </div>
                             <div class="table-responsive mt-4">
