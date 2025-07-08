@@ -828,8 +828,15 @@ class UserController extends Controller
         $user = Auth::user();
         $user->password = Hash::make($request->password);
         $user->save();
-
-        return redirect()->route('dashboard.index')->with('success', 'Password updated successfully.');
+        if (auth()->user()->type == AppHelper::SALE && in_array(auth()->user()->role_id, [AppHelper::USER_EMPLOYEE, AppHelper::USER_SUP, AppHelper::USER_RSM, AppHelper::USER_ASM])) {
+            return redirect()->route('report.index')->with('success', 'Password updated successfully.');
+        }elseif (auth()->user()->type == AppHelper::SE && in_array(auth()->user()->role_id, [AppHelper::USER_EMPLOYEE, AppHelper::USER_SUP, AppHelper::USER_RSM, AppHelper::USER_ASM])) {
+            return redirect()->route('sub-wholesale.index')->with('success', 'Password updated successfully.');
+        } elseif ((auth()->user()->type == AppHelper::SE || auth()->user()->type == AppHelper::SALE) && auth()->user()->role_id == AppHelper::USER_MANAGER) {
+            return redirect()->route('dashboard.index')->with('success', 'Password updated successfully.');
+        } else {
+            return redirect()->route('dashboard.index')->with('success', 'Password updated successfully.');
+        }
     }
     public function lock()
     {

@@ -213,7 +213,7 @@ class ReportController extends Controller
         // If there's old input or a pre-selected area, fetch customers
         $areaId = old('area', $customer->area_id ?? '');
         if ($areaId) {
-            $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
+            $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'depo_id']);
         }
 
         return view('backend.report.add', compact('customer', 'customers', 'report', 'customerType','areas','depos'));

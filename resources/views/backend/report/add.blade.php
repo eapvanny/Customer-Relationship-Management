@@ -646,7 +646,7 @@
                                                         class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
                                                         <img class="rounded mx-auto d-block @if (!old('old_outlet_photo') && !isset($report->outlet_photo)) d-none @endif z-1"
                                                             id="outlet-photo-preview" name="old_outlet_photo"
-                                                            src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }} @else {{ old('old_outlet_photo') }} @endif"
+                                                            src="@if (isset($report->outlet_photo)) {{ asset('storage/' . $report->outlet_photo) }}@endif"
                                                             alt="outlet-photo">
                                                         <input type="hidden" id="outlet-img-preview"
                                                             name="old_outlet_photo"
@@ -1147,10 +1147,10 @@
                 video.srcObject = null;
             }
 
-            var selectedAreaId = $('#area').val();
-            var selectedOutletId = $('#outlet_id').val();
-            var selectedCustomerId = $('#customer_id').val();
-            var selectedCustomerType = $('#customer_type').val();
+            const selectedAreaId = '{{ old('area', $report->area_id ?? '') }}';
+            const selectedOutletId = '{{ old('outlet_id', $report->outlet_id ?? '') }}';
+            const selectedCustomerId = '{{ old('customer_id', $report->customer_id ?? '') }}';
+            const selectedCustomerType = '{{ old('customer_type', $report->customer_type ?? '') }}';
 
             // Handle area change
             $('#area').on('change', function() {
