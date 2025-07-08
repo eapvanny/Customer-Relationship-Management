@@ -36,10 +36,7 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Report::query()
-            ->select('reports.*')
-            ->leftJoin('customers', 'reports.customer_id', '=', 'customers.id')
-            ->with(['user', 'customer', 'customer.depo']);
+        $query = Report::with(['user', 'customer', 'customer.depo']);
 
         if ($user) {
             $userRole = $user->role_id;
@@ -180,7 +177,7 @@ class ReportController extends Controller
                     ->addColumn('default', function ($data) {
                         $val_250ml = intval($data->{'250_ml'} ?? 0);
                         $val_350ml = intval($data->{'350_ml'} ?? 0);
-                        $val_600ml = intval($data->{'600_ml '} ?? 0);
+                        $val_600ml = intval($data->{'600_ml'} ?? 0);
                         $val_1500ml = intval($data->{'1500_ml'} ?? 0);
                         return $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
                     })
