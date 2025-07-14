@@ -14,7 +14,11 @@ class BackupDatabase extends Command
     {
         $filename = "backup-" . Carbon::now()->format('Y-m-d-H-i-s') . ".sql";
         $localBackupPath = storage_path("app/backups/{$filename}");
-        $externalBackupPath = "D:/mysql_backup(CRM)/{$filename}";
+
+        // Separate paths for D and C drives
+        $externalBackupPathD = "D:/mysql_backup(CRM)/{$filename}";
+        $externalBackupPathC = "C:/file/{$filename}";
+
         $friendSharedFolder = "\\\\LAPTOP-VSOKHENG\\CRM-Backup";
         $friendSharedPath = "{$friendSharedFolder}\\{$filename}";
 
@@ -53,31 +57,43 @@ class BackupDatabase extends Command
 
         $this->info("Backup created locally at: {$localBackupPath}");
 
-        // Step 4: Copy to your own D: drive
-        if (!file_exists(dirname($externalBackupPath))) {
-            mkdir(dirname($externalBackupPath), 0755, true);
+        // Step 4: Copy to your D: drive
+        if (!file_exists(dirname($externalBackupPathD))) {
+            mkdir(dirname($externalBackupPathD), 0755, true);
         }
 
-        if (copy($localBackupPath, $externalBackupPath)) {
-            $this->info("Backup copied to your D: drive: {$externalBackupPath}");
+        if (copy($localBackupPath, $externalBackupPathD)) {
+            $this->info("Backup copied to D: drive: {$externalBackupPathD}");
         } else {
-            $this->error("Failed to copy to your D: drive");
+            $this->error("Failed to copy to D: drive");
         }
 
-        // Step 5: Copy to your friend's shared folder (on D:)
+        // Step 5: Copy to your C: drive
+        if (!file_exists(dirname($externalBackupPathC))) {
+            mkdir(dirname($externalBackupPathC), 0755, true);
+        }
+
+        if (copy($localBackupPath, $externalBackupPathC)) {
+            $this->info("Backup copied to C: drive: {$externalBackupPathC}");
+        } else {
+            $this->error("Failed to copy to C: drive");
+        }
+
+        // Step 6: Copy to your friend's shared folder (on D:)
         if (is_dir($friendSharedFolder)) {
             if (copy($localBackupPath, $friendSharedPath)) {
                 $this->info("Backup copied to friend's shared folder: {$friendSharedPath}");
             } else {
-                $this->error("Copy failed — file might be locked or access denied");
+                $this->error("Copy to shared folder failed — file might be locked or access denied");
             }
         } else {
             $this->error("Shared folder not found — check if {$friendSharedFolder} is accessible");
         }
 
-        // Step 6: Clean up old backups
+        // Step 7: Clean up old backups
         $this->cleanOldBackups(storage_path('app/backups'));
         $this->cleanOldBackups('D:/mysql_backup(CRM)');
+        $this->cleanOldBackups('C:/file');
         $this->cleanOldBackups($friendSharedFolder);
     }
 
@@ -100,3 +116,4 @@ class BackupDatabase extends Command
         }
     }
 }
+
