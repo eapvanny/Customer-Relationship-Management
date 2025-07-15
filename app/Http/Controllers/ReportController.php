@@ -38,6 +38,19 @@ class ReportController extends Controller
         $user = Auth::user();
         $query = Report::with(['user', 'customer', 'customer.depo']);
 
+        $hasNoReports = !Report::where('user_id', $user->id)
+            ->whereDate('created_at', Carbon::today())
+            ->exists();
+
+        $hasUnassignedReportToday = Report::where('user_id', $user->id)
+            ->whereNull('driver_id')
+            ->whereNull('driver_status')
+            ->whereDate('created_at', Carbon::today())
+            ->exists();
+
+        $showModal = $hasNoReports || $hasUnassignedReportToday;
+
+
         if ($user) {
             $userRole = $user->role_id;
             $userId = $user->id;
@@ -198,8 +211,9 @@ class ReportController extends Controller
             }
         }
 
-        return view('backend.report.list', compact('is_filter', 'area_id'));
+        return view('backend.report.list', compact('is_filter', 'area_id','showModal'));
     }
+
 
 
     public function create()
@@ -245,7 +259,7 @@ class ReportController extends Controller
                 'employee_name' => $employee_name,
                 'staff_id_card' => $user->staff_id_card ?? 'N/A',
                 'area' => AppHelper::getAreaName($report->area_id),
-                'outlet' => $report->customer->outlet ?? 'N/A',
+                'outlet' => $report->depo->name ?? 'N/A',
                 'customer' => $report->customer->name ?? 'N/A',
                 'customer_type' => $report->customer_type,
                 'date' => $report->date,
@@ -352,7 +366,8 @@ class ReportController extends Controller
         foreach (AppHelper::getAreas() as $group) {
             $areaIds = array_merge($areaIds, array_keys($group));
         }
-
+        $hasDriver = $request->input('has_driver'); // 'yes' or 'no'
+        $driverId = $request->input('driver_id');   // value if 'yes', null if 'no'
         $rules = [
             'area' => 'required|in:' . implode(',', $areaIds),
             'outlet_id' => 'required',
@@ -366,6 +381,7 @@ class ReportController extends Controller
             'outlet_photo_base64' => 'nullable|string',
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
+            'driver_id' => 'required_if:has_driver,yes|nullable|numeric',
         ];
 
         // Make outlet_photo required if neither file nor base64 is provided
@@ -378,6 +394,19 @@ class ReportController extends Controller
         $data = $request->except(['photo', 'photo_base64', 'outlet_photo', 'outlet_photo_base64']);
         $data['photo'] = null;
         $data['outlet_photo'] = null;
+
+        // Handle driver_id and has_driver logic
+        if (!$hasDriver && !$driverId) {
+            // Fetch the most recent report created today by the logged-in user
+            $recentReport = Report::where('user_id', auth()->id())
+                ->whereDate('created_at', Carbon::today('Asia/Phnom_Penh'))
+                ->first();
+
+            if ($recentReport) {
+                $hasDriver = $recentReport->driver_status;
+                $driverId = $recentReport->driver_id;
+            }
+        }
 
         // Handle main photo file upload if exists
         if ($request->hasFile('photo')) {
@@ -437,6 +466,8 @@ class ReportController extends Controller
             'so_number' => $soNumber,
             'area_id' => $request->area,
             'outlet_id' => $request->outlet_id,
+            'driver_id' => $driverId,
+            'driver_status' => $hasDriver,
             'customer_id' => $request->customer_id,
             'customer_type' => $request->customer_type,
             'date' => Carbon::now('Asia/Phnom_Penh'),

@@ -365,8 +365,18 @@
                             data-bs-target="#filterContainer">
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
-                        <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}"><i
-                                class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
+
+                        @if($showModal)
+                            <button type="button" class="btn btn-info text-white" id="openModalBtn">
+                                <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                            </button>
+                        @else
+                            <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
+                                <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                            </a>
+                        @endif
+
+
                     </div>
                 </div>
                 <div class="wrap-outter-box">
@@ -559,6 +569,57 @@
             </div>
         </div>
     </div>
+    <!-- Modal form select id pru-->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true" data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content shadow rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmModalLabel">
+                    <i class="fas fa-id-card me-2"></i> {{ __('Driver Form') }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="redirectForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ __('Do you have a Driver ID?') }}</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hasDriver" id="radioYes" value="yes">
+                                <label class="form-check-label" for="radioYes">{{ __('Yes') }}</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hasDriver" id="radioNo" value="no">
+                                <label class="form-check-label" for="radioNo">{{ __('No') }}</label>
+                            </div>
+                        </div>
+                         <div id="radioError" class="text-danger mt-1" style="display: none;">
+                            {{ __('Please select Yes or No.') }}
+                        </div>
+                    </div>
+                     <!-- Driver ID input -->
+                    <div class="mb-3" id="driverIdGroup" style="display: none;">
+                        <label for="driverId" class="form-label fw-semibold">
+                            {{ __('Driver ID') }} <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="driverId" name="driverId" autocomplete="off">
+                        <div class="invalid-feedback">
+                            {{ __('Driver ID is required.') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">{{ __('Continue') }}</button>
+                    {{-- <button type="button" class="btn btn-secondary btnClose"
+                        data-bs-dismiss="modal">{{ __('Cancel') }}</button> --}}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
     <!-- /.content -->
 @endsection
 <!-- END PAGE CONTENT-->
@@ -684,6 +745,78 @@
             $(document).on('click', '.btnClose', function() {
                 $('#viewModal').modal('hide');
                 $('.img-popup').val('');
+            });
+
+            $('#openModalBtn').on('click', function () {
+                $('#confirmModal').modal('show');
+            });
+
+
+            // Show/hide Customer ID input and clear radio error on selection
+            // Show/hide Driver ID input and clear radio error on selection
+            $('input[name="hasDriver"]').on('change', function () {
+                $('#radioError').hide();
+
+                if ($(this).val() === 'yes') {
+                    $('#driverIdGroup').show();
+                    $('#driverId').prop('required', true);
+                } else {
+                    $('#driverIdGroup').hide();
+                    $('#driverId').prop('required', false).val('');
+                    $('#driverId').removeClass('is-invalid');
+                }
+            });
+
+            // Handle form submission
+            $('#redirectForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const hasDriver = $('input[name="hasDriver"]:checked').val();
+                const driverId = $('#driverId').val().trim();
+
+                let isValid = true;
+
+                // Validate radio selection
+                if (!hasDriver) {
+                    $('#radioError').show();
+                    isValid = false;
+                } else {
+                    $('#radioError').hide();
+                }
+
+                // Validate Driver ID only if "Yes" is selected
+                if (hasDriver === 'yes' && driverId === '') {
+                    $('#driverId').addClass('is-invalid');
+                    isValid = false;
+                } else {
+                    $('#driverId').removeClass('is-invalid');
+                }
+
+                if (!isValid) {
+                    return;
+                }
+
+                // Build URL with query parameters
+                let url = "{{ route('report.create') }}" + "?has_driver=" + hasDriver;
+
+                if (hasDriver === 'yes') {
+                    url += "&driver_id=" + encodeURIComponent(driverId);
+                }
+
+                // Redirect with parameters
+                window.location.href = url;
+            });
+
+            // Reset form when modal is closed
+            $('#confirmModal').on('hidden.bs.modal', function () {
+                // Clear radio selection
+                $('input[name="hasDriver"]').prop('checked', false);
+                // Hide radio error
+                $('#radioError').hide();
+                // Hide driver ID input and clear its value
+                $('#driverIdGroup').hide();
+                $('#driverId').prop('required', false).val('');
+                $('#driverId').removeClass('is-invalid');
             });
 
             // Handle delete

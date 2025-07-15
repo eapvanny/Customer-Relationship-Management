@@ -24,6 +24,7 @@
         <tr>
             <th>{{ __('Area') }}</th>
             <th>{{ __('SSP') }}</th>
+            <th>{{ __('Driver ID') }}</th>
             <th>{{ __('SUP') }}</th>
             <th>{{ __('RSM') }}</th>
             <th>{{ __('Depo Name') }}</th>
@@ -71,6 +72,7 @@
             <tr>
                 <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
                 <td>{{ $reportUser ? ($reportUser->user_lang === 'en' ? ($reportUser->full_name_latin ?? 'N/A') : ($reportUser->full_name ?? 'N/A')) : 'N/A' }}</td>
+                <td>{{ $row->driver_id ?? 'N/A' }}</td>
                 <td>{{ $sup ? ($sup->user_lang === 'en' ? ($sup->full_name_latin ?? 'N/A') : ($sup->full_name ?? 'N/A')) : 'N/A' }}</td>
                 <td>{{ $rsm ? ($rsm->user_lang === 'en' ? ($rsm->full_name_latin ?? 'N/A') : ($rsm->full_name ?? 'N/A')) : 'N/A' }}</td>
                 <td>{{ $row->customer->depo->name ?? 'N/A' }}</td>
@@ -105,7 +107,7 @@
             </tr>
         @endforeach
         <tr>
-            <td colspan="9">{{ __('Total') }}</td>
+            <td colspan="10">{{ __('Total') }}</td>
             <td>{{ $total_250ml }}</td>
             <td>{{ $total_350ml }}</td>
             <td>{{ $total_600ml }}</td>

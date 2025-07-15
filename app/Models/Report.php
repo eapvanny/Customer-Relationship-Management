@@ -33,6 +33,8 @@ class Report extends Model
         'outlet_photo',
         'manager_id',
         'so_number',
+        'driver_id',
+        'driver_status'
     ];
 
     public function user()
