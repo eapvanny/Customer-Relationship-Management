@@ -271,5 +271,10 @@
     "POSM Photo": "រូបថត POSM",
     "Depo List": "បញ្ជីដេប៉ូ",
     "Add New Depo": "បន្ថែមដេប៉ូថ្មី",
-    "The name has already been taken.": "ឈ្មោះនេះត្រូវបានបញ្ជូលហើយ។"
+    "The name has already been taken.": "ឈ្មោះនេះត្រូវបានបញ្ជូលហើយ។",
+    "Driver info": "ព័ត៌មានអ្នកបើកបរ",
+    "Do you have a Driver ?": "តើអ្នកមានអ្នកបើកបរទេ ?",
+    "Please select Yes or No.": "សូមជ្រើសរើស Yes ឬ No",
+    "Driver ID is required.": "សូមបញ្ជូលលេខសម្គាល់អ្នកបើកបរ",
+    "Driver ID": "លេខសម្គាល់អ្នកបើកបរ"
 }

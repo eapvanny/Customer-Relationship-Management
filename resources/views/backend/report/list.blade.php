@@ -576,14 +576,14 @@
         <div class="modal-content shadow rounded-4">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="confirmModalLabel">
-                    <i class="fas fa-id-card me-2"></i> {{ __('Driver Form') }}
+                    <i class="fas fa-id-card me-2"></i> {{ __('Driver info') }}
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="redirectForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">{{ __('Do you have a Driver ID?') }}</label>
+                        <label class="form-label fw-semibold">{{ __('Do you have a Driver ?') }}</label>
                         <div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="hasDriver" id="radioYes" value="yes">
@@ -611,7 +611,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">{{ __('Continue') }}</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-arrow-right"></i> {{ __('Continue') }}</button>
                     {{-- <button type="button" class="btn btn-secondary btnClose"
                         data-bs-dismiss="modal">{{ __('Cancel') }}</button> --}}
                 </div>
