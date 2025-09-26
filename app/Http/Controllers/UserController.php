@@ -66,12 +66,14 @@ class UserController extends Controller
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
                     ])->where('type', AppHelper::SE)
+                        ->where('asm_id', $loggedInUserId)
                         ->orWhere('id', $loggedInUserId);
                 });
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->where('role_id', AppHelper::USER_EMPLOYEE)
                         ->where('type', AppHelper::SE)
+                        ->where('sup_id', $loggedInUserId) // <-- Only users managed by this supervisor
                         ->orWhere('id', $loggedInUserId);
                 });
             } elseif ($loggedInUserRole == AppHelper::USER_EMPLOYEE) {
@@ -103,12 +105,14 @@ class UserController extends Controller
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
                     ])->where('type', AppHelper::SALE)
+                        // ->where('asm_id', $loggedInUserId)
                         ->orWhere('id', $loggedInUserId);
                 });
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->where('role_id', AppHelper::USER_EMPLOYEE)
                         ->where('type', AppHelper::SALE)
+                        ->where('sup_id', $loggedInUserId)
                         ->orWhere('id', $loggedInUserId);
                 });
             } elseif ($loggedInUserRole == AppHelper::USER_EMPLOYEE) {
