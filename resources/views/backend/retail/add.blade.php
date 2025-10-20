@@ -1,7 +1,7 @@
 @extends('backend.layouts.master')
 
 @section('pageTitle')
-    Retail
+    {{ __('Retail') }}
 @endsection
 
 @section('bodyCssClass')
@@ -401,8 +401,6 @@
             <li class="active">
                 @if ($report)
                     {{ __('Update') }}
-                @elseif ($takePicture)
-                    {{ __("Take picture") }}
                 @else
                     {{ __('Add') }}
                 @endif
@@ -412,7 +410,7 @@
 
     <section class="content">
         <form novalidate id="entryForm"
-            action="@if ($report) {{ URL::Route('retail.update', $report->id) }} @elseif ($takePicture) {{ URL::Route('retail.storePicture', $dataRetail->id) }} @else {{ URL::Route('retail.store') }} @endif"
+            action="@if ($report) {{ URL::Route('retail.update', $report->id) }} @else {{ URL::Route('retail.store') }} @endif"
             method="post" enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
@@ -422,21 +420,17 @@
                             <small class="toch">
                                 @if ($report)
                                     {{ __('Update') }}
-                                @elseif ($takePicture)
-                                    {{ __("Take picture") }}
                                 @else
                                     {{ __('Add') }}
                                 @endif
                             </small>
                         </h1>
-                        <div class="box-tools pull-right">
+                        <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('retail.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
                                     {{ __('Update') }}
-                                @elseif ($takePicture)
-                                    {{ __("Save picture") }}
                                 @else
                                     {{ __('Add') }}
                                 @endif
@@ -462,6 +456,26 @@
                                         value="{{ isset($report) ? $report['region'] : old('region') }}" placeholder="{{ __('Region') }}" required>
                                     <span class="fa fa-info form-control-feedback"></span>
                                     <span class="text-danger">{{ $errors->first('region') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="sm_name">{{ __("SM's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="sm_name" id="sm_name"
+                                        value="{{ isset($report) ? $report['sm_name'] : old('sm_name') }}" placeholder="{{ __("SM's Name") }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('sm_name') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="rsm_name">{{ __("RSM's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="rsm_name" id="rsm_name"
+                                        value="{{ isset($report) ? $report['rsm_name'] : old('rsm_name') }}" placeholder="{{ __("RSM's Name") }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('rsm_name') }}</span>
                                 </div>
                             </div>
 
@@ -499,6 +513,18 @@
                                 </div>
                             </div>
 
+                             <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="se_code">{{ __("SE's Code") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="se_code" id="se_code"
+                                        value="{{ isset($report) ? $report['se_code'] : old('se_code') }}"
+                                        placeholder="{{ __("SE's Code") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('se_name') }}</span>
+                                </div>
+                            </div>
+
                             <div class="col-lg-6 col-md-6 col-xl-6 d-none">
                                 <div class="form-group has-feedback">
                                     <label for="date"> {{ __('Date') }}</label>
@@ -509,25 +535,61 @@
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="customer_name">{{ __("Customer's Name") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="customer_name" id="customer_name"
-                                        value="{{ isset($report) ? $report['customer_name'] : old('customer_name') }}"
-                                        placeholder="{{ __("Customer's Name") }}" required>
+                                    <label for="customer_code">{{ __("Customer's Code") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="customer_code" id="customer_code"
+                                        value="{{ isset($report) ? $report['customer_code'] : old('customer_code') }}"
+                                        placeholder="{{ __("Customer's Code") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('customer_name') }}</span>
+                                    <span class="text-danger">{{ $errors->first('customer_code') }}</span>
                                 </div>
                             </div>
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="contact_number">{{ __("Contact Number") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="contact_number" id="contact_number"
-                                        value="{{ isset($report) ? $report['contact_number'] : old('contact_number') }}"
-                                        placeholder="{{ __("Contact Number") }}" required>
+                                    <label for="depo_contact">{{ __("Depot Contact") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="depo_contact" id="depo_contact"
+                                        value="{{ isset($report) ? $report['depo_contact'] : old('depo_contact') }}"
+                                        placeholder="{{ __("Depot Contact") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('contact_number') }}</span>
+                                    <span class="text-danger">{{ $errors->first('depo_contact') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="depo_name">{{ __("Depo's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="depo_name" id="depo_name"
+                                        value="{{ isset($report) ? $report['depo_name'] : old('depo_name') }}"
+                                        placeholder="{{ __("Depo's Name") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('depo_name') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="retails_name">{{ __("Retail's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="retails_name" id="retails_name"
+                                        value="{{ isset($report) ? $report['retails_name'] : old('retails_name') }}"
+                                        placeholder="{{ __("Retail's Name") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('retails_name') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="retails_contact">{{ __("Retail's Contact") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="retails_contact" id="retails_contact"
+                                        value="{{ isset($report) ? $report['retails_contact'] : old('retails_contact') }}"
+                                        placeholder="{{ __("Retail's Contact") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('retails_contact') }}</span>
                                 </div>
                             </div>
 
@@ -546,50 +608,62 @@
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="ams">{{ __("AMS") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="ams" id="ams"
-                                        value="{{ isset($report) ? $report['ams'] : old('ams') }}"
-                                        placeholder="{{ __("AMS") }}" required>
+                                    <label for="sale_kpi">{{ __("Sale KPI") }} <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="sale_kpi" id="sale_kpi" min="0"
+                                        value="{{ isset($report) ? $report['sale_kpi'] : old('sale_kpi') }}"
+                                        placeholder="{{ __("Sale KPI") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('ams') }}</span>
+                                    <span class="text-danger">{{ $errors->first('sale_kpi') }}</span>
                                 </div>
                             </div>
 
-                            <div class="col-lg-6 col-md-6 col-xl-6">
-                                <div class="form-group has-feedback">
-                                    <label for="display_parasol">{{ __("Display Parasol") }} <span class="text-danger">*</span></label>
-                                    <input type="number" min="0" class="form-control" name="display_parasol" id="display_parasol"
-                                        value="{{ isset($report) ? $report['display_parasol'] : old('display_parasol') }}"
-                                        placeholder="{{ __("Display Parasol") }}" required>
-                                    <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('display_parasol') }}</span>
-                                </div>
-                            </div>
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="foc">{{ __("FOC 600ML") }} <span class="text-danger">*</span></label>
-                                    <input type="number" min="0" class="form-control" name="foc" id="foc"
-                                        value="{{ isset($report) ? $report['foc'] : old('foc') }}"
+                                    <label for="display_qty">{{ __("Display QTY") }} <span class="text-danger">*</span></label>
+                                    <input type="number" min="0" class="form-control" name="display_qty" id="display_qty"
+                                        value="{{ isset($report) ? $report['display_qty'] : old('display_qty') }}"
+                                        placeholder="{{ __("Display QTY") }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('display_qty') }}</span>
+                                </div>
+                            </div>
+
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="foc_qty">{{ __("FOC 600ML") }} <span class="text-danger">*</span></label>
+                                    <input type="number" min="0" max="100" class="form-control" name="foc_qty" id="foc_qty"
+                                        value="{{ isset($report) ? $report['foc_qty'] : old('foc_qty') }}"
                                         placeholder="{{ __("FOC 600ML") }}" required>
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('foc') }}</span>
+                                    <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
+                                </div>
+                            </div>
+
+
+                            <div class="col-lg-12">
+                                <div class="form-group has-feedback">
+                                    <label for="remark">{{ __("Remark") }}</label>
+                                    <input type="text" class="form-control" name="remark" id="remark"
+                                        value="{{ isset($report) ? $report['remark'] : old('remark') }}"
+                                        placeholder="{{ __("Remark") }}">
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('remark') }}</span>
                                 </div>
                             </div>
 
 
                             <div class="col-md-12">
                                 <div class="form-group has-feedback">
-                                    <label for="installation">{{ __("Installation") }} <span class="text-danger">*</span></label>
-                                    {{-- <input type="text" min="0" class="form-control" name="installation" id="installation"
-                                        value="{{ isset($report) ? $report['installation'] : old('installation') }}"
-                                        placeholder="{{ __("Installation") }}" required> --}}
-                                    <textarea name="installation" id="installation" cols="30" rows="6"
-                                            placeholder="{{ __("Installation") }}" class="form-control"
-                                            required>{{ isset($report) ? $report['installation'] : old('installation') }}</textarea>
+                                    <label for="location">{{ __("Location") }} <span class="text-danger">*</span></label>
+
+                                    <textarea name="location" id="location" cols="30" rows="6"
+                                            placeholder="{{ __("Location") }}" class="form-control"
+                                            required>{{ isset($report) ? $report['location'] : old('location') }}</textarea>
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('installation') }}</span>
+                                    <span class="text-danger">{{ $errors->first('location') }}</span>
                                 </div>
                             </div>
 

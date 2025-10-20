@@ -211,57 +211,57 @@
 $(document).ready(function() {
         // Enable Pusher logging for debugging
         var loggedInUserId = {{ auth()->id() }};
-        Pusher.logToConsole = true;
+        // Pusher.logToConsole = true;
 
-        var AppHelper = {
-            USER_SUPER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_SUPER_ADMIN }},
-            USER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_ADMIN }},
-            USER_MANAGER: {{ App\Http\Helpers\AppHelper::USER_MANAGER }}
-        };
+        // var AppHelper = {
+        //     USER_SUPER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_SUPER_ADMIN }},
+        //     USER_ADMIN: {{ App\Http\Helpers\AppHelper::USER_ADMIN }},
+        //     USER_MANAGER: {{ App\Http\Helpers\AppHelper::USER_MANAGER }}
+        // };
 
-        var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
-            cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-            forceTLS: true
-        });
+        // var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
+        //     cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+        //     forceTLS: true
+        // });
 
-        var channel = pusher.subscribe('my-channel');
-        channel.bind('my-event', function(data) {
-            var allowedUsers = data.allowedUsers; // Get the allowed users from the event
+        // var channel = pusher.subscribe('my-channel');
+        // channel.bind('my-event', function(data) {
+        //     var allowedUsers = data.allowedUsers; // Get the allowed users from the event
 
-            // Show notification only if the current user is in allowedUsers and did not create the report
-            if (allowedUsers.includes(loggedInUserId)) {
-                toastr.options = {
-                    "closeButton": true,
-                    "progressBar": true,
-                    "timeOut": 9000, // 9 seconds
-                    "extendedTimeOut": 2000,
-                    "positionClass": "toast-top-right"
-                };
-                toastr["info"](data.message, "Report Notification");
-                incrementNotificationBadge();
-            }
-        });
+        //     // Show notification only if the current user is in allowedUsers and did not create the report
+        //     if (allowedUsers.includes(loggedInUserId)) {
+        //         toastr.options = {
+        //             "closeButton": true,
+        //             "progressBar": true,
+        //             "timeOut": 9000, // 9 seconds
+        //             "extendedTimeOut": 2000,
+        //             "positionClass": "toast-top-right"
+        //         };
+        //         toastr["info"](data.message, "Report Notification");
+        //         incrementNotificationBadge();
+        //     }
+        // });
             });
 
-            function incrementNotificationBadge() {
-            var badgeElement = document.querySelector('.notification_badge');
-            if (badgeElement) {
-                let currentCount = parseInt(badgeElement.textContent) || 0;
+        //     function incrementNotificationBadge() {
+        //     var badgeElement = document.querySelector('.notification_badge');
+        //     if (badgeElement) {
+        //         let currentCount = parseInt(badgeElement.textContent) || 0;
 
-                if (currentCount >= 5) {
-                    badgeElement.textContent = '5+';
-                    badgeElement.style.fontSize = '9px';
-                } else {
-                    currentCount += 1;
-                    badgeElement.textContent = currentCount;
-                    badgeElement.style.fontSize = '';
-                }
+        //         if (currentCount >= 5) {
+        //             badgeElement.textContent = '5+';
+        //             badgeElement.style.fontSize = '9px';
+        //         } else {
+        //             currentCount += 1;
+        //             badgeElement.textContent = currentCount;
+        //             badgeElement.style.fontSize = '';
+        //         }
 
-                badgeElement.style.display = (currentCount > 0 || badgeElement.textContent === '5+') ? 'inline' : 'none';
-            } else {
-                console.warn('Notification badge element not found');
-            }
-        }
+        //         badgeElement.style.display = (currentCount > 0 || badgeElement.textContent === '5+') ? 'inline' : 'none';
+        //     } else {
+        //         console.warn('Notification badge element not found');
+        //     }
+        // }
 
 
 

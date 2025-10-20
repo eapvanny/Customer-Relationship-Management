@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\API\DashboardController as APIDashboard;
+use App\Http\Controllers\API\LoginController;
+use App\Http\Controllers\API\ReportController as APIReport;
+use App\Http\Controllers\API\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +18,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/login', [LoginController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::get('/dashboard', [APIDashboard::class, 'index']);
+
+    Route::get('/reports', [APIReport::class, 'index']); // New endpoint: /api/reports
+    Route::get('/reports/{id}', [APIReport::class, 'show']); // New endpoint
 });

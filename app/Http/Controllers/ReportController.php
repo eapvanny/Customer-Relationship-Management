@@ -500,12 +500,12 @@ class ReportController extends Controller
         }
 
         // Remove duplicate user IDs (if any)
-        $notificationUsers = array_unique($notificationUsers);
+        // $notificationUsers = array_unique($notificationUsers);
 
-        event(new ReportRequest(
-            __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
-            $notificationUsers
-        ));
+        // event(new ReportRequest(
+        //     __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
+        //     $notificationUsers
+        // ));
 
         return redirect()->route('report.index')->with('success', "Report has been created!");
     }

@@ -4,10 +4,16 @@ use App\Http\Controllers\AsmimportController;
 use App\Http\Controllers\AsmprogramController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerProvinceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepoController;
+use App\Http\Controllers\DisplaysubwholesaleController;
 use App\Http\Controllers\GetmanagerController;
+use App\Http\Controllers\OutletController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PosmController;
+use App\Http\Controllers\ProvinceReportController;
+use App\Http\Controllers\RegionsController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantimportController;
@@ -24,6 +30,7 @@ use App\Http\Controllers\SubwholesaleController;
 use App\Http\Controllers\SubwholesaleImportController;
 use App\Http\Controllers\TranslationController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WholesaleController;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Crypt;
@@ -112,114 +119,172 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
 
     // SUB WHOLESALE Route
-    Route::resource('sub-wholesale', SubwholesaleController::class);
-    Route::get('/sub-wholesale/export', [SubwholesaleController::class, 'export'])->name('sub-wholesale.export');
-    Route::get('/sub-wholesale/excel/import', [SubwholesaleController::class, 'import'])->name('sub-wholesale.import');
-    Route::post('/subwholesale/import/save', [SubwholesaleController::class, 'saveImport'])->name('import.save');
-    Route::get('/sub-wholesale/by-area', [SubwholesaleController::class, 'getCustomersByArea'])->name('subwholesale.byArea');
-    Route::get('sub-wholesale/{id}/pictures', [SubwholesaleController::class, 'getPictures'])->name('sub-wholesale.picture');
-    Route::post('sub-wholesale/{id}/pictures/save', [SubwholesaleController::class, 'storePicture'])->name('sub-wholesale.storePicture');
-    Route::get('/subwholesale-export', [SubwholesaleController::class, 'export'])->name('sub-wholesale.export');
+    // Route::resource('sub-wholesale', SubwholesaleController::class);
+    // Route::get('/sub-wholesale/export', [SubwholesaleController::class, 'export'])->name('sub-wholesale.export');
+    // Route::get('/sub-wholesale/excel/import', [SubwholesaleController::class, 'import'])->name('sub-wholesale.import');
+    // Route::post('/subwholesale/import/save', [SubwholesaleController::class, 'saveImport'])->name('import.save');
+    // Route::get('/sub-wholesale/by-area', [SubwholesaleController::class, 'getCustomersByArea'])->name('subwholesale.byArea');
+    // Route::get('sub-wholesale/{id}/pictures', [SubwholesaleController::class, 'getPictures'])->name('sub-wholesale.picture');
+    // Route::post('sub-wholesale/{id}/pictures/save', [SubwholesaleController::class, 'storePicture'])->name('sub-wholesale.storePicture');
+    // Route::get('/subwholesale-export', [SubwholesaleController::class, 'export'])->name('sub-wholesale.export');
 
 
 
-    Route::resource('sub-wholesale-import', SubwholesaleImportController::class);
-    Route::get('/subwholesale-import-export', [SubwholesaleImportController::class, 'export'])->name('subwholesaleimport.export');
+    // Route::resource('sub-wholesale-import', SubwholesaleImportController::class);
+    // Route::get('/subwholesale-import-export', [SubwholesaleImportController::class, 'export'])->name('subwholesaleimport.export');
 
 
-
-    // RETAILs
-    Route::resource('retail', RetailController::class);
-    Route::resource('retail-import', RetailimportController::class);
-    Route::get('/retail/excel/import', [RetailController::class, 'import'])->name('retail.import');
-    Route::post('/retail/excel/import/save', [RetailController::class, 'saveImport'])->name('retail.saveImport');
-
-    Route::get('/retailimport/export', [RetailimportController::class, 'export'])->name('retailimport.export');
-    Route::get('/retail-export', [RetailController::class, 'export'])->name('retail.export');
-    Route::get('/retail/by-area', [RetailController::class, 'getCustomersByArea'])->name('retail.byArea');
-    Route::get('retail/{id}/pictures', [RetailController::class, 'getPictures'])->name('retail.picture');
-    Route::post('retail/{id}/pictures/save', [RetailController::class, 'storePicture'])->name('retail.storePicture');
-
-
-
-
-
-
-
-
-
-    Route::resource('school', SchoolController::class);
-    Route::get('/school/by-area', [SchoolController::class, 'getCustomersByArea'])->name('school.byArea');
-    Route::get('/school-export', [SchoolController::class, 'export'])->name('school.export');
-
-    Route::resource('school-import', SchoolimportController::class);
-    Route::get('/import-school/import', [SchoolimportController::class, 'import'])->name('school.import');
-    Route::get('/import-school/export', [SchoolimportController::class, 'export'])->name('schoolimport.export');
-
-
-
-
-
-
+    // ASM Program
     Route::resource('asm', AsmprogramController::class);
     Route::post('/asm-import', [AsmimportController::class, 'import'])->name('asm.import');
     Route::get('/asm-export', [AsmprogramController::class, 'export'])->name('asm.export');
+    // Route::get('/asm-get/by-area', [AsmprogramController::class, 'getCustomersByArea'])->name('asm.byArea');
+
+    Route::get('/customers/outlet/asm', [AsmprogramController::class, 'getOutlets'])->name('asm_customers.outlet');
+    Route::get('/customers/get/asm', [AsmprogramController::class, 'getCustomers'])->name('asm_customers.getName');
+    Route::get('/customers/customer-type/asm', [AsmprogramController::class, 'getCustomerType'])->name('asm_customers.getCustomerType');
+    Route::get('/get-reports/asm', [AsmprogramController::class, 'getReports'])->name('asm.getreport');
 
 
+    // SE Program
     Route::resource('se', SeprogramController::class);
     Route::post('/se-import', [SeimportController::class, 'import'])->name('se.import');
     Route::get('/se-export', [SeprogramController::class, 'export'])->name('se.export');
 
+    Route::get('/customers/outlet/se', [SeprogramController::class, 'getOutlets'])->name('se_customers.outlet');
+    Route::get('/customers/get/se', [SeprogramController::class, 'getCustomers'])->name('se_customers.getName');
+    Route::get('/customers/customer-type/se', [SeprogramController::class, 'getCustomerType'])->name('se_customers.getCustomerType');
+
+
+
     // Route::get('/user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
     Route::get('/user/fetch-hierarchy-users', [UserController::class, 'fetchHierarchyUsers'])->name('user.fetchHierarchyUsers');
-Route::get('/users/fetch-roles', [UserController::class, 'fetchRolesByType'])->name('user.fetchRolesByType');
-Route::get('user/fetch-asms', [UserController::class, 'fetchAsms'])->name('user.fetchAsms');
-Route::get('user/fetch-sups', [UserController::class, 'fetchSupervisors'])->name('user.fetchSupervisors');
-Route::get('user/fetch-rsms', [UserController::class, 'fetchRsms'])->name('user.fetchRsms');
-Route::get('user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
+    Route::get('/users/fetch-roles', [UserController::class, 'fetchRolesByType'])->name('user.fetchRolesByType');
+    Route::get('user/fetch-asms', [UserController::class, 'fetchAsms'])->name('user.fetchAsms');
+    Route::get('user/fetch-sups', [UserController::class, 'fetchSupervisors'])->name('user.fetchSupervisors');
+    Route::get('user/fetch-rsms', [UserController::class, 'fetchRsms'])->name('user.fetchRsms');
+    Route::get('user/fetch-managers', [UserController::class, 'fetchManagers'])->name('user.fetchManagers');
 
-Route::get('/users/fetch-manager', [UserController::class, 'fetchManagersOnly'])->name('user.fetchManagersOnly');
-    // sport club
-    Route::resource('sport-club', SportclubController::class);
-    Route::get('/sport-club/by-area', [SportclubController::class, 'getCustomersByArea'])->name('sport-club.byArea');
-    Route::get('/sport-club-export', [SportclubController::class, 'export'])->name('sport-club.export');
+    Route::get('/users/fetch-manager', [UserController::class, 'fetchManagersOnly'])->name('user.fetchManagersOnly');
 
-    Route::resource('sport-club-import', SportclubimportController::class);
-    Route::get('/import-sport-club/import', [SportclubimportController::class, 'import'])->name('sport-club.import');
-    Route::get('/import-sport-club/export', [SportclubimportController::class, 'export'])->name('sport-clubimport.export');
+    // Report Province
+    Route::resource('reports', ProvinceReportController::class);
+    Route::get('/get-reports-pro', [ProvinceReportController::class, 'getReports'])->name('get-reports-pro');
+    Route::get('/export-report-pro', [ProvinceReportController::class, 'export'])->name('report-pro.export');
+    Route::get('/customers/outlet', [ProvinceReportController::class, 'getOutletsProvince'])->name('customers.outlet-pro');
+    Route::get('/customers/get', [ProvinceReportController::class, 'getCustomersProvince'])->name('customers.getName-pro');
+    Route::get('/customers/customer-type', [ProvinceReportController::class, 'getCustomerTypeProvince'])->name('customers.getCustomerType-pro');
+    // Manager customer for marketing
+    // Route::resource('mcustomer', MCustomerController::class);
+    // Route::get('/mcustomer/province/by-area', [MCustomerController::class, 'getCustomersByArea'])->name('mcustomer.byArea');
+    // Route::get('/mcustomer/province/export', [MCustomerController::class, 'export'])->name('mcustomer.export');
 
 
-     // Restaurant
-    Route::resource('restaurant', RestaurantController::class);
-    Route::get('/restaurant/by-area', [RestaurantController::class, 'getCustomersByArea'])->name('restaurant.byArea');
-    Route::get('/restaurant-export', [RestaurantController::class, 'export'])->name('restaurant.export');
+    // Display program subwholesale route
+    Route::resource('/display/sub-wholesale', DisplaysubwholesaleController::class)->names('displaysub');
+    Route::get('/display/sub-wholesale/file/import', [DisplaysubwholesaleController::class, 'import'])->name('displaysub.import');
+    Route::post('/display/sub-wholesale/file/import/save', [DisplaysubwholesaleController::class, 'saveImport'])->name('displaysub.import.save');
 
-    Route::resource('restaurant-import', RestaurantimportController::class);
-    Route::get('/import-restaurant/import', [RestaurantimportController::class, 'import'])->name('restaurant.import');
-    Route::get('/import-restaurant/export', [RestaurantimportController::class, 'export'])->name('restaurantimport.export');
-    
+    Route::get('/sub-wholesale/by-area', [DisplaysubwholesaleController::class, 'getCustomersByArea'])->name('subwholesale.byArea');
+    Route::get('/display/sub-wholesale/{id}/take/pictures', [DisplaysubwholesaleController::class, 'getPictures'])->name('displaysub.takePicture');
+    Route::post('/display/sub-wholesale/{id}/take/pictures/save', [DisplaysubwholesaleController::class, 'storePicture'])->name('displaysub.storePicture');
+    Route::get('/display/sub-wholesale/export/file/excel', [DisplaysubwholesaleController::class, 'export'])->name('displaysub.export');
+
+
+     // Wholesale
+    Route::resource('/display/wholesale', WholesaleController::class)->names('wholesale');
+    Route::get('/display/wholesale/file/import', [WholesaleController::class, 'import'])->name('wholesale.import');
+    Route::post('/display/wholesale/file/import/save', [WholesaleController::class, 'saveImport'])->name('wholesale.import.save');
+    Route::get('/display/wholesale/{id}/take/picture', [WholesaleController::class, 'takePicture'])->name('wholesale.takePicture');
+    Route::post('/display/wholesale/{id}/take/picture', [WholesaleController::class, 'savePicture'])->name('wholesale.savePicture');
+    Route::get('/display/wholesale/file/export', [WholesaleController::class, 'export'])->name('wholesale.export');
+
+
+    // RETAILs
+    Route::resource('/display/retail', RetailController::class)->names('retail');
+    Route::get('/display/retail/file/import', [RetailController::class, 'import'])->name('retail.import');
+    Route::post('/display/retail/file/import/save', [RetailController::class, 'saveImport'])->name('retail.import.save');
+
+    Route::get('/display/retail/{id}/take/picture', [RetailController::class, 'takePicture'])->name('retail.takePicture');
+    Route::post('/display/retail/{id}/take/picture', [RetailController::class, 'savePicture'])->name('retail.savePicture');
+    Route::get('/display/retail/file/export', [RetailController::class, 'export'])->name('retail.export');
+
+    // Master data
+        // 1. Region management route
+        Route::resource('region', RegionsController::class);
+        Route::get('region/list/export', [RegionsController::class, 'export'])->name('region.export');
+
+        // 2. Outlet management route
+        Route::resource('depot', OutletController::class)->names('outlet');
+
+        // 3. POSM Management
+        Route::resource('posm/management', PosmController::class)->names('posm');
+        Route::get('posm/list/export', [PosmController::class, 'export'])->name('posm.export');
+
+        // 4. Customer province management
+        Route::resource('/province/customer', CustomerProvinceController::class)->names('cp');
+        Route::get('/customer/province/list/export', [CustomerProvinceController::class, 'export'])->name('cp.export');
+        Route::get('/customer/get/outlet/region', [CustomerProvinceController::class, 'getDeposByArea'])->name('get-depos-by-region');
+    // Master data
+
+
+    // Exclusive start
+        // School
+        Route::resource('/exclusive/school', SchoolController::class)->names('school');
+        Route::get('/exclusive/school/file/export', [SchoolController::class, 'export'])->name('school.export');
+
+        Route::get('/exclusive/school/outlet', [SchoolController::class, 'getOutlets'])->name('school.outlet');
+        Route::get('/exclusive/school/get', [SchoolController::class, 'getCustomers'])->name('school.getName');
+        Route::get('/exclusive/school/customer-type', [SchoolController::class, 'getCustomerType'])->name('school.getCustomerType');
+
+
+            // Restaurant
+        Route::resource('/exclusive/restaurant', RestaurantController::class);
+        Route::get('/exclusive/restaurant/file/export', [RestaurantController::class, 'export'])->name('restaurant.export');
+        Route::get('/exclusive/restaurant/outlet', [RestaurantController::class, 'getOutlets'])->name('restaurant.outlet');
+        Route::get('/exclusive/restaurant/get', [RestaurantController::class, 'getCustomers'])->name('restaurant.getName');
+        Route::get('/exclusive/restaurant/customer-type', [RestaurantController::class, 'getCustomerType'])->name('restaurant.getCustomerType');
+
+
+            // sport club
+        Route::resource('/exclusive/sport-club', SportclubController::class)->names('sportClub');
+        Route::get('/exclusive/sport-club/file/export', [SportclubController::class, 'export'])->name('sportClub.export');
+        Route::get('/exclusive/sport-club/outlet', [SportclubController::class, 'getOutlets'])->name('sportClub.outlet');
+        Route::get('/exclusive/sport-club/get', [SportclubController::class, 'getCustomers'])->name('sportClub.getName');
+        Route::get('/exclusive/sport-club/customer-type', [SportclubController::class, 'getCustomerType'])->name('sportClub.getCustomerType');
+
+        // ------------ redo --------
+        // Route::resource('/exclusive/{type}/customer', ExclusiveController::class)->names('exclusive');
+        // Route::get('/exclusive/{type}/customer/export', [ExclusiveController::class, 'export'])->name('exclusive.export');
+
+    // Exclusive end
+
+
+
+
     //photo preview
     Route::get('/photo/{encryptedPath}', function ($encryptedPath) {
-    try {
-        $key = substr(hash('sha256', config('app.key')), 0, 32);
-        $data = base64_decode(strtr($encryptedPath, '-_', '+/'));
-        $iv = substr($data, 0, 16);
-        $encrypted = substr($data, 16);
-        $decryptedPath = openssl_decrypt($encrypted, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+        try {
+            $key = substr(hash('sha256', config('app.key')), 0, 32);
+            $data = base64_decode(strtr($encryptedPath, '-_', '+/'));
+            $iv = substr($data, 0, 16);
+            $encrypted = substr($data, 16);
+            $decryptedPath = openssl_decrypt($encrypted, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
 
-        $filePath = storage_path('app/public/' . $decryptedPath);
+            $filePath = storage_path('app/public/' . $decryptedPath);
 
-        if (file_exists($filePath)) {
-            return response()->file($filePath);
-        } else {
-            abort(404, 'Image not found');
+            if (file_exists($filePath)) {
+                return response()->file($filePath);
+            } else {
+                abort(404, 'Image not found');
+            }
+        } catch (\Exception $e) {
+            abort(403, 'Invalid or corrupted photo URL');
         }
-    } catch (\Exception $e) {
-        abort(403, 'Invalid or corrupted photo URL');
-    }
-})->name('photo.view');
+    })->name('photo.view');
 
-// SE section end
+
+    // SE section end
 
     // Translation Routes
     Route::prefix('translations')->name('translation.')->group(function () {

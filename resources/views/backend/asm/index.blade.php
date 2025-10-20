@@ -3,7 +3,7 @@
 
 <!-- Page title -->
 @section('pageTitle')
-    ASM Program
+    {{ __('ASM Program') }}
 @endsection
 <!-- End block -->
 
@@ -13,7 +13,8 @@
 <!-- End block -->
 @section('extraStyle')
     <style>
-        #datatabble th, #datatabble td {
+        #datatabble th,
+        #datatabble td {
             /* text-align: center; */
             width: 550px !important;
             /* background: rgb(237, 237, 237); */
@@ -24,9 +25,9 @@
 @endsection
 <!-- BEGIN PAGE CONTENT-->
 @section('pageContent')
-@php
-    use App\Http\Helpers\AppHelper;
-@endphp
+    @php
+        use App\Http\Helpers\AppHelper;
+    @endphp
     <!-- Section header -->
     <section class="content-header">
         <ol class="breadcrumb">
@@ -82,8 +83,8 @@
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
                     <h1>
-                        {{ __('ASM Program') }}
-                        <small class="toch"> {{ __('List') }} </small>
+                        {{ __('ASM Program Report List') }}
+                        {{-- <small class="toch"> {{ __('List') }} </small> --}}
                     </h1>
                     <div class="box-tools pull-right">
                         <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
@@ -103,8 +104,8 @@
                                     <form action="{{ route('asm.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif "
                                             id="filterContainer">
-                                            <a id="close_filter" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse"
-                                            data-bs-target="#filterContainer">
+                                            <a id="close_filter" class="btn btn-outline-secondary btn-sm"
+                                                data-bs-toggle="collapse" data-bs-target="#filterContainer">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
                                             <div class="row">
@@ -122,18 +123,28 @@
                                                             class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
-                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_SE_MANAGER]))
+                                                {{-- @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN, AppHelper::USER_SE_MANAGER])) --}}
                                                     <div class="col-xl-4">
                                                         <div class="form-group">
-                                                            <label for="full_name">{{ __('Employee Name') }}</label>
-                                                            {!! Form::select('full_name', $full_name, request('full_name'), [
-                                                                'placeholder' => __('Select employee'),
-                                                                'id' => 'full_name',
-                                                                'class' => 'form-control select2',
-                                                            ]) !!}
+                                                            <label for="date2">{{ __('Region') }}</label>
+                                                            <select name="area_id" id="area_id" class="form-control select2">
+                                                                <option value="">{{ __('Select Region') }}</option>
+                                                                @foreach($regions as $regionName => $regionGroup)
+                                                                    <optgroup label="{{ $regionGroup->first()->region_name }} (@if(auth()->user()->user_lang == 'en') {{ $regionGroup->first()->rg_manager_en }} @else {{ $regionGroup->first()->rg_manager_kh }} @endif)">
+                                                                        @foreach($regionGroup as $region)
+                                                                            <option value="{{ $region->id }}"
+                                                                                @if(request('area_id'))
+                                                                                {{ (request('area_id')  == $region->id ? 'selected' : '') }}
+                                                                                @endif>
+                                                                                {{ $region->se_code }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </optgroup>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                     </div>
-                                                @endif
+                                                {{-- @endif --}}
                                             </div>
                                             <div class="row">
                                                 <div class="col-12 mt-2">
@@ -141,7 +152,7 @@
                                                         class="btn btn-outline-secondary btn-sm float-end" type="submit">
                                                         <i class="fa-solid fa-magnifying-glass"></i> {{ __('Apply') }}
                                                     </button>
-                                                    <a href=""
+                                                    <a href="{{ route('asm.index') }}"
                                                         class="btn btn-outline-secondary btn-sm float-end me-1">
                                                         <i class="fa-solid fa-xmark"></i> {{ __('Cancel') }}
                                                     </a>
@@ -153,7 +164,7 @@
                                         <div class="col-12">
                                             {{-- <a class="btn btn-success btn-sm" href="{{ route('asm.export') }}"><i class="fa-solid fa-download"></i> {{ __('Export') }}</a> --}}
                                             <a class="btn btn-success btn-sm"
-                                                href="{{ route('asm.export') }}{{ request()->has('date1') ? '?date1=' . request('date1') . '&date2=' . request('date2') . '&full_name=' . request('full_name') : '' }}">
+                                                href="{{ route('asm.export') }}{{ request()->has('date1') ? '?date1=' . request('date1') . '&date2=' . request('date2') . '&are_id=' . request('are_id') : '' }}">
                                                 <i class="fa-solid fa-download"></i> {{ __('Export') }}
                                             </a>
                                             {{-- <a type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exportFilterModal"><i class="fa-solid fa-download"></i> {{ __('Export') }}</a> --}}
@@ -205,34 +216,80 @@
                         <!-- /.box-header -->
                         <div class="box-body margin-top-20">
                             <div class="table-responsive mt-4">
-                                <table id="datatabble"
-                                    class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
+                                <table id="datatable"
+                                    class="table table-hover"
                                     width="100%">
                                     <thead>
                                         <tr>
-                                            {{-- <th> {{ __('Photo') }} </th> --}}
-                                            <th> {{ __('Staff ID') }} </th>
-                                            <th> {{ __('Name') }} </th>
-                                            <th> {{ __('Area') }} </th>
-                                            <th> {{ __('Outlet') }} </th>
-                                            <th> {{ __('Customer') }} </th>
-                                            <th> {{ __('Customer Type') }} </th>
-                                            <th> {{ __('250ml') }} </th>
-                                            <th> {{ __('350ml') }} </th>
-                                            <th> {{ __('600ml') }} </th>
-                                            <th> {{ __('1500ml') }} </th>
-                                            <th> {{ __('Phone number') }} </th>
+                                            <th style="width: 20px;" class="text-center">{{ __('No') }}</th>
+                                            <th> {{ __('Reported By') }} </th>
+                                            {{-- <th> {{ __('Name') }} </th> --}}
+                                            <th> {{ __('Region') }} </th>
+                                            {{-- <th> {{ __('Outlet') }} </th> --}}
+                                            <th> {{ __('Customer Name') }} </th>
+                                            {{-- <th> {{ __('Customer Type') }} </th> --}}
+                                            <th> {{ __('250ml') . " (". __("Boxes") . ")" }} </th>
+                                            <th> {{ __('350ml') . " (". __("Boxes") . ")"  }} </th>
+                                            <th> {{ __('600ml') . " (". __("Boxes") . ")" }} </th>
+                                            <th> {{ __('1500ml'). " (". __("Boxes") . ")" }} </th>
+                                            {{-- <th> {{ __('Default') }} </th> --}}
+
+                                            {{-- <th> {{ __('Phone number') }} </th>
                                             <th> {{ __('Other') }} </th>
                                             <th> {{ __('Material Type') }} </th>
                                             <th> {{ __('Qty') }} </th>
                                             <th> {{ __('Foc Qty') }} </th>
                                             <th> {{ __('Address') }} </th>
-                                            <th> {{ __('Date') }} </th>
+                                            <th> {{ __('Date') }} </th> --}}
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @foreach ($reports as $key=> $report)
+                                            <tr>
+                                                <th class="text-center">{{ $key+1 }}</th>
+                                                <td>
+                                                    <span class="d-block">
+                                                        <i class="fa fa-regular fa-address-card text-muted"></i>
+                                                        {{ $report->user->staff_id_card }}
+                                                    </span>
+                                                    <span class="d-block">
+                                                        <i class="fa fa-regular fa-user text-muted"></i>
+                                                        @if (auth()->user()->user_lang == 'en')
+                                                            {{ $report->user->family_name_latin . ' '.$report->user->name_latin  }}
+                                                        @else
+                                                            {{ $report->user->family_name . ' '.$report->user->name  }}
+                                                        @endif
+                                                    </span>
+                                                    {{-- <span class="d-block"><i class="fa-solid fa-crosshairs text-muted"></i> {{ $report->user->position }}</span> --}}
+                                                    <span class="d-block"><span class="text-muted">Tel:</span> {{ $report->user->phone_no }}</span>
+                                                    <span class="d-block text-muted">{{ Carbon\Carbon::parse($report->created_at)->format('d-M-Y') }}</span>
 
+                                                </td>
+                                                <td>{{ $report->region->region_name . ' - '. $report->region->se_code }}</td>
+                                                <td>
+                                                    <span class="d-block text-capitalize">{!! $report->CustomerProvince->name ?? '<span class="text-danger">N/A</span>' !!}</span>
+                                                    <span class="d-block"><span class="text-muted">Tel: </span> {!! $report->CustomerProvince->phone ?? '<span class="text-danger">N/A</span>' !!}</span>
+                                                </td>
+                                                <td>{!! $report->{'250_ml'} ?? '<span class="text-danger">N/A</span>' !!}</span></td>
+                                                <td>{!! $report->{'350_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
+                                                <td>{!! $report->{'600_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
+                                                <td>{!! $report->{'1500_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
+
+                                                {{-- <td class="text-center fw-bold">
+                                                    {{ intval($report->{'250_ml'} + $report->{'350_ml'} + $report->{'600_ml'} + $report->{'1500_ml'}) . " ". __('Boxes') }}
+                                                </td> --}}
+
+                                                <td class="text-center">
+                                                    <a href="{{ route('asm.show', $report->id) }}" class="img-detail me-2"
+                                                        data-id="{{ $report->id }}" title="{{ __('View') }}"><i
+                                                            class="fa fa-eye"></i></a>
+                                                    @hasTypePermission('update asm')
+                                                        <a href="{{ route('asm.edit', $report->id) }}" class="text-success"
+                                                            title="{{ __('Edit') }}"><i class="fa fa-edit"></i></a>
+                                                    @endHasTypePermission
+                                                </td>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
@@ -262,37 +319,55 @@
                 </div>
                 <div class="modal-body img-popup">
                     <div class="row">
-
                         <div class="col-md-12">
                             <div class="report-details">
                                 <div class="row">
                                     <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa fa-user"></i> <strong>{{__('Employee Name')}}:</strong> <span
+                                            <li class="list-group-item"><i class="fa fa-user"></i>
+                                                <strong>{{ __('Employee Name') }}:</strong> <span
                                                     id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i> <strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i>
+                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span>
                                             </li>
-                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i> <strong>{{__('Area')}} :</strong> <span id="modalArea"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-home"></i> <strong>{{__('Outlet')}} :</strong> <span id="modalOutlet"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer')}} :</strong> <span id="modalCustomer"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-user"></i> <strong>{{__('Customer Type')}} :</strong> <span id="modalCustomerType"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i> <strong>{{__('Date')}} :</strong> <span id="modalDate"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i>
+                                                <strong>{{ __('Area') }} :</strong> <span id="modalArea"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-home"></i>
+                                                <strong>{{ __('Outlet') }} :</strong> <span id="modalOutlet"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-user"></i>
+                                                <strong>{{ __('Customer') }} :</strong> <span id="modalCustomer"></span>
+                                            </li>
+                                            <li class="list-group-item"><i class="fa-solid fa-user"></i>
+                                                <strong>{{ __('Customer Type') }} :</strong> <span
+                                                    id="modalCustomerType"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i>
+                                                <strong>{{ __('Date') }} :</strong> <span id="modalDate"></span></li>
 
-                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i> <strong>{{__('Address')}} :</strong> <span id="modalCity"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i>
+                                                <strong>{{ __('Address') }} :</strong> <span id="modalCity"></span></li>
 
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
                                     <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('250ml')}} :</strong> <span id="modal250ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('350ml')}} :</strong> <span id="modal350ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('600ml')}} :</strong> <span id="modal600ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('1500ml')}} :</strong> <span id="modal1500ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i> <strong>{{__('Other')}} :</strong> <span id="modalOther"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i> <strong>{{__('Material Type')}} :</strong> <span id="modalPosm"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('Quantity')}} :</strong> <span id="modalQty"></span>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i> <strong>{{__('FOC Qty')}} :</strong> <span id="modalQtyFoc"></span>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('250ml') }} :</strong> <span id="modal250ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('350ml') }} :</strong> <span id="modal350ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('600ml') }} :</strong> <span id="modal600ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('1500ml') }} :</strong> <span id="modal1500ml"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
+                                                <strong>{{ __('Other') }} :</strong> <span id="modalOther"></span></li>
+                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i>
+                                                <strong>{{ __('Material Type') }} :</strong> <span id="modalPosm"></span>
+                                            </li>
+                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
+                                                <strong>{{ __('Quantity') }} :</strong> <span id="modalQty"></span>
+                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
+                                                <strong>{{ __('FOC Qty') }} :</strong> <span id="modalQtyFoc"></span>
                                             </li>
                                         </ul>
                                     </div>
@@ -300,15 +375,17 @@
 
                             </div>
                         </div>
-                         <div class="col-md-12 my-2">
+                        <div class="col-md-12 my-2">
                             <div class="row">
-                                 <div class="col-md-6">
-                                    <img  style="border: 1px solid #cfcfcf;" id="modalPhotoFoc" src="" class="img-fluid photo-detail" alt="Photo Detail">
-                                    <p class="text-center">{{__('FOC Image')}}</p>
+                                <div class="col-md-6">
+                                    <img style="border: 1px solid #cfcfcf;" id="modalPhotoFoc" src=""
+                                        class="img-fluid photo-detail" alt="Photo Detail">
+                                    <p class="text-center">{{ __('FOC Image') }}</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <img  style="border: 1px solid #cfcfcf;" id="modalPhoto" src="" class="img-fluid photo-detail" alt="Photo Detail">
-                                    <p class="text-center">{{__('POSM Image')}}</p>
+                                    <img style="border: 1px solid #cfcfcf;" id="modalPhoto" src=""
+                                        class="img-fluid photo-detail" alt="Photo Detail">
+                                    <p class="text-center">{{ __('POSM Image') }}</p>
 
                                 </div>
 
@@ -317,7 +394,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btnClose" data-bs-dismiss="modal">{{__('Close')}}</button>
+                    <button type="button" class="btn btn-secondary btnClose"
+                        data-bs-dismiss="modal">{{ __('Close') }}</button>
                 </div>
             </div>
         </div>
@@ -429,99 +507,98 @@
                     }, 1000); // Matches the animation duration (1s)
                 }, 3000);
             @endif
-            t = $('#datatabble').DataTable({
-                processing: false,
-                serverSide: true,
-                ajax: {
-                    url: "{!! route('asm.index', request()->all()) !!}",
-                },
-                pageLength: 10,
-                columns: [
-                    // {
-                    //     data: 'photo',
-                    //     name: 'photo',
-                    //     orderable: false
-                    // },
-                    {
-                        data: 'id_card',
-                        name: 'id_card'
-                    },
-                    {
-                        data: 'name',
-                        name: 'name'
-                    },
-                    {
-                        data: 'area',
-                        name: 'area'
-                    },
-                    {
-                        data: 'outlet_id',
-                        name: 'outlet_id'
-                    },
-                    {
-                        data: 'customer',
-                        name: 'customer'
-                    },
-                    {
-                        data: 'customer_type',
-                        name: 'customer_type'
-                    },
-                    {
-                        data: '250ml',
-                        name: '250ml'
-                    },
-                    {
-                        data: '350ml',
-                        name: '350ml'
-                    },
-                    {
-                        data: '600ml',
-                        name: '600ml'
-                    },
-                    {
-                        data: '1500ml',
-                        name: '1500ml'
-                    },
-                    {
-                        data: 'phone',
-                        name: 'phone'
-                    },
-                    {
-                        data: 'other',
-                        name: 'other'
-                    },
-                    {
-                        data: 'posm',
-                        name: 'posm'
-                    },
-                    {
-                        data: 'qty',
-                        name: 'qty'
-                    },
-                    {
-                        data: 'foc_qty',
-                        name: 'foc_qty'
-                    },
-                    {
-                        data: 'location',
-                        name: 'location'
-                    },
-                    {
-                        data: 'date',
-                        name: 'date'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false
-                    }
-                ],
-            });
+
+            // t = $('#datatabble').DataTable({
+            //     processing: false,
+            //     serverSide: true,
+            //     ajax: {
+            //         url: "{!! route('asm.index', request()->all()) !!}",
+            //     },
+            //     pageLength: 10,
+            //     columns: [
+            //         {
+            //             data: 'id_card',
+            //             name: 'id_card'
+            //         },
+            //         {
+            //             data: 'name',
+            //             name: 'name'
+            //         },
+            //         {
+            //             data: 'area',
+            //             name: 'area'
+            //         },
+            //         {
+            //             data: 'outlet_id',
+            //             name: 'outlet_id'
+            //         },
+            //         {
+            //             data: 'customer',
+            //             name: 'customer'
+            //         },
+            //         {
+            //             data: 'customer_type',
+            //             name: 'customer_type'
+            //         },
+            //         {
+            //             data: '250ml',
+            //             name: '250ml'
+            //         },
+            //         {
+            //             data: '350ml',
+            //             name: '350ml'
+            //         },
+            //         {
+            //             data: '600ml',
+            //             name: '600ml'
+            //         },
+            //         {
+            //             data: '1500ml',
+            //             name: '1500ml'
+            //         },
+            //         {
+            //             data: 'phone',
+            //             name: 'phone'
+            //         },
+            //         {
+            //             data: 'other',
+            //             name: 'other'
+            //         },
+            //         {
+            //             data: 'posm',
+            //             name: 'posm'
+            //         },
+            //         {
+            //             data: 'qty',
+            //             name: 'qty'
+            //         },
+            //         {
+            //             data: 'foc_qty',
+            //             name: 'foc_qty'
+            //         },
+            //         {
+            //             data: 'location',
+            //             name: 'location'
+            //         },
+            //         {
+            //             data: 'date',
+            //             name: 'date'
+            //         },
+            //         {
+            //             data: 'action',
+            //             name: 'action',
+            //             orderable: false
+            //         }
+            //     ],
+            // });
+
+            $('#datatable').DataTable();
 
             $('#close_filter').click(function() {
                 $("#filters").trigger('click');
             });
 
+            /*
             $(document).on('click', '.img-detail', function() {
                 var reportId = $(this).data('id');
 
@@ -558,6 +635,7 @@
                     }
                 });
             });
+            */
 
             $(document).on('click', '.btnClose', function() {
                 $('#viewModal').modal('hide');

@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class Asm_program extends Model
 {
     use HasFactory;
+
     protected $table = 'asm_programs';
 
     protected $fillable = [
+        // 'posm',
+        // 'qty',
         'area_id',
         'outlet_id',
         'customer_id',
@@ -27,15 +30,24 @@ class Asm_program extends Model
         'city',
         'country',
         'user_id',
-        'posm',
-        'qty',
         'photo',
         'customer',
         'customer_type',
         'phone',
-
         'photo_foc',
-        'foc_qty',
+        'foc_250_qty',
+        'foc_350_qty',
+        'foc_600_qty',
+        'foc_1500_qty',
+        'foc_other',
+        'foc_other_qty',
+        'posm_1',
+        'posm_1_qty',
+        'posm_2',
+        'posm_2_qty',
+        'posm_3',
+        'posm_3_qty',
+        // 'foc_qty',
         // 'manager_id'
     ];
 
@@ -47,8 +59,35 @@ class Asm_program extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function customer()
+
+    public function CustomerProvince()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(CustomerProvince::class, 'customer_id');
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class, 'area_id');
+    }
+
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class, 'outlet_id');
+    }
+
+
+    public function posm1()
+    {
+        return $this->belongsTo(Posm::class, 'posm_1');
+    }
+
+    public function posm2()
+    {
+        return $this->belongsTo(Posm::class, 'posm_2');
+    }
+
+    public function posm3()
+    {
+        return $this->belongsTo(Posm::class, 'posm_3');
     }
 }

@@ -7,6 +7,64 @@
     $authUser = Auth::user();
     $photoPath = $authUser->photo ? asset('storage/' . $authUser->photo) : asset('images/avatar.png');
 @endphp
+<style>
+   
+
+    .theme-switch {
+        position: relative;
+        display: inline-block;
+        width: 65px;
+        height: 28px;
+    }
+
+    .theme-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #f5f5f5;
+        /* dark blue background like your image */
+        border-radius: 30px;
+        transition: 0.4s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+        /* color: #747474; */
+    }
+    .fa-sun{
+        color: #ffb400;
+    }
+    .slider i {
+        font-size: 16px;
+        transition: color 0.3s ease;
+    }
+
+    .theme-switch input:checked+.slider {
+        background-color: #23343d;
+    }
+
+    .theme-switch input:checked+.slider .fa-sun {
+        color: #4f4f4f;
+    }
+
+    .theme-switch input:checked+.slider .fa-moon {
+        color: #ffb400;
+    }
+    
+
+.main-header { background-color: var(--header-bg); }
+.content-wrapper { background-color: var(--bg-primary); }
+.form-control { background-color: var(--bg-secondary); color: var(--text-primary); }
+</style>
 <header class="main-header shadow-sm">
     <!-- Logo -->
     <a href="@if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE) {{ URL::route('dashboard.index') }} @else {{ URL::route('report.index') }} @endif"
@@ -127,7 +185,16 @@
 
                 {{--    Upgrade Stype NavItems --}}
                 <div class="d-flex align-items-center">
-
+                    <!-- Dark Mode Toggle Switch -->
+                    <div class="mx-3">
+                        <label class="theme-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="slider">
+                                <i class="fas fa-sun"></i>
+                                <i class="fas fa-moon"></i>
+                            </span>
+                        </label>
+                    </div>
                     <!-- Languages -->
                     <div class="dropdown mx-3 language">
                         <div data-mdb-dropdown-init class="main-language text-reset dropdown-toggle hidden-dropdow-xs"
@@ -177,7 +244,7 @@
                         </ul>
                     </div>  --}}
                     <!-- Notifications -->
-                    <div class="dropdown mx-2">
+                    {{-- <div class="dropdown mx-2">
                         <?php
                         
                         $user = auth()->user();
@@ -237,7 +304,7 @@
                                 </a>
                             </li>
                         </ul>
-                    </div>
+                    </div> --}}
 
                     <div class="sepa-menu-header"></div>
                     <!-- Avatar -->
@@ -381,6 +448,9 @@
                     }
                 });
             });
+        });
+        document.getElementById('darkModeToggle').addEventListener('change', function() {
+            document.body.classList.toggle('dark-mode', this.checked);
         });
     </script>
 @endpush

@@ -30,7 +30,7 @@ class SubwholesaleController extends Controller
     /**
      * Display a listing of the resource.
      */
-        public function __construct()
+    public function __construct()
     {
         $this->middleware('type.permission:view sub-wholesale', ['only' => ['index']]);
         $this->middleware('type.permission:create sub-wholesale', ['only' => ['create', 'store']]);
@@ -42,6 +42,7 @@ class SubwholesaleController extends Controller
     public function index(Request $request)
     {
         // dd('HI Wholesale');
+        // $reports = [];
         $query = Sub_wholesale::with('user')->orderBy('id', 'desc');
         $user = auth()->user();
         if ($user->role_id === AppHelper::USER_MANAGER) {
@@ -81,10 +82,11 @@ class SubwholesaleController extends Controller
             $is_filter = true;
             $query->where('user_id', $request->full_name);
         }
+        $reports = $query->get();
 
 
         if ($request->ajax()) {
-            $reports = $query->get();
+            // $reports = $query->get();
             return DataTables::of($reports)
                 ->addColumn('id_card', function ($data) {
                     return $data->user->staff_id_card ?? 'N/A';
@@ -183,7 +185,7 @@ class SubwholesaleController extends Controller
                 ->make(true);
         }
 
-        return view('backend.sub-wholesale.index', compact('is_filter', 'full_name'));
+        return view('backend.sub-wholesale.index', compact('is_filter', 'full_name', 'reports'));
         // dd('HI Wholesale');
         // return view('backend.retail.index');
     }
@@ -401,9 +403,11 @@ class SubwholesaleController extends Controller
             $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
         }
 
+        $selectUsers = User::where('type', AppHelper::SE)->orderBy('staff_id_card', 'asc')->get();
+
         // dd($customers);
 
-        return view('backend.sub-wholesale.import', compact('customer', 'customers','report','customerType'));
+        return view('backend.sub-wholesale.import', compact('customer', 'customers','report','customerType', 'selectUsers'));
         // return view('backend.sub-wholesale.import', compact('report', 'customers'));
     }
 

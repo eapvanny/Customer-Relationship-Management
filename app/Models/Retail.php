@@ -10,54 +10,31 @@ class Retail extends Model
     use HasFactory;
     protected $table = 'retails';
 
-    protected $fillable = [
-        // 'area_id',
-        // 'outlet_id',
-        // 'customer_id',
-        // 'customer_type',
-        // 'date',
-        // 'other',
-        // '250_ml',
-        // '350_ml',
-        // '600_ml',
-        // '1500_ml',
-        // 'phone',
-        // 'latitude',
-        // 'longitude',
-        // 'city',
-        // 'country',
-        // 'user_id',
-        // 'posm',
-        // 'qty',
-        // 'photo',
-        // 'customer',
-        // 'customer_type',
-        // 'phone',
-
-        // 'photo_foc',
-        // 'foc_qty',
-        // 'manager_id'
-
+   protected $fillable = [
         'region',
+        'sm_name',
+        'rsm_name',
         'asm_name',
         'sup_name',
         'se_name',
-        'customer_name',
-        'contact_number',
+        'se_code',
+        'customer_code',
+        'depo_contact',
+        'creater',
+        'depo_name',
+        'retails_name',
+        'retails_contact',
         'business_type',
-        'ams',
-        'display_parasol',
-        'foc',
-        'installation',
-        'user_id',
+        'sale_kpi',
+        'display_qty',
+        'foc_qty',
+        'remark',
+        'apply_user',
+        'location',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'apply_user');
     }
-    // public function customer()
-    // {
-    //     return $this->belongsTo(Customer::class, 'customer_id');
-    // }
 }

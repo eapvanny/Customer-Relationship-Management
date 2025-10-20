@@ -3,7 +3,7 @@
 
 <!-- Page title -->
 @section('pageTitle')
-    Retail
+    {{ __('Retail') }}
 @endsection
 <!-- End block -->
 
@@ -13,28 +13,37 @@
 <!-- End block -->
 @section('extraStyle')
     <style>
-        #datatabble th, #datatabble td {
+        #datatabble th,
+        #datatabble td {
             /* text-align: center; */
-            width: 550px !important;
+            /* width: 550px !important; */
             /* background: rgb(237, 237, 237); */
             font-size: small !important;
-            min-width: 100px !important;
+            /* min-width: 100px !important; */
         }
-        .link-group a{
+
+        .link-group a {
             color: grey;
             padding: 0 5px;
         }
-        .link-group a.active{
+
+        .link-group a.active {
             color: rgb(0, 121, 190);
             text-decoration: underline;
+        }
+        .text{
+            line-height: 20px !important;
+        }
+        .text p{
+            margin: 0 !important;
         }
     </style>
 @endsection
 <!-- BEGIN PAGE CONTENT-->
 @section('pageContent')
-@php
-    use App\Http\Helpers\AppHelper;
-@endphp
+    @php
+        use App\Http\Helpers\AppHelper;
+    @endphp
     <!-- Section header -->
     <section class="content-header">
         <ol class="breadcrumb">
@@ -90,15 +99,14 @@
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
                     <h1>
-                        {{ __('Retail') }}
-                        <small class="toch"> {{ __('List') }} </small>
+                        {{ __('Retail List') }}
                     </h1>
                     <div class="box-tools pull-right">
                         <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
                             data-bs-target="#filterContainer">
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
-                        <a class="btn btn-success text-white" href="{{ URL::route('retail.import') }}">
+                        <a class="btn btn-secondary text-white" href="{{ URL::route('retail.import') }}">
                             <i class="fa fa-download"></i> {{ __('Import data') }}
                         </a>
                         <a class="btn btn-info text-white" href="{{ URL::route('retail.create') }}"><i
@@ -114,8 +122,8 @@
                                     <form action="{{ route('retail.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif "
                                             id="filterContainer">
-                                            <a id="close_filter" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse"
-                                            data-bs-target="#filterContainer">
+                                            <a id="close_filter" class="btn btn-outline-secondary btn-sm"
+                                                data-bs-toggle="collapse" data-bs-target="#filterContainer">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
                                             <div class="row">
@@ -133,7 +141,7 @@
                                                             class="form-control" value="{{ request('date2') }}">
                                                     </div>
                                                 </div>
-                                                @if(in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
+                                                @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
                                                     <div class="col-xl-4">
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>
@@ -152,7 +160,7 @@
                                                         class="btn btn-outline-secondary btn-sm float-end" type="submit">
                                                         <i class="fa-solid fa-magnifying-glass"></i> {{ __('Apply') }}
                                                     </button>
-                                                    <a href=""
+                                                    <a href="{{ route('retail.index') }}"
                                                         class="btn btn-outline-secondary btn-sm float-end me-1">
                                                         <i class="fa-solid fa-xmark"></i> {{ __('Cancel') }}
                                                     </a>
@@ -168,7 +176,7 @@
                                     </div> --}}
                                     <div class="row" style="margin-bottom: -20px">
                                         <div class="col-12">
-                                            <a class="btn btn-success btn-sm" href="{{ route('retail.export') }}"><i
+                                            <a class="btn btn-success btn-sm" href="{{ route('retail.export', request()->all()) }}"><i
                                                     class="fa-solid fa-download"></i> {{ __('Export') }}</a>
                                         </div>
                                     </div>
@@ -181,46 +189,63 @@
                         <div class="box-body margin-top-20">
                             <div class="table-responsive mt-4">
                                 <table id="datatabble"
-                                    class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
-                                    width="100%">
+                                    class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server">
                                     <thead>
                                         <tr>
-                                            {{-- <th> {{ __('Photo') }} </th> --}}
-                                            {{-- <th> {{ __('Staff ID') }} </th>
-                                            <th> {{ __('Name') }} </th>
-                                            <th> {{ __('Area') }} </th>
-                                            <th> {{ __('Outlet') }} </th>
-                                            <th> {{ __('Customer') }} </th>
-                                            <th> {{ __('Customer Type') }} </th>
-                                            <th> {{ __('250ml') }} </th>
-                                            <th> {{ __('350ml') }} </th>
-                                            <th> {{ __('600ml') }} </th>
-                                            <th> {{ __('1500ml') }} </th>
-                                            <th> {{ __('Phone number') }} </th>
-                                            <th> {{ __('Other') }} </th>
-                                            <th> {{ __('Material Type') }} </th>
-                                            <th> {{ __('Qty') }} </th>
-                                            <th> {{ __('Foc Qty') }} </th>
-                                            <th> {{ __('Address') }} </th>
-                                            <th> {{ __('Date') }} </th> --}}
+                                            <th>{{ __('No') }}</th>
+                                            <th> {{ __('Staff Info') }} </th>
+                                            <th>{{ __('Region') }}</th>
 
-                                            <th> {{ __('Staff ID') }} </th>
-                                            <th> {{ __('Name') }} </th>
-                                            <th>{{__('Region')}}</th>
-                                            <th>{{__("ASM's Name")}}</th>
-                                            <th>{{__("SUP's Name")}}</th>
-                                            <th>{{__("SE's Name")}}</th>
-                                            <th>{{__("Customer's Name")}}</th>
-                                            <th>{{__("Contact Number")}}</th>
-                                            <th>{{__('Business Type')}}</th>
-                                            <th>{{__('AMS')}}</th>
-                                            <th>{{__('Display Parasol')}}</th>
-                                            <th>{{__('FOC 600ML')}}</th>
-                                            <th>{{__('Installation')}}</th>
+                                            {{-- <th>{{ __('ASM Name') }}</th>
+                                            <th>{{ __('SE Info') }}</th> --}}
+                                            <th>{{ __('Customer Code') }}</th>
+                                            <th>{{ __('Depo Info') }}</th>
+                                            {{-- <th>{{ __('WS Info') }}</th> --}}
+                                            <th>{{ __('Business Type') }}</th>
+                                            <th>{{ __('Display QTY') }}</th>
+                                            <th>{{ __('FOC 600ML') }}</th>
+                                            <th>{{ __('Location') }}</th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @foreach ($reports as $key => $item)
+                                            <tr>
+                                                <th>{{ $key+1 }}</th>
+                                                <td class="text text-start">
+                                                    <p>ID: {{ $item->user->staff_id_card}}</p>
+                                                    <p>{{ $item->user->family_name . ' ' . $item->user->name}}</p>
+                                                </td>
+                                                <td class="text">
+                                                    {{$item->region}}
+                                                </td>
+                                                <td>{{$item->customer_code}}</td>
+                                                <td class="text text-start">
+                                                    <p>{{$item->depo_name}}</p>
+                                                    <p>{{$item->depo_contact}}</p>
+                                                </td>
+                                                <td>
+                                                    {{$item->business_type}}
+                                                </td>
+                                                <td>{{$item->display_qty}}</td>
+                                                <td>{{$item->foc_qty}}</td>
+                                                <td>{{$item->location}}</td>
+                                                <td class="text-center">
+                                                    <a href="javascript:void(0);" class="img-detail me-2"
+                                                        data-id="{{ $item->id }}" title="{{ __('View') }}"><i
+                                                            class="fa fa-eye"></i></a>
+                                                    @hasTypePermission('update retail')
+                                                        <a href="{{ route('retail.edit', $item->id) }}" class="text-success me-2"
+                                                            title="{{ __('Edit') }}"><i class="fa fa-edit"></i></a>
+                                                    @endHasTypePermission
+
+                                                    @hasTypePermission('take photo retail')
+                                                        <a href="{{ route('retail.takePicture', $item->id) }}" class="text-secondary"
+                                                            title="{{ __('Camera') }}"><i class="fa fa-camera"></i></a>
+                                                    @endHasTypePermission
+                                                </td>
+                                            </tr>
+                                        @endforeach
 
                                     </tbody>
                                 </table>
@@ -261,26 +286,66 @@
 
                                     <div class="col-md-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><strong>{{__('Staff ID')}}:</strong> <span id="modalIdCard"></span></li>
-                                            <li class="list-group-item"> <strong>{{__('Employee Name')}}:</strong> <span id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Region')}} :</strong> <span id="modalRegion"></span></li>
-                                            <li class="list-group-item"><strong>{{__("ASM's Name")}} :</strong> <span id="modalAsmName"></span></li>
-                                            <li class="list-group-item"><strong>{{__("SUP's Name")}} :</strong> <span id="modalSupName"></span></li>
-                                            <li class="list-group-item"><strong>{{__("SE's Name")}} :</strong> <span id="modalSeName"></span></li>
-                                            <li class="list-group-item"><strong>{{__("Customer's Name")}} :</strong> <span id="modalCustomerName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('Staff ID') }}:</strong> <span
+                                                    id="modalIdCard"></span></li>
+                                            <li class="list-group-item"> <strong>{{ __('Employee Name') }}:</strong> <span
+                                                    id="modalEmployeeName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('Region') }} :</strong> <span
+                                                    id="modalRegion"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("SM's Name") }} :</strong> <span
+                                                    id="modalSmName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("RSM's Name") }} :</strong> <span
+                                                    id="modalRsmName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("ASM's Name") }} :</strong> <span
+                                                    id="modalAsmName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("SUP's Name") }} :</strong> <span
+                                                    id="modalSupName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("SE's Name") }} :</strong> <span
+                                                    id="modalSeName"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("SE's Code") }} :</strong> <span
+                                                    id="modalSeCode"></span></li>
+                                            <li class="list-group-item"><strong>{{ __("Customer's Code") }} :</strong>
+                                                <span id="modalCustomerCode"></span>
+                                            </li>
+
+                                            <li class="list-group-item"><strong>{{ __("Depo's Name") }} :</strong>
+                                                <span id="modalDepoName"></span>
+                                            </li>
+
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
                                     </div>
 
                                     <div class="col-md-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><strong>{{__("Contact Number")}} :</strong> <span id="modalContactNumber"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Business Type')}} :</strong> <span id="modalBusinessType"></span></li>
-                                            <li class="list-group-item"><strong>{{__('AMS')}} :</strong> <span id="modalAMS"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Display Parasol')}} :</strong> <span id="modalDisplayParasol"></span></li>
-                                            <li class="list-group-item"><strong>{{__('FOC 600ML')}} :</strong> <span id="modalFOC600ml"></span></li>
-                                            <li class="list-group-item"><strong>{{__('Installation')}} :</strong> <span id="modalInstallation"></span></li></li>
-                                            <li class="list-group-item"><strong>{{__('Create date')}} :</strong> <span id="modalCreateDate"></span></li></li>
+                                            <li class="list-group-item"><strong>{{ __("Depot Contact") }} :</strong>
+                                                <span id="modalDepoContact"></span>
+                                            </li>
+                                            <li class="list-group-item"><strong>{{ __('Retail Name') }} :</strong>
+                                                <span id="modalRetailName"></span>
+                                            </li>
+                                            <li class="list-group-item"><strong>{{ __('Retail Contact') }} :</strong>
+                                                <span id="modalRetailContact"></span>
+                                            </li>
+                                            <li class="list-group-item"><strong>{{ __('Business Type') }} :</strong> <span
+                                                    id="modalBusinessType"></span></li>
+
+                                            <li class="list-group-item"><strong>{{ __('Sale KPI') }} :</strong> <span
+                                                    id="modalSaleKPI"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('Display QTY') }} :</strong>
+                                                <span id="modalDisplayQty"></span>
+                                            </li>
+                                            <li class="list-group-item"><strong>{{ __('FOC 600ML') }} :</strong> <span
+                                                    id="modalFOC600ml"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('Remark') }} :</strong> <span
+                                                    id="modalRemark"></span></li>
+
+                                            <li class="list-group-item"><strong>{{ __('Location') }} :</strong> <span
+                                                    id="modalLocation"></span></li>
+                                            </li>
+                                            <li class="list-group-item"><strong>{{ __('Create date') }} :</strong> <span
+                                                    id="modalCreateDate"></span></li>
+                                            </li>
                                         </ul>
                                     </div>
 
@@ -293,7 +358,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btnClose" data-bs-dismiss="modal">{{__('Close')}}</button>
+                        <button type="button" class="btn btn-secondary btnClose"
+                            data-bs-dismiss="modal">{{ __('Close') }}</button>
                     </div>
                 </div>
             </div>
@@ -307,73 +373,6 @@
 <!-- END PAGE CONTENT-->
 
 <!-- BEGIN PAGE JS-->
-{{-- @section('extraScript')
-    <script type="text/javascript">
-        $(document).ready(function() {
-            Generic.initCommonPageJS();
-            Generic.initDeleteDialog();
-
-            $('#datatabble').DataTable();
-            // $.ajaxSetup({
-            //         headers: {
-            //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            //         }
-            //     });
-            //     t = $('#datatabble').DataTable({
-            //     processing: false,
-            //     serverSide: true,
-            //     ajax: {
-            //         url: "{!! route('role.index', request()->all()) !!}",
-            //     },
-            //     pageLength: 10,
-            //         columns: [{
-            //                 data: 'DT_RowIndex',
-            //                 name: 'DT_RowIndex',
-            //                 orderable: false,
-            //                 searchable: false
-            //             },
-            //             {
-            //                 data: 'name',
-            //                 name: 'name'
-            //             },
-            //             {
-            //                 data: 'permission',
-            //                 name: 'permission'
-            //             },
-            //             {
-            //                 data: 'action',
-            //                 name: 'action',
-            //                 orderable: false
-            //             }
-            //         ],
-            // });
-
-            //delete grade_level
-            $('#datatabble').delegate('.delete', 'click', function(e) {
-                let action = $(this).attr('href');
-                console.log()
-                $('#myAction').attr('action', action);
-                e.preventDefault();
-                swal({
-                    title: 'Are you sure?',
-                    text: 'You will not be able to recover this record!',
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dd4848',
-                    cancelButtonColor: '#8f8f8f',
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'No, keep it'
-                }).then((result) => {
-                    if (result.value) {
-                        $('#myAction').submit();
-                    }
-                });
-            });
-        });
-    </script>
-@endsection --}}
-
-
 
 @section('extraScript')
     <script type="text/javascript">
@@ -384,6 +383,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
+
             @if (session('show_popup'))
                 var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 
@@ -409,78 +409,8 @@
                     }, 1000); // Matches the animation duration (1s)
                 }, 3000);
             @endif
-            t = $('#datatabble').DataTable({
-                processing: false,
-                serverSide: true,
-                ajax: {
-                    url: "{!! route('retail.index', request()->all()) !!}",
-                },
-                pageLength: 10,
-                columns: [
-                    // {
-                    //     data: 'photo',
-                    //     name: 'photo',
-                    //     orderable: false
-                    // },
-                    {
-                        data: 'id_card',
-                        name: 'id_card'
-                    },
-                    {
-                        data: 'name',
-                        name: 'name'
-                    },
-                    {
-                        data: 'region',
-                        name: 'region',
-                    },
-                    {
-                        data: 'asm_name',
-                        name: 'asm_name',
-                    },
-                    {
-                        data: 'sup_name',
-                        name: 'sup_name',
-                    },
-                    {
-                        data: 'se_name',
-                        name: 'se_name',
-                    },
-                    {
-                        data: 'customer_name',
-                        name: 'customer_name',
-                    },
-                    {
-                        data: 'contact_number',
-                        name: 'contact_number',
-                    },
-                    {
-                        data: 'business_type',
-                        name: 'business_type',
-                    },
-                    {
-                        data: 'ams',
-                        name: 'ams',
-                    },
-                    {
-                        data: 'display_parasol',
-                        name: 'display_parasol',
-                    },
-                    {
-                        data: 'foc',
-                        name: 'foc',
-                    },
-                    {
-                        data: 'installation',
-                        name: 'installation',
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false
-                    }
-                ],
-            });
+
+            $('#datatabble').DataTable();
 
             $('#close_filter').click(function() {
                 $("#filters").trigger('click');
@@ -490,30 +420,36 @@
                 var reportId = $(this).data('id');
                 $('#viewModal').modal('show');
 
+                var url = '{{ route("retail.show", ":id") }}'.replace(':id', reportId);
                 $.ajax({
-                    url: '/retail/' + reportId,
+                    url: url,
                     method: 'GET',
+                    dataType: 'json',
                     success: function(response) {
                         var report = response.report;
-                        // $('#modalPhoto').attr('src', report.photo);
-                        // $('#modalPhotoFoc').attr('src', report.photo_foc);
-                        $('#modalEmployeeName').text(report.employee_name);
-                        $('#modalIdCard').text(report.staff_id_card);
+                        $('#modalEmployeeName').text(report.modalEmployeeName);
+                        $('#modalIdCard').text(report.modalIdCard);
 
                         $('#modalRegion').text(report.modalRegion);
+                        $('#modalSmName').text(report.modalSmName);
+                        $('#modalRsmName').text(report.modalRsmName);
                         $('#modalAsmName').text(report.modalAsmName);
                         $('#modalSupName').text(report.modalSupName);
                         $('#modalSeName').text(report.modalSeName);
+                        $('#modalSeCode').text(report.modalSeCode);
+                        $('#modalCustomerCode').text(report.modalCustomerCode);
+                        $('#modalDepoName').text(report.modalDepoName);
+                        $('#modalDepoContact').text(report.modalDepoContact);
 
-                        $('#modalCustomerName').text(report.modalCustomerName);
-                        $('#modalContactNumber').text(report['modalContactNumber']);
-                        $('#modalBusinessType').text(report['modalBusinessType']);
-                        $('#modalAMS').text(report['modalAMS']);
-                        $('#modalDisplayParasol').text(report['modalDisplayParasol']);
-                        $('#modalFOC600ml').text(report['modalFOC600ml']);
-                        $('#modalInstallation').text(report['modalInstallation']);
+                        $('#modalRetailName').text(report.modalRetailName);
+                        $('#modalRetailContact').text(report.modalRetailContact);
+                        $('#modalBusinessType').text(report.modalBusinessType);
+                        $('#modalSaleKPI').text(report.modalSaleKPI);
+                        $('#modalDisplayQty').text(report.modalDisplayQty);
+                        $('#modalFOC600ml').text(report.modalFOC600ml);
+                        $('#modalRemark').text(report.modalRemark);
+                        $('#modalLocation').text(report.modalLocation);
                         $('#modalCreateDate').text(report['modalCreateDate']);
-
                         $('#showPictures').html(response.picture);
                     },
                     error: function(xhr) {
@@ -529,30 +465,26 @@
             });
 
             //delete grade_level
-            $('#datatabble').delegate('.delete', 'click', function(e) {
-                let action = $(this).attr('href');
-                console.log()
-                $('#myAction').attr('action', action);
-                e.preventDefault();
-                swal({
-                    title: 'Are you sure?',
-                    text: 'You will not be able to recover this record!',
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dd4848',
-                    cancelButtonColor: '#8f8f8f',
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'No, keep it'
-                }).then((result) => {
-                    if (result.value) {
-                        $('#myAction').submit();
-                    }
-                });
-            });
-
-
-            // $('#viewModal').modal('show');
-
+            // $('#datatabble').delegate('.delete', 'click', function(e) {
+            //     let action = $(this).attr('href');
+            //     console.log()
+            //     $('#myAction').attr('action', action);
+            //     e.preventDefault();
+            //     swal({
+            //         title: 'Are you sure?',
+            //         text: 'You will not be able to recover this record!',
+            //         type: 'warning',
+            //         showCancelButton: true,
+            //         confirmButtonColor: '#dd4848',
+            //         cancelButtonColor: '#8f8f8f',
+            //         confirmButtonText: 'Yes, delete it!',
+            //         cancelButtonText: 'No, keep it'
+            //     }).then((result) => {
+            //         if (result.value) {
+            //             $('#myAction').submit();
+            //         }
+            //     });
+            // });
         });
     </script>
 @endsection

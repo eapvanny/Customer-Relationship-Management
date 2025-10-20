@@ -2,185 +2,182 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Retail;
-use App\Models\Customer;
-use Illuminate\Support\Str;
-// use App\Models\Retail;
-use App\Models\RetailPictur;
-use Illuminate\Http\Request;
 use App\Events\ReportRequest;
 use App\Exports\RetailExport;
-use App\Imports\RetailImport;
-use App\Exports\ReportsExport;
-use Illuminate\Support\Carbon;
+use App\Exports\WholesaleExport;
 use App\Http\Helpers\AppHelper;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\RetailImport;
+use App\Imports\WholesaleImport;
+use App\Models\Retail;
+use App\Models\RetailPictur;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RetailController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-        public function __construct()
+    public function __construct()
     {
         $this->middleware('type.permission:view retail', ['only' => ['index']]);
         $this->middleware('type.permission:create retail', ['only' => ['create', 'store']]);
         $this->middleware('type.permission:update retail', ['only' => ['update', 'edit']]);
         $this->middleware('type.permission:delete retail', ['only' => ['destroy']]);
     }
-    public $indexof = 1;
 
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
-        $query = Retail::with('user')->orderBy('id', 'desc');
+        $query = Retail::with('user')->whereDate('created_at', today())->orderBy('id', 'desc');
         $user = auth()->user();
-        if ($user->role_id === AppHelper::USER_SE_MANAGER) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('manager_id', $user->id);
-            });
-        } elseif ($user->role_id !== AppHelper::USER_SUPER_ADMIN && $user->role_id !== AppHelper::USER_ADMIN) {
-            $query->where('user_id', $user->id);
+
+        if ($user) {
+            $userRole = $user->role_id;
+            $userId = $user->id;
+            $userType = $user->type;
+            $userIds = [$userId];  // Always include own reports
+            $allowedTypes = [AppHelper::SALE, AppHelper::SE];
+
+            if ($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ])) {
+                // Users with type ALL or roles Super Admin, Admin, Director see all reports
+                // No additional filtering needed
+            } elseif ($userRole == AppHelper::USER_MANAGER) {
+                // Manager sees reports of RSMs, Supervisors, ASMs, Employees under them
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q
+                        ->where('manager_id', $userId)
+                        ->orWhere('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_RSM) {
+                // RSM sees reports of Supervisors, ASMs, Employees under them
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q
+                        ->where('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_SUP) {
+                // Supervisor sees reports of ASMs, Employees under them
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q
+                        ->where('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            } elseif ($userRole == AppHelper::USER_ASM) {
+                // ASM sees reports of Employees under them
+                $managedUserIds = User::where('asm_id', $userId)
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+                $userIds = array_merge($userIds, $managedUserIds);
+            }
+
+            // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
+            if (!($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ]))) {
+                $query->whereIn('apply_user', array_unique($userIds));
+            }
+
+            // Ensure reports belong to users with allowed types (except for ALL/Super Admin/Admin/Director)
+            if (!($userType == AppHelper::ALL || in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ]))) {
+                $query->whereHas('user', function ($q) use ($allowedTypes) {
+                    $q->whereIn('type', $allowedTypes);
+                });
+            }
+        } else {
+            // No authenticated user, return no reports
+            $query->where('id', 0);
         }
 
-        $is_filter = false;
-        $authUser = auth()->user();
-
-        $userRole = User::where('role_id', AppHelper::USER_SE);
-        if ($authUser->role_id === AppHelper::USER_SE_MANAGER) {
-            $userRole->where('manager_id', $authUser->id);
+        // Load employee list for filtering (based on role hierarchy)
+        $employeeQuery = User::query();
+        if ($user && !($userType == AppHelper::ALL || in_array($userRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
+            if ($userRole == AppHelper::USER_MANAGER) {
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q
+                        ->where('manager_id', $userId)
+                        ->orWhere('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes);
+            } elseif ($userRole == AppHelper::USER_RSM) {
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q
+                        ->where('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes);
+            } elseif ($userRole == AppHelper::USER_SUP) {
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q
+                        ->where('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })->whereIn('type', $allowedTypes);
+            } elseif ($userRole == AppHelper::USER_ASM) {
+                $employeeQuery
+                    ->where('asm_id', $userId)
+                    ->whereIn('type', $allowedTypes);
+            } else {
+                $employeeQuery->where('id', $userId);  // Employee sees only themselves
+            }
         }
-        $full_name = $userRole->get()->mapWithKeys(function ($names) use ($authUser) {
-            return [
-                $names->id => $authUser->user_lang === 'en'
-                    ? $names->family_name_latin . ' ' . $names->name_latin
-                    : $names->family_name . ' ' . $names->name
-            ];
+
+        $full_name = $employeeQuery->get()->mapWithKeys(function ($u) use ($user) {
+            return [$u->id => $u->user_lang === 'en' ? ($u->full_name_latin ?? 'N/A') : ($u->full_name ?? 'N/A')];
         });
 
-        // Filter by date range
-        if ($request->has(['date1', 'date2']) && !empty($request->date1) && !empty($request->date2)) {
+        $is_filter = false;
+
+        // Date filtering
+        if ($request->filled(['date1', 'date2'])) {
             $is_filter = true;
             $startDate = Carbon::parse($request->date1)->startOfDay();
             $endDate = Carbon::parse($request->date2)->endOfDay();
             $query->whereBetween('created_at', [$startDate, $endDate]);
         }
 
-
-        if ($request->has('full_name') && !empty($request->full_name)){
+        if ($request->filled('full_name')) {
             $is_filter = true;
-            $query->where('user_id', $request->full_name);
+            $query->where('apply_user', $request->full_name);
         }
 
-
-        if ($request->ajax()) {
-            $reports = $query->get();
-            // dd($reports);
-            return DataTables::of($reports)
-                ->addColumn('id_card', function ($data) {
-                    return $data->user->staff_id_card ?? 'N/A';
-                })
-                ->addColumn('name', function ($data) {
-                    $user = optional($data->user);
-                    return auth()->user()->user_lang == 'en'
-                        ? ($user->getFullNameLatinAttribute() ?? 'N/A')
-                        : ($user->getFullNameAttribute() ?? 'N/A');
-                })
-
-                ->addColumn('region', function ($data) {
-                    return __(AppHelper::getAreaName($data->region));
-                    // return isset(AppHelper::AREAS[$data->area_id]) ? __(AppHelper::AREAS[$data->area_id]) : __('N/A');
-                })
-
-               ->addColumn('asm_name', function ($data) {
-                    return $data->asm_name;
-                })
-
-                ->addColumn('sup_name', function ($data) {
-                    return $data->sup_name;
-
-                })
-
-                ->addColumn('se_name', function ($data) {
-                    return $data->se_name;
-                })
-
-                ->addColumn('customer_name', function ($data) {
-                    return $data->customer_name;
-                })
-
-                ->addColumn('contact_number', function ($data) {
-                    return $data->contact_number;
-                })
-                ->addColumn('business_type', function ($data) {
-                    return $data->business_type;
-                })
-
-                ->addColumn('ams', function ($data) {
-                    return $data->ams;
-                })
-
-                ->addColumn('display_parasol', function ($data) {
-                    return $data->display_parasol;
-                })
-
-                ->addColumn('foc', function ($data) {
-                    return $data->foc;
-                })
-
-                ->addColumn('installation', function ($data) {
-                    return $data->installation;
-                })
-
-                ->addColumn('action', function ($data) {
-                    $editRoute = route('retail.edit', $data->id);
-                    $deleteRoute = route('retail.destroy', $data->id);
-                    $takePhotoRoute = route('retail.picture', $data->id);
-
-                    $actionButtons = '
-                    <span class="change-action-item">
-                        <a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show" data-bs-toggle="modal">
-                            <i class="fa fa-fw fa-eye"></i>
-                        </a>
-                    </span>';
-
-                    if (auth()->user()->can('update user')) {
-                        $actionButtons .= '
-                        <span class="change-action-item">
-                            <a title="Edit" href="' . $editRoute . '" class="btn btn-primary btn-sm">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                        </span>';
-                    }
-                    if (auth()->user()->can('update user')) {
-                        $actionButtons .= '
-                        <span class="change-action-item">
-                            <a title="Take pictur" href="' . $takePhotoRoute . '" class="btn btn-primary btn-sm">
-                                <i class="fa fa-camera"></i>
-                            </a>
-                        </span>';
-                    }
-                    return $actionButtons;
-                })
-
-                //        <span class="change-action-item">
-                //        <a href="' . $deleteRoute . '" class="btn btn-danger btn-sm delete" title="Delete">
-                //            <i class="fa fa-fw fa-trash"></i>
-                //        </a>
-                //    </span>
-                // })
-                ->rawColumns(['photo', 'action'])
-                ->make(true);
-        }
-
-        return view('backend.retail.index', compact('is_filter', 'full_name'));
-        // dd('HI Wholesale');
-        // return view('backend.retail.index');
+        $reports = $query->get();
+        return view('backend.retail.index', compact('is_filter', 'full_name', 'reports'));
     }
 
     /**
@@ -190,21 +187,12 @@ class RetailController extends Controller
     {
         $report = null;
         $dataRetail = null;
-        // dd('HI Wholesale');
-        $customer = null; // Assuming $customer is used for editing; null for create
+        $customer = null;  // Assuming $customer is used for editing; null for create
         $customers = [];
-        $takePicture = null; // Assuming this is used for taking pictures, set to null for create
+        $takePicture = null;  // Assuming this is used for taking pictures, set to null for create
         $customerType = AppHelper::CUSTOMER_TYPE;
-        // If there's old input or a pre-selected area, fetch customers
         $areaId = old('area', $customer->area_id ?? '');
-
-        if ($areaId) {
-            $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
-        }
-
-        // dd($customers);
-
-        return view('backend.retail.add', compact('customer', 'customers','report','customerType', 'takePicture', 'dataRetail'));
+        return view('backend.retail.add', compact('customer', 'customers', 'report', 'customerType', 'takePicture', 'dataRetail'));
     }
 
     /**
@@ -212,99 +200,52 @@ class RetailController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
-
         $rules = [
             'region' => 'required|string',
+            'sm_name' => 'required|string',
+            'rsm_name' => 'required|string',
             'asm_name' => 'required|string',
             'sup_name' => 'required|string',
             'se_name' => 'required|string',
-            'customer_name' => 'required|string',
-            'contact_number' => 'required|string',
+            'se_code' => 'required|string',
+            'customer_code' => 'required|string',
+            'depo_contact' => 'required|string',
+            'depo_name' => 'required|string',
+            'retails_name' => 'required|string',
+            'retails_contact' => 'required|string',
             'business_type' => 'required|string',
-            'ams' => 'required|string',
-            'display_parasol' => 'required|numeric',
-            'foc' => 'required|string',
-            'installation' => 'required|string',
-
-            // 'photo_foc' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
-            // 'photo_base64_foc' => 'nullable|string',
-
+            'sale_kpi' => 'required|string',
+            'display_qty' => 'required|integer|min:0',
+            'foc_qty' => 'required|integer|min:0',
+            'remark' => 'nullable|string',
+            'location' => 'required|string',
         ];
 
         $this->validate($request, $rules);
-
-        // $data = $request->except(['photo', 'photo_base64', 'photo_foc', 'photo_base64_foc']);
-        // $data['photo'] = null;
-        // $data['photo_foc'] = null;
-
-        // Handle file upload if exists
-
-
-
-        /*  /////  ### File include here ####
-
-            if ($request->hasFile('photo')) {
-                $file = $request->file('photo');
-                $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-                $filePath = 'uploads/' . $fileName;
-                Storage::put($filePath, file_get_contents($file));
-                $data['photo'] = $filePath;
-            }
-
-            if($request->hasFile('photo_foc')) {
-                $file = $request->file('photo_foc');
-                $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-                $filePath = 'uploads/' . $fileName;
-                Storage::put($filePath, file_get_contents($file));
-                $data['photo_foc'] = $filePath;
-            }
-
-            // Handle base64 image if provided
-            if ($request->photo_base64) {
-                $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
-                $image = str_replace(' ', '+', $image);
-                $imageData = base64_decode($image);
-
-                $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
-                Storage::put($fileName, $imageData);
-
-                $data['photo'] = $fileName;
-            }
-
-            if ($request->photo_base64_foc) {
-                $image = str_replace('data:image/png;base64,', '', $request->photo_base64_foc);
-                $image = str_replace(' ', '+', $image);
-                $imageData = base64_decode($image);
-
-                $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
-                Storage::put($fileName, $imageData);
-
-                $data['photo_foc'] = $fileName;
-            }
-
-        */
-
-
         $data['retail'] = [
             'region' => $request->region,
+            'sm_name' => $request->sm_name,
+            'rsm_name' => $request->rsm_name,
             'asm_name' => $request->asm_name,
             'sup_name' => $request->sup_name,
             'se_name' => $request->se_name,
-            'customer_name' => $request->customer_name,
-            'contact_number' => $request->contact_number,
+            'se_code' => $request->se_code,
+            'customer_code' => $request->customer_code,
+            'depo_contact' => $request->depo_contact,
+            'depo_name' => $request->depo_name,
+            'retails_name' => $request->retails_name,
+            'retails_contact' => $request->retails_contact,
             'business_type' => $request->business_type,
-            'ams' => $request->ams,
-            'display_parasol' => $request->display_parasol,
-            'foc' => $request->foc,
-            'installation' => $request->installation,
-            'user_id' => auth()->id(),
+            'sale_kpi' => $request->sale_kpi,
+            'display_qty' => $request->display_qty,
+            'foc_qty' => $request->foc_qty,
+            'remark' => $request->remark,
+            'apply_user' => auth()->id(),
+            'location' => $request->location,
         ];
 
         // Store report data
         Retail::create($data['retail']);
-
-
         $adminUsers = User::whereIn('role_id', [
             AppHelper::USER_SUPER_ADMIN,
             AppHelper::USER_ADMIN
@@ -322,10 +263,10 @@ class RetailController extends Controller
         $notificationUsers = array_unique($notificationUsers);
 
         event(new ReportRequest(
-            __("A new report has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
+            __('A new report has been created by ') . auth()->user()->family_name . ' ' . auth()->user()->name,
             $notificationUsers
         ));
-        return redirect()->route('retail.index')->with('success', "Report has been created!");
+        return redirect()->route('retail.index')->with('success', 'Report has been created!');
     }
 
     /**
@@ -333,6 +274,8 @@ class RetailController extends Controller
      */
     public function show($id)
     {
+    // dd('HI Show');
+
         $report = Retail::with('user')->find($id);
         $picture = RetailPictur::where('retail_id', $id)->get();
         $showPicture = '';
@@ -341,7 +284,7 @@ class RetailController extends Controller
                 $showPicture .= '
                     <div class="col-md-6 mb-2">
                         <img src="' . asset('storage/' . $pic->picture) . '" class="img-fluid" style="max-width: 100%; height: auto;" />
-                        <p class="text-center mt-2"><b>' . __("Picture dated") . '</b> : ' . Carbon::parse($pic->created_at)->format('d-m-Y H:i:s A') . '</p>
+                        <p class="text-center mt-2"><b>' . __('Picture dated') . '</b> : ' . Carbon::parse($pic->created_at)->format('d-m-Y H:i:s A') . '</p>
                     </div>';
             }
         }
@@ -362,169 +305,127 @@ class RetailController extends Controller
             : 'Unknown';
         return response()->json([
             'report' => [
-                'employee_name' => $employee_name,
-                'staff_id_card' => $user->staff_id_card ?? 'N/A',
+                'modalEmployeeName' => $employee_name,
+                'modalIdCard' => $user->staff_id_card ?? 'N/A',
                 'modalRegion' => $report->region ?? 'N/A',
+                'modalSmName' => $report->sm_name ?? 'N/A',
+                'modalRsmName' => $report->rsm_name ?? 'N/A',
                 'modalAsmName' => $report->asm_name ?? 'N/A',
                 'modalSupName' => $report->sup_name ?? 'N/A',
                 'modalSeName' => $report->se_name ?? 'N/A',
-
-                'modalCustomerName' => $report->customer_name ?? 'N/A',
-                'modalContactNumber' => $report->contact_number ?? 'N/A',
+                'modalSeCode' => $report->se_code ?? 'N/A',
+                'modalCustomerCode' => $report->customer_code ?? 'N/A',
+                'modalDepoName' => $report->depo_name ?? 'N/A',
+                'modalDepoContact' => $report->depo_contact ?? 'N/A',
+                'modalRetailName' => $report->retails_name ?? 'N/A',
+                'modalRetailContact' => $report->retails_contact ?? 'N/A',
                 'modalBusinessType' => $report->business_type ?? 'N/A',
-                'modalAMS' => $report->ams ?? 'N/A',
-                'modalDisplayParasol' => $report->display_parasol ?? 'N/A',
-                'modalFOC600ml' => $report->foc ?? 'N/A',
-                'modalInstallation' => $report->installation ?? 'N/A',
-                'modalCreateDate' => $report->created_at ? $report->created_at->format('d-m-Y H:i:s A') : 'N/A',
+                'modalSaleKPI' => $report->sale_kpi ?? 'N/A',
+                'modalDisplayQty' => $report->display_qty ?? 'N/A',
+                'modalFOC600ml' => $report->foc_qty ?? 'N/A',
+                'modalRemark' => $report->remark ?? 'N/A',
+                'modalLocation' => $report->location ?? 'N/A',
+                'modalCreateDate' => $report->created_at ? $report->created_at->format('d-m-Y h:i:s A') : 'N/A',
             ],
             'picture' => $showPicture
         ]);
     }
 
-     public function import(){
-        // dd('Import data here');
-        $report = null;
-        // dd('HI Wholesale');
-        $customer = null; // Assuming $customer is used for editing; null for create
-        $customers = [];
-        $report = null;
-        $customerType = AppHelper::CUSTOMER_TYPE;
-        // If there's old input or a pre-selected area, fetch customers
-        $areaId = old('area', $customer->area_id ?? '');
-        if ($areaId) {
-            $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
-        }
-
-        // dd($customers);
-
-        return view('backend.retail.import', compact('customer', 'customers','report','customerType'));
-        // return view('backend.sub-wholesale.import', compact('report', 'customers'));
-    }
-
-
-    // store import file as excel
-    public function saveImport(Request $request)
-    {
-        // dd("HI");
-         $validator = Validator::make($request->all(), [
-            'file' => 'required|mimes:xlsx,xls,csv|max:2048', // Added max size limit
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        $file = $request->file('file');
-        // phpinfo();
-
-        // exit;
-        // Import the file
-        Excel::import(new RetailImport, $file);
-        // dd('File imported successfully.');
-        return redirect()->route('retail.index')->with('success', 'File imported successfully.');
-    }
-
-
-    public function getCustomersByArea(Request $request)
-    {
-        $areaId = $request->query('area_id');
-        $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
-
-        // Extract unique outlet values
-        $outlets = $customers->pluck('outlet')->unique()->filter()->map(function ($outlet, $index) {
-            return ['id' => $index + 1, 'name' => $outlet];
-        })->values();
-        // dd($outlets);
-        return response()->json([
-            'customers' => $customers->map(function ($customer) {
-                return ['id' => $customer->id, 'name' => $customer->name];
-            }),
-            'outlets' => $outlets
-        ]);
-    }
-
-
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(string $id)
     {
-        $report = Retail::find($id);
-        if (!$report) {
-            return redirect()->route('retail.index');
-        }
-        $takePicture = null; // Assuming this is used for taking pictures, set to null for edit
-        $customers = Customer::where('area_id', $report->area_id)->get(['id', 'name', 'outlet']);
-        $customer = $report->customer; // The related customer for the report
-        $customerType = AppHelper::CUSTOMER_TYPE;
+        $report = Retail::findOrFail($id);
         $dataRetail = null;
-        return view('backend.retail.add', compact('report', 'customers', 'customer','customerType', 'takePicture', 'dataRetail'));
+        $customer = null;  // Assuming $customer is used for editing; null for create
+        $customers = [];
+        $takePicture = null;  // Assuming this is used for taking pictures, set to null for create
+        $customerType = AppHelper::CUSTOMER_TYPE;
+        $areaId = old('area', $customer->area_id ?? '');
+        return view('backend.retail.add', compact('customer', 'customers', 'report', 'customerType', 'takePicture', 'dataRetail'));
     }
 
-
-
-    public function update(Request $request, $id)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
     {
-        $report = Retail::find($id);
-        if (!$report) {
-            return redirect()->route('report.index')->with('error', 'Report not found!');
-        }
-        $areaIds = [];
-        foreach (AppHelper::getAreas() as $group) {
-            $areaIds = array_merge($areaIds, array_keys($group));
-        }
+        $report = Retail::findOrFail($id);
         $rules = [
             'region' => 'required|string',
+            'sm_name' => 'required|string',
+            'rsm_name' => 'required|string',
             'asm_name' => 'required|string',
             'sup_name' => 'required|string',
             'se_name' => 'required|string',
-            'customer_name' => 'required|string',
-            'contact_number' => 'required|string',
+            'se_code' => 'required|string',
+            'customer_code' => 'required|string',
+            'depo_contact' => 'required|string',
+            'depo_name' => 'required|string',
+            'retails_name' => 'required|string',
+            'retails_contact' => 'required|string',
             'business_type' => 'required|string',
-            'ams' => 'required|string',
-            'display_parasol' => 'required|numeric',
-            'foc' => 'required|string',
-            'installation' => 'required|string',
+            'sale_kpi' => 'required|string',
+            'display_qty' => 'required|integer|min:0',
+            'foc_qty' => 'required|integer|min:0',
+            'remark' => 'nullable|string',
+            'location' => 'required|string',
         ];
 
         $this->validate($request, $rules);
-        $data['retail'] = [
+        $data['wholesale'] = [
             'region' => $request->region,
+            'sm_name' => $request->sm_name,
+            'rsm_name' => $request->rsm_name,
             'asm_name' => $request->asm_name,
             'sup_name' => $request->sup_name,
             'se_name' => $request->se_name,
-            'customer_name' => $request->customer_name,
-            'contact_number' => $request->contact_number,
+            'se_code' => $request->se_code,
+            'customer_code' => $request->customer_code,
+            'depo_contact' => $request->depo_contact,
+            'depo_name' => $request->depo_name,
+            'retails_name' => $request->retails_name,
+            'retails_contact' => $request->retails_contact,
             'business_type' => $request->business_type,
-            'ams' => $request->ams,
-            'display_parasol' => $request->display_parasol,
-            'foc' => $request->foc,
-            'installation' => $request->installation,
-            'user_id' => auth()->id(),
+            'sale_kpi' => $request->sale_kpi,
+            'display_qty' => $request->display_qty,
+            'foc_qty' => $request->foc_qty,
+            'remark' => $request->remark,
+            'apply_user' => auth()->id(),
+            'location' => $request->location,
         ];
 
-        $update = $report->update($data['retail']);
-        if($update) return redirect()->route('retail.index')->with('success', "Report has been updated!");
-        else return redirect()->route('retail.index')->with('error', "Report has not updated!");
+        // Store report data
+        $report->update($data['wholesale']);
+        return redirect()->route('retail.index')->with('success', 'Report has been updated!');
     }
 
-    public function getPictures($id){
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+
+    public function takePicture($id)
+    {
         $takePicture = true;
         $customers = null;
         $customer = null;
         $customerType = null;
-        $report = null;
-        $dataRetail = Retail::find($id);
-        if (!$dataRetail) {
+        // $report = null;
+        $report = Retail::find($id);
+        if (!$report) {
             return redirect()->route('retail.index')->with('error', 'Report not found!');
         }
-        return view('backend.retail.add', compact('report', 'customers', 'customer','customerType', 'takePicture', 'dataRetail'));
+        return view('backend.retail.take-photo', compact('report', 'customers', 'customer', 'customerType', 'takePicture'));
     }
 
-
-    public function storePicture(Request $request, $id)
+    public function savePicture(Request $request, $id)
     {
+        // dd('save photo for retail');
         $report = Retail::find($id);
         if (!$report) {
             return redirect()->route('retail.index')->with('error', 'Report not found!');
@@ -532,29 +433,27 @@ class RetailController extends Controller
         // dd($request->file());
         // dd($request->all());
 
-
         // Validate the request
         $request->validate([
-            'picture' => 'required|string',
-            'photo_base64_foc' => 'required|string',
+            'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'photo_base64' => 'required|string',
+            // 'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
         ]);
 
-
-
-        if($request->hasFile('picture')) {
-            $file = $request->file('picture');
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'uploads/retail-img/' . $fileName;
+            $filePath = 'uploads/subwholesale-img/' . $fileName;
             Storage::put($filePath, file_get_contents($file));
             $data['photo'] = $filePath;
         }
 
-        if ($request->photo_base64_foc) {
-            $image = str_replace('data:image/png;base64,', '', $request->photo_base64_foc);
+        if ($request->photo_base64) {
+            $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
             $image = str_replace(' ', '+', $image);
             $imageData = base64_decode($image);
 
-            $fileName = 'uploads/retail-img/' . time() . '_' . Str::random(10) . '.png';
+            $fileName = 'uploads/subwholesale-img/' . time() . '_' . Str::random(10) . '.png';
             Storage::put($fileName, $imageData);
 
             $data['photo'] = $fileName;
@@ -562,13 +461,14 @@ class RetailController extends Controller
         // dd($data['photo']);
 
         $data['storePicture'] = [
-            'retail_id' =>  $id,
+            'retail_id' => $id,
             'picture' => $data['photo']
         ];
         $storePicture = RetailPictur::create($data['storePicture']);
-        if($storePicture == true) return redirect()->route('retail.index')->with('success', 'Take picture has successfully.');
-        else return redirect()->route('retail.index')->with('error', 'Take picture has not successfully.');
-
+        if ($storePicture == true)
+            return redirect()->route('retail.index')->with('success', 'Take picture has successfully.');
+        else
+            return redirect()->route('retail.index')->with('error', 'Take picture has not successfully.');
 
         // Handle file upload
         // if ($request->hasFile('photo')) {
@@ -583,77 +483,53 @@ class RetailController extends Controller
         // return redirect()->route('retail.index')->with('success', "Picture has been uploaded!");
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    public function import()
     {
-        $report = Retail::find($id);
-        if ($report) {
-            $report->delete();
-            return redirect()->back()->with('success', "Report has been deleted!");
-        }
-        return redirect()->back()->with('error', "Report not found!");
+        // dd('Import data here');
+        $report = null;
+        $customer = null;
+        $customers = [];
+        $report = null;
+        $customerType = AppHelper::CUSTOMER_TYPE;
+        $selectUsers = User::where('type', AppHelper::SE)->orderBy('staff_id_card', 'asc')->get();
+        return view('backend.retail.import', compact('customer', 'customers', 'report', 'customerType', 'selectUsers'));
     }
 
-
-
-    public function export()
+    // store import file as excel
+    public function saveImport(Request $request)
     {
-        // dd('HI Export');
-        return Excel::download(new RetailExport(), 'reports_retail_' . now()->format('Y_m_d_His') . '.xlsx');
-    }
+        // ✅ Validate input
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:xlsx,xls,csv|max:4048',
+            'employee' => 'required|string',
+        ]);
 
-    public function getReports()
-    {
-        // dd("HI Export");
-
-        $user = Auth::user();
-
-        $isAdmin = in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]);
-        $isManager = $user->role_id == AppHelper::USER_MANAGER;
-
-        $query = Retail::with('user')->whereNull('deleted_at')->where('is_seen', false);
-
-        if ($isManager) {
-            // Managers can only see reports from their employees
-            $query->whereIn('user_id', User::where('manager_id', $user->id)->pluck('id'));
-        } elseif (!$isAdmin) {
-            // Other users should not receive reports
-            return response()->json([]);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $reports = $query->latest()->limit(5)->get()->map(function ($report) {
-            return [
-                'family_name' => $report->user->family_name ?? 'N/A',
-                'name' => $report->user->name ?? 'N/A',
-                'area' => $report->area ?? 'Unknown',
-                'photo' => $report->user->photo ? asset('storage/' . $report->user->photo) : asset('images/avatar.png')
-            ];
-        });
+        $file = $request->file('file');
+        $employee_id = $request->employee;
 
-        return response()->json($reports);
+        $import = Excel::import(new RetailImport($employee_id), $file);
+        if($import == true)
+        return redirect()->back()->with('success', __('Data has been imported successfully.'));
+        else
+        return redirect()->back()->with('error', __('Import data has been failed.'));
+        // dd('File imported successfully.');
     }
 
-
-
-
-    public function markAsSeen()
-    {
-        $user = auth()->user();
-
-        if (in_array($user->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
-            Retail::whereNull('deleted_at')->update(['is_seen' => true]);
-        } elseif ($user->role_id == AppHelper::USER_MANAGER) {
-            Retail::whereNull('deleted_at')
-                ->whereIn('user_id', User::where('manager_id', $user->id)->pluck('id'))
-                ->update(['is_seen' => true]);
+    public function export(Request $request){
+        if ($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
+            return Excel::download(
+                new RetailExport($request->date1, $request->date2, $request->full_name, $request),
+                'retail_export_' . now()->format('Y_m_d_His') . '.xlsx'
+            );
+        } else {
+            return Excel::download(
+                new RetailExport($request->date1, $request->date2, $request->full_name, $request),
+                'retail_export_' . now()->format('Y_m_d_His') . '.xlsx'
+            );
         }
-
-        return response()->json(['success' => true]);
     }
-
-
 }
-

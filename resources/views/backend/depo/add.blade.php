@@ -9,23 +9,7 @@
 
 @section('extraStyle')
     <style>
-       @media (max-width: 414px) {
-            .wrap-outter-header-title h4{
-                font-size: 13px !important;
-            }
-            .btn-default .btn-info .btn-success {
-                font-size: 7px !important;
-            }
-        }
-        @media (max-width: 375px) {
-           .wrap-outter-header-title h4{
-                font-size: 13px !important;
-            }
-            .btn-default .btn-info .btn-success {
-                font-size: 7px !important;
-            }
-           
-        }
+       
     </style>
 @endsection
 

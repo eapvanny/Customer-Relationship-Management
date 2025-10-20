@@ -1,7 +1,7 @@
 @extends('backend.layouts.master')
 
 @section('pageTitle')
-    Retail
+    {{ __('Retail') }}
 @endsection
 
 @section('bodyCssClass')
@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                                            margin-bottom: 0px;
-                                        }
-
-                                        fieldset .iradio .error,
-                                        fieldset .icheck .error {
-                                            display: none !important;
-                                        }
-
-                                        @media (max-width: 600px) {
-                                            .display-flex {
-                                                display: inline-flex;
+                                                margin-bottom: 0px;
                                             }
-                                        } */
+
+                                            fieldset .iradio .error,
+                                            fieldset .icheck .error {
+                                                display: none !important;
+                                            }
+
+                                            @media (max-width: 600px) {
+                                                .display-flex {
+                                                    display: inline-flex;
+                                                }
+                                            } */
 
         .checkbox,
         .radio {
@@ -390,7 +390,7 @@
     <section class="content-header">
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li><a href="{{ URL::route('sub-wholesale.index') }}"> {{ __('Retail') }} </a></li>
+            <li><a href="{{ URL::route('retail.index') }}"> {{ __('Retail') }} </a></li>
             <li class="active">
                 @if ($report)
                     {{ __('Update') }}
@@ -403,13 +403,13 @@
 
     <section class="content">
         <form novalidate id="entryForm"
-            action="@if ($report) {{ URL::Route('retail-import.update', $report->id) }} @else {{ URL::Route('retail.saveImport') }} @endif"
+            action="{{ URL::route('retail.import.save') }}"
             method="post" enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
                         <h1>
-                            {{ __('Customer Data') }}
+                            {{ __('Report Data') }}
                             <small class="toch">
                                 @if ($report)
                                     {{ __('Update') }}
@@ -419,7 +419,8 @@
                             </small>
                         </h1>
                         <div class="box-tools pull-right">
-                            <a href="{{ URL::route('retail-import.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
+                            <a href="{{ URL::route('retail.index') }}"
+                                class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
@@ -436,21 +437,43 @@
                 <input id="org_detail" type="hidden" name="org_detail" value="">
                 <div class="box-body">
                     @csrf
-                    @if ($report)
+                    {{-- @if ($report)
                         @method('PUT')
-                    @endif
-                    <div class="row mt-3">
-                        <div class="col-md-12 p-4 rounded-3 bg-light border-2 border-secondary text-center" style="border: dashed 2px">
-                            <i class="fas fa-upload" style="font-size: 50px"></i>
-                            <h4 class="d-block mt-4">{{ __('Import file Excel to store data') }}</h4>
-                            <small class="mt-3 text-secondary d-block d-none" id="fileChosen" style="font-style: italic">
-
-                                {{ __('You are selecting a file') }}
-
-                            </small>
-                            <label for="file" class="btn btn-success mt-3"> <i class="fas fa-search pe-2"></i> {{ __('Browse to file') }} </label>
-                            <input type="file" class="d-none" name="file" id="file" class="form-control-file" accept=".xlsx, .xls, .csv">
+                    @endif --}}
+                    <div class="row ">
+                        <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="file"> {{ __('Select a File') }} <span class="text-danger">*</span></label>
+                                <input type="file" name="file" id="file" class="form-control"
+                                    accept=".xlsx, .xls, .csv">
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('file') }}</span>
+                            </div>
                         </div>
+
+                        <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="form-group has-feedback">
+                                <label for="employee_id"> {{ __('Select Employee') }} <span
+                                        class="text-danger">*</span></label>
+                                <select name="employee" class="form-control select2" id="employee_id" required>
+                                    <option value="">{{__('Select Employee')}}</option>
+                                    @foreach ($selectUsers as $u)
+                                        <option value="{{ $u->id }}"
+                                            {{ old('employee_id') == $u->id ? 'selected' : '' }}>
+                                            {{ $u->staff_id_card }} - @if (auth()->user()->user_lang == 'en')
+                                                {{ $u->family_name_latin . ' ' . $u->name_latin }}
+                                            @else
+                                                {{ $u->family_name . ' ' . $u->name }}
+                                            @endif
+                                            ({{ $u->role->name }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="fa fa-info form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('employee') }}</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -461,39 +484,9 @@
 @section('extraScript')
     {{-- <script src="{{asset('js/leaflet.js')}}"></script> --}}
     <script>
-
         $(document).on('change', '#file', function() {
             $('#fileChosen').removeClass('d-none');
         });
-
-        let map;
-        let marker;
-
-        // Initialize map function
-        function initMap(lat = 0, lng = 0) {
-            if (map) {
-                map.remove(); // Remove existing map if any
-            }
-
-            map = L.map('map').setView([lat, lng], 15);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19,
-            }).addTo(map);
-
-            marker = L.marker([lat, lng]).addTo(map);
-        }
-
-        // Function to update map position
-        function updateMap(lat, lng) {
-            if (!map) {
-                initMap(lat, lng);
-            } else {
-                map.setView([lat, lng], 15);
-                marker.setLatLng([lat, lng]);
-            }
-        }
 
         // Show loading overlay
         function showLoading() {
@@ -505,180 +498,7 @@
             document.getElementById('loadingOverlay').style.display = 'none';
         }
 
-        document.getElementById('getLocationBtn').addEventListener('click', async function() {
-            if (navigator.geolocation) {
-                showLoading(); // Show loading when starting
 
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                            const lat = position.coords.latitude;
-                            const lon = position.coords.longitude;
 
-                            try {
-                                const response = await fetch(
-                                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-                                );
-                                const data = await response.json();
-
-                                const country = data.address.country || 'Unknown';
-                                const province = data.address.state || 'Unknown';
-                                const comune = data.address.comune || 'Unknown';
-                                const district = data.address.district || 'Unknown';
-                                const village = data.address.village || 'Unknown';
-                                const khan = data.address.city || 'Unknown';
-                                const town = data.address.town;
-
-                                const city = [khan, village, comune, district, town, province]
-                                    .filter(location => location !== 'Unknown')
-                                    .join(', ') || 'Unknown';
-
-                                // Populate form fields
-                                document.getElementById('latitude').value = lat;
-                                document.getElementById('longitude').value = lon;
-                                document.getElementById('city').value = city;
-                                document.getElementById('country').value = country;
-
-                                // Update map with new coordinates
-                                updateMap(lat, lon);
-
-                                console.log(`Country: ${country}, Province: ${province}, City: ${city}`);
-                            } catch (error) {
-                                alert('Failed to fetch location details. Please try again.');
-                                console.error(error);
-                            } finally {
-                                hideLoading(); // Hide loading when done
-                            }
-                        },
-                        (error) => {
-                            hideLoading(); // Hide loading on error
-                            switch (error.code) {
-                                case error.PERMISSION_DENIED:
-                                    alert('User denied the request for Geolocation.');
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    alert('Location information is unavailable.');
-                                    break;
-                                case error.TIMEOUT:
-                                    alert('The request to get user location timed out.');
-                                    break;
-                                case error.UNKNOWN_ERROR:
-                                    alert('An unknown error occurred.');
-                                    break;
-                            }
-                            console.error(error);
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 5000,
-                            maximumAge: 0
-                        }
-                );
-            } else {
-                alert('Geolocation is not supported by your browser.');
-            }
-        });
-
-        // Initialize map with default coordinates if report exists
-        @if ($report && $report->latitude && $report->longitude)
-            window.onload = function() {
-                initMap({{ $report->latitude }}, {{ $report->longitude }});
-            }
-        @else
-            // Initialize with a default location (e.g., center of the world)
-            window.onload = function() {
-                initMap(0, 0);
-            }
-        @endif
-
-        $(document).ready(function() {
-            let video = document.getElementById('webcam');
-            let canvas = document.getElementById('canvas');
-            let context = canvas.getContext('2d');
-            let imgPreview = $('#photo-preview');
-            let imgInput = $('#img-preview');
-            let cameraModal = $('#camera-modal');
-            let currentFacingMode = 'user'; // Default to front camera
-
-            @if ($report && $report->photo)
-                $('#btn-upload-photo').addClass('d-none');
-                $('#btn-remove-photo').removeClass('d-none');
-            @endif
-
-            function startCamera(facingMode) {
-                if (navigator.mediaDevices.getUserMedia) {
-                    navigator.mediaDevices.getUserMedia({
-                            video: {
-                                facingMode: facingMode
-                            }
-                        })
-                        .then(function(stream) {
-                            video.srcObject = stream;
-                        })
-                        .catch(function(error) {
-                            alert('Unable to access camera: ' + error);
-                        });
-                }
-            }
-
-            // Open Camera
-            $('#open-camera-btn').on('click', function(e) {
-                e.preventDefault();
-                cameraModal.removeClass('d-none');
-                startCamera(currentFacingMode);
-            });
-
-            // Switch Camera
-            $('#switch-camera-btn').on('click', function() {
-                currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-                stopCamera();
-                startCamera(currentFacingMode);
-            });
-
-            $('#capture-btn').on('click', function(e) {
-                e.preventDefault();
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                let imageData = canvas.toDataURL('image/png');
-                imgPreview.attr('src', imageData).removeClass('d-none');
-                imgInput.val(imageData);
-                stopCamera();
-                $('#btn-upload-photo').addClass('d-none');
-                $('#btn-remove-photo').removeClass('d-none');
-                cameraModal.addClass('d-none');
-            });
-
-            $('#btn-remove-photo').on('click', function() {
-                $('#photo').val('');
-                $('#img-preview').val('');
-                $('#photo-preview').removeAttr('src').addClass('d-none');
-                $('#btn-remove-photo').addClass('d-none');
-                $('#btn-upload-photo').removeClass('d-none');
-            });
-
-            $('#close-camera-btn').on('click', function(e) {
-                e.preventDefault();
-                stopCamera();
-                cameraModal.addClass('d-none');
-            });
-
-            function stopCamera() {
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                }
-                video.srcObject = null;
-            }
-
-            $('#entryForm').on('submit', function(e) {
-                let imageData = $('#img-preview').val();
-                if (imageData) {
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'photo_base64',
-                        value: imageData
-                    }).appendTo(this);
-                }
-            });
-
-        });
     </script>
 @endsection

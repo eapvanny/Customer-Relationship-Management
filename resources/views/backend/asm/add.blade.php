@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                                            margin-bottom: 0px;
-                                        }
-
-                                        fieldset .iradio .error,
-                                        fieldset .icheck .error {
-                                            display: none !important;
-                                        }
-
-                                        @media (max-width: 600px) {
-                                            .display-flex {
-                                                display: inline-flex;
+                                                margin-bottom: 0px;
                                             }
-                                        } */
+
+                                            fieldset .iradio .error,
+                                            fieldset .icheck .error {
+                                                display: none !important;
+                                            }
+
+                                            @media (max-width: 600px) {
+                                                .display-flex {
+                                                    display: inline-flex;
+                                                }
+                                            } */
 
         .checkbox,
         .radio {
@@ -149,7 +149,7 @@
         }
 
         fieldset>#open-camera-btn>#btn-upload-photo,
-        fieldset>#open-camera-btn-foc>#btn-upload-photo-foc  {
+        fieldset>#open-camera-btn-foc>#btn-upload-photo-foc {
             min-width: 100px;
             min-height: 100px;
             background-color: #ddd;
@@ -165,7 +165,7 @@
         }
 
         fieldset>#photo-preview,
-         fieldset>#photo-foc-preview {
+        fieldset>#photo-foc-preview {
             height: 238px;
             width: 238px;
             position: absolute;
@@ -423,14 +423,14 @@
                                 @endif
                             </small>
                         </h1>
-                        <div class="box-tools pull-right">
+                        <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('asm.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
                                     {{ __('Update') }}
                                 @else
-                                    {{ __('Add') }}
+                                    {{ __('Submit') }}
                                 @endif
                             </button>
                         </div>
@@ -447,15 +447,17 @@
                     <div class="row">
                         <div class="col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
+                                <label for="area">{{ __('Region') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
-                                    <option value="">{{ __('Select Area') }}</option>
-                                    @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
-                                        <optgroup label="{{ $area }}">
-                                            @foreach ($subItems as $area_id => $subItem)
-                                                <option value="{{ $area_id }}"
-                                                    @if (old('area', $report->area_id ?? '') == $area_id) selected @endif>
-                                                    {{ $subItem }}
+                                    <option value="">{{ __('Select Region') }}</option>
+                                    @foreach ($regions as $regionName => $regionGroup)
+                                        <optgroup
+                                            label="{{ $regionGroup->first()->region_name }} (@if (auth()->user()->user_lang == 'en') {{ $regionGroup->first()->rg_manager_en }} @else {{ $regionGroup->first()->rg_manager_kh }} @endif)">
+                                            @foreach ($regionGroup as $region)
+                                                <option value="{{ $region->id }}"
+                                                    @if ($report) {{ $report->area_id == $region->id ? 'selected' : '' }} @endif
+                                                    @if (old('area')) {{ old('area') == $region->id ? 'selected' : '' }} @endif>
+                                                    {{ $region->se_code }}
                                                 </option>
                                             @endforeach
                                         </optgroup>
@@ -469,18 +471,29 @@
                             <div class="form-group has-feedback">
                                 <label for="outlet_id">{{ __('Outlet') }} <span class="text-danger">*</span></label>
                                 <select name="outlet_id" class="form-control select2" id="outlet_id" required>
-                                    <option value="">{{ __('Select area first') }}</option>
-                                    @if ($report && $report->outlet && !$customers->contains('id', $report->outlet_id))
+
+                                    {{-- empty all  --}}
+                                    @if (!$report && !old('outlet_id'))
+                                        <option value="">{{ __('Select region first') }}</option>
+                                    @else
+                                        @foreach ($outlets as $c)
+                                            <option value="{{ $c->id }}"
+                                                {{ old('outlet_id', $report->outlet_id ?? '') == $c->id ? 'selected' : '' }}>
+                                                {{ $c->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+
+
+                                    {{-- has update or has error old value  --}}
+                                    {{-- @if ($report && $report->outlet && !$customers->contains('id', $report->outlet_id) && old('outlet_id'))
                                         <option value="{{ $report->outlet_id }}" selected>
                                             {{ $report->customer->outlet }} (Current)
                                         </option>
-                                    @endif
-                                    @foreach ($customers as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ old('outlet_id', $report->outlet_id ?? '') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->outlet }}
-                                        </option>
-                                    @endforeach
+                                    @endif --}}
+
+
+
                                 </select>
                                 <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('outlet_id') }}</span>
@@ -490,10 +503,10 @@
                             <div class="form-group has-feedback">
                                 <label for="customer_id">{{ __('Customer') }} <span class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
-                                    <option value="">{{ __('Select area first') }}</option>
-                                    @if ($report && $report->customer && !$customers->contains('id', $report->customer_id))
+                                    <option value="">{{ __('Select Customer') }}</option>
+                                    @if ($report && $report->customer_id && !$customers->contains('id', $report->customer_id))
                                         <option value="{{ $report->customer_id }}" selected>
-                                            {{ $report->customer->name }} (Current)
+                                            {{ $report->customer_id }} (Current)
                                         </option>
                                     @endif
                                     @foreach ($customers as $c)
@@ -546,37 +559,46 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="250_ml"> {{ __('250ml') }}</label>
-                                <input type="text" class="form-control" name="250_ml"
+                                <label for="250_ml"> {{ __('250ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <input type="number" min="0" class="form-control" name="250_ml"
+                                    placeholder="{{ __('250ml') }}"
                                     value="{{ isset($report) ? $report['250_ml'] : old('250_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="350_ml"> {{ __('350ml') }}</label>
-                                <input type="text" class="form-control" name="350_ml"
+                                <label for="350_ml"> {{ __('350ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <input type="number" min="0" class="form-control" name="350_ml"
+                                    placeholder="{{ __('350ml') }}"
                                     value="{{ isset($report) ? $report['350_ml'] : old('350_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="600_ml"> {{ __('600ml') }}</label>
-                                <input type="text" class="form-control" name="600_ml"
+                                <label for="600_ml"> {{ __('600ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <input type="number" min="0" class="form-control" name="600_ml"
+                                    placeholder="{{ __('600ml') }}"
                                     value="{{ isset($report) ? $report['600_ml'] : old('600_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="1500_ml"> {{ __('1500ml') }}</label>
-                                <input type="text" class="form-control" name="1500_ml"
+                                <label for="1500_ml"> {{ __('1500ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <input type="number" min="0" class="form-control" name="1500_ml"
+                                    placeholder="{{ __('1500ml') }}"
                                     value="{{ isset($report) ? $report['1500_ml'] : old('1500_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-12 col-md-12 col-xl-12">
                             <div class="form-group has-feedback">
                                 <label for="other"> {{ __('Other') }}</label>
-                                <input type="text" class="form-control" name="other" placeholder="other"
-                                    value="@if ($report) {{ $report->other }}@else{{ old('other') }} @endif">
+                                <textarea name="other" class="form-control" id="other" cols="30" rows="5"
+                                    placeholder="{{ __('Other') }}...">
+@if ($report)
+{{ $report->other }}@else{{ old('other') }}
+@endif
+</textarea>
+                                {{-- <input type="text" class="form-control" name="other" placeholder="{{ __('Other') }}" value="@if ($report) {{ $report->other }}@else{{ old('other') }}@endif"> --}}
                             </div>
                         </div>
 
@@ -592,11 +614,10 @@
 
 
 
-                       <div class="col-xl-12 col-lg-12 col-md-12">
-                         {{-- FOC START  --}}
-                        <fieldset>
-                            <legend>{{ __('FOC From Company') }}</legend>
-                            <div class="row">
+                        {{-- FOC START  --}}
+                        <div class="col-md-12">
+                            <fieldset>
+                                <legend class="fs-6">{{ __('FOC From Company') }}</legend>
                                 <div class="form-group has-feedback">
                                     <div class="row">
                                         <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
@@ -646,7 +667,8 @@
                                                             type="button">
                                                             <i class="fa-solid fa-camera-rotate"></i>
                                                         </button>
-                                                        <button id="capture-btn-foc" class="btn capture-btn" type="button">
+                                                        <button id="capture-btn-foc" class="btn capture-btn"
+                                                            type="button">
                                                             <i class="fa-solid fa-camera"></i>
                                                         </button>
                                                         <button id="close-camera-btn-foc" class="btn close-camera-btn"
@@ -660,54 +682,123 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="row">
-                                                {{-- <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('POSM') }}
-                                                            <i class="fa fa-question-circle" data-toggle="tooltip"
-                                                                data-placement="bottom" title="Select POSM"></i>
-                                                        </label>
-                                                        {!! Form::select(
-                                                            'posm',
-                                                            [
-                                                                AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::SHIRT => __(AppHelper::MATERIAL[AppHelper::SHIRT]),
-                                                                AppHelper::FAN => __(AppHelper::MATERIAL[AppHelper::FAN]),
-                                                                AppHelper::CALENDAR => __(AppHelper::MATERIAL[AppHelper::CALENDAR]),
-                                                            ],
-                                                            old('posm', optional($report)->posm),
-                                                            [
-                                                                'placeholder' => __('Select material type'),
-                                                                'id' => 'posm',
-                                                                'name' => 'posm',
-                                                                'class' => 'form-control select2',
-                                                            ],
-                                                        ) !!}
-                                                        <span class="form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('posm') }}</span>
-                                                    </div>
-                                                </div> --}}
                                                 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="foc_qty"
-                                                            value="{{ old('foc_qty', $report->foc_qty ?? '') }}">
+                                                    <div
+                                                        class="form-group has-feedback d-flex flex-row align-items-center">
+                                                        <label for="foc_250_qty" style="width: 300px" class="m-0 p-0">
+                                                            {{ __('FOC 250ml') }} </label>
+                                                        <input type="number" min="0" max="100"
+                                                            id="foc_250_qty" class="form-control" name="foc_250_qty"
+                                                            placeholder="{{ __('1 - 100') }}"
+                                                            value="{{ old('foc_250_qty', $report->foc_250_qty ?? '') }}">
                                                         <span class="fa fa-info form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
+                                                        <span
+                                                            class="text-danger">{{ $errors->first('foc_250_qty') }}</span>
                                                     </div>
                                                 </div>
+                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div
+                                                        class="form-group has-feedback d-flex flex-row align-items-center">
+                                                        <label for="foc_350_qty" style="width: 300px" class="m-0 p-0">
+                                                            {{ __('FOC 350ml') }} </label>
+                                                        <input type="number" min="0" max="100"
+                                                            id="foc_350_qty" class="form-control" name="foc_350_qty"
+                                                            placeholder="{{ __('1 - 100') }}"
+                                                            value="{{ old('foc_350_qty', $report->foc_350_qty ?? '') }}">
+                                                        <span class="fa fa-info form-control-feedback"></span>
+                                                        <span
+                                                            class="text-danger">{{ $errors->first('foc_350_qty') }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div
+                                                        class="form-group has-feedback d-flex flex-row align-items-center">
+                                                        <label for="foc_600_qty" style="width: 300px" class="m-0 p-0">
+                                                            {{ __('FOC 600ml') }} </label>
+                                                        <input type="number" min="0" max="100"
+                                                            id="foc_600_qty" class="form-control" name="foc_600_qty"
+                                                            placeholder="{{ __('1 - 100') }}"
+                                                            value="{{ old('foc_600_qty', $report->foc_600_qty ?? '') }}">
+                                                        <span class="fa fa-info form-control-feedback"></span>
+                                                        <span
+                                                            class="text-danger">{{ $errors->first('foc_600_qty') }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div
+                                                        class="form-group has-feedback d-flex flex-row align-items-center">
+                                                        <label for="foc_1500_qty" style="width: 300px" class="m-0 p-0">
+                                                            {{ __('FOC 1500ml') }} </label>
+                                                        <input type="number" min="0" max="100"
+                                                            id="foc_1500_qty" class="form-control" name="foc_1500_qty"
+                                                            placeholder="{{ __('1 - 100') }}"
+                                                            value="{{ old('foc_1500_qty', $report->foc_1500_qty ?? '') }}">
+                                                        <span class="fa fa-info form-control-feedback"></span>
+                                                        <span
+                                                            class="text-danger">{{ $errors->first('foc_1500_qty') }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div
+                                                        class="form-group has-feedback d-flex flex-row align-items-center">
+                                                        <input type="checkbox" id="foc_special" class="me-2"
+                                                            {{ old('foc_other', $report->foc_other ?? '') ? 'checked' : '' }}>
+                                                        <label for="foc_special" class="m-0 p-0 fw-bold">
+                                                            {{ __('FOC Special') }} </label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 {{ old('foc_other', $report->foc_other ?? '') ? '' : 'd-none' }}" id="foc_other_section">
+                                                    <div class="form-group has-feedback d-flex flex-row align-items-center gap-3">
+                                                        <select name="foc_other" id="foc_other"
+                                                            class="form-control select2" style="width: 300px;">
+                                                            <option value="">{{ __('Select FOC') }}</option>
+                                                            <option value="250"
+                                                                {{ old('foc_other', $report->foc_other ?? '') == '250' ? 'selected' : '' }}>
+                                                                {{ __('FOC 250ml') }}
+                                                            </option>
+                                                            <option value="350"
+                                                                {{ old('foc_other', $report->foc_other ?? '') == '350' ? 'selected' : '' }}>
+                                                                {{ __('FOC 350ml') }}
+                                                            </option>
+                                                            <option value="600"
+                                                                {{ old('foc_other', $report->foc_other ?? '') == '600' ? 'selected' : '' }}>
+                                                                {{ __('FOC 600ml') }}
+                                                            </option>
+                                                            <option value="1500"
+                                                                {{ old('foc_other', $report->foc_other ?? '') == '1500' ? 'selected' : '' }}>
+                                                                {{ __('FOC 1500ml') }}
+                                                            </option>
+                                                        </select>
+
+                                                        <input type="number" min="0" max="100"
+                                                            id="foc_other_qty" name="foc_other_qty" class="form-control"
+                                                            placeholder="{{ __('1 - 100') }}"
+                                                            value="{{ old('foc_other_qty', $report->foc_other_qty ?? '') }}">
+
+                                                        <span class="fa fa-info form-control-feedback"></span>
+                                                    </div>
+
+                                                    @error('foc_other_qty')
+                                                        <span class="text-danger">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </fieldset>
+                            </fieldset>
+                        </div>
                         {{-- FOC END  --}}
 
 
                         {{-- POSM START --}}
-                        <fieldset>
-                            <legend>{{ __('Photo Attachment') }}</legend>
-                            <div class="row">
+                        <div class="col-md-12 my-4">
+                            <fieldset>
+                                <legend class="fs-6">{{ __('POSM Material') }}</legend>
                                 <div class="form-group has-feedback">
                                     <div class="row">
                                         <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
@@ -726,7 +817,7 @@
                                                         src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
                                                         alt="photo">
                                                     <input type="hidden" id="img-preview" name="oldphoto"
-                                                        value="@if (optional($report)->photo) {{$report->photo}} @endif">
+                                                        value="@if (optional($report)->photo) {{ $report->photo }} @endif">
                                                     <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
                                                         id="open-camera-btn">
                                                         <button class="btn p-3 rounded-circle" id="btn-upload-photo"
@@ -771,74 +862,132 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="row">
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="posm"> {{ __('POSM') }}
-                                                            <i class="fa fa-question-circle" data-toggle="tooltip"
-                                                                data-placement="bottom" title="Select POSM"></i>
-                                                        </label>
-                                                        {!! Form::select(
-                                                            'posm',
-                                                            [
-                                                                AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
-                                                                AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
-                                                                AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
-                                                                AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
-                                                                AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
-                                                                AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
-                                                                AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
-                                                                AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
-                                                                AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
-                                                                AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
-                                                                AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
-                                                                AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
-                                                                AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
-                                                                AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
-                                                                AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
-                                                                AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
-                                                            ],
-                                                            old('posm', optional($report)->posm),
-                                                            [
-                                                                'placeholder' => __('Select material type'),
-                                                                'id' => 'posm',
-                                                                'name' => 'posm',
-                                                                'class' => 'form-control select2',
-                                                            ],
-                                                        ) !!}
-                                                        <span class="form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('posm') }}</span>
+                                                <div class="col-12">
+                                                    <div class="row">
+                                                        <div class="col-8 col-sm-7 col-md-7 col-lg-7 col-xl-7">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="posm_1"> {{ __('POSM 1') }}
+                                                                    <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                        data-placement="bottom" title="Select POSM"></i>
+                                                                </label>
+                                                                <select name="posm_1" class="form-control select2" id="posm_1">
+                                                                    <option value="">{{ __('Select POSM') }}</option>
+                                                                    @foreach ($posms as $p)
+                                                                        <option value="{{ $p->id }}"
+                                                                            {{ old('posm_1', $report->posm_1 ?? '') == $p->id ? 'selected' : '' }}>
+                                                                            {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <span class="form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('posm_1') }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-3 col-sm-5 col-md-5 col-lg-5 col-xl-5">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="posm_1_qty"> {{ __('Quantity') }} </label>
+                                                                <input type="number" min="0" max="10" class="form-control"
+                                                                    name="posm_1_qty" placeholder="{{ __('1 - 10') }}"
+                                                                    value="{{ old('posm_1_qty', $report->posm_1_qty ?? '') }}">
+                                                                <span class="fa fa-info form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('posm_1_qty') }}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div class="form-group has-feedback">
-                                                        <label for="qty"> {{ __('Quantity') }} </label>
-                                                        <input type="number" class="form-control" name="qty"
-                                                            value="{{ old('qty', $report->qty ?? '') }}">
-                                                        <span class="fa fa-info form-control-feedback"></span>
-                                                        <span class="text-danger">{{ $errors->first('qty') }}</span>
+
+                                                <div class="col-12">
+                                                    <div class="row">
+                                                        <div class="col-8 col-sm-7 col-md-7 col-lg-7 col-xl-7">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="posm_2"> {{ __('POSM 2') }}
+                                                                    <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                        data-placement="bottom" title="Select POSM"></i>
+                                                                </label>
+                                                                <select name="posm_2" class="form-control select2" id="posm_2">
+                                                                    <option value="">{{ __('Select POSM') }}</option>
+                                                                    @foreach ($posms as $p)
+                                                                        <option value="{{ $p->id }}"
+                                                                            {{ old('posm_2', $report->posm_2 ?? '') == $p->id ? 'selected' : '' }}>
+                                                                            {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <span class="form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('posm_2') }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-3 col-sm-5 col-md-5 col-lg-5 col-xl-5">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="posm_2_qty"> {{ __('Quantity') }} </label>
+                                                                <input type="number" min="0" max="10" class="form-control"
+                                                                    name="posm_2_qty" placeholder="{{ __('1 - 10') }}"
+                                                                    value="{{ old('posm_2_qty', $report->posm_2_qty ?? '') }}">
+                                                                <span class="fa fa-info form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('posm_2_qty') }}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
+
+
+                                                <div class="col-12">
+                                                    <div class="row">
+                                                        <div class="col-8 col-sm-7 col-md-7 col-lg-7 col-xl-7">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="posm_3"> {{ __('POSM 3') }}
+                                                                    <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                        data-placement="bottom" title="Select POSM"></i>
+                                                                </label>
+                                                                <select name="posm_3" class="form-control select2" id="posm_3">
+                                                                    <option value="">{{ __('Select POSM') }}</option>
+                                                                    @foreach ($posms as $p)
+                                                                        <option value="{{ $p->id }}"
+                                                                            {{ old('posm_3', $report->posm_3 ?? '') == $p->id ? 'selected' : '' }}>
+                                                                            {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <span class="form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('posm_3') }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-3 col-sm-5 col-md-5 col-lg-5 col-xl-5">
+                                                            <div class="form-group has-feedback">
+                                                                <label for="posm_3_qty"> {{ __('Quantity') }} </label>
+                                                                <input type="number" min="0" max="10" class="form-control"
+                                                                    name="posm_3_qty" placeholder="{{ __('1 - 10') }}"
+                                                                    value="{{ old('posm_3_qty', $report->posm_3_qty ?? '') }}">
+                                                                <span class="fa fa-info form-control-feedback"></span>
+                                                                <span class="text-danger">{{ $errors->first('posm_3_qty') }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </fieldset>
-                        {{-- POSM END--}}
-                       </div>
+                            </fieldset>
+                        </div>
+                        {{-- POSM END --}}
 
                         <!-- Location Fields and Map -->
                         <div class="col-lg-12 col-md-12 col-xl-12">
                             <fieldset>
-                                <legend>{{ __('Location') }}</legend>
+                                <legend class="fs-6">{{ __('Location') }}</legend>
                                 <div class="row">
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
                                             <label for="latitude">{{ __('Latitude') }}<span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="latitude" id="latitude"
+                                                placeholder="{{ __('Latitude') }}"
                                                 value="{{ isset($report) ? $report->latitude : old('latitude') }}"
                                                 readonly required>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('latitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -846,15 +995,22 @@
                                             <label for="longitude">{{ __('Longitude') }}<span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="longitude" id="longitude"
+                                                placeholder="{{ __('Longitude') }}"
                                                 value="{{ isset($report) ? $report->longitude : old('longitude') }}"
                                                 readonly required>
+
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('longitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
                                             <label for="city">{{ __('Address') }}<span
                                                     class="text-danger">*</span></label>
-                                            <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>{{ isset($report) ? $report->city : old('city') }}</textarea>
+                                            <textarea class="form-control" name="city" placeholder="{{ __('Address') }}" id="city" cols="30"
+                                                rows="1" readonly required>{{ isset($report) ? $report->city : old('city') }}</textarea>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('city') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -862,8 +1018,11 @@
                                             <label for="country">{{ __('Country') }}<span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="country" id="country"
+                                                placeholder="{{ __('Country') }}"
                                                 value="{{ isset($report) ? $report->country : old('country') }}" readonly
                                                 required>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('country') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12 mt-3">
@@ -1011,95 +1170,173 @@
         @endif
 
         $(document).ready(function() {
+            const selectedAreaId = '{{ old('area', $report->area_id ?? '') }}';
+            const selectedOutletId = '{{ old('outlet_id', $report->outlet_id ?? '') }}';
+            const selectedCustomerId = '{{ old('customer_id', $report->customer_id ?? '') }}';
+            const selectedCustomerType = '{{ old('customer_type', $report->customer_type ?? '') }}';
+
+            // Handle area change
             $('#area').on('change', function() {
-                var areaId = $(this).val();
-                var selectedCustomerId = $('#customer_id').val(); // Store current customer_id
-                var selectedOutletId = $('#outlet_id').val(); // Store current outlet_id
+                const areaId = $(this).val();
+                const $outletSelect = $('#outlet_id');
+                const $customerSelect = $('#customer_id');
+                const $customerTypeSelect = $('#customer_type');
+
+                // Clear dependent selects
+                $outletSelect.empty().append('<option value="">{{ __('Loading...') }}</option>');
+                $customerSelect.empty().append(
+                        '<option value="">{{ __('Select outlet first') }}</option>')
+                    .trigger('change.select2');
+                $customerTypeSelect.empty().append(
+                    '<option value="">{{ __('Select customer first') }}</option>').trigger(
+                    'change.select2');
 
                 if (areaId) {
                     $.ajax({
-                        url: '{{ route('customers.byArea') }}',
-                        type: 'GET',
+                        url: '{{ route('se_customers.outlet') }}',
+                        method: "GET",
                         data: {
                             area_id: areaId
                         },
-                        success: function(data) {
-                            // Handle Customers Dropdown
-                            $('#customer_id').empty();
-                            if (data.customers.length === 0) {
-                                $('#customer_id').append(
-                                    '<option value="">{{ __('Customer Not Found!') }}</option>'
-                                );
-                            } else {
-                                $('#customer_id').append(
-                                    '<option value="">{{ __('Select Customer') }}</option>'
-                                );
-                                $.each(data.customers, function(key, customer) {
-                                    var isSelected = (customer.id ==
-                                        selectedCustomerId) ? 'selected' : '';
-                                    $('#customer_id').append('<option value="' +
-                                        customer.id + '" ' + isSelected + '>' +
-                                        customer.name + '</option>');
-                                });
-                            }
-                            $('#customer_id').trigger('change');
+                        success: function(response) {
+                            $outletSelect.empty().append(
+                                '<option value="">{{ __('Select Depo') }}</option>');
 
-                            // Handle Outlets Dropdown
-                            $('#outlet_id').empty();
-                            if (data.outlets.length === 0) {
-                                $('#outlet_id').append(
-                                    '<option value="">{{ __('Outlet Not Found!') }}</option>'
+                            if (Object.keys(response).length === 0) {
+                                $outletSelect.append(
+                                    '<option value="">{{ __('Depo Not Found!') }}</option>'
                                 );
                             } else {
-                                $('#outlet_id').append(
-                                    '<option value="">{{ __('Select outlet') }}</option>'
-                                );
-                                $.each(data.outlets, function(key, outlet) {
-                                    var isSelected = (outlet.id == selectedOutletId) ?
+                                $.each(response, function(id, name) {
+                                    // Pre-select outlet if it matches selectedOutletId
+                                    const isSelected = id == selectedOutletId ?
                                         'selected' : '';
-                                    $('#outlet_id').append('<option value="' + outlet
-                                        .id + '" ' + isSelected + '>' + outlet
-                                        .name + '</option>');
+                                    $outletSelect.append(
+                                        `<option value="${id}" ${isSelected}>${name}</option>`
+                                    );
                                 });
                             }
-                            $('#outlet_id').trigger('change');
-                        },
-                        error: function(xhr) {
-                            console.log('Error fetching data:', xhr);
-                            //orney Handle Customers Dropdown on Error
-                            $('#customer_id').empty().append(
-                                '<option value="">{{ __('Customer Not Found!') }}</option>'
-                            );
-                            $('#customer_id').trigger('change');
+                            $outletSelect.trigger('change.select2');
 
-                            // Handle Outlets Dropdown on Error
-                            $('#outlet_id').empty().append(
-                                '<option value="">{{ __('Outlet Not Found!') }}</option>'
-                            );
-                            $('#outlet_id').trigger('change');
+                            // Trigger outlet change if an outlet is selected
+                            if (selectedOutletId && areaId == selectedAreaId) {
+                                $outletSelect.val(selectedOutletId).trigger('change');
+                            }
+                        },
+                        error: function() {
+                            $outletSelect.empty().append(
+                                '<option value="">{{ __('Error loading depo') }}</option>'
+                            ).trigger('change.select2');
                         }
                     });
                 } else {
-                    // Clear Customers Dropdown
-                    $('#customer_id').empty().append(
-                        '<option value="">{{ __('Customer Not Found!') }}</option>'
-                    );
-                    $('#customer_id').trigger('change');
-
-                    // Clear Outlets Dropdown
-                    $('#outlet_id').empty().append(
-                        '<option value="">{{ __('Outlet Not Found!') }}</option>'
-                    );
-                    $('#outlet_id').trigger('change');
+                    $outletSelect.empty().append(
+                        '<option value="">{{ __('Select area first') }}</option>').trigger(
+                        'change.select2');
                 }
             });
 
-            // Trigger change on page load if area is pre-selected
-            if ($('#area').val()) {
-                $('#area').trigger('change');
-            }
+            // Handle outlet change
+            $('#outlet_id').on('change', function() {
+                const areaId = $('#area').val();
+                const outletId = $(this).val();
+                const $customerSelect = $('#customer_id');
+                const $customerTypeSelect = $('#customer_type');
 
+                // Clear dependent selects
+                $customerSelect.empty().append('<option value="">{{ __('Select Customer') }}</option>')
+                    .trigger('change.select2');
+                $customerTypeSelect.empty().append(
+                    '<option value="">{{ __('Select customer first') }}</option>').trigger(
+                    'change.select2');
 
+                if (areaId && outletId) {
+                    $.ajax({
+                        url: '{{ route('asm_customers.getName') }}',
+                        type: 'GET',
+                        data: {
+                            area_id: areaId,
+                            outlet_id: outletId
+                        },
+                        success: function(response) {
+                            if (response.success && response.customers.length > 0) {
+                                $.each(response.customers, function(index, customer) {
+                                    // Pre-select customer if it matches selectedCustomerId
+                                    const isSelected = customer.id ==
+                                        selectedCustomerId ? 'selected' : '';
+                                    $customerSelect.append(
+                                        `<option value="${customer.id}" ${isSelected}>${customer.name}</option>`
+                                    );
+                                });
+                            } else {
+                                $customerSelect.append(
+                                    '<option value="">{{ __('No customers found') }}</option>'
+                                );
+                            }
+                            $customerSelect.trigger('change.select2');
+
+                            // Trigger customer change if a customer is selected
+                            if (selectedCustomerId && outletId == selectedOutletId) {
+                                $customerSelect.val(selectedCustomerId).trigger('change');
+                            }
+                        },
+                        error: function(xhr) {
+                            $customerSelect.empty().append(
+                                '<option value="">{{ __('Error loading customers') }}</option>'
+                            ).trigger('change.select2');
+                            console.error('Error:', xhr.responseJSON?.error ||
+                                'Failed to load customers');
+                        }
+                    });
+                }
+            });
+
+            // Handle customer change
+            $('#customer_id').on('change', function() {
+                const areaId = $('#area').val();
+                const outletId = $('#outlet_id').val();
+                const customerId = $(this).val();
+                const $customerTypeSelect = $('#customer_type');
+
+                // Clear customer type select
+                $customerTypeSelect.empty().append(
+                    '<option value="">{{ __('Select customer type') }}</option>').trigger(
+                    'change.select2');
+
+                if (areaId && outletId && customerId) {
+                    $.ajax({
+                        url: '{{ route('asm_customers.getCustomerType') }}',
+                        type: 'GET',
+                        data: {
+                            customer_id: customerId
+                        },
+                        success: function(data) {
+                            if (data.customer_types.length > 0) {
+                                $.each(data.customer_types, function(index, customerType) {
+                                    // Pre-select customer type if it matches selectedCustomerType
+                                    const isSelected = customerType.id ==
+                                        selectedCustomerType ? 'selected' : '';
+                                    $customerTypeSelect.append(
+                                        `<option value="${customerType.id}" ${isSelected}>${customerType.name}</option>`
+                                    );
+                                });
+                            } else {
+                                $customerTypeSelect.append(
+                                    '<option value="">{{ __('Customer Type Not Found!') }}</option>'
+                                );
+                            }
+                            $customerTypeSelect.trigger('change.select2');
+                        },
+                        error: function(xhr) {
+                            $customerTypeSelect.empty().append(
+                                '<option value="">{{ __('Error loading customer types') }}</option>'
+                            ).trigger('change.select2');
+                            console.error('Error:', xhr.responseJSON?.error ||
+                                'Failed to load customer types');
+                        }
+                    });
+                }
+            });
         });
 
         // $('#outlet').on('input', function() {
@@ -1159,7 +1396,6 @@
         //         $('input[name="other"]').val('');
         //     }
         // });
-
     </script>
 
     <script>
@@ -1186,273 +1422,284 @@
             });
 
             // POSM START
-            $(document).on('click', '#btn-upload-photo', function () {
+            $(document).on('click', '#btn-upload-photo', function() {
                 // POSM START
-                    let video = document.getElementById('webcam');
-                    let canvas = document.getElementById('canvas');
-                    let context = canvas.getContext('2d');
-                    let imgPreview = $('#photo-preview');
-                    let imgInput = $('#img-preview');
-                    let cameraModal = $('#camera-modal');
-                    let cameraLabel = $('#camera-label');
-                    let currentFacingMode = 'user';
+                let video = document.getElementById('webcam');
+                let canvas = document.getElementById('canvas');
+                let context = canvas.getContext('2d');
+                let imgPreview = $('#photo-preview');
+                let imgInput = $('#img-preview');
+                let cameraModal = $('#camera-modal');
+                let cameraLabel = $('#camera-label');
+                let currentFacingMode = 'user';
 
-                    // Function to update camera label based on photo presence
-                    function updateCameraLabel() {
-                        if (imgPreview.hasClass('d-none')) {
-                            cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
-                        } else {
-                            cameraLabel.text('{{ __('Delete the old photo before you can open the camera') }}');
-                        }
+                // Function to update camera label based on photo presence
+                function updateCameraLabel() {
+                    if (imgPreview.hasClass('d-none')) {
+                        cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
+                    } else {
+                        cameraLabel.text(
+                            '{{ __('Delete the old photo before you can open the camera') }}');
                     }
+                }
 
-                    // Initialize label on page load
-                    updateCameraLabel();
+                // Initialize label on page load
+                updateCameraLabel();
 
-                    @if ($report && $report->photo)
-                        $('#btn-upload-photo').addClass('d-none');
-                        $('#btn-remove-photo').removeClass('d-none');
-                    @endif
+                @if ($report && $report->photo)
+                    $('#btn-upload-photo').addClass('d-none');
+                    $('#btn-remove-photo').removeClass('d-none');
+                @endif
 
-                    function startCamera(facingMode) {
-                        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                            video.setAttribute('playsinline', 'true');
-                            video.setAttribute('autoplay', 'true');
+                function startCamera(facingMode) {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        video.setAttribute('playsinline', 'true');
+                        video.setAttribute('autoplay', 'true');
 
-                            navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        facingMode: facingMode,
-                                        width: {
-                                            ideal: 1280
-                                        },
-                                        height: {
-                                            ideal: 720
-                                        }
+                        navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    facingMode: facingMode,
+                                    width: {
+                                        ideal: 1280
+                                    },
+                                    height: {
+                                        ideal: 720
                                     }
-                                })
-                                .then(function(stream) {
-                                    video.srcObject = stream;
-                                    video.play();
-                                })
-                                .catch(function(error) {
-                                    alert('Unable to access camera: ' + error.message);
-                                    console.error('Camera error:', error);
-                                    cameraModal.addClass('d-none');
-                                    $('#photo').click();
-                                });
-                        } else {
-                            alert('Camera not supported on this device.');
-                            $('#photo').click();
-                        }
+                                }
+                            })
+                            .then(function(stream) {
+                                video.srcObject = stream;
+                                video.play();
+                            })
+                            .catch(function(error) {
+                                alert('Unable to access camera: ' + error.message);
+                                console.error('Camera error:', error);
+                                cameraModal.addClass('d-none');
+                                $('#photo').click();
+                            });
+                    } else {
+                        alert('Camera not supported on this device.');
+                        $('#photo').click();
                     }
+                }
 
-                    // Use click event only, targeting the button specifically
-                    $('[data-action="open-camera"]').on('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        cameraModal.removeClass('d-none');
-                        startCamera(currentFacingMode);
-                    });
+                // Use click event only, targeting the button specifically
+                $('[data-action="open-camera"]').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cameraModal.removeClass('d-none');
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#switch-camera-btn').on('click', function() {
-                        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-                        stopCamera();
-                        startCamera(currentFacingMode);
-                    });
+                $('#switch-camera-btn').on('click', function() {
+                    currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+                    stopCamera();
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#capture-btn').on('click', function(e) {
-                        e.preventDefault();
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        let imageData = canvas.toDataURL('image/png');
-                        imgPreview.attr('src', imageData).removeClass('d-none');
-                        imgInput.val(imageData);
-                        stopCamera();
-                        $('#btn-upload-photo').addClass('d-none');
-                        $('#btn-remove-photo').removeClass('d-none');
-                        cameraModal.addClass('d-none');
-                        updateCameraLabel(); // Update label after capturing photo
-                    });
+                $('#capture-btn').on('click', function(e) {
+                    e.preventDefault();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    let imageData = canvas.toDataURL('image/png');
+                    imgPreview.attr('src', imageData).removeClass('d-none');
+                    imgInput.val(imageData);
+                    stopCamera();
+                    $('#btn-upload-photo').addClass('d-none');
+                    $('#btn-remove-photo').removeClass('d-none');
+                    cameraModal.addClass('d-none');
+                    updateCameraLabel(); // Update label after capturing photo
+                });
 
-                    $('#btn-remove-photo').on('click', function() {
-                        $('#photo').val('');
-                        $('#img-preview').val('');
-                        $('#photo-preview').removeAttr('src').addClass('d-none');
-                        $('#btn-remove-photo').addClass('d-none');
-                        $('#btn-upload-photo').removeClass('d-none');
-                        updateCameraLabel(); // Update label after removing photo
-                    });
+                $('#btn-remove-photo').on('click', function() {
+                    $('#photo').val('');
+                    $('#img-preview').val('');
+                    $('#photo-preview').removeAttr('src').addClass('d-none');
+                    $('#btn-remove-photo').addClass('d-none');
+                    $('#btn-upload-photo').removeClass('d-none');
+                    updateCameraLabel(); // Update label after removing photo
+                });
 
-                    $('#close-camera-btn').on('click', function(e) {
-                        e.preventDefault();
-                        stopCamera();
-                        cameraModal.addClass('d-none');
-                    });
+                $('#close-camera-btn').on('click', function(e) {
+                    e.preventDefault();
+                    stopCamera();
+                    cameraModal.addClass('d-none');
+                });
 
-                    $('#photo').on('change', function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                imgPreview.attr('src', e.target.result).removeClass('d-none');
-                                imgInput.val(e.target.result);
-                                $('#btn-upload-photo').addClass('d-none');
-                                $('#btn-remove-photo').removeClass('d-none');
-                                updateCameraLabel(); // Update label after uploading photo
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-
-                    function stopCamera() {
-                        if (video.srcObject) {
-                            video.srcObject.getTracks().forEach(track => track.stop());
-                        }
-                        video.srcObject = null;
+                $('#photo').on('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imgPreview.attr('src', e.target.result).removeClass('d-none');
+                            imgInput.val(e.target.result);
+                            $('#btn-upload-photo').addClass('d-none');
+                            $('#btn-remove-photo').removeClass('d-none');
+                            updateCameraLabel(); // Update label after uploading photo
+                        };
+                        reader.readAsDataURL(file);
                     }
+                });
+
+                function stopCamera() {
+                    if (video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                    video.srcObject = null;
+                }
                 // POSM END
             });
 
 
             // FOC START
 
-            $(document).on('click', '#btn-upload-photo-foc' , function () {
+            $(document).on('click', '#btn-upload-photo-foc', function() {
 
 
 
                 // FOC START
-                    let video = document.getElementById('webcam-foc');
-                    let canvas = document.getElementById('canvas-foc');
-                    let context = canvas.getContext('2d');
-                    let imgPreview = $('#photo-foc-preview');
-                    let imgInput = $('#img-preview-foc');
-                    let cameraModal = $('#camera-modal-foc');
-                    let cameraLabel = $('#camera-label-foc');
-                    let currentFacingMode = 'user';
+                let video = document.getElementById('webcam-foc');
+                let canvas = document.getElementById('canvas-foc');
+                let context = canvas.getContext('2d');
+                let imgPreview = $('#photo-foc-preview');
+                let imgInput = $('#img-preview-foc');
+                let cameraModal = $('#camera-modal-foc');
+                let cameraLabel = $('#camera-label-foc');
+                let currentFacingMode = 'user';
 
-                    // Function to update camera label based on photo presence
-                    function updateCameraLabel() {
-                        if (imgPreview.hasClass('d-none')) {
-                            cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
-                        } else {
-                            cameraLabel.text('{{ __('Delete the old photo before you can open the camera') }}');
-                        }
+                // Function to update camera label based on photo presence
+                function updateCameraLabel() {
+                    if (imgPreview.hasClass('d-none')) {
+                        cameraLabel.text('{{ __('Click to open camera and capture photo') }}');
+                    } else {
+                        cameraLabel.text(
+                            '{{ __('Delete the old photo before you can open the camera') }}');
                     }
+                }
 
-                    // Initialize label on page load
-                    updateCameraLabel();
+                // Initialize label on page load
+                updateCameraLabel();
 
-                    @if ($report && $report->photo)
-                        $('#btn-upload-photo-foc').addClass('d-none');
-                        $('#btn-remove-photo-foc').removeClass('d-none');
-                    @endif
+                @if ($report && $report->photo)
+                    $('#btn-upload-photo-foc').addClass('d-none');
+                    $('#btn-remove-photo-foc').removeClass('d-none');
+                @endif
 
-                    function startCamera(facingMode) {
-                        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                            video.setAttribute('playsinline', 'true');
-                            video.setAttribute('autoplay', 'true');
+                function startCamera(facingMode) {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        video.setAttribute('playsinline', 'true');
+                        video.setAttribute('autoplay', 'true');
 
-                            navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        facingMode: facingMode,
-                                        width: {
-                                            ideal: 1280
-                                        },
-                                        height: {
-                                            ideal: 720
-                                        }
+                        navigator.mediaDevices.getUserMedia({
+                                video: {
+                                    facingMode: facingMode,
+                                    width: {
+                                        ideal: 1280
+                                    },
+                                    height: {
+                                        ideal: 720
                                     }
-                                })
-                                .then(function(stream) {
-                                    video.srcObject = stream;
-                                    video.play();
-                                })
-                                .catch(function(error) {
-                                    alert('Unable to access camera: ' + error.message);
-                                    console.error('Camera error:', error);
-                                    cameraModal.addClass('d-none');
-                                    $('#photo-foc').click();
-                                });
-                        } else {
-                            alert('Camera not supported on this device.');
-                            $('#photo-foc').click();
-                        }
+                                }
+                            })
+                            .then(function(stream) {
+                                video.srcObject = stream;
+                                video.play();
+                            })
+                            .catch(function(error) {
+                                alert('Unable to access camera: ' + error.message);
+                                console.error('Camera error:', error);
+                                cameraModal.addClass('d-none');
+                                $('#photo-foc').click();
+                            });
+                    } else {
+                        alert('Camera not supported on this device.');
+                        $('#photo-foc').click();
                     }
+                }
 
-                    // Use click event only, targeting the button specifically
-                    $('[data-action="open-camera-foc"]').on('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        cameraModal.removeClass('d-none');
-                        startCamera(currentFacingMode);
-                    });
+                // Use click event only, targeting the button specifically
+                $('[data-action="open-camera-foc"]').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cameraModal.removeClass('d-none');
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#switch-camera-btn-foc').on('click', function() {
-                        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-                        stopCamera();
-                        startCamera(currentFacingMode);
-                    });
+                $('#switch-camera-btn-foc').on('click', function() {
+                    currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+                    stopCamera();
+                    startCamera(currentFacingMode);
+                });
 
-                    $('#capture-btn-foc').on('click', function(e) {
-                        e.preventDefault();
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        let imageData = canvas.toDataURL('image/png');
-                        imgPreview.attr('src', imageData).removeClass('d-none');
-                        imgInput.val(imageData);
-                        stopCamera();
-                        $('#btn-upload-photo-foc').addClass('d-none');
-                        $('#btn-remove-photo-foc').removeClass('d-none');
-                        cameraModal.addClass('d-none');
-                        updateCameraLabel(); // Update label after capturing photo
-                    });
+                $('#capture-btn-foc').on('click', function(e) {
+                    e.preventDefault();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    let imageData = canvas.toDataURL('image/png');
+                    imgPreview.attr('src', imageData).removeClass('d-none');
+                    imgInput.val(imageData);
+                    stopCamera();
+                    $('#btn-upload-photo-foc').addClass('d-none');
+                    $('#btn-remove-photo-foc').removeClass('d-none');
+                    cameraModal.addClass('d-none');
+                    updateCameraLabel(); // Update label after capturing photo
+                });
 
-                    $('#btn-remove-photo-foc').on('click', function() {
+                $('#btn-remove-photo-foc').on('click', function() {
 
-                        // console.log('remove');
+                    // console.log('remove');
 
-                        $('#photo-foc').val('');
-                        $('#img-preview-foc').val('');
-                        $('#photo-foc-preview').removeAttr('src').addClass('d-none');
-                        $('#btn-remove-photo-foc').addClass('d-none');
-                        $('#btn-upload-photo-foc').removeClass('d-none');
-                        updateCameraLabel(); // Update label after removing photo
-                    });
+                    $('#photo-foc').val('');
+                    $('#img-preview-foc').val('');
+                    $('#photo-foc-preview').removeAttr('src').addClass('d-none');
+                    $('#btn-remove-photo-foc').addClass('d-none');
+                    $('#btn-upload-photo-foc').removeClass('d-none');
+                    updateCameraLabel(); // Update label after removing photo
+                });
 
-                    $('#close-camera-btn-foc').on('click', function(e) {
-                        e.preventDefault();
-                        stopCamera();
-                        cameraModal.addClass('d-none');
-                    });
+                $('#close-camera-btn-foc').on('click', function(e) {
+                    e.preventDefault();
+                    stopCamera();
+                    cameraModal.addClass('d-none');
+                });
 
-                    $('#photo-foc').on('change', function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                imgPreview.attr('src', e.target.result).removeClass('d-none');
-                                imgInput.val(e.target.result);
-                                $('#btn-upload-photo-foc').addClass('d-none');
-                                $('#btn-remove-photo-foc').removeClass('d-none');
-                                updateCameraLabel(); // Update label after uploading photo
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-
-                    function stopCamera() {
-                        if (video.srcObject) {
-                            video.srcObject.getTracks().forEach(track => track.stop());
-                        }
-                        video.srcObject = null;
+                $('#photo-foc').on('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imgPreview.attr('src', e.target.result).removeClass('d-none');
+                            imgInput.val(e.target.result);
+                            $('#btn-upload-photo-foc').addClass('d-none');
+                            $('#btn-remove-photo-foc').removeClass('d-none');
+                            updateCameraLabel(); // Update label after uploading photo
+                        };
+                        reader.readAsDataURL(file);
                     }
+                });
+
+                function stopCamera() {
+                    if (video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                    video.srcObject = null;
+                }
 
                 // FOC END
             });
+
+            // toggle FOC input
+            $('#foc_special').on('change', function() {
+                var focSection = $('#foc_other_section');
+                if (this.checked) {
+                    focSection.removeClass('d-none');
+                } else {
+                    focSection.addClass('d-none');
+                    $('#foc_other').val('').trigger('change');
+                }
+            });
         });
     </script>
-
-
 @endsection
