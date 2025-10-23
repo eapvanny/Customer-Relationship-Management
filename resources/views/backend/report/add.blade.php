@@ -1231,7 +1231,7 @@
 
                 if (areaId && outletId) {
                     $.ajax({
-                        url: '{{ route('customers.getName') }}',
+                        url: '{{ route('customers.getNames') }}',
                         type: 'GET',
                         data: {
                             area_id: areaId,
@@ -1284,7 +1284,7 @@
 
                 if (areaId && outletId && customerId) {
                     $.ajax({
-                        url: '{{ route('customers.getCustomerType') }}',
+                        url: '{{ route('customers.getCustomerTypes') }}',
                         type: 'GET',
                         data: {
                             customer_id: customerId

@@ -106,8 +106,8 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
     //customer
     Route::get('/customers/outlet', [ReportController::class, 'getOutlets'])->name('customers.outlet');
-    Route::get('/customers/get', [ReportController::class, 'getCustomers'])->name('customers.getName');
-    Route::get('/customers/customer-type', [ReportController::class, 'getCustomerType'])->name('customers.getCustomerType');
+    Route::get('/customers/getName', [ReportController::class, 'getCustomers'])->name('customers.getNames');
+    Route::get('/customers/customer-types', [ReportController::class, 'getCustomerType'])->name('customers.getCustomerTypes');
     Route::resource('customer', CustomerController::class)->except(['show']);
     Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');
     Route::get('/get-depos-by-area', [CustomerController::class, 'getDeposByArea'])->name('get-depos-by-area');
@@ -171,14 +171,13 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::resource('reports', ProvinceReportController::class);
     Route::get('/get-reports-pro', [ProvinceReportController::class, 'getReports'])->name('get-reports-pro');
     Route::get('/export-report-pro', [ProvinceReportController::class, 'export'])->name('report-pro.export');
-    Route::get('/customers/outlet', [ProvinceReportController::class, 'getOutletsProvince'])->name('customers.outlet-pro');
-    Route::get('/customers/get', [ProvinceReportController::class, 'getCustomersProvince'])->name('customers.getName-pro');
+    Route::get('/customers/outlet/province', [ProvinceReportController::class, 'getOutletsProvince'])->name('customers.outlet-pro');
+    Route::get('/customers/get', [ProvinceReportController::class, 'getCustomersProvince'])->name('customers_pro.getName');
     Route::get('/customers/customer-type', [ProvinceReportController::class, 'getCustomerTypeProvince'])->name('customers.getCustomerType-pro');
     // Manager customer for marketing
     // Route::resource('mcustomer', MCustomerController::class);
     // Route::get('/mcustomer/province/by-area', [MCustomerController::class, 'getCustomersByArea'])->name('mcustomer.byArea');
     // Route::get('/mcustomer/province/export', [MCustomerController::class, 'export'])->name('mcustomer.export');
-
 
     // Display program subwholesale route
     Route::resource('/display/sub-wholesale', DisplaysubwholesaleController::class)->names('displaysub');

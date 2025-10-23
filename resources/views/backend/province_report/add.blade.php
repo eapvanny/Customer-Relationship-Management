@@ -1225,7 +1225,7 @@
 
                 if (areaId && outletId) {
                     $.ajax({
-                        url: '{{ route('customers.getName-pro') }}',
+                        url: '{{ route('customers_pro.getName') }}',
                         type: 'GET',
                         data: {
                             area_id: areaId,
