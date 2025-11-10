@@ -31,12 +31,6 @@ class Customer extends Model
     {
         return AppHelper::getAreas();
     }
-
-    public function report()
-    {
-        return $this->hasMany(Report::class, 'customer_id');
-    }
-    
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -44,5 +38,9 @@ class Customer extends Model
     public function depo()
     {
         return $this->belongsTo(Depo::class, 'depo_id');
+    }
+    public function report()
+    {
+        return $this->hasMany(Report::class, 'customer_id');
     }
 }

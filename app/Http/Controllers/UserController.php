@@ -57,18 +57,21 @@ class UserController extends Controller
                         AppHelper::USER_ASM,
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
-                    ])->where('type', AppHelper::SE)
-                        ->orWhere('id', $loggedInUserId);
-                });
+                    ])
+                    ->where('type', AppHelper::SE)
+                    ->orWhere('id', $loggedInUserId);
+                })
+                ->where('rsm_id', $loggedInUserId);
             } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->whereIn('role_id', [
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
-                    ])->where('type', AppHelper::SE)
-                        ->where('asm_id', $loggedInUserId)
-                        ->orWhere('id', $loggedInUserId);
-                });
+                    ])
+                    ->where('type', AppHelper::SE)
+                    ->where('asm_id', $loggedInUserId);
+                })
+                ->orWhere('id', $loggedInUserId);
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->where('role_id', AppHelper::USER_EMPLOYEE)
@@ -93,21 +96,23 @@ class UserController extends Controller
             } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->whereIn('role_id', [
-                        AppHelper::USER_ASM,
-                        AppHelper::USER_SUP,
-                        AppHelper::USER_EMPLOYEE
-                    ])->where('type', AppHelper::SALE)
-                        ->orWhere('id', $loggedInUserId);
-                });
+                            AppHelper::USER_ASM,
+                            AppHelper::USER_SUP,
+                            AppHelper::USER_EMPLOYEE
+                        ])
+                        ->where('type', AppHelper::SALE)
+                        ->where('rsm_id', $loggedInUserId);
+                })
+                ->orWhere('id', $loggedInUserId);
             } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->whereIn('role_id', [
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
                     ])->where('type', AppHelper::SALE)
-                        // ->where('asm_id', $loggedInUserId)
-                        ->orWhere('id', $loggedInUserId);
-                });
+                        ->where('asm_id', $loggedInUserId);
+                })
+                ->orWhere('id', $loggedInUserId);
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
                 $query->where(function ($q) use ($loggedInUserId) {
                     $q->where('role_id', AppHelper::USER_EMPLOYEE)

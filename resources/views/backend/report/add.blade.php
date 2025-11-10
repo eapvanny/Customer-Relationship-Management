@@ -489,9 +489,9 @@
                             @endif
                             {{-- {{ __('Customer Data') }} --}}
                         </h4>
-                        <div class="box-tools pull-right">
+                        <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('report.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
-                            <button type="submit" class="btn btn-info pull-right text-white"><i
+                            <button type="submit" class="submitClick btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
                                     {{ __('Update') }}
@@ -515,18 +515,18 @@
                             <div class="form-group has-feedback">
                                 <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
-                                    <option value="">{{ __('Select Area') }}</option>
-                                    @foreach ($areas as $area => $subItems)
-                                        <optgroup label="{{ $area }}">
-                                            @foreach ($subItems as $area_id => $subItem)
-                                                <option value="{{ $area_id }}"
-                                                    {{ old('area', $report->area_id ?? '') == $area_id ? 'selected' : '' }}>
-                                                    {{ $subItem }}
-                                                </option>
-                                            @endforeach
-                                        </optgroup>
-                                    @endforeach
-                                </select>
+                                        <option value="">{{ __('Select Area') }}</option>
+                                        @foreach ($areas as $area => $subItems)
+                                            <optgroup label="{{ $area }}">
+                                                @foreach ($subItems as $area_id => $subItem)
+                                                    <option value="{{ $area_id }}"
+                                                        @if (old('area', $customer->area_id ?? '') == $area_id) selected @endif>
+                                                        {{ $subItem }}
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
                                 <span class="fa fa-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('area') }}</span>
                             </div>
@@ -566,11 +566,12 @@
                         </div>
                         <div class="col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="customer_type">{{ __('Customer Type') }} <span class="text-danger">*</span>
+                                <label for="customer_type">{{ __('Customer Type') }}
+                                    <span class="text-danger">*</span>
                                     <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom"
                                         title="Select customer type"></i>
                                 </label>
-                                <select name="customer_type" id="customer_type" class="form-control select2" required>
+                                <select name="customer_type" id="customer_type" class="form-control select2" disabled>
                                     <option value="">{{ __('Select customer first') }}</option>
                                     @foreach ($customerType as $id => $name)
                                         <option value="{{ $id }}"
@@ -1278,42 +1279,49 @@
                 const $customerTypeSelect = $('#customer_type');
 
                 // Clear customer type select
-                $customerTypeSelect.empty().append(
-                    '<option value="">{{ __('Select customer type') }}</option>').trigger(
-                    'change.select2');
+                $customerTypeSelect.empty().append('<option value="">{{ __('Loading...') }}</option>').trigger('change.select2');
 
                 if (areaId && outletId && customerId) {
                     $.ajax({
                         url: '{{ route('customers.getCustomerTypes') }}',
                         type: 'GET',
-                        data: {
-                            customer_id: customerId
-                        },
+                        data: { customer_id: customerId },
                         success: function(data) {
-                            if (data.customer_types.length > 0) {
-                                $.each(data.customer_types, function(index, customerType) {
-                                    // Pre-select customer type if it matches selectedCustomerType
-                                    const isSelected = customerType.id ==
-                                        selectedCustomerType ? 'selected' : '';
-                                    $customerTypeSelect.append(
-                                        `<option value="${customerType.id}" ${isSelected}>${customerType.name}</option>`
-                                    );
-                                });
-                            } else {
+                            $customerTypeSelect.empty();
+
+                            if (data.customer_types && data.customer_types.length > 0) {
+                                const customerType = data.customer_types[0]; // Assuming one type per customer
+
+                                // Append and auto-select
                                 $customerTypeSelect.append(
-                                    '<option value="">{{ __('Customer Type Not Found!') }}</option>'
-                                    );
+                                    `<option value="${customerType.id}" selected>${customerType.name}</option>`
+                                );
+
+                                // Create hidden input to submit the value since "disabled" fields aren't submitted
+                                $('#hidden_customer_type').remove();
+                                $('<input>').attr({
+                                    type: 'hidden',
+                                    id: 'hidden_customer_type',
+                                    name: 'customer_type',
+                                    value: customerType.id
+                                }).appendTo('form');
+                            } else {
+                                $customerTypeSelect.append('<option value="">{{ __('Customer Type Not Found!') }}</option>');
+                                $('#hidden_customer_type').remove();
                             }
+
                             $customerTypeSelect.trigger('change.select2');
                         },
                         error: function(xhr) {
                             $customerTypeSelect.empty().append(
                                 '<option value="">{{ __('Error loading customer types') }}</option>'
-                                ).trigger('change.select2');
-                            console.error('Error:', xhr.responseJSON?.error ||
-                                'Failed to load customer types');
+                            ).trigger('change.select2');
+                            console.error('Error:', xhr.responseJSON?.error || 'Failed to load customer types');
                         }
                     });
+                } else {
+                    $customerTypeSelect.empty().append('<option value="">{{ __('Select customer first') }}</option>').trigger('change.select2');
+                    $('#hidden_customer_type').remove();
                 }
             });
 

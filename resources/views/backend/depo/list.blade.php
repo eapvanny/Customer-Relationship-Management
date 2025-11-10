@@ -40,8 +40,8 @@
                                     <thead>
                                         <tr>
                                             <th>{{ __('#') }}</th>
-                                            <th>{{ __('Area') }}</th>
                                             <th>{{ __('Created by') }}</th>
+                                            <th>{{ __('Area') }}</th>
                                             <th>{{ __('Depo Name') }}</th>
                                             <th class="notexport" style="min-width: 90px;">{{ __('Action') }}</th>
                                         </tr>

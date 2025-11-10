@@ -360,13 +360,12 @@
                                                     <span class="text-danger">{{ $errors->first('position') }}</span>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6 co-xl-6 col-lg-6">
+                                            <div class="col-md-6 col-xl-6 col-lg-6">
                                                 <div class="form-group has-feedback">
-                                                    <label for="area"> {{ __('Area') }} <span
-                                                            class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="area"
-                                                        value="@if ($user) {{ $user->area }}@else{{ old('area') }} @endif"
-                                                        required>
+                                                    <label for="area"> {{ __('Area') }} <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" name="area" id="area"
+                                                        value="@if ($user) {{ old('area', $user->area) }} @endif"
+                                                        onkeyup="this.value = this.value.toUpperCase();" required>
                                                     <span class="fa fa-info form-control-feedback"></span>
                                                     <span class="text-danger">{{ $errors->first('area') }}</span>
                                                 </div>

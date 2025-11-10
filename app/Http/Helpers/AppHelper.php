@@ -111,14 +111,14 @@ class AppHelper
             9 => 'S-77',
             10 => 'S-97',
         ],
-        'S-VA (R2-1)' => [
+        'S-VA (R2-01)' => [
             11 => 'S-113',
             12 => 'S-30',
             13 => 'S-86',
             14 => 'S-98',
             15 => 'S-99',
         ],
-        'Doeun (R2-2)' => [
+        'Doeun (R2-02)' => [
             16 => 'S-110',
             17 => 'S-76',
             18 => 'S-81',
@@ -176,6 +176,17 @@ class AppHelper
     {
         return self::AREAS;
     }
+public static function getAreaIdByText($areaText)
+{
+    foreach (self::AREAS as $areaGroup => $areas) {
+        foreach ($areas as $id => $area) {
+            if ($area === $areaText) {
+                return $id;
+            }
+        }
+    }
+    return null;
+}
 
 
     /**

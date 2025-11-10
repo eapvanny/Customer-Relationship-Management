@@ -460,16 +460,17 @@
             <div class="wrap-outter-box">
                 <div class="box box-info">
                     <div class="box-body">
-                        <div class="row">
+                        <div class="row">   
                             <div class="col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
                                     <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                     <select name="area" id="area" class="form-control select2" required>
                                         <option value="">{{ __('Select Area') }}</option>
-                                        @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                        @foreach ($areas as $area => $subItems)
                                             <optgroup label="{{ $area }}">
                                                 @foreach ($subItems as $area_id => $subItem)
-                                                    <option value="{{ $area_id }}" {{ old('area', $customer->area_id ?? '') == $area_id ? 'selected' : '' }}>
+                                                    <option value="{{ $area_id }}"
+                                                        @if (old('area', $customer->area_id ?? '') == $area_id) selected @endif>
                                                         {{ $subItem }}
                                                     </option>
                                                 @endforeach

@@ -80,7 +80,7 @@
                                 <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
                                     <option value="">{{ __('Select Area') }}</option>
-                                    @foreach (\App\Http\Helpers\AppHelper::getAreas() as $area => $subItems)
+                                    @foreach ($areas as $area => $subItems)
                                         <optgroup label="{{ $area }}">
                                             @foreach ($subItems as $area_id => $subItem)
                                                 <option value="{{ $area_id }}"

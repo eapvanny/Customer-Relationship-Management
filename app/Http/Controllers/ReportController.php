@@ -168,7 +168,7 @@ class ReportController extends Controller
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                $reports = $query->orderBy('id','desc')->get();
+                $reports = $query->orderBy('id', 'desc')->get();
 
                 return DataTables::of($reports)
                     ->addColumn('area', function ($data) {
@@ -211,7 +211,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('backend.report.list', compact('is_filter', 'area_id','showModal'));
+        return view('backend.report.list', compact('is_filter', 'area_id', 'showModal'));
     }
 
 
@@ -223,14 +223,48 @@ class ReportController extends Controller
         $report = null;
         $customerType = [];
         $depos = [];
+        $user = auth()->user();
+        $userAreaCode = $user->area ?? null; // Example: "R1", "R1-01", "S-04", etc.
+
         $areas = AppHelper::getAreas();
+
+        if ($userAreaCode) {
+            $filteredAreas = collect($areas)->filter(function ($subItems, $areaName) use ($userAreaCode) {
+                // 1️⃣ Region-level: R1 → include all subregions R1-01, R1-02
+                if (preg_match('/^R\d$/', $userAreaCode)) {
+                    return str_contains($areaName, $userAreaCode . '-');
+                }
+
+                // 2️⃣ Subregion-level: R1-01 → include only exact match
+                if (preg_match('/^R\d-\d{2}$/', $userAreaCode)) {
+                    return str_contains($areaName, $userAreaCode);
+                }
+
+                // 3️⃣ Store-level: S-04 → include only the area that has this store
+                if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                    return in_array($userAreaCode, $subItems);
+                }
+
+                return false;
+            });
+
+            // 4️⃣ If user is a store-level (S-XX), show only that store, not all under the subregion
+            if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                $filteredAreas = $filteredAreas->map(function ($subItems) use ($userAreaCode) {
+                    // Keep only the user’s own store
+                    return array_filter($subItems, fn($v) => $v === $userAreaCode);
+                });
+            }
+
+            $areas = $filteredAreas->toArray();
+        }
         // If there's old input or a pre-selected area, fetch customers
         $areaId = old('area', $customer->area_id ?? '');
         if ($areaId) {
             $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'depo_id']);
         }
 
-        return view('backend.report.add', compact('customer', 'customers', 'report', 'customerType','areas','depos'));
+        return view('backend.report.add', compact('customer', 'customers', 'report', 'customerType', 'areas', 'depos'));
     }
 
     public function show($id)
@@ -277,87 +311,87 @@ class ReportController extends Controller
     }
 
     public function getOutlets(Request $request)
-{
-    $areaId = $request->query('area_id');
-    $authUser = auth()->user();
+    {
+        $areaId = $request->query('area_id');
+        $authUser = auth()->user();
 
-    if (!$areaId) {
-        return response()->json([], 400);
+        if (!$areaId) {
+            return response()->json([], 400);
+        }
+
+        $query = Depo::where('area_id', $areaId);
+
+        if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
+            // Filter outlets accessible by SALE or SE users
+            $query->where('user_type', $authUser->type);
+            // ->where(function ($q) use ($authUser) {
+            //     $q->where('user_id', $authUser->id); // Include depos without specific user
+            // });
+        }
+
+        $outlets = $query->pluck('name', 'id')->toArray();
+
+        return response()->json($outlets);
     }
-
-    $query = Depo::where('area_id', $areaId);
-
-    if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
-        // Filter outlets accessible by SALE or SE users
-        $query->where('user_type', $authUser->type);
-                // ->where(function ($q) use ($authUser) {
-                //     $q->where('user_id', $authUser->id); // Include depos without specific user
-                // });
-    }
-
-    $outlets = $query->pluck('name', 'id')->toArray();
-
-    return response()->json($outlets);
-}
 
 
     // AJAX endpoint to fetch customers by area_id and outlet_id
     public function getCustomers(Request $request)
-{
-    $areaId = $request->query('area_id');
-    $outletId = $request->query('outlet_id');
-    $authUser = auth()->user();
+    {
+        $areaId = $request->query('area_id');
+        $outletId = $request->query('outlet_id');
+        $authUser = auth()->user();
 
-    if (!$areaId || !$outletId) {
-        return response()->json(['success' => false, 'error' => 'Area ID and Outlet ID are required'], 400);
+        if (!$areaId || !$outletId) {
+            return response()->json(['success' => false, 'error' => 'Area ID and Outlet ID are required'], 400);
+        }
+
+        $query = Customer::where('area_id', $areaId)
+            ->where('depo_id', $outletId);
+
+        if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
+            // Further filter if needed (e.g., customers assigned to this user)
+            $query->where('user_type', $authUser->type); // adjust field if different
+        }
+
+        $customers = $query->select('id', 'name')->get();
+
+        return response()->json(['success' => true, 'customers' => $customers]);
     }
-
-    $query = Customer::where('area_id', $areaId)
-        ->where('depo_id', $outletId);
-
-    if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
-        // Further filter if needed (e.g., customers assigned to this user)
-        $query->where('user_type', $authUser->type); // adjust field if different
-    }
-
-    $customers = $query->select('id', 'name')->get();
-
-    return response()->json(['success' => true, 'customers' => $customers]);
-}
 
 
     // AJAX endpoint to fetch customer types by customer_id
     public function getCustomerType(Request $request)
-{
-    $customerId = $request->query('customer_id');
-    $authUser = auth()->user();
+    {
+        $customerId = $request->query('customer_id');
+        $authUser = auth()->user();
 
-    if (!$customerId) {
-        return response()->json(['customer_types' => []], 400);
+        if (!$customerId) {
+            return response()->json(['customer_types' => []], 400);
+        }
+
+        $customer = Customer::find($customerId, ['customer_type', 'user_type']);
+
+        if (!$customer || !$customer->customer_type) {
+            return response()->json(['customer_types' => []]);
+        }
+
+        // Check user access if SALE or SE
+        if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE]) && $customer->user_type != $authUser->type) {
+            return response()->json(['customer_types' => []]);
+        }
+
+        $customerTypes = collect(AppHelper::CUSTOMER_TYPE)
+            ->map(function ($name, $id) {
+                return ['id' => $id, 'name' => $name];
+            })
+            ->filter(function ($type) use ($customer) {
+                return $type['id'] == $customer->customer_type;
+            })
+            ->values();
+
+        return response()->json(['customer_types' => $customerTypes]);
     }
-
-    $customer = Customer::find($customerId, ['customer_type', 'user_type']);
-
-    if (!$customer || !$customer->customer_type) {
-        return response()->json(['customer_types' => []]);
-    }
-
-    // Check user access if SALE or SE
-    if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE]) && $customer->user_type != $authUser->type) {
-        return response()->json(['customer_types' => []]);
-    }
-
-    $customerTypes = collect(AppHelper::CUSTOMER_TYPE)
-        ->map(function ($name, $id) {
-            return ['id' => $id, 'name' => $name];
-        })
-        ->filter(function ($type) use ($customer) {
-            return $type['id'] == $customer->customer_type;
-        })
-        ->values();
-
-    return response()->json(['customer_types' => $customerTypes]);
-}
 
 
     public function store(Request $request)

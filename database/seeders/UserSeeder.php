@@ -53,6 +53,10 @@ class UserSeeder extends Seeder
         // Define permissions for different types
         $permissionGroups = [
             AppHelper::ALL => [
+                'create depo',
+                'view depo',
+                'update depo',
+                'delete depo',
                 'create customer',
                 'view customer',
                 'update customer',
@@ -155,6 +159,10 @@ class UserSeeder extends Seeder
 
             ],
             AppHelper::SALE => [
+                'create depo',
+                'view depo',
+                'update depo',
+                'delete depo',
                 'create customer',
                 'view customer',
                 'update customer',
