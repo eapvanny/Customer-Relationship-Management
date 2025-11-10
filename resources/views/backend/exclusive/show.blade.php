@@ -1,7 +1,7 @@
 @extends('backend.layouts.master')
 
 @section('pageTitle')
-    {{ __('SE Program') }}
+    {{ __('Exclusive Customer') }}
 @endsection
 
 @section('bodyCssClass')
@@ -395,7 +395,8 @@
     <section class="content-header">
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li><a href="{{ URL::route('se.index') }}"> {{ __('SE Program') }} </a></li>
+            <li><a> {{ __('Exclusive Customer') }} </a></li>
+            {{-- <li><a href="{{ URL::route('school.index') }}"> {{ __('School') }} </a></li> --}}
             <li class="active">
                 {{ __('Detail') }}
             </li>

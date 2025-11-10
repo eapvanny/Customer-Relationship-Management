@@ -433,7 +433,7 @@
                     <div class="wrap-outter-header-title">
                         <h4>{{ __('Customer') }}</h4>
                         <div class="action-btn-top none_fly_action_btn">
-                            <a href="{{ URL::route('customer.index') }}" class="btn btn-default"> {{ __('Cancel') }} </a>
+                            <a href="{{ URL::route('cp.index') }}" class="btn btn-default"> {{ __('Cancel') }} </a>
                             <button type="submit" class="submitClick btn btn-info pull-right text-white">
                                 <i class="fa @if ($customer_province) fa-refresh @else fa-check-circle @endif"></i>
                                 @if ($customer_province)
@@ -488,7 +488,7 @@
                             </div>
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="depo_id">{{ __("Outlet") }} <span class="text-danger">*</span></label>
+                                    <label for="depo_id">{{ __("Depot") }} <span class="text-danger">*</span></label>
                                     <select name="depo_id" class="form-control select2" id="depo_id" required>
                                         <option value="">{{ __('Select region first') }}</option>
                                         @if(old('depo_id') || $errors->first('depo_id') || $customer_province)
@@ -715,9 +715,9 @@
                             $('#depo_id').empty(); // Clear options first
 
                             if (Object.keys(response).length === 0) {
-                                $('#depo_id').append('<option value="">{{__('Depo Not Found!')}}</option>');
+                                $('#depo_id').append('<option value="">{{__('Depot Not Found!')}}</option>');
                             } else {
-                                $('#depo_id').append('<option value="">{{__('Select Depo')}}</option>');
+                                $('#depo_id').append('<option value="">{{__('Select Depot')}}</option>');
                                 $.each(response, function (id, name) {
                                     $('#depo_id').append(`<option value="${id}">${name}</option>`);
                                 });

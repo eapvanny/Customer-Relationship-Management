@@ -8,10 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class SubwholesalePicture extends Model
 {
     use HasFactory;
+
     protected $table = 'subwholesale_pictures';
+
     protected $fillable = [
         'subwholesale_id',
         'picture',
+        'latitude',
+        'longitude',
+        'city',
+        'country'
     ];
 
     public function retail()

@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\CustomerProvinceExport;
 use Exception;
 use App\Models\Outlet;
 use App\Models\Region;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use App\Http\Helpers\AppHelper;
 use App\Models\CustomerProvince;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CustomerProvinceExport;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -263,7 +264,44 @@ class CustomerProvinceController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $report = CustomerProvince::with('user', 'outlet', 'region')->find($id);
+        if (!$report) {
+            return response()->json(['error' => 'Report not found'], 404);
+        }
+
+        $user = $report->user;
+        $employee_name = 'N/A';
+
+        if ($user) {
+            $employee_name = auth()->user()->user_lang == 'en'
+                ? $user->getFullNameLatinAttribute()
+                : $user->getFullNameAttribute();
+        }
+
+        return response()->json([
+            'report' => [
+                'region' => $report->region->region_name . ' '. $report->region->se_code,
+                'depot_code' => $report->outlet->code,
+                'depot_name' => $report->outlet->name,
+
+                'customer_code' => $report->code,
+                'customer_name' => $report->name,
+                'phone_number' => $report->phone,
+                'outlet_photo' => $report->outlet_photo ? asset('storage/' . $report->outlet_photo) : asset('images/post-placeholder.jpg'),
+                'customer_type' => AppHelper::CUSTOMER_TYPE_PROVINCE[$report->customer_type] ?? 'N/A',
+
+                'created_by' => session('user_lang') == 'en'
+                                ? $report->user->family_name_latin . ' ' . $report->user->name_latin
+                                : $report->user->family_name . ' ' . $report->user->name,
+
+
+                'date' => Carbon::parse($report->created_at)->format('d M Y'),
+                'city' => $report->city,
+                'country' => $report->country,
+                'lat' => $report->latitude,
+                'long' => $report->longitude,
+            ]
+        ]);
     }
 
     /**

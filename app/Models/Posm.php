@@ -12,6 +12,7 @@ class Posm extends Model
     protected $table = 'posms';
 
     protected $fillable = [
+        'code',
         'name_kh',
         'name_en',
         'status',

@@ -103,7 +103,8 @@ class CustomerProvinceExport implements FromView
         $customers = $query->orderBy('id', 'desc')->get();
 
         return view('exports.customer-province', [
-            'rows' => $customers
+            'rows' => $customers,
+            'title' => __('Customer (Province)'),
         ]);
     }
 }

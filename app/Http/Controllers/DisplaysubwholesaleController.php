@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Events\ReportRequest;
 use App\Exports\SubwholesaleExport;
-use Illuminate\Support\Carbon;
 use App\Http\Helpers\AppHelper;
 use App\Imports\SubwholesaleImport;
-use App\Models\SubwholesalePicture;
 use App\Models\Display_subwholesale;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\SubwholesalePicture;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class DisplaysubwholesaleController extends Controller
 {
@@ -29,9 +29,10 @@ class DisplaysubwholesaleController extends Controller
         $this->middleware('type.permission:update sub-wholesale', ['only' => ['update', 'edit']]);
         $this->middleware('type.permission:delete sub-wholesale', ['only' => ['destroy']]);
     }
+
     public $indexof = 1;
 
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Display_subwholesale::with('user')->whereDate('created_at', today())->orderBy('id', 'desc');
         $user = auth()->user();
@@ -187,9 +188,9 @@ class DisplaysubwholesaleController extends Controller
         $report = null;
         $dataRetail = null;
         // dd('HI Wholesale');
-        $customer = null; // Assuming $customer is used for editing; null for create
+        $customer = null;  // Assuming $customer is used for editing; null for create
         $customers = [];
-        $takePicture = null; // Assuming this is used for taking pictures, set to null for create
+        $takePicture = null;  // Assuming this is used for taking pictures, set to null for create
         $customerType = AppHelper::CUSTOMER_TYPE;
         // If there's old input or a pre-selected area, fetch customers
         $areaId = old('area', $customer->area_id ?? '');
@@ -202,74 +203,62 @@ class DisplaysubwholesaleController extends Controller
 
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'region' => ['required', 'string'],
+            'province' => ['required', 'string'],
+            'district' => ['required', 'string'],
+            'commune' => ['required', 'string'],
+            'sm_name' => ['required', 'string'],
+            'rsm_name' => ['required', 'string'],
+            'asm_name' => ['required', 'string'],
+            'se_name' => ['required', 'string'],
+            'se_code' => ['required', 'string'],
+            'customer_code' => ['required', 'string'],
+            'depot_contact' => ['required', 'string'],
+            'depot_name' => ['required', 'string'],
+            'sub_ws_name' => ['required', 'string'],
+            'sub_ws_contact' => ['required', 'string'],
+            'outlet_type' => ['required', 'string'],
+            'sale_kpi' => ['required', 'string'],
+            'display_qty' => ['required', 'integer', 'min:0'],
+            'sku' => ['required', 'integer', 'min:0'],
+            'incentive' => ['required', 'integer', 'min:0', 'max:100'],
+            'remark' => ['nullable', 'string'],
+        ]);
 
-        $rules = [
-            'region' => 'required|string',
-            'sm_name' => 'required|string',
-            'rsm_name' => 'required|string',
-            'asm_name' => 'required|string',
-            'sup_name' => 'required|string',
-            'se_name' => 'required|string',
-            'se_code' => 'required|string',
-            'customer_code' => 'required|string',
-            'depo_contact' => 'required|string',
-            'depo_name' => 'required|string',
-            'subwholesale_name' => 'required|string',
-            'subwholesale_contact' => 'required|string',
-            'business_type' => 'required|string',
-            'sale_kpi' => 'required|string',
-            'display_qty' => 'required|integer|min:0',
-            'foc_qty' => 'required|integer|min:0',
-            'remark' => 'nullable|string',
-            'location' => 'required|string',
-        ];
+        // if ($validator->fails()) {
+        //     return redirect()->back()->withErrors($validator)->withInput();
+        // }
 
-        $this->validate($request, $rules);
-        $data['sub_wholesale'] = [
-            'region' => $request->region,
-            'sm_name' => $request->sm_name,
-            'rsm_name' => $request->rsm_name,
-            'asm_name' => $request->asm_name,
-            'sup_name' => $request->sup_name,
-            'se_name' => $request->se_name,
-            'se_code' => $request->se_code,
-            'customer_code' => $request->customer_code,
-            'depo_contact' => $request->depo_contact,
-            'depo_name' => $request->depo_name,
-            'subwholesale_name' => $request->subwholesale_name,
-            'subwholesale_contact' => $request->subwholesale_contact,
-            'business_type' => $request->business_type,
-            'sale_kpi' => $request->sale_kpi,
-            'display_qty' => $request->display_qty,
-            'foc_qty' => $request->foc_qty,
-            'remark' => $request->remark,
-            'apply_user' => auth()->id(),
-            'location' => $request->location,
-        ];
+        $data = $validator->validated();
 
-        // Store report data
-        Display_subwholesale::create($data['sub_wholesale']);
+        // Add apply user
+        $data['apply_user'] = auth()->id();
+
+        // Insert to DB
+        Display_subwholesale::create($data);
+
+        // Send notifications to admins + manager
         $adminUsers = User::whereIn('role_id', [
             AppHelper::USER_SUPER_ADMIN,
             AppHelper::USER_ADMIN
         ])->pluck('id')->toArray();
 
-        $managerId = auth()->user()->manager_id;
-
         $notificationUsers = $adminUsers;
 
+        $managerId = auth()->user()->manager_id;
         if ($managerId) {
             $notificationUsers[] = $managerId;
         }
 
-        // Remove duplicate user IDs (if any)
         $notificationUsers = array_unique($notificationUsers);
 
         event(new ReportRequest(
-            __("A new report has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
+            __('A new report has been created by ') . auth()->user()->family_name . ' ' . auth()->user()->name,
             $notificationUsers
         ));
-        return redirect()->route('displaysub.index')->with('success', "Report has been created!");
+
+        return redirect()->route('displaysub.index')->with('success', 'Report has been created!');
     }
 
     /**
@@ -277,20 +266,33 @@ class DisplaysubwholesaleController extends Controller
      */
     public function show($id)
     {
-        // dd('HI Show');
-
         $report = Display_subwholesale::with('user')->find($id);
-        $picture = SubwholesalePicture::where('subwholesale_id', $id)->get();
+        $picture = SubwholesalePicture::where('subwholesale_id', $id)->orderBy('id', 'desc')->get();
         $showPicture = '';
-        if ($picture) {
+
+        if ($picture->isNotEmpty()) {
             foreach ($picture as $pic) {
+                $imageUrl = asset('storage/' . $pic->picture);
+                $latitude = $pic->latitude ?? '';
+                $longitude = $pic->longitude ?? '';
+                $city = $pic->city ?? '';
+                $country = $pic->country ?? '';
+                $dateFormatted = Carbon::parse($pic->created_at)->format('d M Y h:i:s A');
+
                 $showPicture .= '
-                    <div class="col-md-6 mb-2">
-                        <img src="' . asset('storage/' . $pic->picture) . '" class="img-fluid" style="max-width: 100%; height: auto;" />
-                        <p class="text-center mt-2"><b>' . __("Picture dated") . '</b> : ' . Carbon::parse($pic->created_at)->format('d-m-Y H:i:s A') . '</p>
-                    </div>';
+            <div class="col-md-6 mb-2">
+                <div class="img-bg" style="height: 400px; background-image: url(\'' . $imageUrl . '\');">
+                    <div class="lat-long">
+                        <p>' . $latitude . ', ' . $longitude . '</p>
+                        <p>' . $city . ', ' . $country . '</p>
+                        <p>' . $dateFormatted .'</p>
+                    </div>
+                </div>
+            </div>
+        ';
             }
         }
+
         if (!$report) {
             return response()->json(['error' => 'Report not found'], 404);
         }
@@ -311,34 +313,37 @@ class DisplaysubwholesaleController extends Controller
                 'modalEmployeeName' => $employee_name,
                 'modalIdCard' => $user->staff_id_card ?? 'N/A',
                 'modalRegion' => $report->region ?? 'N/A',
+                'modalProvince' => $report->province ?? 'N/A',
+                'modalDistrict' => $report->district ?? 'N/A',
+                'modalCommune' => $report->commune ?? 'N/A',
                 'modalSmName' => $report->sm_name ?? 'N/A',
                 'modalRsmName' => $report->rsm_name ?? 'N/A',
                 'modalAsmName' => $report->asm_name ?? 'N/A',
-                'modalSupName' => $report->sup_name ?? 'N/A',
                 'modalSeName' => $report->se_name ?? 'N/A',
                 'modalSeCode' => $report->se_code ?? 'N/A',
                 'modalCustomerCode' => $report->customer_code ?? 'N/A',
-                'modalDepoName' => $report->depo_name ?? 'N/A',
-                'modalDepoContact' => $report->depo_contact ?? 'N/A',
-                'modalWholesaleName' => $report->subwholesale_contact ?? 'N/A',
-                'modalWholesaleContact' => $report->subwholesale_contact ?? 'N/A',
-                'modalBusinessType' => $report->business_type ?? 'N/A',
+                'modalDepoName' => $report->depot_name ?? 'N/A',
+                'modalDepoContact' => $report->depot_contact ?? 'N/A',
+                'modalWholesaleName' => $report->sub_ws_name ?? 'N/A',
+                'modalWholesaleContact' => $report->sub_ws_contact ?? 'N/A',
+                'modalBusinessType' => $report->outlet_type ?? 'N/A',
                 'modalSaleKPI' => $report->sale_kpi ?? 'N/A',
                 'modalDisplayQty' => $report->display_qty ?? 'N/A',
-                'modalFOC600ml' => $report->foc_qty ?? 'N/A',
+                'modalSKU' => $report->sku ?? 'N/A' . ' ML',
+                'modalIncentive' => $report->incentive ?? 'N/A',
                 'modalRemark' => $report->remark ?? 'N/A',
-                'modalLocation' => $report->location ?? 'N/A',
-                'modalCreateDate' => $report->created_at ? $report->created_at->format('d-m-Y h:i:s A') : 'N/A',
+                'modalCreateDate' => $report->created_at ? $report->created_at->format('d-M-Y h:i:s A') : 'N/A',
             ],
             'picture' => $showPicture
         ]);
     }
 
-    public function import(){
+    public function import()
+    {
         // dd('Import data here');
         $report = null;
         // dd('HI Wholesale');
-        $customer = null; // Assuming $customer is used for editing; null for create
+        $customer = null;  // Assuming $customer is used for editing; null for create
         $customers = [];
         $report = null;
         $customerType = AppHelper::CUSTOMER_TYPE;
@@ -351,17 +356,16 @@ class DisplaysubwholesaleController extends Controller
 
         // dd($customers);
 
-        return view('backend.sub-wholesale.import', compact('customer', 'customers','report','customerType', 'selectUsers'));
+        return view('backend.sub-wholesale.import', compact('customer', 'customers', 'report', 'customerType', 'selectUsers'));
         // return view('backend.sub-wholesale.import', compact('report', 'customers'));
     }
-
 
     // store import file as excel
     public function saveImport(Request $request)
     {
         // dd("HI iMport");
-         $validator = Validator::make($request->all(), [
-            'file' => 'required|mimes:xlsx,xls,csv|max:2048', // Added max size limit
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',  // Added max size limit
             'employee' => 'required|string',
         ]);
 
@@ -373,33 +377,14 @@ class DisplaysubwholesaleController extends Controller
         $employee_id = $request->employee;
 
         // Import the file
-         $import = Excel::import(new SubwholesaleImport($employee_id), $file);
-        if($import == true){
+        $import = Excel::import(new SubwholesaleImport($employee_id), $file);
+        if ($import == true) {
             return redirect()->back()->with('success', __('Data has imported successfully.'));
-        }else return redirect()->back()->with('error', __('Failed to imported data.'))->withInput();
+        } else
+            return redirect()->back()->with('error', __('Failed to imported data.'))->withInput();
 
         // dd('File imported successfully.');
     }
-
-
-    public function getCustomersByArea(Request $request)
-    {
-        $areaId = $request->query('area_id');
-        $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'outlet']);
-
-        // Extract unique outlet values
-        $outlets = $customers->pluck('outlet')->unique()->filter()->map(function ($outlet, $index) {
-            return ['id' => $index + 1, 'name' => $outlet];
-        })->values();
-        // dd($outlets);
-        return response()->json([
-            'customers' => $customers->map(function ($customer) {
-                return ['id' => $customer->id, 'name' => $customer->name];
-            }),
-            'outlets' => $outlets
-        ]);
-    }
-
 
     /**
      * Show the form for editing the specified resource.
@@ -417,65 +402,51 @@ class DisplaysubwholesaleController extends Controller
         // $dataRetail = null;
         $report = Display_subwholesale::find($id);
         $dataRetail = null;
-        $customer = null; // Assuming $customer is used for editing; null for create
+        $customer = null;  // Assuming $customer is used for editing; null for create
         $customers = [];
-        $takePicture = null; // Assuming this is used for taking pictures, set to null for create
+        $takePicture = null;  // Assuming this is used for taking pictures, set to null for create
         $customerType = AppHelper::CUSTOMER_TYPE;
         $areaId = old('area', $customer->area_id ?? '');
         return view('backend.sub-wholesale.add', compact('customer', 'customers', 'report', 'customerType', 'takePicture', 'dataRetail'));
     }
 
-
-
     public function update(Request $request, $id)
     {
         $report = Display_subwholesale::findOrFail($id);
-        $rules = [
-            'region' => 'required|string',
-            'sm_name' => 'required|string',
-            'rsm_name' => 'required|string',
-            'asm_name' => 'required|string',
-            'sup_name' => 'required|string',
-            'se_name' => 'required|string',
-            'se_code' => 'required|string',
-            'customer_code' => 'required|string',
-            'depo_contact' => 'required|string',
-            'depo_name' => 'required|string',
-            'subwholesale_name' => 'required|string',
-            'subwholesale_contact' => 'required|string',
-            'business_type' => 'required|string',
-            'sale_kpi' => 'required|string',
-            'display_qty' => 'required|integer|min:0',
-            'foc_qty' => 'required|integer|min:0',
-            'remark' => 'nullable|string',
-            'location' => 'required|string',
-        ];
+        $validator = Validator::make($request->all(), [
+            'region' => ['required', 'string'],
+            'province' => ['required', 'string'],
+            'district' => ['required', 'string'],
+            'commune' => ['required', 'string'],
+            'sm_name' => ['required', 'string'],
+            'rsm_name' => ['required', 'string'],
+            'asm_name' => ['required', 'string'],
+            'se_name' => ['required', 'string'],
+            'se_code' => ['required', 'string'],
+            'customer_code' => ['required', 'string'],
+            'depot_contact' => ['required', 'string'],
+            'depot_name' => ['required', 'string'],
+            'sub_ws_name' => ['required', 'string'],
+            'sub_ws_contact' => ['required', 'string'],
+            'outlet_type' => ['required', 'string'],
+            'sale_kpi' => ['required', 'string'],
+            'display_qty' => ['required', 'integer', 'min:0'],
+            'sku' => ['required', 'integer', 'min:0'],
+            'incentive' => ['required', 'integer', 'min:0', 'max:100'],
+            'remark' => ['nullable', 'string'],
+        ]);
 
-        $this->validate($request, $rules);
-        $data['sub-wholesale'] = [
-            'region' => $request->region,
-            'sm_name' => $request->sm_name,
-            'rsm_name' => $request->rsm_name,
-            'asm_name' => $request->asm_name,
-            'sup_name' => $request->sup_name,
-            'se_name' => $request->se_name,
-            'se_code' => $request->se_code,
-            'customer_code' => $request->customer_code,
-            'depo_contact' => $request->depo_contact,
-            'depo_name' => $request->depo_name,
-            'subwholesale_name' => $request->subwholesale_name,
-            'subwholesale_contact' => $request->subwholesale_contact,
-            'business_type' => $request->business_type,
-            'sale_kpi' => $request->sale_kpi,
-            'display_qty' => $request->display_qty,
-            'foc_qty' => $request->foc_qty,
-            'remark' => $request->remark,
-            'apply_user' => auth()->id(),
-            'location' => $request->location,
-        ];
+        // if ($validator->fails()) {
+        //     return redirect()->back()->withErrors($validator)->withInput();
+        // }
+
+        $data = $validator->validated();
+
+        // Add apply user
+        $data['apply_user'] = auth()->id();
 
         // Store report data
-        $report->update($data['sub-wholesale']);
+        $report->update($data);
         return redirect()->route('displaysub.index')->with('success', 'Report has been updated!');
 
         // $update = $report->update($data['sub_wholesale']);
@@ -483,7 +454,8 @@ class DisplaysubwholesaleController extends Controller
         // else return redirect()->route('displaysub.index')->with('error', "Report has not updated!");
     }
 
-    public function getPictures($id){
+    public function getPictures($id)
+    {
         $takePicture = true;
         $customers = null;
         $customer = null;
@@ -493,9 +465,8 @@ class DisplaysubwholesaleController extends Controller
         if (!$report) {
             return redirect()->route('displaysub.index')->with('error', 'Report not found!');
         }
-        return view('backend.sub-wholesale.take-photo', compact('report', 'customers', 'customer','customerType', 'takePicture'));
+        return view('backend.sub-wholesale.take-photo', compact('report', 'customers', 'customer', 'customerType', 'takePicture'));
     }
-
 
     public function storePicture(Request $request, $id)
     {
@@ -507,18 +478,18 @@ class DisplaysubwholesaleController extends Controller
         // dd($request->file());
         // dd($request->all());
 
-
         // Validate the request
         $request->validate([
             'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
             'photo_base64' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'city' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
             // 'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
-
         ]);
 
-
-
-        if($request->hasFile('photo')) {
+        if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
             $filePath = 'uploads/subwholesale-img/' . $fileName;
@@ -539,13 +510,18 @@ class DisplaysubwholesaleController extends Controller
         // dd($data['photo']);
 
         $data['storePicture'] = [
-            'subwholesale_id' =>  $id,
-            'picture' => $data['photo']
+            'subwholesale_id' => $id,
+            'picture' => $data['photo'],
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $request->city,
+            'country' => $request->country,
         ];
         $storePicture = SubwholesalePicture::create($data['storePicture']);
-        if($storePicture == true) return redirect()->route('displaysub.index')->with('success', 'Take picture has successfully.');
-        else return redirect()->route('displaysub.index')->with('error', 'Take picture has not successfully.');
-
+        if ($storePicture == true)
+            return redirect()->route('displaysub.index')->with('success', 'Take picture has successfully.');
+        else
+            return redirect()->route('displaysub.index')->with('error', 'Take picture has not successfully.');
 
         // Handle file upload
         // if ($request->hasFile('photo')) {
@@ -560,21 +536,16 @@ class DisplaysubwholesaleController extends Controller
         // return redirect()->route('retail.index')->with('success', "Picture has been uploaded!");
     }
 
-
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($id) {}
+
+    public function export(Request $request)
     {
-
-    }
-
-
-
-    public function export(Request $request){
         if ($request->has('date1') && $request->has('date2') && $request->has('full_name')) {
             return Excel::download(
-                new SubwholesaleExport ($request->date1, $request->date2, $request->full_name, $request),
+                new SubwholesaleExport($request->date1, $request->date2, $request->full_name, $request),
                 'sub-wholesale_export_' . now()->format('Y_m_d_His') . '.xlsx'
             );
         } else {
@@ -584,7 +555,6 @@ class DisplaysubwholesaleController extends Controller
             );
         }
     }
-
 
     public function getReports()
     {
@@ -617,7 +587,6 @@ class DisplaysubwholesaleController extends Controller
         // return response()->json($reports);
     }
 
-
     public function markAsSeen()
     {
         // $user = auth()->user();
@@ -632,5 +601,4 @@ class DisplaysubwholesaleController extends Controller
 
         // return response()->json(['success' => true]);
     }
-
 }

@@ -50,6 +50,7 @@ class PosmController extends Controller
         // dd($request->input());
 
         $request->validate([
+            'code' => 'required|string|max:255|min:3|unique:posms,code',
             'name_kh' => 'required|string|max:255|min:3',
             'name_en' => 'required|string|max:255|min:3',
             'status' => 'nullable|in:0,1',
@@ -60,6 +61,7 @@ class PosmController extends Controller
             $status = 0;
         }
         $posm = Posm::create([
+            'code' => $request->input('code'),
             'name_kh' => $request->input('name_kh'),
             'name_en' => $request->input('name_en'),
             'status' => $status,
@@ -98,6 +100,7 @@ class PosmController extends Controller
         // dd($request->input());
         $posm = Posm::findOrFail($id);
         $request->validate([
+            'code' => 'required|string|max:255|min:3|unique:posms,code,'.$id.',id',
             'name_kh' => 'required|string|max:255|min:3',
             'name_en' => 'required|string|max:255|min:3',
             'status' => 'nullable|in:0,1',
@@ -108,6 +111,7 @@ class PosmController extends Controller
             $status = 0;
         }
         $posm->update([
+            'code' => $request->input('code'),
             'name_kh' => $request->input('name_kh'),
             'name_en' => $request->input('name_en'),
             'status' => $status,

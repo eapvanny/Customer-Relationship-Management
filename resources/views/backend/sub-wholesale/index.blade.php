@@ -31,11 +31,39 @@
             color: rgb(0, 121, 190);
             text-decoration: underline;
         }
-        .text{
+
+        .text {
             line-height: 20px !important;
         }
-        .text p{
+
+        .text p {
             margin: 0 !important;
+        }
+
+        .img-bg {
+            width: 100%;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+            position: relative !important;
+            object-fit: cover !important;
+        }
+
+        .lat-long {
+            position: absolute !important;
+            top: 5px !important;
+            background: #ffffff94;
+            padding: 0 5px;
+            width: fit-content;
+
+        }
+        .lat-long p{
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 10px;
+        }
+        .fs-small{
+            font-size: medium;
         }
     </style>
 @endsection
@@ -99,7 +127,7 @@
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
                     <h1>
-                        {{ __('Wholesale List') }}
+                        {{ __('Sub-Wholesale List') }}
                     </h1>
                     <div class="box-tools pull-right">
                         <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
@@ -176,7 +204,8 @@
                                     </div> --}}
                                     <div class="row" style="margin-bottom: -20px">
                                         <div class="col-12">
-                                            <a class="btn btn-success btn-sm" href="{{ route('displaysub.export', request()->all()) }}"><i
+                                            <a class="btn btn-success btn-sm"
+                                                href="{{ route('displaysub.export', request()->all()) }}"><i
                                                     class="fa-solid fa-download"></i> {{ __('Export') }}</a>
                                         </div>
                                     </div>
@@ -195,53 +224,55 @@
                                             <th>{{ __('No') }}</th>
                                             <th> {{ __('Staff Info') }} </th>
                                             <th>{{ __('Region') }}</th>
-
-                                            {{-- <th>{{ __('ASM Name') }}</th>
-                                            <th>{{ __('SE Info') }}</th> --}}
+                                            <th>{{ __('Address') }}</th>
                                             <th>{{ __('Customer Code') }}</th>
-                                            <th>{{ __('Depo Info') }}</th>
-                                            {{-- <th>{{ __('WS Info') }}</th> --}}
-                                            <th>{{ __('Business Type') }}</th>
+                                            <th>{{ __('Depot') }}</th>
+                                            <th>{{ __('Outlet Type') }}</th>
                                             <th>{{ __('Display QTY') }}</th>
-                                            <th>{{ __('FOC 600ML') }}</th>
-                                            <th>{{ __('Location') }}</th>
+                                            <th>{{ __('FOC') }}</th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($reports as $key => $item)
                                             <tr>
-                                                <th>{{ $key+1 }}</th>
+                                                <th>{{ $key + 1 }}</th>
                                                 <td class="text text-start">
-                                                    <p>ID: {{ $item->user->staff_id_card}}</p>
-                                                    <p>{{ $item->user->family_name . ' ' . $item->user->name}}</p>
+                                                    <p>ID: {{ $item->user->staff_id_card }}</p>
+                                                    <p>{{ $item->user->family_name . ' ' . $item->user->name }}</p>
                                                 </td>
                                                 <td class="text">
-                                                    {{$item->region}}
+                                                    {{ $item->region }}
                                                 </td>
-                                                <td>{{$item->customer_code}}</td>
                                                 <td class="text text-start">
-                                                    <p>{{$item->depo_name}}</p>
-                                                    <p>{{$item->depo_contact}}</p>
+                                                    <p> {{ $item->province }}</p>
+                                                    <p> {{ $item->district }}</p>
+                                                    <p> {{ $item->commune }}</p>
+                                                </td>
+                                                <td>{{ $item->customer_code }}</td>
+                                                <td class="text text-start">
+                                                    <p>{{ $item->depot_name }}</p>
+                                                    <p>{{ $item->depot_contact }}</p>
                                                 </td>
                                                 <td>
-                                                    {{$item->business_type}}
+                                                    {{ $item->outlet_type }}
                                                 </td>
-                                                <td>{{$item->display_qty}}</td>
-                                                <td>{{$item->foc_qty}}</td>
-                                                <td>{{$item->location}}</td>
+                                                <td>{{ $item->display_qty }}</td>
+                                                <td>{{ $item->sku }} ML x {{ $item->incentive }}</td>
                                                 <td class="text-center">
                                                     <a href="javascript:void(0);" class="img-detail me-2"
                                                         data-id="{{ $item->id }}" title="{{ __('View') }}"><i
                                                             class="fa fa-eye"></i></a>
                                                     @hasTypePermission('update sub-wholesale')
-                                                        <a href="{{ route('displaysub.edit', $item->id) }}" class="text-success me-2"
-                                                            title="{{ __('Edit') }}"><i class="fa fa-edit"></i></a>
+                                                        <a href="{{ route('displaysub.edit', $item->id) }}"
+                                                            class="text-success me-2" title="{{ __('Edit') }}"><i
+                                                                class="fa fa-edit"></i></a>
                                                     @endHasTypePermission
 
                                                     @hasTypePermission('take photo sub-wholesale')
-                                                        <a href="{{ route('displaysub.takePicture', $item->id) }}" class="text-secondary"
-                                                            title="{{ __('Camera') }}"><i class="fa fa-camera"></i></a>
+                                                        <a href="{{ route('displaysub.takePicture', $item->id) }}"
+                                                            class="text-secondary" title="{{ __('Camera') }}"><i
+                                                                class="fa fa-camera"></i></a>
                                                     @endHasTypePermission
                                                 </td>
                                             </tr>
@@ -286,31 +317,47 @@
 
                                     <div class="col-md-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><strong>{{ __('Staff ID') }}:</strong> <span
-                                                    id="modalIdCard"></span></li>
-                                            <li class="list-group-item"> <strong>{{ __('Employee Name') }}:</strong> <span
-                                                    id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><strong>{{ __('Region') }} :</strong> <span
-                                                    id="modalRegion"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("SM's Name") }} :</strong> <span
-                                                    id="modalSmName"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("RSM's Name") }} :</strong> <span
-                                                    id="modalRsmName"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("ASM's Name") }} :</strong> <span
-                                                    id="modalAsmName"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("SUP's Name") }} :</strong> <span
-                                                    id="modalSupName"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("SE's Name") }} :</strong> <span
-                                                    id="modalSeName"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("SE's Code") }} :</strong> <span
-                                                    id="modalSeCode"></span></li>
-                                            <li class="list-group-item"><strong>{{ __("Customer's Code") }} :</strong>
-                                                <span id="modalCustomerCode"></span>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Employee Name') }}:</strong> <span
+                                                    id="modalEmployeeName"></span>
                                             </li>
 
-                                            <li class="list-group-item"><strong>{{ __("Depo's Name") }} :</strong>
-                                                <span id="modalDepoName"></span>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Region') }} :</strong> <span id="modalRegion"></span>
                                             </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Province') }} :</strong> <span id="modalProvince"></span>
+                                            </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('District') }} :</strong> <span id="modalDistrict"></span>
+                                            </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Commune') }} :</strong> <span id="modalCommune"></span>
+                                            </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("SM's Name") }} :</strong> <span id="modalSmName"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("RSM's Name") }} :</strong> <span id="modalRsmName"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("ASM's Name") }} :</strong> <span id="modalAsmName"></span>
+                                            </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("SE's Name") }} :</strong> <span id="modalSeName"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("SE's Code") }} :</strong> <span id="modalSeCode"></span>
+                                            </li>
+
 
                                             {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
                                         </ul>
@@ -318,37 +365,64 @@
 
                                     <div class="col-md-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><strong>{{ __("Depot Contact") }} :</strong>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("Customer's Code") }} :</strong>
+                                                <span id="modalCustomerCode"></span>
+                                            </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __("Depot's Name") }} :</strong>
+                                                <span id="modalDepoName"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Depot Contact') }} :</strong>
                                                 <span id="modalDepoContact"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{ __('WS Name') }} :</strong>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Sub-WS Name') }} :</strong>
                                                 <span id="modalWholesaleName"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{ __('WS Contact') }} :</strong>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Sub-WS Contact') }} :</strong>
                                                 <span id="modalWholesaleContact"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{ __('Business Type') }} :</strong> <span
-                                                    id="modalBusinessType"></span></li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Outlet Type') }} :</strong> <span
+                                                    id="modalBusinessType"></span>
+                                            </li>
 
-                                            <li class="list-group-item"><strong>{{ __('Sale KPI') }} :</strong> <span
-                                                    id="modalSaleKPI"></span></li>
-                                            <li class="list-group-item"><strong>{{ __('Display QTY') }} :</strong>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Sale KPI') }} :</strong> <span id="modalSaleKPI"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Display QTY') }} :</strong>
                                                 <span id="modalDisplayQty"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{ __('FOC 600ML') }} :</strong> <span
-                                                    id="modalFOC600ml"></span></li>
-                                            <li class="list-group-item"><strong>{{ __('Remark') }} :</strong> <span
-                                                    id="modalRemark"></span></li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('SKU') }} :</strong> <span id="modalSKU"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Incentive') }} :</strong> <span id="modalIncentive"></span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Remark') }} :</strong> <span id="modalRemark"></span>
+                                            </li>
 
-                                            <li class="list-group-item"><strong>{{ __('Location') }} :</strong> <span
-                                                    id="modalLocation"></span></li>
-                                            </li>
-                                            <li class="list-group-item"><strong>{{ __('Create date') }} :</strong> <span
-                                                    id="modalCreateDate"></span></li>
-                                            </li>
+
                                         </ul>
                                     </div>
 
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <ul class="list-group list-group-unbordered profile-log">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>{{ __('Create date') }} :</strong> <span
+                                                    id="modalCreateDate"></span>
+                                            </li>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -420,7 +494,7 @@
                 var reportId = $(this).data('id');
                 $('#viewModal').modal('show');
 
-                var url = '{{ route("displaysub.show", ":id") }}'.replace(':id', reportId);
+                var url = '{{ route('displaysub.show', ':id') }}'.replace(':id', reportId);
                 $.ajax({
                     url: url,
                     method: 'GET',
@@ -431,10 +505,13 @@
                         $('#modalIdCard').text(report.modalIdCard);
 
                         $('#modalRegion').text(report.modalRegion);
+                        $('#modalProvince').text(report.modalProvince);
+                        $('#modalDistrict').text(report.modalDistrict);
+                        $('#modalCommune').text(report.modalCommune);
+
                         $('#modalSmName').text(report.modalSmName);
                         $('#modalRsmName').text(report.modalRsmName);
                         $('#modalAsmName').text(report.modalAsmName);
-                        $('#modalSupName').text(report.modalSupName);
                         $('#modalSeName').text(report.modalSeName);
                         $('#modalSeCode').text(report.modalSeCode);
                         $('#modalCustomerCode').text(report.modalCustomerCode);
@@ -446,9 +523,11 @@
                         $('#modalBusinessType').text(report.modalBusinessType);
                         $('#modalSaleKPI').text(report.modalSaleKPI);
                         $('#modalDisplayQty').text(report.modalDisplayQty);
-                        $('#modalFOC600ml').text(report.modalFOC600ml);
+
+                        $('#modalSKU').text(report.modalSKU);
+                        $('#modalIncentive').text(report.modalIncentive);
+
                         $('#modalRemark').text(report.modalRemark);
-                        $('#modalLocation').text(report.modalLocation);
                         $('#modalCreateDate').text(report['modalCreateDate']);
                         $('#showPictures').html(response.picture);
                     },

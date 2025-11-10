@@ -13,9 +13,10 @@ class PosmExport implements FromView
     */
     public function view(): View
     {
-        $posm = Posm::all();
+        $posm = Posm::orderBy('id', 'desc')->get();
         return view('exports.posm-export', [
-            'posms' => $posm
+            'posms' => $posm,
+            'title' => __('POSM Material')
         ]);
     }
 }

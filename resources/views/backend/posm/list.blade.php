@@ -43,6 +43,7 @@
                                 <thead>
                                     <tr>
                                         <th>{{__("No")}}</th>
+                                        <th>{{ __('POSM Code') }}</th>
                                         <th>{{ __('POSM (KH)') }}</th>
                                         <th>{{ __('POSM (EN)') }}</th>
                                         <th>{{ __('Status') }}</th>
@@ -54,6 +55,7 @@
                                     @foreach ($posms as $key => $item)
                                     <tr>
                                         <th>{{$key+1}}</th>
+                                        <td class="text-start">{{ $item->code ?? 'N/A'}}</td>
                                         <td class="text-start">{{ $item->name_kh}}</td>
                                         <td class="text-start">{{ $item->name_en}}</td>
                                         <td>

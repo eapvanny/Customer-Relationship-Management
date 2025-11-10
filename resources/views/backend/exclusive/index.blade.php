@@ -3,7 +3,7 @@
 
 <!-- Page title -->
 @section('pageTitle')
-    {{ __('ASM Program') }}
+    {{ __('Exclusive Customer') }}
 @endsection
 <!-- End block -->
 
@@ -32,7 +32,8 @@
     <section class="content-header">
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li class="active"> {{ __('ASM Program') }} </li>
+            <li class="active"> {{ __('Exclusive Customer') }} </li>
+            {{-- <li class="active text-capitalize"> {{ __("School") }} </li>    --}}
         </ol>
     </section>
     <!-- ./Section header -->
@@ -82,8 +83,8 @@
             @endif
             <div class="col-md-12">
                 <div class="wrap-outter-header-title">
-                    <h1>
-                        {{ __('ASM Program Report List') }}
+                    <h1 class="text-capitalize">
+                        {{ __('Exclusive Customer') }}
                         {{-- <small class="toch"> {{ __('List') }} </small> --}}
                     </h1>
                     <div class="box-tools pull-right">
@@ -91,7 +92,7 @@
                             data-bs-target="#filterContainer">
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
-                        <a class="btn btn-info text-white" href="{{ URL::route('asm.create') }}"><i
+                        <a class="btn btn-info text-white" href="{{ URL::route('exclusive.create') }}"><i
                                 class="fa fa-plus-circle"></i> {{ __('Add New') }} </a>
                     </div>
                 </div>
@@ -101,7 +102,7 @@
                         <div class="box-header">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <form action="{{ route('asm.index') }}" method="GET" id="filterForm">
+                                    <form action="{{ route('exclusive.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif "
                                             id="filterContainer">
                                             <a id="close_filter" class="btn btn-outline-secondary btn-sm"
@@ -152,7 +153,7 @@
                                                         class="btn btn-outline-secondary btn-sm float-end" type="submit">
                                                         <i class="fa-solid fa-magnifying-glass"></i> {{ __('Apply') }}
                                                     </button>
-                                                    <a href="{{ route('asm.index') }}"
+                                                    <a href="{{ route('exclusive.index') }}"
                                                         class="btn btn-outline-secondary btn-sm float-end me-1">
                                                         <i class="fa-solid fa-xmark"></i> {{ __('Cancel') }}
                                                     </a>
@@ -164,7 +165,7 @@
                                         <div class="col-12">
                                             {{-- <a class="btn btn-success btn-sm" href="{{ route('asm.export') }}"><i class="fa-solid fa-download"></i> {{ __('Export') }}</a> --}}
                                             <a class="btn btn-success btn-sm"
-                                                href="{{ route('asm.export') }}{{ request()->has('date1') ? '?date1=' . request('date1') . '&date2=' . request('date2') . '&are_id=' . request('are_id') : '' }}">
+                                                href="{{ route('exclusive.export') }}{{ request()->has('date1') ? '?date1=' . request('date1') . '&date2=' . request('date2') . '&are_id=' . request('are_id') : '' }}">
                                                 <i class="fa-solid fa-download"></i> {{ __('Export') }}
                                             </a>
                                             {{-- <a type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exportFilterModal"><i class="fa-solid fa-download"></i> {{ __('Export') }}</a> --}}
@@ -262,7 +263,7 @@
                                                         @endif
                                                     </span>
                                                     {{-- <span class="d-block"><i class="fa-solid fa-crosshairs text-muted"></i> {{ $report->user->position }}</span> --}}
-                                                    <span class="d-block"><span class="text-muted">Tel:</span> {{ $report->user->phone_no }}</span>
+                                                    {{-- <span class="d-block"><span class="text-muted">Tel:</span> {{ $report->user->phone_no }}</span> --}}
                                                     <span class="d-block text-muted">{{ Carbon\Carbon::parse($report->created_at)->format('d-M-Y') }}</span>
 
                                                 </td>
@@ -270,22 +271,24 @@
                                                 <td>
                                                     <span class="d-block text-capitalize">{!! $report->CustomerProvince->name ?? '<span class="text-danger">N/A</span>' !!}</span>
                                                     <span class="d-block"><span class="text-muted">Tel: </span> {!! $report->CustomerProvince->phone ?? '<span class="text-danger">N/A</span>' !!}</span>
+                                                    <span>{{ \App\Http\Helpers\AppHelper::CUSTOMER_TYPE_PROVINCE[$report->customer_type] ?? 'N/A' }}</span>
+
                                                 </td>
-                                                <td>{!! $report->{'250_ml'} ?? '<span class="text-danger">N/A</span>' !!}</span></td>
-                                                <td>{!! $report->{'350_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
-                                                <td>{!! $report->{'600_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
-                                                <td>{!! $report->{'1500_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
+                                                <td class="text-center">{!! $report->{'250_ml'} ?? '<span class="text-danger">N/A</span>' !!}</span></td>
+                                                <td class="text-center">{!! $report->{'350_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
+                                                <td class="text-center">{!! $report->{'600_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
+                                                <td class="text-center">{!! $report->{'1500_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
 
                                                 {{-- <td class="text-center fw-bold">
-                                                    {{ intval($report->{'250_ml'} + $report->{'350_ml'} + $report->{'600_ml'} + $report->{'1500_ml'}) . " ". __('Boxes') }}
+                                                    {{ intval($report->{'250_ml'} + $report->{'350_ml'} + $report->{'600_ml'} + $report->{'1500_ml'}) . " ". __('CTN') }}
                                                 </td> --}}
 
                                                 <td class="text-center">
-                                                    <a href="{{ route('asm.show', $report->id) }}" class="img-detail me-2"
+                                                    <a href="{{ route('exclusive.show', $report->id) }}" class="img-detail me-2"
                                                         data-id="{{ $report->id }}" title="{{ __('View') }}"><i
                                                             class="fa fa-eye"></i></a>
-                                                    @hasTypePermission('update asm')
-                                                        <a href="{{ route('asm.edit', $report->id) }}" class="text-success"
+                                                    @hasTypePermission('update exclusive')
+                                                        <a href="{{ route('exclusive.edit', $report->id) }}" class="text-success"
                                                             title="{{ __('Edit') }}"><i class="fa fa-edit"></i></a>
                                                     @endHasTypePermission
                                                 </td>
@@ -307,172 +310,11 @@
         </div>
     </section>
 
-    <!-- Modal photo -->
-    <div class="modal modal-xl fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable" role="document">
-            <div class="modal-content rounded-0">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewModalLabel">{{ __('Report Details') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" id="btnClose"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body img-popup">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="report-details">
-                                <div class="row">
-                                    <div class="col-md-8 col-sm-8 col-lg-8 col-xl-8">
-                                        <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa fa-user"></i>
-                                                <strong>{{ __('Employee Name') }}:</strong> <span
-                                                    id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i>
-                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span>
-                                            </li>
-                                            <li class="list-group-item"><i class="fa-solid fa-chart-area"></i>
-                                                <strong>{{ __('Area') }} :</strong> <span id="modalArea"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-home"></i>
-                                                <strong>{{ __('Depot') }} :</strong> <span id="modalOutlet"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-user"></i>
-                                                <strong>{{ __('Customer') }} :</strong> <span id="modalCustomer"></span>
-                                            </li>
-                                            <li class="list-group-item"><i class="fa-solid fa-user"></i>
-                                                <strong>{{ __('Customer Type') }} :</strong> <span
-                                                    id="modalCustomerType"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-calendar-days"></i>
-                                                <strong>{{ __('Date') }} :</strong> <span id="modalDate"></span></li>
-
-                                            <li class="list-group-item"><i class="fa-solid fa-location-dot"></i>
-                                                <strong>{{ __('Address') }} :</strong> <span id="modalCity"></span></li>
-
-                                            {{-- <li class="list-group-item"><strong>{{__('Country')}} :</strong> <span id="modalCountry"></ </li> --}}
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
-                                        <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('250ml') }} :</strong> <span id="modal250ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('350ml') }} :</strong> <span id="modal350ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('600ml') }} :</strong> <span id="modal600ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('1500ml') }} :</strong> <span id="modal1500ml"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
-                                                <strong>{{ __('Other') }} :</strong> <span id="modalOther"></span></li>
-                                            <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i>
-                                                <strong>{{ __('Material Type') }} :</strong> <span id="modalPosm"></span>
-                                            </li>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
-                                                <strong>{{ __('Quantity') }} :</strong> <span id="modalQty"></span>
-                                            <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
-                                                <strong>{{ __('FOC Qty') }} :</strong> <span id="modalQtyFoc"></span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                        <div class="col-md-12 my-2">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <img style="border: 1px solid #cfcfcf;" id="modalPhotoFoc" src=""
-                                        class="img-fluid photo-detail" alt="Photo Detail">
-                                    <p class="text-center">{{ __('FOC Image') }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <img style="border: 1px solid #cfcfcf;" id="modalPhoto" src=""
-                                        class="img-fluid photo-detail" alt="Photo Detail">
-                                    <p class="text-center">{{ __('POSM Image') }}</p>
-
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btnClose"
-                        data-bs-dismiss="modal">{{ __('Close') }}</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- /.content -->
 @endsection
 <!-- END PAGE CONTENT-->
 
 <!-- BEGIN PAGE JS-->
-{{-- @section('extraScript')
-    <script type="text/javascript">
-        $(document).ready(function() {
-            Generic.initCommonPageJS();
-            Generic.initDeleteDialog();
-
-            $('#datatabble').DataTable();
-            // $.ajaxSetup({
-            //         headers: {
-            //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            //         }
-            //     });
-            //     t = $('#datatabble').DataTable({
-            //     processing: false,
-            //     serverSide: true,
-            //     ajax: {
-            //         url: "{!! route('role.index', request()->all()) !!}",
-            //     },
-            //     pageLength: 10,
-            //         columns: [{
-            //                 data: 'DT_RowIndex',
-            //                 name: 'DT_RowIndex',
-            //                 orderable: false,
-            //                 searchable: false
-            //             },
-            //             {
-            //                 data: 'name',
-            //                 name: 'name'
-            //             },
-            //             {
-            //                 data: 'permission',
-            //                 name: 'permission'
-            //             },
-            //             {
-            //                 data: 'action',
-            //                 name: 'action',
-            //                 orderable: false
-            //             }
-            //         ],
-            // });
-
-            //delete grade_level
-            $('#datatabble').delegate('.delete', 'click', function(e) {
-                let action = $(this).attr('href');
-                console.log()
-                $('#myAction').attr('action', action);
-                e.preventDefault();
-                swal({
-                    title: 'Are you sure?',
-                    text: 'You will not be able to recover this record!',
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dd4848',
-                    cancelButtonColor: '#8f8f8f',
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'No, keep it'
-                }).then((result) => {
-                    if (result.value) {
-                        $('#myAction').submit();
-                    }
-                });
-            });
-        });
-    </script>
-@endsection --}}
-
-
 
 @section('extraScript')
     <script type="text/javascript">

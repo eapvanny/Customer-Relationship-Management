@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                                            margin-bottom: 0px;
-                                        }
-
-                                        fieldset .iradio .error,
-                                        fieldset .icheck .error {
-                                            display: none !important;
-                                        }
-
-                                        @media (max-width: 600px) {
-                                            .display-flex {
-                                                display: inline-flex;
+                                                margin-bottom: 0px;
                                             }
-                                        } */
+
+                                            fieldset .iradio .error,
+                                            fieldset .icheck .error {
+                                                display: none !important;
+                                            }
+
+                                            @media (max-width: 600px) {
+                                                .display-flex {
+                                                    display: inline-flex;
+                                                }
+                                            } */
 
         .checkbox,
         .radio {
@@ -379,6 +379,8 @@
             transform: translateY(1px);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
+
     </style>
 @endsection
 
@@ -402,9 +404,8 @@
     </section>
 
     <section class="content">
-        <form novalidate id="entryForm"
-            action="{{ URL::Route('displaysub.storePicture', $report->id) }}"
-            method="post" enctype="multipart/form-data" autocomplete="off">
+        <form novalidate id="entryForm" action="{{ URL::Route('displaysub.storePicture', $report->id) }}" method="post"
+            enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
@@ -418,7 +419,7 @@
                                 @endif
                             </small>
                         </h1>
-                        <div class="box-tools pull-right">
+                        <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('displaysub.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
@@ -439,70 +440,70 @@
 
                     <div class="row">
                         {{-- <fieldset> --}}
-                            {{-- <legend>{{ __('Photo Attachment') }}</legend> --}}
-                            <div class="row">
-                                <div class="form-group has-feedback">
-                                    <div class="row">
-                                        <div class="row-12">
-                                            <div class="form-group has-feedback position-relative">
-                                                <input type="file" id="photo" name="photo"
-                                                    style="display: none" accept="image/*">
-                                                <button type="button"
-                                                    class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
-                                                    id="btn-remove-photo">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <fieldset id="photo-upload"
-                                                    class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
-                                                    <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
-                                                        id="photo-preview" name="oldphoto"
-                                                        src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
-                                                        alt="">
-                                                    <input type="hidden" id="img-preview" name="oldphoto"
-                                                        value="@if (optional($report)->photo) {{ asset($report->photo) }} @endif">
-                                                    <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
-                                                        id="open-camera-btn">
-                                                        <button class="btn p-3 rounded-circle" id="btn-upload-photo"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera-retro"></i>
-                                                        </button>
-                                                    </div>
-                                                    <label class="position-absolute bottom-0 text-center w-100 mb-2">
-                                                        {{ __('Click to open camera and capture photo') }}
-                                                    </label>
-                                                </fieldset>
-                                            </div>
-                                            <div id="camera-modal" class="camera-modal d-none">
-                                                <div class="camera-content">
-                                                    <div class="video-container position-relative">
-                                                        <video id="webcam" autoplay></video>
-                                                        <!-- Camera overlay for a realistic look -->
-                                                        <div class="camera-overlay">
-                                                            <div class="overlay-top"></div>
-                                                            <div class="overlay-bottom"></div>
-                                                            <div class="overlay-left"></div>
-                                                            <div class="overlay-right"></div>
-                                                            <div class="focus-circle"></div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="camera-controls">
-                                                        <button id="switch-camera-btn" class="btn switch-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-camera-rotate"></i>
-                                                        </button>
-                                                        <button id="capture-btn" class="btn capture-btn" type="button">
-                                                            <i class="fa-solid fa-camera"></i>
-                                                        </button>
-                                                        <button id="close-camera-btn" class="btn close-camera-btn"
-                                                            type="button">
-                                                            <i class="fa-solid fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                    <canvas id="canvas" class="d-none"></canvas>
+                        {{-- <legend>{{ __('Photo Attachment') }}</legend> --}}
+                        <div class="row">
+                            <div class="form-group has-feedback">
+                                <div class="row">
+                                    <div class="row-12">
+                                        <div class="form-group has-feedback position-relative">
+                                            <input type="file" id="photo" name="photo" style="display: none"
+                                                accept="image/*">
+                                            <button type="button"
+                                                class="btn btn-light text-secondary fs-5 position-absolute d-none m-2 end-0 z-1"
+                                                id="btn-remove-photo">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                            <fieldset id="photo-upload"
+                                                class="p-0 d-flex align-items-center justify-content-center z-0 position-relative">
+                                                <img class="rounded mx-auto d-block @if (!old('oldphoto') && !old('img-preview') && !isset($report)) {{ 'd-none' }} @endif z-1"
+                                                    id="photo-preview" name="oldphoto"
+                                                    src="@if (optional($report)->photo) {{ asset('storage/' . $report->photo) }}@else{{ old('oldphoto') }} @endif"
+                                                    alt="">
+                                                <input type="hidden" id="img-preview" name="oldphoto"
+                                                    value="@if (optional($report)->photo) {{ asset($report->photo) }} @endif">
+                                                <div class="d-flex align-items-center justify-content-center bg-transparent z-2 @if (!old('img-preview')) {{ 'opacity-100' }} @else {{ 'opacity-25' }} @endif"
+                                                    id="open-camera-btn">
+                                                    <button class="btn p-3 rounded-circle" id="btn-upload-photo"
+                                                        type="button">
+                                                        <i class="fa-solid fa-camera-retro"></i>
+                                                    </button>
                                                 </div>
+                                                <label class="position-absolute bottom-0 text-center w-100 mb-2">
+                                                    {{ __('Click to open camera and capture photo') }}
+                                                </label>
+                                            </fieldset>
+                                        </div>
+                                        <div id="camera-modal" class="camera-modal d-none">
+                                            <div class="camera-content">
+                                                <div class="video-container position-relative">
+                                                    <video id="webcam" autoplay></video>
+                                                    <!-- Camera overlay for a realistic look -->
+                                                    <div class="camera-overlay">
+                                                        <div class="overlay-top"></div>
+                                                        <div class="overlay-bottom"></div>
+                                                        <div class="overlay-left"></div>
+                                                        <div class="overlay-right"></div>
+                                                        <div class="focus-circle"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="camera-controls">
+                                                    <button id="switch-camera-btn" class="btn switch-camera-btn"
+                                                        type="button">
+                                                        <i class="fa-solid fa-camera-rotate"></i>
+                                                    </button>
+                                                    <button id="capture-btn" class="btn capture-btn" type="button">
+                                                        <i class="fa-solid fa-camera"></i>
+                                                    </button>
+                                                    <button id="close-camera-btn" class="btn close-camera-btn"
+                                                        type="button">
+                                                        <i class="fa-solid fa-times"></i>
+                                                    </button>
+                                                </div>
+                                                <canvas id="canvas" class="d-none"></canvas>
                                             </div>
                                         </div>
-                                        {{-- <div class="col-md-6">
+                                    </div>
+                                    {{-- <div class="col-md-6">
                                             <div class="row">
                                                 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="form-group has-feedback">
@@ -542,24 +543,27 @@
                                                 </div>
                                             </div>
                                         </div> --}}
-                                    </div>
                                 </div>
                             </div>
+                        </div>
                         {{-- </fieldset> --}}
                         <!-- Location Fields and Map -->
 
                         {{-- <h1>Hello</h1> --}}
-                        <div class="col-lg-12 col-md-12 col-xl-12 d-none">
+                        <div class="col-lg-12 col-md-12 col-xl-12">
                             <fieldset>
-                                <legend>{{ __('Location') }}</legend>
+                                <legend class="fs-6">{{ __('Location') }}</legend>
                                 <div class="row">
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
                                             <label for="latitude">{{ __('Latitude') }}<span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="latitude" id="latitude"
-                                                value="{{ isset($report) ? $report->latitude : old('latitude') }}"
-                                                readonly required>
+                                                placeholder="{{ __('Latitude') }}"
+                                                value="{{ isset($report) ? $report->latitude : old('latitude') }}" readonly
+                                                required>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('latitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -567,15 +571,22 @@
                                             <label for="longitude">{{ __('Longitude') }}<span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="longitude" id="longitude"
+                                                placeholder="{{ __('Longitude') }}"
                                                 value="{{ isset($report) ? $report->longitude : old('longitude') }}"
                                                 readonly required>
+
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('longitude') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
                                         <div class="form-group has-feedback">
                                             <label for="city">{{ __('Address') }}<span
                                                     class="text-danger">*</span></label>
-                                            <textarea class="form-control" name="city" id="city" cols="30" rows="1" readonly required>{{ isset($report) ? $report->city : old('city') }}</textarea>
+                                            <textarea class="form-control" name="city" placeholder="{{ __('Address') }}" id="city" cols="30"
+                                                rows="1" readonly required>{{ isset($report) ? $report->city : old('city') }}</textarea>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('city') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-md-6 col-xl-6">
@@ -583,8 +594,11 @@
                                             <label for="country">{{ __('Country') }}<span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="country" id="country"
+                                                placeholder="{{ __('Country') }}"
                                                 value="{{ isset($report) ? $report->country : old('country') }}" readonly
                                                 required>
+                                            <span class="fa fa-info form-control-feedback"></span>
+                                            <span class="text-danger">{{ $errors->first('country') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-lg-12 col-md-12 col-xl-12 mt-3">

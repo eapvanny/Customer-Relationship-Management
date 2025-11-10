@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
                 'staff_id_card' => '1280',
                 'family_name' => 'ឌី',
                 'name' => 'អេដមីន',
-                'family_name_latin' => 'Dy',
+                'family_name_latin' => 'Dy', 
                 'name_latin' => 'Admin',
                 'position' => 'Deallar',
                 'area' => 'ច្បារអំពៅ',

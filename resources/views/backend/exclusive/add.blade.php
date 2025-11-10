@@ -1,7 +1,7 @@
 @extends('backend.layouts.master')
 
 @section('pageTitle')
-    ASM Program
+    {{ __('Exclusive Customer') }}
 @endsection
 
 @section('bodyCssClass')
@@ -10,19 +10,19 @@
 @section('extraStyle')
     <style>
         /* fieldset .form-group {
-                                                    margin-bottom: 0px;
-                                                }
+                                                margin-bottom: 0px;
+                                            }
 
-                                                fieldset .iradio .error,
-                                                fieldset .icheck .error {
-                                                    display: none !important;
-                                                }
+                                            fieldset .iradio .error,
+                                            fieldset .icheck .error {
+                                                display: none !important;
+                                            }
 
-                                                @media (max-width: 600px) {
-                                                    .display-flex {
-                                                        display: inline-flex;
-                                                    }
-                                                } */
+                                            @media (max-width: 600px) {
+                                                .display-flex {
+                                                    display: inline-flex;
+                                                }
+                                            } */
 
         .checkbox,
         .radio {
@@ -395,7 +395,7 @@
     <section class="content-header">
         <ol class="breadcrumb">
             <li><a href="{{ URL::route('dashboard.index') }}"><i class="fa fa-dashboard"></i> {{ __('Dashboard') }} </a></li>
-            <li><a href="{{ URL::route('asm.index') }}"> {{ __('ASM Program') }} </a></li>
+            <li><a href="{{ URL::route('exclusive.index') }}"> {{ __('Exclusive Customer') }} </a></li>
             <li class="active">
                 @if ($report)
                     {{ __('Update') }}
@@ -408,13 +408,13 @@
 
     <section class="content">
         <form novalidate id="entryForm"
-            action="@if ($report) {{ URL::Route('asm.update', $report->id) }} @else {{ URL::Route('asm.store') }} @endif"
+            action="@if ($report) {{ URL::Route('exclusive.update', $report->id) }} @else {{ URL::Route('exclusive.store') }} @endif"
             method="post" enctype="multipart/form-data" autocomplete="off">
             <div class="row">
                 <div class="col-md-12">
                     <div class="wrap-outter-header-title">
                         <h1>
-                            {{ __('Customer Data') }}
+                            {{ __('Exclusive Customer') }}
                             <small class="toch">
                                 @if ($report)
                                     {{ __('Update') }}
@@ -424,7 +424,7 @@
                             </small>
                         </h1>
                         <div class="action-btn-top none_fly_action_btn">
-                            <a href="{{ URL::route('asm.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
+                            <a href="{{ URL::route('exclusive.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
                             <button type="submit" class="btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
@@ -738,55 +738,6 @@
                                                             class="text-danger">{{ $errors->first('foc_1500_qty') }}</span>
                                                     </div>
                                                 </div>
-
-                                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                                                    <div
-                                                        class="form-group has-feedback d-flex flex-row align-items-center">
-                                                        <input type="checkbox" id="foc_special" class="me-2"
-                                                            {{ old('foc_other', $report->foc_other ?? '') ? 'checked' : '' }}>
-                                                        <label for="foc_special" class="m-0 p-0 fw-bold">
-                                                            {{ __('FOC Special') }} </label>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12 {{ old('foc_other', $report->foc_other ?? '') ? '' : 'd-none' }}"
-                                                    id="foc_other_section">
-                                                    <div
-                                                        class="form-group has-feedback d-flex flex-row align-items-center gap-3">
-                                                        <select name="foc_other" id="foc_other"
-                                                            class="form-control select2" style="width: 300px;">
-                                                            <option value="">{{ __('Select FOC') }}</option>
-                                                            <option value="250"
-                                                                {{ old('foc_other', $report->foc_other ?? '') == '250' ? 'selected' : '' }}>
-                                                                {{ __('FOC 250ml') }}
-                                                            </option>
-                                                            <option value="350"
-                                                                {{ old('foc_other', $report->foc_other ?? '') == '350' ? 'selected' : '' }}>
-                                                                {{ __('FOC 350ml') }}
-                                                            </option>
-                                                            <option value="600"
-                                                                {{ old('foc_other', $report->foc_other ?? '') == '600' ? 'selected' : '' }}>
-                                                                {{ __('FOC 600ml') }}
-                                                            </option>
-                                                            <option value="1500"
-                                                                {{ old('foc_other', $report->foc_other ?? '') == '1500' ? 'selected' : '' }}>
-                                                                {{ __('FOC 1500ml') }}
-                                                            </option>
-                                                        </select>
-
-                                                        <input type="number" min="0" max="100"
-                                                            id="foc_other_qty" name="foc_other_qty" class="form-control"
-                                                            placeholder="{{ __('1 - 100') }}"
-                                                            value="{{ old('foc_other_qty', $report->foc_other_qty ?? '') }}">
-
-                                                        <span class="fa fa-info form-control-feedback"></span>
-                                                    </div>
-
-                                                    @error('foc_other_qty')
-                                                        <span class="text-danger">{{ $message }}</span>
-                                                    @enderror
-                                                </div>
-
                                             </div>
                                         </div>
                                     </div>
@@ -871,32 +822,27 @@
                                                                     <i class="fa fa-question-circle" data-toggle="tooltip"
                                                                         data-placement="bottom" title="Select POSM"></i>
                                                                 </label>
-                                                                <select name="posm_1" class="form-control select2"
-                                                                    id="posm_1">
-                                                                    <option value="">{{ __('Select POSM') }}
-                                                                    </option>
+                                                                <select name="posm_1" class="form-control select2" id="posm_1">
+                                                                    <option value="">{{ __('Select POSM') }}</option>
                                                                     @foreach ($posms as $p)
                                                                         <option value="{{ $p->id }}"
                                                                             {{ old('posm_1', $report->posm_1 ?? '') == $p->id ? 'selected' : '' }}>
-                                                                             {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                            {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
                                                                 <span class="form-control-feedback"></span>
-                                                                <span
-                                                                    class="text-danger">{{ $errors->first('posm_1') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('posm_1') }}</span>
                                                             </div>
                                                         </div>
                                                         <div class="col-3 col-sm-5 col-md-5 col-lg-5 col-xl-5">
                                                             <div class="form-group has-feedback">
                                                                 <label for="posm_1_qty"> {{ __('Quantity') }} </label>
-                                                                <input type="number" min="0" max="10"
-                                                                    class="form-control" name="posm_1_qty"
-                                                                    placeholder="{{ __('1 - 10') }}"
+                                                                <input type="number" min="0" max="10" class="form-control"
+                                                                    name="posm_1_qty" placeholder="{{ __('1 - 10') }}"
                                                                     value="{{ old('posm_1_qty', $report->posm_1_qty ?? '') }}">
                                                                 <span class="fa fa-info form-control-feedback"></span>
-                                                                <span
-                                                                    class="text-danger">{{ $errors->first('posm_1_qty') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('posm_1_qty') }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -910,32 +856,27 @@
                                                                     <i class="fa fa-question-circle" data-toggle="tooltip"
                                                                         data-placement="bottom" title="Select POSM"></i>
                                                                 </label>
-                                                                <select name="posm_2" class="form-control select2"
-                                                                    id="posm_2">
-                                                                    <option value="">{{ __('Select POSM') }}
-                                                                    </option>
+                                                                <select name="posm_2" class="form-control select2" id="posm_2">
+                                                                    <option value="">{{ __('Select POSM') }}</option>
                                                                     @foreach ($posms as $p)
                                                                         <option value="{{ $p->id }}"
                                                                             {{ old('posm_2', $report->posm_2 ?? '') == $p->id ? 'selected' : '' }}>
-                                                                            {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                             {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
                                                                 <span class="form-control-feedback"></span>
-                                                                <span
-                                                                    class="text-danger">{{ $errors->first('posm_2') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('posm_2') }}</span>
                                                             </div>
                                                         </div>
                                                         <div class="col-3 col-sm-5 col-md-5 col-lg-5 col-xl-5">
                                                             <div class="form-group has-feedback">
                                                                 <label for="posm_2_qty"> {{ __('Quantity') }} </label>
-                                                                <input type="number" min="0" max="10"
-                                                                    class="form-control" name="posm_2_qty"
-                                                                    placeholder="{{ __('1 - 10') }}"
+                                                                <input type="number" min="0" max="10" class="form-control"
+                                                                    name="posm_2_qty" placeholder="{{ __('1 - 10') }}"
                                                                     value="{{ old('posm_2_qty', $report->posm_2_qty ?? '') }}">
                                                                 <span class="fa fa-info form-control-feedback"></span>
-                                                                <span
-                                                                    class="text-danger">{{ $errors->first('posm_2_qty') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('posm_2_qty') }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -950,32 +891,27 @@
                                                                     <i class="fa fa-question-circle" data-toggle="tooltip"
                                                                         data-placement="bottom" title="Select POSM"></i>
                                                                 </label>
-                                                                <select name="posm_3" class="form-control select2"
-                                                                    id="posm_3">
-                                                                    <option value="">{{ __('Select POSM') }}
-                                                                    </option>
+                                                                <select name="posm_3" class="form-control select2" id="posm_3">
+                                                                    <option value="">{{ __('Select POSM') }}</option>
                                                                     @foreach ($posms as $p)
                                                                         <option value="{{ $p->id }}"
                                                                             {{ old('posm_3', $report->posm_3 ?? '') == $p->id ? 'selected' : '' }}>
-                                                                            {{ $p->code }} -  {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                             {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
                                                                 <span class="form-control-feedback"></span>
-                                                                <span
-                                                                    class="text-danger">{{ $errors->first('posm_3') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('posm_3') }}</span>
                                                             </div>
                                                         </div>
                                                         <div class="col-3 col-sm-5 col-md-5 col-lg-5 col-xl-5">
                                                             <div class="form-group has-feedback">
                                                                 <label for="posm_3_qty"> {{ __('Quantity') }} </label>
-                                                                <input type="number" min="0" max="10"
-                                                                    class="form-control" name="posm_3_qty"
-                                                                    placeholder="{{ __('1 - 10') }}"
+                                                                <input type="number" min="0" max="10" class="form-control"
+                                                                    name="posm_3_qty" placeholder="{{ __('1 - 10') }}"
                                                                     value="{{ old('posm_3_qty', $report->posm_3_qty ?? '') }}">
                                                                 <span class="fa fa-info form-control-feedback"></span>
-                                                                <span
-                                                                    class="text-danger">{{ $errors->first('posm_3_qty') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('posm_3_qty') }}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1708,17 +1644,12 @@
 
             // toggle FOC input
             $('#foc_special').on('change', function() {
-                const focSection = $('#foc_other_section');
-
+                var focSection = $('#foc_other_section');
                 if (this.checked) {
                     focSection.removeClass('d-none');
-                    $('#foc_other_qty').prop('required', true);
-                    $('#foc_other').prop('required', true);
                 } else {
                     focSection.addClass('d-none');
                     $('#foc_other').val('').trigger('change');
-                    $('#foc_other_qty').prop('required', false);
-                    $('#foc_other').prop('required', false);
                 }
             });
         });

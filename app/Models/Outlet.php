@@ -11,10 +11,18 @@ class Outlet extends Model
 
     protected $table = 'outlets';
     protected $fillable = [
-        'area_id',
-        'user_id',
-        'user_type',
         'name',
+        'phone',
+        'area_id',
+        'outlet_photo',
+        'latitude',
+        'longitude',
+        'city',
+        'country',
+        'code',
+        'customer_type',
+        'user_type',
+        'user_id',
         'active_status',
     ];
     public function user()

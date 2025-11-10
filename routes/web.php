@@ -8,7 +8,9 @@ use App\Http\Controllers\CustomerProvinceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepoController;
 use App\Http\Controllers\DisplaysubwholesaleController;
+use App\Http\Controllers\ExclusiveController;
 use App\Http\Controllers\GetmanagerController;
+use App\Http\Controllers\MCustomerController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PosmController;
@@ -175,9 +177,11 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/customers/get', [ProvinceReportController::class, 'getCustomersProvince'])->name('customers_pro.getName');
     Route::get('/customers/customer-type', [ProvinceReportController::class, 'getCustomerTypeProvince'])->name('customers.getCustomerType-pro');
     // Manager customer for marketing
-    // Route::resource('mcustomer', MCustomerController::class);
-    // Route::get('/mcustomer/province/by-area', [MCustomerController::class, 'getCustomersByArea'])->name('mcustomer.byArea');
-    // Route::get('/mcustomer/province/export', [MCustomerController::class, 'export'])->name('mcustomer.export');
+    // Manager customer for marketing
+    Route::resource('mcustomer', MCustomerController::class);
+    Route::get('/mcustomer/province/by-area', [MCustomerController::class, 'getCustomersByArea'])->name('mcustomer.byArea');
+    Route::get('/mcustomer/province/export', [MCustomerController::class, 'export'])->name('mcustomer.export');
+
 
     // Display program subwholesale route
     Route::resource('/display/sub-wholesale', DisplaysubwholesaleController::class)->names('displaysub');
@@ -215,6 +219,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
         // 2. Outlet management route
         Route::resource('depot', OutletController::class)->names('outlet');
+        Route::get('depot/export/excel', [OutletController::class, 'export'])->name('outlet.export');
 
         // 3. POSM Management
         Route::resource('posm/management', PosmController::class)->names('posm');
@@ -228,6 +233,15 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
 
     // Exclusive start
+        // School
+        Route::resource('/exclusive/customer', ExclusiveController::class)->names('exclusive');
+        Route::get('/exclusive/customer/file/export', [ExclusiveController::class, 'export'])->name('exclusive.export');
+
+        Route::get('/exclusive/customer/outlet', [ExclusiveController::class, 'getOutlets'])->name('exclusive.outlet');
+        Route::get('/exclusive/customer/get', [ExclusiveController::class, 'getCustomers'])->name('exclusive.getName');
+        Route::get('/exclusive/customer/customer-type', [ExclusiveController::class, 'getCustomerType'])->name('exclusive.getCustomerType');
+
+
         // School
         Route::resource('/exclusive/school', SchoolController::class)->names('school');
         Route::get('/exclusive/school/file/export', [SchoolController::class, 'export'])->name('school.export');

@@ -465,7 +465,19 @@
                 <div class="box box-info">
                     <div class="box-body">
                         <div class="row">
-                            <div class="col-lg-6 col-md-6 col-xl-6">
+                            <div class="col-md-4">
+                                <div class="form-group has-feedback">
+                                    <label for="code"> {{ __('POSM Code') }} <span class="text-danger">*</span></label>
+                                    <input id="code" name="code" class="form-control"
+                                        placeholder="{{ __('POSM Code') }}" required
+                                        value="@if($posm){{ old('code') ?? $posm->code }}@else{{ old('code') }}@endif">
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('code') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
                                 <div class="form-group has-feedback">
                                     <label for="name_kh"> {{ __('POSM Name (KH)') }} <span class="text-danger">*</span></label>
                                     <input id="name_kh" name="name_kh" class="form-control"
@@ -476,7 +488,8 @@
                                     <span class="text-danger">{{ $errors->first('name_kh') }}</span>
                                 </div>
                             </div>
-                            <div class="col-lg-6 col-md-6 col-xl-6">
+
+                            <div class="col-md-4">
                                 <div class="form-group has-feedback">
                                     <label for="name_en"> {{ __('POSM Name (EN)') }} <span class="text-danger">*</span></label>
                                     <input id="name_en" name="name_en" class="form-control"

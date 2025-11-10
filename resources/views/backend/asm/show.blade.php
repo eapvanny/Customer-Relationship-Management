@@ -576,7 +576,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('250ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'250_ml'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'250_ml'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -586,7 +586,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('350ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'350_ml'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'350_ml'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -596,7 +596,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('600ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'600_ml'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'600_ml'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -606,7 +606,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('1500ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'1500_ml'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'1500_ml'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -617,7 +617,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('Default')}}</div>
                                             </div>
-                                            <span class="badge bg-primary rounded-pill">{!! intval($report->{'250_ml'}) + intval($report->{'350_ml'}) + intval($report->{'600_ml'}) + intval($report->{'1500_ml'}) ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="badge bg-primary rounded-pill">{!! intval($report->{'250_ml'}) + intval($report->{'350_ml'}) + intval($report->{'600_ml'}) + intval($report->{'1500_ml'}) ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -647,7 +647,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('250ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'foc_250_qty'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'foc_250_qty'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -657,7 +657,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('350ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'foc_350_qty'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'foc_350_qty'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -667,7 +667,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('600ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'foc_600_qty'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'foc_600_qty'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -677,7 +677,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('1500ml')}}</div>
                                             </div>
-                                            <span class="">{!! $report->{'foc_1500_qty'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'foc_1500_qty'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -689,7 +689,7 @@
                                             <div class="fw-bold text-danger">{{__('Special FOC')}} {{ $report->foc_other . ' ml' }}</div>
 
                                             </div>
-                                            <span class="">{!! $report->{'foc_other_qty'} ?? 0 !!}  {{__('Boxes')}}</span>
+                                            <span class="">{!! $report->{'foc_other_qty'} ?? 0 !!}  {{__('CTN')}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -709,7 +709,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('POSM 1')}}</div>
                                             </div>
-                                            <span class="">{{ session('user_lang') =='en' ? $report->posm1->name_en : $report->posm1->name_kh}}</span>
+                                            <span class="">{{ session('user_lang') =='en' ? @$report->posm1->name_en : @$report->posm1->name_kh}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -719,7 +719,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('POSM 2')}}</div>
                                             </div>
-                                            <span class="">{{ session('user_lang') =='en' ? $report->posm2->name_en : $report->posm1->name_kh}}</span>
+                                            <span class="">{{ session('user_lang') =='en' ? @$report->posm2->name_en : @$report->posm1->name_kh}}</span>
                                         </li>
                                     </ol>
                                 </div>
@@ -729,7 +729,7 @@
                                             <div class="ms-2 me-auto">
                                             <div class="fw-bold">{{__('POSM 3')}}</div>
                                             </div>
-                                            <span class="">{{ session('user_lang') =='en' ? $report->posm3->name_en : $report->posm1->name_kh}}</span>
+                                            <span class="">{{ session('user_lang') =='en' ? @$report->posm3->name_en : @$report->posm1->name_kh}}</span>
                                         </li>
                                     </ol>
                                 </div>

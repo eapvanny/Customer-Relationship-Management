@@ -469,7 +469,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="outlet_id">{{ __('Outlet') }} <span class="text-danger">*</span></label>
+                                <label for="outlet_id">{{ __('Depot') }} <span class="text-danger">*</span></label>
                                 <select name="outlet_id" class="form-control select2" id="outlet_id" required>
 
                                     {{-- empty all  --}}
@@ -559,7 +559,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="250_ml"> {{ __('250ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <label for="250_ml"> {{ __('250ml') . ' (' . __('CTN') . ')' }}</label>
                                 <input type="number" min="0" class="form-control" name="250_ml"
                                     placeholder="{{ __('250ml') }}"
                                     value="{{ isset($report) ? $report['250_ml'] : old('250_ml') }}">
@@ -567,7 +567,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="350_ml"> {{ __('350ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <label for="350_ml"> {{ __('350ml') . ' (' . __('CTN') . ')' }}</label>
                                 <input type="number" min="0" class="form-control" name="350_ml"
                                     placeholder="{{ __('350ml') }}"
                                     value="{{ isset($report) ? $report['350_ml'] : old('350_ml') }}">
@@ -575,7 +575,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="600_ml"> {{ __('600ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <label for="600_ml"> {{ __('600ml') . ' (' . __('CTN') . ')' }}</label>
                                 <input type="number" min="0" class="form-control" name="600_ml"
                                     placeholder="{{ __('600ml') }}"
                                     value="{{ isset($report) ? $report['600_ml'] : old('600_ml') }}">
@@ -583,7 +583,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="1500_ml"> {{ __('1500ml') . ' (' . __('Boxes') . ')' }}</label>
+                                <label for="1500_ml"> {{ __('1500ml') . ' (' . __('CTN') . ')' }}</label>
                                 <input type="number" min="0" class="form-control" name="1500_ml"
                                     placeholder="{{ __('1500ml') }}"
                                     value="{{ isset($report) ? $report['1500_ml'] : old('1500_ml') }}">
@@ -593,8 +593,7 @@
                             <div class="form-group has-feedback">
                                 <label for="other"> {{ __('Other') }}</label>
                                 <textarea name="other" class="form-control" id="other" cols="30" rows="5"
-                                    placeholder="{{ __('Other') }}...">
-@if ($report)
+                                    placeholder="{{ __('Other') }}...">@if ($report)
 {{ $report->other }}@else{{ old('other') }}
 @endif
 </textarea>
@@ -617,7 +616,7 @@
                         {{-- FOC START  --}}
                         <div class="col-md-12">
                             <fieldset>
-                                <legend class="fs-6">{{ __('FOC From Company') }}</legend>
+                                <legend class="fs-6">{{ __('FOC Stock From Company') }}</legend>
                                 <div class="form-group has-feedback">
                                     <div class="row">
                                         <div class="row-span-6 col-sm-12 col-md-12 col-lg-12 col-xl-6">
@@ -828,7 +827,7 @@
                                                                     @foreach ($posms as $p)
                                                                         <option value="{{ $p->id }}"
                                                                             {{ old('posm_1', $report->posm_1 ?? '') == $p->id ? 'selected' : '' }}>
-                                                                            {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                            {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
@@ -862,7 +861,7 @@
                                                                     @foreach ($posms as $p)
                                                                         <option value="{{ $p->id }}"
                                                                             {{ old('posm_2', $report->posm_2 ?? '') == $p->id ? 'selected' : '' }}>
-                                                                            {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                             {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
@@ -897,7 +896,7 @@
                                                                     @foreach ($posms as $p)
                                                                         <option value="{{ $p->id }}"
                                                                             {{ old('posm_3', $report->posm_3 ?? '') == $p->id ? 'selected' : '' }}>
-                                                                            {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
+                                                                             {{ $p->code }} - {{ session('user_lang') == 'en' ? $p->name_en : $p->name_kh }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
@@ -1138,7 +1137,7 @@
                 // Clear dependent selects
                 $outletSelect.empty().append('<option value="">{{ __('Loading...') }}</option>');
                 $customerSelect.empty().append(
-                        '<option value="">{{ __('Select outlet first') }}</option>')
+                        '<option value="">{{ __('Select depot first') }}</option>')
                     .trigger('change.select2');
                 $customerTypeSelect.empty().append(
                     '<option value="">{{ __('Select customer first') }}</option>').trigger(
@@ -1153,11 +1152,11 @@
                         },
                         success: function(response) {
                             $outletSelect.empty().append(
-                                '<option value="">{{ __('Select Depo') }}</option>');
+                                '<option value="">{{ __('Select Depot') }}</option>');
 
                             if (Object.keys(response).length === 0) {
                                 $outletSelect.append(
-                                    '<option value="">{{ __('Depo Not Found!') }}</option>'
+                                    '<option value="">{{ __('Depot Not Found!') }}</option>'
                                 );
                             } else {
                                 $.each(response, function(id, name) {

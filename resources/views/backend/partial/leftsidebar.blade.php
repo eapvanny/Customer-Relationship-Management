@@ -120,7 +120,8 @@
                     </a>
                 </li>
             @endHasTypePermission
-
+            {{-- master data end here  --}}
+            
             @if (in_array(auth()->user()->type, [AppHelper::SE, AppHelper::ALL]))
 
                 <li class="treeview">
@@ -184,15 +185,12 @@
 
 
 
-                <li class="treeview">
-                    <a href="#" class="text-decoration-none">
+                <li>
+                    <a href="{{ route('exclusive.index') }}" class="text-decoration-none">
                         <i class="fa fa-thumbs-up"></i>
                         <span>{{ __('Exclusive Customer') }}</span>
-                        <span class="pull-right-container">
-                            <i class="fa fa-angle-left pull-right"></i>
-                        </span>
                     </a>
-                    <ul class="treeview-menu">
+                    {{-- <ul class="treeview-menu">
                         @hasTypePermission('view school')
                             <li>
                                 <a href="{{ route('school.index') }}" class="text-decoration-none">
@@ -214,7 +212,7 @@
                                 </a>
                             </li>
                         @endHasTypePermission
-                    </ul>
+                    </ul> --}}
                 </li>
             @endif
             {{-- SE section end --}}

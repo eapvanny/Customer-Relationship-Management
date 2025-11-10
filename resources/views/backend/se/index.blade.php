@@ -228,10 +228,10 @@
                                             {{-- <th> {{ __('Outlet') }} </th> --}}
                                             <th> {{ __('Customer Name') }} </th>
                                             {{-- <th> {{ __('Customer Type') }} </th> --}}
-                                            <th> {{ __('250ml') . " (". __("Boxes") . ")" }} </th>
-                                            <th> {{ __('350ml') . " (". __("Boxes") . ")"  }} </th>
-                                            <th> {{ __('600ml') . " (". __("Boxes") . ")" }} </th>
-                                            <th> {{ __('1500ml'). " (". __("Boxes") . ")" }} </th>
+                                            <th> {{ __('250ml') . " (". __("CTN") . ")" }} </th>
+                                            <th> {{ __('350ml') . " (". __("CTN") . ")"  }} </th>
+                                            <th> {{ __('600ml') . " (". __("CTN") . ")" }} </th>
+                                            <th> {{ __('1500ml'). " (". __("CTN") . ")" }} </th>
                                             {{-- <th> {{ __('Default') }} </th> --}}
 
                                             {{-- <th> {{ __('Phone number') }} </th>
@@ -277,7 +277,7 @@
                                                 <td>{!! $report->{'1500_ml'} ?? '<span class="text-danger">N/A</span>' !!}</td>
 
                                                 {{-- <td class="text-center fw-bold">
-                                                    {{ intval($report->{'250_ml'} + $report->{'350_ml'} + $report->{'600_ml'} + $report->{'1500_ml'}) . " ". __('Boxes') }}
+                                                    {{ intval($report->{'250_ml'} + $report->{'350_ml'} + $report->{'600_ml'} + $report->{'1500_ml'}) . " ". __('CTN') }}
                                                 </td> --}}
 
                                                 <td class="text-center">
