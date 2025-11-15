@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Helpers\AppHelper;
 use App\Models\Depo;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 
 class DepoController extends Controller
@@ -30,78 +32,67 @@ class DepoController extends Controller
                     $loggedInUserRole = $loggedInUser->role_id;
                     $loggedInUserId = $loggedInUser->id;
                     $loggedInUserType = $loggedInUser->type;
+                    $loggedInUserArea = $loggedInUser->area;
 
-                    // Collect user IDs to filter depos
-                    $userIds = [$loggedInUserId]; // Always include own depos
-
-                    // Define allowed user types for subordinates
                     $allowedTypes = [AppHelper::SALE, AppHelper::SE];
+                    $userIds = [$loggedInUserId]; // Always include self
 
-                    if ($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-                        AppHelper::USER_SUPER_ADMIN,
-                        AppHelper::USER_ADMINISTRATOR,
-                        AppHelper::USER_ADMIN,
-                        AppHelper::USER_DIRECTOR
-                    ])) {
-                        // No additional filtering needed
-                    } elseif ($loggedInUserRole == AppHelper::USER_MANAGER) {
-                        $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
-                            $q->where('manager_id', $loggedInUserId)
-                                ->orWhere('rsm_id', $loggedInUserId)
-                                ->orWhere('sup_id', $loggedInUserId)
-                                ->orWhere('asm_id', $loggedInUserId);
-                        })->whereIn('type', $allowedTypes)
-                            ->pluck('id')
-                            ->toArray();
-                        $userIds = array_merge($userIds, $managedUserIds);
-                    } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
-                        $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
-                            $q->where('rsm_id', $loggedInUserId)
-                                ->orWhere('sup_id', $loggedInUserId)
-                                ->orWhere('asm_id', $loggedInUserId);
-                        })->whereIn('type', $allowedTypes)
-                            ->pluck('id')
-                            ->toArray();
-                        $userIds = array_merge($userIds, $managedUserIds);
-                    } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
-                        $managedUserIds = \App\Models\User::where(function ($q) use ($loggedInUserId) {
-                            $q->where('sup_id', $loggedInUserId)
-                                ->orWhere('asm_id', $loggedInUserId);
-                        })->whereIn('type', $allowedTypes)
-                            ->pluck('id')
-                            ->toArray();
-                        $userIds = array_merge($userIds, $managedUserIds);
-                    } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
-                        $managedUserIds = \App\Models\User::where('asm_id', $loggedInUserId)
+                    // Full-access roles — no restrictions
+                    if (
+                        $loggedInUserType == AppHelper::ALL ||
+                        in_array($loggedInUserRole, [
+                            AppHelper::USER_SUPER_ADMIN,
+                            AppHelper::USER_ADMINISTRATOR,
+                            AppHelper::USER_ADMIN,
+                            AppHelper::USER_DIRECTOR
+                        ])
+                    ) {
+                        // No filter for full-access rolesm,
+                    } else {
+                        // Find all managed users by hierarchy or same area
+                        $managedUsers = User::query()
                             ->whereIn('type', $allowedTypes)
+                            ->where(function ($q) use ($loggedInUser, $loggedInUserArea) {
+                                $q->where('manager_id', $loggedInUser->id)
+                                    ->orWhere('rsm_id', $loggedInUser->id)
+                                    ->orWhere('asm_id', $loggedInUser->id)
+                                    ->orWhere('sup_id', $loggedInUser->id)
+                                    ->orWhere('area', $loggedInUserArea);
+                            })
                             ->pluck('id')
                             ->toArray();
-                        $userIds = array_merge($userIds, $managedUserIds);
-                    }
 
-                    // Apply user ID filter unless Super Admin, Admin, Director, or type ALL
-                    // if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-                    //     AppHelper::USER_SUPER_ADMIN,
-                    //     AppHelper::USER_ADMINISTRATOR,
-                    //     AppHelper::USER_ADMIN,
-                    //     AppHelper::USER_DIRECTOR
-                    // ]))) {
-                    //     $query->whereIn('user_id', array_unique($userIds));
-                    // }
+                        $userIds = array_unique(array_merge($userIds, $managedUsers));
 
-                    // Ensure depos belong to users with allowed types
-                    if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-                        AppHelper::USER_SUPER_ADMIN,
-                        AppHelper::USER_ADMINISTRATOR,
-                        AppHelper::USER_ADMIN,
-                        AppHelper::USER_DIRECTOR
-                    ]))) {
-                        $query->whereHas('user', function ($q) use ($allowedTypes) {
-                            $q->whereIn('type', $allowedTypes);
+                        // 🔹 FIXED: Get allowed area_ids based on user's area
+                        $allowedAreaIds = $this->getAllowedAreaIdsForUserArea($loggedInUserArea);
+
+                        $query->where(function ($q) use ($userIds, $allowedAreaIds, $loggedInUserRole, $loggedInUserArea) {
+                            $q->whereIn('user_id', $userIds);
+
+                            // Filter by allowed area_ids (the numeric keys from AREAS array)
+                            if (!empty($allowedAreaIds)) {
+                                $q->orWhereIn('area_id', $allowedAreaIds);
+                            }
+
+                            // Additional role-based area filtering
+                            if (in_array($loggedInUserRole, [AppHelper::USER_MANAGER, AppHelper::USER_RSM])) {
+                                // For RSM, get all area_ids under the parent region (R1 → R1-01, R1-02)
+                                $parentArea = explode('-', $loggedInUserArea)[0]; // Extract "R1" from "R1-01"
+                                $parentAreaIds = $this->getAreaIdsForParentRegion($parentArea);
+                                if (!empty($parentAreaIds)) {
+                                    $q->orWhereIn('area_id', $parentAreaIds);
+                                }
+                            }
                         });
                     }
+
+                    // Restrict to allowed user types
+                    $query->whereHas('user', function ($q) use ($allowedTypes) {
+                        $q->whereIn('type', $allowedTypes);
+                    });
                 } else {
-                    // No authenticated user, return no depos
+                    // No user logged in → no data
                     $query->where('id', 0);
                 }
 
@@ -143,18 +134,88 @@ class DepoController extends Controller
         }
     }
 
+    /**
+     * Get allowed area_ids (numeric keys) for a user's area
+     */
+    private function getAllowedAreaIdsForUserArea($userArea)
+    {
+        $areaData = AppHelper::getAreas();
+        $allowedAreaIds = [];
+
+        foreach ($areaData as $areaName => $areaMapping) {
+            // Extract area code from area name (e.g., "Ussa (R1-01)" → "R1-01")
+            preg_match('/\((.*?)\)/', $areaName, $matches);
+            $areaCode = $matches[1] ?? $areaName;
+
+            // Check if this area matches the user's area
+            if ($areaCode === $userArea) {
+                // Get all numeric keys for this area
+                $allowedAreaIds = array_merge($allowedAreaIds, array_keys($areaMapping));
+            }
+        }
+
+        return $allowedAreaIds;
+    }
+
+    /**
+     * Get all area_ids for a parent region (e.g., R1 → all R1-01, R1-02 area_ids)
+     */
+    private function getAreaIdsForParentRegion($parentRegion)
+    {
+        $areaData = AppHelper::getAreas();
+        $areaIds = [];
+
+        foreach ($areaData as $areaName => $areaMapping) {
+            // Extract area code from area name
+            preg_match('/\((.*?)\)/', $areaName, $matches);
+            $areaCode = $matches[1] ?? $areaName;
+
+            // Check if this area belongs to the parent region
+            if (strpos($areaCode, $parentRegion . '-') === 0) {
+                // Get all numeric keys for this area
+                $areaIds = array_merge($areaIds, array_keys($areaMapping));
+            }
+        }
+
+        return $areaIds;
+    }
+
 
     public function create()
     {
-        $depo = null; // Assuming $depo is used for editing; null for create
+        $depo = null;
         $depos = [];
-        // If there's old input or a pre-selected area, fetch depos
+
+        $user = auth()->user();
+        $userAreaCode = $user->area ?? null; // Example: "R1", "R2", "R2-02", or null
+
+        $areas = AppHelper::getAreas();
+
+        // Only filter if area is defined and matches pattern R1 / R2 / R1-01 / R2-02
+        if ($userAreaCode && preg_match('/^R\d(-\d{2})?$/', $userAreaCode)) {
+            $areas = collect($areas)
+                ->filter(function ($subItems, $areaName) use ($userAreaCode) {
+                    // If userAreaCode = "R1" → include "R1-"
+                    if (preg_match('/^R\d$/', $userAreaCode)) {
+                        return str_contains($areaName, $userAreaCode . '-');
+                    }
+
+                    // If userAreaCode = "R1-01" → include exact match
+                    return str_contains($areaName, $userAreaCode);
+                })
+                ->toArray();
+        }
+        // else → show all (no filtering)
+
+        // Handle depos if area selected
         $areaId = old('area', $depo->area_id ?? '');
         if ($areaId) {
             $depos = Depo::where('area_id', $areaId)->get(['id', 'name']);
         }
-        return view('backend.depo.add', compact('depo', 'depos'));
+
+        return view('backend.depo.add', compact('depo', 'depos', 'areas'));
     }
+
 
 
     public function store(Request $request)
@@ -189,12 +250,12 @@ class DepoController extends Controller
     {
         $depo = Depo::findOrFail($id);
         if (!$depo) {
-            return redirect()->route('depo.index')->with('error', 'Depot Not Found.');
+            return redirect()->route('depo.index')->with('error', 'Depo not found.');
         }
-
+        $areas = AppHelper::getAreas();
         // Fetch depos for the depo's area
         $depos = Depo::where('area_id', $depo->area_id)->get(['id', 'name']);
-        return view('backend.depo.add', compact('depo', 'depos'));
+        return view('backend.depo.add', compact('depo', 'depos', 'areas'));
     }
 
 
@@ -202,7 +263,7 @@ class DepoController extends Controller
     {
         $depo = Depo::findOrFail($id);
         if (!$depo) {
-            return redirect()->route('depo.index')->with('error', 'Depot Not Found!');
+            return redirect()->route('depo.index')->with('error', 'Depo not found!');
         }
 
         // Get all valid area IDs (numeric keys)
@@ -238,6 +299,6 @@ class DepoController extends Controller
             $depo->delete();
             return redirect()->back()->with('success', "Depo has been deleted!");
         }
-        return redirect()->back()->with('error', "Depot Not Found!");
+        return redirect()->back()->with('error', "Depo not found!");
     }
 }
