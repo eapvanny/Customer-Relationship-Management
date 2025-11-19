@@ -204,4 +204,28 @@ public static function getAreaIdByText($areaText)
         }
         return $area_id ?: '-';
     }
+    public static function normalizeIds($ids)
+{
+    if (empty($ids)) {
+        return [];
+    }
+    
+    // If it's a JSON string array
+    if (is_string($ids) && strpos($ids, '[') === 0) {
+        $decoded = json_decode($ids, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+    
+    // If it's a single ID
+    if (is_numeric($ids)) {
+        return [$ids];
+    }
+    
+    // If it's already an array
+    if (is_array($ids)) {
+        return $ids;
+    }
+    
+    return [];
+}
 }

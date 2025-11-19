@@ -524,7 +524,7 @@
                                                 <strong>{{ __('Address') }}:</strong> <span id="modalCity"></span></li>
                                         </ul>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xl-4">
+                                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-6">
                                         <ul class="list-group list-group-unbordered profile-log">
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
                                                 <strong>{{ __('250ml') }}:</strong> <span id="modal250ml"></span></li>
@@ -537,10 +537,15 @@
                                             <li class="list-group-item"><i class="fa-solid fa-bottle-water"></i>
                                                 <strong>{{ __('Other') }}:</strong> <span id="modalOther"></span></li>
                                             <li class="list-group-item"><i class="fa-brands fa-square-letterboxd"></i>
-                                                <strong>{{ __('Material Type') }}:</strong> <span id="modalPosm"></span>
+                                                <strong>{{ __('POSM1') }}:</strong> <span id="modalPosm"></span>, &nbsp;
+                                                <strong>{{ __('POSM2') }}:</strong> <span id="modalPosm2"></span>, &nbsp;
+                                                <strong>{{ __('POSM3') }}:</strong> <span id="modalPosm3"></span>
                                             </li>
                                             <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
-                                                <strong>{{ __('Quantity') }}:</strong> <span id="modalQty"></span></li>
+                                                <strong>{{ __('Quantity1') }}:</strong> <span id="modalQty"></span>, &nbsp;
+                                                <strong>{{ __('Quantity2') }}:</strong> <span id="modalQty2"></span>, &nbsp;
+                                                <strong>{{ __('Quantity3') }}:</strong> <span id="modalQty3"></span>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -732,6 +737,10 @@
                         $('#modalCity').text(report.city);
                         $('#modalPosm').text(report.posm);
                         $('#modalQty').text(report.qty);
+                        $('#modalPosm2').text(report.posm2);
+                        $('#modalQty2').text(report.qty2);
+                        $('#modalPosm3').text(report.posm3);
+                        $('#modalQty3').text(report.qty3);
                         $('#viewModal').modal('show');
                     },
                     error: function(xhr) {

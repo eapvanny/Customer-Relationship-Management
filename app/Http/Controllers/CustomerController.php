@@ -34,111 +34,134 @@ class CustomerController extends Controller
 
                 $loggedInUserRole = $loggedInUser->role_id;
                 $loggedInUserId   = $loggedInUser->id;
+                $loggedInUserType = $loggedInUser->type;
                 $rawAreaText      = $loggedInUser->area; // e.g. "ASM-R1-01" or "RSM-R1" or "S-04"
                 $loggedUserAreaId = AppHelper::getAreaIdByText($rawAreaText);
 
-                // === Normalize area text and compute allowed area IDs ===
-                $allowedAreaIds = [];
+                // === NEW CONDITION: If user type is SALE and role is USER_EMPLOYEE, show only their own records ===
+                if ($loggedInUserType == AppHelper::SALE && $loggedInUserRole == AppHelper::USER_EMPLOYEE) {
+                    $query->where('user_id', $loggedInUserId);
+                } else {
+                    // === Normalize area text and compute allowed area IDs ===
+                    $allowedAreaIds = [];
 
-                if ($rawAreaText) {
-                    // Remove role prefix like ASM-, RSM-, SUP-, etc.
-                    $normalized = preg_replace('/^[A-Za-z]+-/', '', $rawAreaText);
+                    if ($rawAreaText) {
+                        // Remove role prefix like ASM-, RSM-, SUP-, etc.
+                        $normalized = preg_replace('/^[A-Za-z]+-/', '', $rawAreaText);
 
-                    // Get your mapping
-                    $areas = AppHelper::getAreas(); // your const AREAS list
+                        // Get your mapping
+                        $areas = AppHelper::getAreas(); // your const AREAS list
 
-                    // === Case 1: Specific S-XX code (like S-04) ===
-                    if (preg_match('/^S-\d+$/', $normalized)) {
-                        foreach ($areas as $group => $subs) {
-                            foreach ($subs as $id => $sText) {
-                                if ($sText === $normalized) {
-                                    $allowedAreaIds[] = $id;
-                                    break 2;
-                                }
-                            }
-                        }
-                    }
-
-                    // === Case 2: Specific subregion (R1-01, R2-02, etc.) ===
-                    elseif (preg_match('/^R\d+-\d{2}$/', $normalized)) {
-                        foreach ($areas as $group => $subs) {
-                            if (strpos($group, "($normalized)") !== false) {
+                        // === Case 1: Specific S-XX code (like S-04) ===
+                        if (preg_match('/^S-\d+$/', $normalized)) {
+                            foreach ($areas as $group => $subs) {
                                 foreach ($subs as $id => $sText) {
-                                    $allowedAreaIds[] = $id;
+                                    if ($sText === $normalized) {
+                                        $allowedAreaIds[] = $id;
+                                        break 2;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // === Case 3: RSM-level region (R1, R2) → all subregions under that region ===
-                    elseif (preg_match('/^R\d+$/', $normalized)) {
-                        foreach ($areas as $group => $subs) {
-                            // Example group name: "Ussa (R1-01)"
-                            if (strpos($group, "($normalized-") !== false) { // matches R1-01, R1-02...
-                                foreach ($subs as $id => $sText) {
-                                    $allowedAreaIds[] = $id;
+                        // === Case 2: Specific subregion (R1-01, R2-02, etc.) ===
+                        elseif (preg_match('/^R\d+-\d{2}$/', $normalized)) {
+                            foreach ($areas as $group => $subs) {
+                                if (strpos($group, "($normalized)") !== false) {
+                                    foreach ($subs as $id => $sText) {
+                                        $allowedAreaIds[] = $id;
+                                    }
                                 }
                             }
                         }
+
+                        // === Case 3: RSM-level region (R1, R2) → all subregions under that region ===
+                        elseif (preg_match('/^R\d+$/', $normalized)) {
+                            foreach ($areas as $group => $subs) {
+                                // Example group name: "Ussa (R1-01)"
+                                if (strpos($group, "($normalized-") !== false) { // matches R1-01, R1-02...
+                                    foreach ($subs as $id => $sText) {
+                                        $allowedAreaIds[] = $id;
+                                    }
+                                }
+                            }
+                        }
+                        // === Case 4: Fallback numeric area ID directly ===
+                        elseif (is_numeric($loggedUserAreaId)) {
+                            // Fallback: direct area ID match
+                            $allowedAreaIds[] = $loggedUserAreaId;
+                        }
                     }
-                    // === Case 4: Fallback numeric area ID directly ===
-                    elseif (is_numeric($loggedUserAreaId)) {
-                        // Fallback: direct area ID match
-                        $allowedAreaIds[] = $loggedUserAreaId;
-                    }
-                }
 
-                // Remove duplicates
-                $allowedAreaIds = array_values(array_unique($allowedAreaIds));
+                    // Remove duplicates
+                    $allowedAreaIds = array_values(array_unique($allowedAreaIds));
 
-                $adminRoles = [
-                    AppHelper::USER_SUPER_ADMIN,
-                    AppHelper::USER_ADMINISTRATOR,
-                    AppHelper::USER_ADMIN,
-                    AppHelper::USER_DIRECTOR,
-                    AppHelper::USER_MANAGER,
-                ];
+                    $adminRoles = [
+                        AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMINISTRATOR,
+                        AppHelper::USER_ADMIN,
+                        AppHelper::USER_DIRECTOR,
+                        AppHelper::USER_MANAGER,
+                    ];
 
-                // Full access for admin roles
-                if (!($loggedInUser->type == AppHelper::ALL ||
-                    in_array($loggedInUserRole, $adminRoles))) {
+                    // Full access for admin roles
+                    if (!($loggedInUser->type == AppHelper::ALL ||
+                        in_array($loggedInUserRole, $adminRoles))) {
 
-                    $query->where(function ($q) use ($loggedInUser) {
-                        $loggedInUserId = $loggedInUser->id;
+                        $query->where(function ($q) use ($loggedInUser) {
+                            $loggedInUserId = $loggedInUser->id;
 
-                        // 1. Customers created by logged-in user
-                        $q->where('user_id', $loggedInUserId)
+                            // 1. Customers created by logged-in user
+                            $q->where('user_id', $loggedInUserId)
 
-                            // 2. Customers whose creator is managed by logged-in user
-                            ->orWhereHas('user', function ($u) use ($loggedInUserId) {
-                                $u->where('manager_id', $loggedInUserId)
-                                    ->orWhere('rsm_id', $loggedInUserId)
-                                    ->orWhere('asm_id', $loggedInUserId)
-                                    ->orWhere('sup_id', $loggedInUserId);
-                            });
+                                // 2. Customers whose creator is managed by logged-in user
+                                ->orWhereHas('user', function ($u) use ($loggedInUserId) {
+                                    // Fix: Handle JSON array fields properly
+                                    $u->where('manager_id', $loggedInUserId)
+                                        ->orWhere('rsm_id', $loggedInUserId)
+                                        ->orWhere(function ($jsonQuery) use ($loggedInUserId) {
+                                            // Handle asm_id as JSON array
+                                            $jsonQuery->whereJsonContains('asm_id', (string)$loggedInUserId)
+                                                ->orWhere('asm_id', $loggedInUserId);
+                                        })
+                                        ->orWhere(function ($jsonQuery) use ($loggedInUserId) {
+                                            // Handle sup_id as JSON array  
+                                            $jsonQuery->whereJsonContains('sup_id', (string)$loggedInUserId)
+                                                ->orWhere('sup_id', $loggedInUserId);
+                                        });
+                                });
 
-                        // 3. Customers whose creator is the manager above
-                        if ($loggedInUser->manager_id) {
-                            $q->orWhere('user_id', $loggedInUser->manager_id);
-                        }
-                        if ($loggedInUser->rsm_id) {
-                            $q->orWhere('user_id', $loggedInUser->rsm_id);
-                        }
-                        if ($loggedInUser->asm_id) {
-                            $q->orWhere('user_id', $loggedInUser->asm_id);
-                        }
-                        if ($loggedInUser->sup_id) {
-                            $q->orWhere('user_id', $loggedInUser->sup_id);
-                        }
-                    });
+                            // 3. Customers whose creator is the manager above
+                            // Fix: Use the helper function to normalize IDs from both formats
+                            $managerIds = AppHelper::normalizeIds($loggedInUser->manager_id);
+                            $rsmIds     = AppHelper::normalizeIds($loggedInUser->rsm_id);
+                            $asmIds     = AppHelper::normalizeIds($loggedInUser->asm_id);
+                            $supIds     = AppHelper::normalizeIds($loggedInUser->sup_id);
 
+                            if (!empty($managerIds)) {
+                                $q->orWhereIn('user_id', $managerIds);
+                            }
 
-                    // ✅ Apply area restriction at the end
-                    if (!empty($allowedAreaIds)) {
-                        $query->whereIn('area_id', $allowedAreaIds);
-                    } else {
-                        if ($rawAreaText) {
-                            $query->where('id', 0); // no match
+                            if (!empty($rsmIds)) {
+                                $q->orWhereIn('user_id', $rsmIds);
+                            }
+
+                            if (!empty($asmIds)) {
+                                $q->orWhereIn('user_id', $asmIds);
+                            }
+
+                            if (!empty($supIds)) {
+                                $q->orWhereIn('user_id', $supIds);
+                            }
+                        });
+
+                        // ✅ Apply area restriction at the end
+                        if (!empty($allowedAreaIds)) {
+                            $query->whereIn('area_id', $allowedAreaIds);
+                        } else {
+                            if ($rawAreaText) {
+                                $query->where('id', 0); // no match
+                            }
                         }
                     }
                 }
@@ -232,17 +255,43 @@ class CustomerController extends Controller
 
         $areas = AppHelper::getAreas();
 
-        // Only filter if area is defined and matches pattern R1 / R2 / R1-01 / R2-02
-        if ($userAreaCode && preg_match('/^R\d(-\d{2})?$/', $userAreaCode)) {
+        if ($userAreaCode) {
             $areas = collect($areas)
                 ->filter(function ($subItems, $areaName) use ($userAreaCode) {
-                    // If userAreaCode = "R1" → include "R1-"
+
+                    // === RSM LEVEL (ex: "R1", "R2") ===
                     if (preg_match('/^R\d$/', $userAreaCode)) {
+                        // Keep all sub-areas under same region (e.g. R1-01, R1-02)
                         return str_contains($areaName, $userAreaCode . '-');
                     }
 
-                    // If userAreaCode = "R1-01" → include exact match
-                    return str_contains($areaName, $userAreaCode);
+                    // === ASM LEVEL (ex: "R1-01") ===
+                    if (preg_match('/^R\d-\d{2}$/', $userAreaCode)) {
+                        // Keep only that specific ASM area
+                        return str_contains($areaName, $userAreaCode);
+                    }
+
+                    // === SALE LEVEL (ex: "S-04") ===
+                    if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                        // Keep only areas containing this sales code
+                        foreach ($subItems as $code) {
+                            if ($code === $userAreaCode) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    return false;
+                })
+                ->map(function ($subItems, $areaName) use ($userAreaCode) {
+                    // If Sales (S-xx), keep only their own code in sublist
+                    if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                        return collect($subItems)
+                            ->filter(fn($code) => $code === $userAreaCode)
+                            ->toArray();
+                    }
+                    return $subItems;
                 })
                 ->toArray();
         }

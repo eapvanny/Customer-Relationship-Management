@@ -286,6 +286,12 @@ class ReportController extends Controller
         $posm = isset(AppHelper::MATERIAL[$report->posm])
             ? __(AppHelper::MATERIAL[$report->posm])
             : 'Unknown';
+        $posm2 = isset(AppHelper::MATERIAL[$report->posm2])
+            ? __(AppHelper::MATERIAL[$report->posm2])
+            : 'Unknown';
+        $posm3 = isset(AppHelper::MATERIAL[$report->posm3])
+            ? __(AppHelper::MATERIAL[$report->posm3])
+            : 'Unknown';
         return response()->json([
             'report' => [
                 'photo' => $report->photo ? asset('storage/' . $report->photo) : asset('images/avatar.png'),
@@ -306,6 +312,10 @@ class ReportController extends Controller
                 'city' => $report->city,
                 'posm' => $posm,
                 'qty' => $report->qty,
+                'posm2' => $posm2,
+                'qty2' => $report->qty2,
+                'posm3' => $posm3,
+                'qty3' => $report->qty3,
             ]
         ]);
     }
@@ -516,6 +526,10 @@ class ReportController extends Controller
             'country' => $request->country,
             'qty' => $request->qty,
             'posm' => $request->posm,
+            'qty2' => $request->qty2,
+            'posm2' => $request->posm2,
+            'qty3' => $request->qty3,
+            'posm3' => $request->posm3,
             'photo' => $data['photo'],
             'outlet_photo' => $data['outlet_photo'],
         ]);
@@ -627,6 +641,10 @@ class ReportController extends Controller
             'country' => $request->country,
             'qty' => $request->qty,
             'posm' => $request->posm,
+            'qty2' => $request->qty2,
+            'posm2' => $request->posm2,
+            'qty3' => $request->qty3,
+            'posm3' => $request->posm3,
             'photo' => $report->photo, // Preserve existing photo by default
             'outlet_photo' => $report->outlet_photo,
         ];

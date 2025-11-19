@@ -520,7 +520,7 @@
                                             <optgroup label="{{ $area }}">
                                                 @foreach ($subItems as $area_id => $subItem)
                                                     <option value="{{ $area_id }}"
-                                                        @if (old('area', $customer->area_id ?? '') == $area_id) selected @endif>
+                                                        @if (old('area', $report->area_id ?? '') == $area_id) selected @endif>
                                                         {{ $subItem }}
                                                     </option>
                                                 @endforeach
@@ -778,7 +778,7 @@
                                             </div>
                                             <div class="col-md-12 col-lg-12 col-xl-6 col-sm-12">
                                                 <div class="row">
-                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
                                                         <div class="form-group has-feedback">
                                                             <label for="posm"> {{ __('POSM') }}
                                                                 <i class="fa fa-question-circle" data-toggle="tooltip"
@@ -816,13 +816,107 @@
                                                             <span class="text-danger">{{ $errors->first('posm') }}</span>
                                                         </div>
                                                     </div>
-                                                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
                                                         <div class="form-group has-feedback">
                                                             <label for="qty"> {{ __('Quantity') }} </label>
                                                             <input type="number" class="form-control" name="qty"
                                                                 value="{{ old('qty', $report->qty ?? '') }}">
                                                             <span class="fa fa-info form-control-feedback"></span>
                                                             <span class="text-danger">{{ $errors->first('qty') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="posm2"> {{ __('POSM') }}
+                                                                <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                    data-placement="bottom" title="Select POSM"></i>
+                                                            </label>
+                                                            {!! Form::select(
+                                                                'posm2',
+                                                                [
+                                                                    AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
+                                                                    AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
+                                                                    AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
+                                                                    AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
+                                                                    AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
+                                                                    AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
+                                                                    AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
+                                                                    AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
+                                                                    AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
+                                                                    AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
+                                                                    AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
+                                                                    AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
+                                                                    AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
+                                                                    AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
+                                                                    AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
+                                                                    AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
+                                                                ],
+                                                                old('posm2', optional($report)->posm2),
+                                                                [
+                                                                    'placeholder' => __('Select material type'),
+                                                                    'id' => 'posm2',
+                                                                    'name' => 'posm2',
+                                                                    'class' => 'form-control select2',
+                                                                ],
+                                                            ) !!}
+                                                            <span class="form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('posm2') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="qty2"> {{ __('Quantity') }} </label>
+                                                            <input type="number" class="form-control" name="qty2"
+                                                                value="{{ old('qty2', $report->qty2 ?? '') }}">
+                                                            <span class="fa fa-info form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('qty2') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="posm3"> {{ __('POSM') }}
+                                                                <i class="fa fa-question-circle" data-toggle="tooltip"
+                                                                    data-placement="bottom" title="Select POSM"></i>
+                                                            </label>
+                                                            {!! Form::select(
+                                                                'posm3',
+                                                                [
+                                                                    AppHelper::UMBRELLA => __(AppHelper::MATERIAL[AppHelper::UMBRELLA]),
+                                                                    AppHelper::TUMBLER => __(AppHelper::MATERIAL[AppHelper::TUMBLER]),
+                                                                    AppHelper::PARASOL => __(AppHelper::MATERIAL[AppHelper::PARASOL]),
+                                                                    AppHelper::JACKET => __(AppHelper::MATERIAL[AppHelper::JACKET]),
+                                                                    AppHelper::BOTTLE_HOLDER => __(AppHelper::MATERIAL[AppHelper::BOTTLE_HOLDER]),
+                                                                    AppHelper::ICE_BOX_200L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_200L]),
+                                                                    AppHelper::CAP_BLUE => __(AppHelper::MATERIAL[AppHelper::CAP_BLUE]),
+                                                                    AppHelper::HAT => __(AppHelper::MATERIAL[AppHelper::HAT]),
+                                                                    AppHelper::GLASS_CUP => __(AppHelper::MATERIAL[AppHelper::GLASS_CUP]),
+                                                                    AppHelper::ICE_BOX_27L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_27L]),
+                                                                    AppHelper::ICE_BOX_45L => __(AppHelper::MATERIAL[AppHelper::ICE_BOX_45L]),
+                                                                    AppHelper::T_SHIRT_RUNNING => __(AppHelper::MATERIAL[AppHelper::T_SHIRT_RUNNING]),
+                                                                    AppHelper::LUNCH_BOX => __(AppHelper::MATERIAL[AppHelper::LUNCH_BOX]),
+                                                                    AppHelper::LSK_FAN_16_DSF_9163 => __(AppHelper::MATERIAL[AppHelper::LSK_FAN_16_DSF_9163]),
+                                                                    AppHelper::PAPER_CUP_250ML => __(AppHelper::MATERIAL[AppHelper::PAPER_CUP_250ML]),
+                                                                    AppHelper::TISSUE_BOX => __(AppHelper::MATERIAL[AppHelper::TISSUE_BOX]),
+                                                                ],
+                                                                old('posm3', optional($report)->posm3),
+                                                                [
+                                                                    'placeholder' => __('Select material type'),
+                                                                    'id' => 'posm3',
+                                                                    'name' => 'posm3',
+                                                                    'class' => 'form-control select2',
+                                                                ],
+                                                            ) !!}
+                                                            <span class="form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('posm') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
+                                                        <div class="form-group has-feedback">
+                                                            <label for="qty3"> {{ __('Quantity') }} </label>
+                                                            <input type="number" class="form-control" name="qty3"
+                                                                value="{{ old('qty3', $report->qty3 ?? '') }}">
+                                                            <span class="fa fa-info form-control-feedback"></span>
+                                                            <span class="text-danger">{{ $errors->first('qty3') }}</span>
                                                         </div>
                                                     </div>
                                                 </div>

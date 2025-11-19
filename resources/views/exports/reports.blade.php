@@ -42,8 +42,12 @@
             <th>{{ __('Address') }}</th>
             <th>{{ __('Photo Outlet') }}</th>
             <th>{{ __('POSM PHOTO') }}</th>
-            <th>{{ __('POSM') }}</th>
-            <th>{{ __('Quantity') }}</th>
+            <th>{{ __('POSM1') }}</th>
+            <th>{{ __('Quantity1') }}</th>
+            <th>{{ __('POSM2')}}</th>
+            <th>{{ __('Quantity2')}}</th>
+            <th>{{ __('POSM3')}}</th>
+            <th>{{ __('Quantity3')}}</th>
         </tr>
     </thead>
     <tbody>
@@ -64,7 +68,8 @@
                 $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
                 $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
                 $posm = isset(AppHelper::MATERIAL[$row->posm]) ? __(AppHelper::MATERIAL[$row->posm]) : 'N/A';
-                
+                $posm2 = isset(AppHelper::MATERIAL[$row->posm2]) ? __(AppHelper::MATERIAL[$row->posm2]) : 'N/A';
+                $posm3 = isset(AppHelper::MATERIAL[$row->posm3]) ? __(AppHelper::MATERIAL[$row->posm3]) : 'N/A';
                 // Check if outlet_photo or photo exists, otherwise set to 'No_Photo'
                 $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'No_Photo';
                 $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'No_Photo';
@@ -104,6 +109,10 @@
                 </td>
                 <td>{{ $posm ?? 'N/A' }}</td>
                 <td>{{ $row->qty ?? 'N/A' }}</td>
+                <td>{{ $posm2 ?? 'N/A' }}</td>
+                <td>{{ $row->qty2 ?? 'N/A' }}</td>
+                <td>{{ $posm3 ?? 'N/A' }}</td>
+                <td>{{ $row->qty3 ?? 'N/A' }}</td>
             </tr>
         @endforeach
         <tr>
