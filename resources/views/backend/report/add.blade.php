@@ -780,7 +780,7 @@
                                                 <div class="row">
                                                     <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
                                                         <div class="form-group has-feedback">
-                                                            <label for="posm"> {{ __('POSM') }}
+                                                            <label for="posm"> {{ __('POSM 1') }}
                                                                 <i class="fa fa-question-circle" data-toggle="tooltip"
                                                                     data-placement="bottom" title="Select POSM"></i>
                                                             </label>
@@ -827,7 +827,7 @@
                                                     </div>
                                                     <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
                                                         <div class="form-group has-feedback">
-                                                            <label for="posm2"> {{ __('POSM') }}
+                                                            <label for="posm2"> {{ __('POSM 2') }}
                                                                 <i class="fa fa-question-circle" data-toggle="tooltip"
                                                                     data-placement="bottom" title="Select POSM"></i>
                                                             </label>
@@ -874,7 +874,7 @@
                                                     </div>
                                                     <div class="col-sm-6 col-md-6 col-lg-6 col-xl-6">
                                                         <div class="form-group has-feedback">
-                                                            <label for="posm3"> {{ __('POSM') }}
+                                                            <label for="posm3"> {{ __('POSM 3') }}
                                                                 <i class="fa fa-question-circle" data-toggle="tooltip"
                                                                     data-placement="bottom" title="Select POSM"></i>
                                                             </label>
