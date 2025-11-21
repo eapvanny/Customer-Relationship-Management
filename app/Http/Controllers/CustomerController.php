@@ -252,10 +252,20 @@ class CustomerController extends Controller
         $customerType = AppHelper::CUSTOMER_TYPE;
         $user = auth()->user();
         $userAreaCode = $user->area ?? null; // Example: "R1", "R1-01", "S-04", etc.
+        $userRoleId = $user->role_id ?? null;
 
+        // Define which roles can see ALL areas (no filtering)
+        $fullAccessRoles = [
+            AppHelper::USER_SUPER_ADMIN,      // 1
+            AppHelper::USER_ADMINISTRATOR,    // 2
+            AppHelper::USER_ADMIN,            // 3
+            AppHelper::USER_DIRECTOR,         // 4
+            AppHelper::USER_MANAGER,          // 5
+            // Add more if needed in the future
+        ];
         $areas = AppHelper::getAreas();
 
-        if ($userAreaCode) {
+        if ($userAreaCode && !in_array($userRoleId, $fullAccessRoles)) {
             $areas = collect($areas)
                 ->filter(function ($subItems, $areaName) use ($userAreaCode) {
 

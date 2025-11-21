@@ -218,29 +218,41 @@ class ReportController extends Controller
 
     public function create()
     {
-        $customer = null; // Assuming $customer is used for editing; null for create
+        $customer = null;
         $customers = [];
         $report = null;
         $customerType = [];
         $depos = [];
         $user = auth()->user();
-        $userAreaCode = $user->area ?? null; // Example: "R1", "R1-01", "S-04", etc.
+        $userAreaCode = $user->area ?? null;
+        $userRoleId = $user->role_id ?? null;
 
-        $areas = AppHelper::getAreas();
+        // Define which roles can see ALL areas (no filtering)
+        $fullAccessRoles = [
+            AppHelper::USER_SUPER_ADMIN,      // 1
+            AppHelper::USER_ADMINISTRATOR,    // 2
+            AppHelper::USER_ADMIN,            // 3
+            AppHelper::USER_DIRECTOR,         // 4
+            AppHelper::USER_MANAGER,          // 5
+            // Add more if needed in the future
+        ];
 
-        if ($userAreaCode) {
+        $areas = AppHelper::getAreas(); // Original full list
+
+        // Only filter areas if user does NOT have full access
+        if ($userAreaCode && !in_array($userRoleId, $fullAccessRoles)) {
             $filteredAreas = collect($areas)->filter(function ($subItems, $areaName) use ($userAreaCode) {
-                // 1️⃣ Region-level: R1 → include all subregions R1-01, R1-02
-                if (preg_match('/^R\d$/', $userAreaCode)) {
-                    return str_contains($areaName, $userAreaCode . '-');
+                // Region level: R1 → include all subregions like R1-01, R1-02
+                if (preg_match('/^R\d+$/', $userAreaCode)) {
+                    return str_starts_with($areaName, $userAreaCode . '-');
                 }
 
-                // 2️⃣ Subregion-level: R1-01 → include only exact match
-                if (preg_match('/^R\d-\d{2}$/', $userAreaCode)) {
+                // Subregion level: R1-01 → include only exact subregion
+                if (preg_match('/^R\d+-\d{2}$/', $userAreaCode)) {
                     return str_contains($areaName, $userAreaCode);
                 }
 
-                // 3️⃣ Store-level: S-04 → include only the area that has this store
+                // Store level: S-04 → include only the area that contains this store
                 if (preg_match('/^S-\d+$/', $userAreaCode)) {
                     return in_array($userAreaCode, $subItems);
                 }
@@ -248,23 +260,31 @@ class ReportController extends Controller
                 return false;
             });
 
-            // 4️⃣ If user is a store-level (S-XX), show only that store, not all under the subregion
+            // If user is store-level (S-XX), restrict to only their own store
             if (preg_match('/^S-\d+$/', $userAreaCode)) {
                 $filteredAreas = $filteredAreas->map(function ($subItems) use ($userAreaCode) {
-                    // Keep only the user’s own store
-                    return array_filter($subItems, fn($v) => $v === $userAreaCode);
-                });
+                    return array_filter($subItems, fn($store) => $store === $userAreaCode);
+                })->filter(fn($stores) => !empty($stores)); // Remove empty arrays
             }
 
             $areas = $filteredAreas->toArray();
         }
-        // If there's old input or a pre-selected area, fetch customers
+        // Otherwise: $areas remains full list (for Super Admin, Admin, Director, Manager, etc.)
+
+        // Handle old input or pre-selected area for customer dropdown
         $areaId = old('area', $customer->area_id ?? '');
         if ($areaId) {
             $customers = Customer::where('area_id', $areaId)->get(['id', 'name', 'depo_id']);
         }
 
-        return view('backend.report.add', compact('customer', 'customers', 'report', 'customerType', 'areas', 'depos'));
+        return view('backend.report.add', compact(
+            'customer',
+            'customers',
+            'report',
+            'customerType',
+            'areas',
+            'depos'
+        ));
     }
 
     public function show($id)
