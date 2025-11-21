@@ -621,10 +621,16 @@
                             </div>
                         </div>
                         <div class="col-lg-12 col-md-12 col-xl-12">
-                            <div class="form-group has-feedback">
+                            {{-- <div class="form-group has-feedback">
                                 <label for="other"> {{ __('Other') }}</label>
                                 <input type="number" class="form-control" name="other" placeholder="other"
                                     value="@if ($report) {{ $report->other }}@else{{ old('other') }} @endif">
+                            </div> --}}
+                            <div class="form-group has-feedback">
+                                <label for="other"> {{ __('other') }}</label>
+                                <textarea class="form-control" name="other" id="other" rows="2"
+                                    placeholder="{{ __('Enter other here...') }}">{{ isset($report) ? $report['other'] : old('other') }}
+                                </textarea>
                             </div>
                         </div>
                         <div class="col-xl-12 col-lg-12 col-md-12">
