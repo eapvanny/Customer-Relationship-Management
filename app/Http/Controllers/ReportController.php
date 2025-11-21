@@ -50,7 +50,6 @@ class ReportController extends Controller
 
         $showModal = $hasNoReports || $hasUnassignedReportToday;
 
-
         if ($user) {
             $userRole = $user->role_id;
             $userId = $user->id;
@@ -93,8 +92,11 @@ class ReportController extends Controller
                     ->toArray();
                 $userIds = array_merge($userIds, $managedUserIds);
             } elseif ($userRole == AppHelper::USER_ASM) {
-                $managedUserIds = User::where('asm_id', $userId)
-                    ->whereIn('type', $allowedTypes)
+                // FIX: Handle JSON array format for asm_id
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->whereJsonContains('asm_id', (string)$userId) // Handle JSON array format
+                        ->orWhere('asm_id', $userId); // Also check for integer format for backward compatibility
+                })->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
                 $userIds = array_merge($userIds, $managedUserIds);
@@ -114,7 +116,7 @@ class ReportController extends Controller
             $query->where('reports.id', 0);
         }
 
-        // Load employee list for filtering
+        // Load employee list for filtering - FIX THE SAME ISSUE HERE
         $employeeQuery = User::query();
         if ($user && !($userType == AppHelper::ALL || in_array($userRole, [
             AppHelper::USER_SUPER_ADMIN,
@@ -140,8 +142,11 @@ class ReportController extends Controller
                         ->orWhere('asm_id', $userId);
                 })->whereIn('type', $allowedTypes);
             } elseif ($userRole == AppHelper::USER_ASM) {
-                $employeeQuery->where('asm_id', $userId)
-                    ->whereIn('type', $allowedTypes);
+                // FIX: Handle JSON array format for asm_id in employee query too
+                $employeeQuery->where(function ($q) use ($userId) {
+                    $q->whereJsonContains('asm_id', (string)$userId) // Handle JSON array format
+                        ->orWhere('asm_id', $userId); // Also check for integer format
+                })->whereIn('type', $allowedTypes);
             } else {
                 $employeeQuery->where('id', $userId);
             }
@@ -163,7 +168,6 @@ class ReportController extends Controller
             $is_filter = true;
             $query->where('reports.area_id', $request->area_id);
         }
-
 
         // Handle DataTables AJAX
         if ($request->ajax()) {
