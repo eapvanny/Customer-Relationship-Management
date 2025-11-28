@@ -547,25 +547,25 @@
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="depo_contact">{{ __("Depot Contact") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="depo_contact" id="depo_contact"
-                                        value="{{ isset($report) ? $report['depo_contact'] : old('depo_contact') }}"
+                                    <label for="depot_contact">{{ __("Depot Contact") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="depot_contact" id="depot_contact"
+                                        value="{{ isset($report) ? $report['depot_contact'] : old('depot_contact') }}"
                                         placeholder="{{ __("Depot Contact") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('depo_contact') }}</span>
+                                    <span class="text-danger">{{ $errors->first('depot_contact') }}</span>
                                 </div>
                             </div>
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="depo_name">{{ __("Depo's Name") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="depo_name" id="depo_name"
-                                        value="{{ isset($report) ? $report['depo_name'] : old('depo_name') }}"
+                                    <label for="depot_name">{{ __("Depot Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="depot_name" id="depot_name"
+                                        value="{{ isset($report) ? $report['depot_name'] : old('depot_name') }}"
                                         placeholder="{{ __("Depo's Name") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('depo_name') }}</span>
+                                    <span class="text-danger">{{ $errors->first('depot_name') }}</span>
                                 </div>
                             </div>
 
@@ -596,13 +596,13 @@
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="business_type">{{ __("Business Type") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="business_type" id="business_type"
-                                        value="{{ isset($report) ? $report['business_type'] : old('business_type') }}"
-                                        placeholder="{{ __("Business Type") }}" required>
+                                    <label for="outlet_type">{{ __("Outlet Type") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="outlet_type" id="outlet_type"
+                                        value="{{ isset($report) ? $report['outlet_type'] : old('outlet_type') }}"
+                                        placeholder="{{ __("Outlet Type") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('business_type') }}</span>
+                                    <span class="text-danger">{{ $errors->first('outlet_type') }}</span>
                                 </div>
                             </div>
 
@@ -633,29 +633,80 @@
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="foc_qty">{{ __("FOC 600ML") }} <span class="text-danger">*</span></label>
-                                    <input type="number" min="0" max="100" class="form-control" name="foc_qty" id="foc_qty"
-                                        value="{{ isset($report) ? $report['foc_qty'] : old('foc_qty') }}"
-                                        placeholder="{{ __("FOC 600ML") }}" required>
+                                    <label for="sku">{{ __('SKU') }} <span class="text-danger">*</span></label>
+
+                                    <div class="input-group">
+                                        <input type="number" min="0" class="form-control" name="sku"
+                                            id="sku" value="{{ isset($report) ? $report['sku'] : old('sku') }}"
+                                            placeholder="{{ __('SKU') }}" required>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="basic-addon2">ML</span>
+                                        </div>
+                                    </div>
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
+                                    <span class="text-danger">{{ $errors->first('sku') }}</span>
                                 </div>
                             </div>
 
 
-                            <div class="col-lg-12">
+                            <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="remark">{{ __("Remark") }}</label>
+                                    <label for="incentive">{{ __('Incentive') }} <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number" min="0" class="form-control" name="incentive"
+                                        id="incentive"
+                                        value="{{ isset($report) ? $report['incentive'] : old('incentive') }}"
+                                        placeholder="{{ __('Incentive') }}" required>
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('incentive') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xl-6">
+                                <div class="form-group has-feedback">
+                                    <label for="remark">{{ __('Remark') }}</label>
                                     <input type="text" class="form-control" name="remark" id="remark"
                                         value="{{ isset($report) ? $report['remark'] : old('remark') }}"
-                                        placeholder="{{ __("Remark") }}">
+                                        placeholder="{{ __('Remark') }}">
                                     <span class="fa fa-info form-control-feedback"></span>
                                     <span class="text-danger">{{ $errors->first('remark') }}</span>
                                 </div>
                             </div>
 
+                            <div class="col-lg-4 col-md-4 col-xl-4">
+                                <div class="form-group has-feedback">
+                                    <label for="province">{{ __("Province") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="province" id="province"
+                                        value="{{ isset($report) ? $report['province'] : old('province') }}"
+                                        placeholder="{{ __("Business Type") }}" required>
 
-                            <div class="col-md-12">
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('province') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 col-xl-4">
+                                <div class="form-group has-feedback">
+                                    <label for="district">{{ __("District") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="district" id="district"
+                                        value="{{ isset($report) ? $report['district'] : old('district') }}"
+                                        placeholder="{{ __("Business Type") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('district') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 col-xl-4">
+                                <div class="form-group has-feedback">
+                                    <label for="commune">{{ __("Commune") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="commune" id="commune"
+                                        value="{{ isset($report) ? $report['commune'] : old('commune') }}"
+                                        placeholder="{{ __("Business Type") }}" required>
+
+                                    <span class="fa fa-info form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('commune') }}</span>
+                                </div>
+                            </div>
+                            {{-- <div class="col-md-12">
                                 <div class="form-group has-feedback">
                                     <label for="location">{{ __("Location") }} <span class="text-danger">*</span></label>
 
@@ -665,7 +716,7 @@
                                     <span class="fa fa-info form-control-feedback"></span>
                                     <span class="text-danger">{{ $errors->first('location') }}</span>
                                 </div>
-                            </div>
+                            </div> --}}
 
                         @endif
 
@@ -783,10 +834,10 @@
                                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                             <div class="form-group has-feedback">
                                                                 <label for="qty"> {{ __('Quantity') }} </label>
-                                                                <input type="number" class="form-control" name="foc_qty"
-                                                                    value="{{ old('foc_qty', $report->foc_qty ?? '') }}">
+                                                                <input type="number" class="form-control" name="sku"
+                                                                    value="{{ old('sku', $report->sku ?? '') }}">
                                                                 <span class="fa fa-info form-control-feedback"></span>
-                                                                <span class="text-danger">{{ $errors->first('foc_qty') }}</span>
+                                                                <span class="text-danger">{{ $errors->first('sku') }}</span>
                                                             </div>
                                                         </div>
                                                     </div>

@@ -10,8 +10,11 @@ class Retail extends Model
     use HasFactory;
     protected $table = 'retails';
 
-   protected $fillable = [
+    protected $fillable = [
         'region',
+        'province',
+        'district',
+        'commune',
         'sm_name',
         'rsm_name',
         'asm_name',
@@ -19,18 +22,17 @@ class Retail extends Model
         'se_name',
         'se_code',
         'customer_code',
-        'depo_contact',
-        'creater',
-        'depo_name',
+        'depot_contact',
+        'depot_name',
         'retails_name',
         'retails_contact',
-        'business_type',
+        'outlet_type',
         'sale_kpi',
         'display_qty',
-        'foc_qty',
+        'sku',
+        'incentive',
         'remark',
         'apply_user',
-        'location',
     ];
 
     public function user()

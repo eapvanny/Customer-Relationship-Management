@@ -199,11 +199,11 @@
                                             {{-- <th>{{ __('ASM Name') }}</th>
                                             <th>{{ __('SE Info') }}</th> --}}
                                             <th>{{ __('Customer Code') }}</th>
-                                            <th>{{ __('Depo Info') }}</th>
+                                            <th>{{ __('Depot Info') }}</th>
                                             {{-- <th>{{ __('WS Info') }}</th> --}}
-                                            <th>{{ __('Business Type') }}</th>
+                                            <th>{{ __('Outlet Type') }}</th>
                                             <th>{{ __('Display QTY') }}</th>
-                                            <th>{{ __('FOC 600ML') }}</th>
+                                            <th>{{ __('SKU') }}</th>
                                             <th>{{ __('Location') }}</th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
@@ -221,15 +221,15 @@
                                                 </td>
                                                 <td>{{$item->customer_code}}</td>
                                                 <td class="text text-start">
-                                                    <p>{{$item->depo_name}}</p>
-                                                    <p>{{$item->depo_contact}}</p>
+                                                    <p>{{$item->depot_name}}</p>
+                                                    <p>{{$item->depot_contact}}</p>
                                                 </td>
                                                 <td>
-                                                    {{$item->business_type}}
+                                                    {{$item->outlet_type}}
                                                 </td>
                                                 <td>{{$item->display_qty}}</td>
-                                                <td>{{$item->foc_qty}}</td>
-                                                <td>{{$item->location}}</td>
+                                                <td>{{$item->sku}}</td>
+                                                <td>{{ collect([$item->province, $item->district, $item->commune])->filter()->join(', ') }}</td>
                                                 <td class="text-center">
                                                     <a href="javascript:void(0);" class="img-detail me-2"
                                                         data-id="{{ $item->id }}" title="{{ __('View') }}"><i
@@ -327,16 +327,18 @@
                                             <li class="list-group-item"><strong>{{ __('Retail Contact') }} :</strong>
                                                 <span id="modalRetailContact"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{ __('Business Type') }} :</strong> <span
-                                                    id="modalBusinessType"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('Outlet Type') }} :</strong> <span
+                                                    id="modalOutletType"></span></li>
 
                                             <li class="list-group-item"><strong>{{ __('Sale KPI') }} :</strong> <span
                                                     id="modalSaleKPI"></span></li>
                                             <li class="list-group-item"><strong>{{ __('Display QTY') }} :</strong>
                                                 <span id="modalDisplayQty"></span>
                                             </li>
-                                            <li class="list-group-item"><strong>{{ __('FOC 600ML') }} :</strong> <span
-                                                    id="modalFOC600ml"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('SKU') }} :</strong> <span
+                                                    id="modalSKU"></span></li>
+                                            <li class="list-group-item"><strong>{{ __('Incentive') }} :</strong> <span
+                                                    id="modalIncentive"></span></li>
                                             <li class="list-group-item"><strong>{{ __('Remark') }} :</strong> <span
                                                     id="modalRemark"></span></li>
 
@@ -443,10 +445,11 @@
 
                         $('#modalRetailName').text(report.modalRetailName);
                         $('#modalRetailContact').text(report.modalRetailContact);
-                        $('#modalBusinessType').text(report.modalBusinessType);
+                        $('#modalOutletType').text(report.modalOutletType);
                         $('#modalSaleKPI').text(report.modalSaleKPI);
                         $('#modalDisplayQty').text(report.modalDisplayQty);
-                        $('#modalFOC600ml').text(report.modalFOC600ml);
+                        $('#modalSKU').text(report.modalSKU);
+                        $('#modalIncentive').text(report.modalIncentive);
                         $('#modalRemark').text(report.modalRemark);
                         $('#modalLocation').text(report.modalLocation);
                         $('#modalCreateDate').text(report['modalCreateDate']);

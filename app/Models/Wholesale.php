@@ -20,18 +20,21 @@ class Wholesale extends Model
         'se_name',
         'se_code',
         'customer_code',
-        'depo_contact',
+        'depot_contact',
         'creater',
-        'depo_name',
+        'depot_name',
         'wholesale_name',
         'wholesale_contact',
-        'business_type',
+        'outlet_type',
         'sale_kpi',
         'display_qty',
-        'foc_qty',
         'remark',
         'apply_user',
-        'location',
+        'province',
+        'district',
+        'commune',
+        'sku',
+        'incentive'
     ];
 
     public function user()
