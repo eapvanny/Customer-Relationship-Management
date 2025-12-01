@@ -229,7 +229,7 @@
                                             <th>{{ __('Depot') }}</th>
                                             <th>{{ __('Outlet Type') }}</th>
                                             <th>{{ __('Display QTY') }}</th>
-                                            <th>{{ __('FOC') }}</th>
+                                            <th>{{ __('SKU') }}</th>
                                             <th class="notexport" style="max-width: 82px"> {{ __('Action') }} </th>
                                         </tr>
                                     </thead>
