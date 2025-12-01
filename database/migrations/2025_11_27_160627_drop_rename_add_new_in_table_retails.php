@@ -27,7 +27,7 @@ return new class extends Migration
                 $table->renameColumn('business_type', 'outlet_type');
                 $table->renameColumn('depo_name', 'depot_name');
                 $table->renameColumn('depo_contact', 'depot_contact');
-                $table->renameColumn('retails_name', 'Retail_name');
+                $table->renameColumn('retails_name', 'retail_name');
                 $table->renameColumn('retails_contact', 'retails_contact');
             }
 
