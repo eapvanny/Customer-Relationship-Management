@@ -571,25 +571,25 @@
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="retails_name">{{ __("Retail's Name") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="retails_name" id="retails_name"
-                                        value="{{ isset($report) ? $report['retails_name'] : old('retails_name') }}"
+                                    <label for="retail_name">{{ __("Retail's Name") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="retail_name" id="retail_name"
+                                        value="{{ isset($report) ? $report['retail_name'] : old('retail_name') }}"
                                         placeholder="{{ __("Retail's Name") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('retails_name') }}</span>
+                                    <span class="text-danger">{{ $errors->first('retail_name') }}</span>
                                 </div>
                             </div>
 
                             <div class="col-lg-6 col-md-6 col-xl-6">
                                 <div class="form-group has-feedback">
-                                    <label for="retails_contact">{{ __("Retail's Contact") }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="retails_contact" id="retails_contact"
-                                        value="{{ isset($report) ? $report['retails_contact'] : old('retails_contact') }}"
+                                    <label for="retail_contact">{{ __("Retail's Contact") }} <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="retail_contact" id="retail_contact"
+                                        value="{{ isset($report) ? $report['retail_contact'] : old('retail_contact') }}"
                                         placeholder="{{ __("Retail's Contact") }}" required>
 
                                     <span class="fa fa-info form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('retails_contact') }}</span>
+                                    <span class="text-danger">{{ $errors->first('retail_contact') }}</span>
                                 </div>
                             </div>
 
