@@ -60,7 +60,7 @@
             @hasTypePermission('view marketing')
                 <li>
                     <a class="fw-bold p-3 text-dark m-0 text-uppercase">
-                        <span>{{ __('Marketing Module') }}</span>
+                        <span>{{ __('Sale Module (Province)') }}</span>
                     </a>
                 </li>
             @endHasTypePermission
