@@ -186,7 +186,7 @@
                 {{--    Upgrade Stype NavItems --}}
                 <div class="d-flex align-items-center">
                     <!-- Dark Mode Toggle Switch -->
-                    <div class="mx-3">
+                    {{-- <div class="mx-3">
                         <label class="theme-switch">
                             <input type="checkbox" id="darkModeToggle">
                             <span class="slider">
@@ -194,7 +194,7 @@
                                 <i class="fas fa-moon"></i>
                             </span>
                         </label>
-                    </div>
+                    </div> --}}
                     <!-- Languages -->
                     <div class="dropdown mx-3 language">
                         <div data-mdb-dropdown-init class="main-language text-reset dropdown-toggle hidden-dropdow-xs"
