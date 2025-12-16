@@ -254,37 +254,47 @@ class ReportController extends Controller
             // Add more if needed in the future
         ];
 
-        $areas = AppHelper::getAreas(); // Original full list
+        $areas = AppHelper::getAreas();
 
-        // Only filter areas if user does NOT have full access
         if ($userAreaCode && !in_array($userRoleId, $fullAccessRoles)) {
-            $filteredAreas = collect($areas)->filter(function ($subItems, $areaName) use ($userAreaCode) {
-                // Region level: R1 → include all subregions like R1-01, R1-02
-                if (preg_match('/^R\d+$/', $userAreaCode)) {
-                    return str_starts_with($areaName, $userAreaCode . '-');
-                }
+            $areas = collect($areas)
+                ->filter(function ($subItems, $areaName) use ($userAreaCode) {
 
-                // Subregion level: R1-01 → include only exact subregion
-                if (preg_match('/^R\d+-\d{2}$/', $userAreaCode)) {
-                    return str_contains($areaName, $userAreaCode);
-                }
+                    // === RSM LEVEL (ex: "R1", "R2") ===
+                    if (preg_match('/^R\d$/', $userAreaCode)) {
+                        // Keep all sub-areas under same region (e.g. R1-01, R1-02)
+                        return str_contains($areaName, $userAreaCode . '-');
+                    }
 
-                // Store level: S-04 → include only the area that contains this store
-                if (preg_match('/^S-\d+$/', $userAreaCode)) {
-                    return in_array($userAreaCode, $subItems);
-                }
+                    // === ASM LEVEL (ex: "R1-01") ===
+                    if (preg_match('/^R\d-\d{2}$/', $userAreaCode)) {
+                        // Keep only that specific ASM area
+                        return str_contains($areaName, $userAreaCode);
+                    }
 
-                return false;
-            });
+                    // === SALE LEVEL (ex: "S-04") ===
+                    if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                        // Keep only areas containing this sales code
+                        foreach ($subItems as $code) {
+                            if ($code === $userAreaCode) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
 
-            // If user is store-level (S-XX), restrict to only their own store
-            if (preg_match('/^S-\d+$/', $userAreaCode)) {
-                $filteredAreas = $filteredAreas->map(function ($subItems) use ($userAreaCode) {
-                    return array_filter($subItems, fn($store) => $store === $userAreaCode);
-                })->filter(fn($stores) => !empty($stores)); // Remove empty arrays
-            }
-
-            $areas = $filteredAreas->toArray();
+                    return false;
+                })
+                ->map(function ($subItems, $areaName) use ($userAreaCode) {
+                    // If Sales (S-xx), keep only their own code in sublist
+                    if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                        return collect($subItems)
+                            ->filter(fn($code) => $code === $userAreaCode)
+                            ->toArray();
+                    }
+                    return $subItems;
+                })
+                ->toArray();
         }
         // Otherwise: $areas remains full list (for Super Admin, Admin, Director, Manager, etc.)
 
