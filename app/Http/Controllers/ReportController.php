@@ -151,6 +151,13 @@ class ReportController extends Controller
                 $employeeQuery->where('id', $userId);
             }
         }
+        // Get employees for dropdown
+        $employees = $employeeQuery
+            ->get(['id', 'username', 'family_name', 'name']) // only needed columns
+            ->mapWithKeys(function ($user) {
+                return [$user->id => $user->username . ' (' . $user->full_name . ')'];
+            })
+            ->toArray();
 
         $area_id = AppHelper::AREAS;
 
@@ -167,6 +174,12 @@ class ReportController extends Controller
         if ($request->filled('area_id')) {
             $is_filter = true;
             $query->where('reports.area_id', $request->area_id);
+        }
+
+        // Filter by selected employee
+        if ($request->filled('user_id')) {
+            $is_filter = true;
+            $query->where('reports.user_id', $request->user_id);
         }
 
         // Handle DataTables AJAX
@@ -215,7 +228,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('backend.report.list', compact('is_filter', 'area_id', 'showModal'));
+        return view('backend.report.list', compact('is_filter', 'area_id', 'showModal', 'employees'));
     }
 
 

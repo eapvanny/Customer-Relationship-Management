@@ -391,14 +391,14 @@
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
                                             <div class="row">
-                                                <div class="col-xl-4">
+                                                <div class="col-xl-3">
                                                     <div class="form-group">
                                                         <label for="date1">{{ __('From Date') }}</label>
                                                         <input type="date" name="date1" id="date1"
                                                             class="form-control" value="{{ request('date1') }}">
                                                     </div>
                                                 </div>
-                                                <div class="col-xl-4">
+                                                <div class="col-xl-3">
                                                     <div class="form-group">
                                                         <label for="date2">{{ __('To Date') }}</label>
                                                         <input type="date" name="date2" id="date2"
@@ -406,7 +406,7 @@
                                                     </div>
                                                 </div>
                                                 {{-- @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
-                                                    <div class="col-xl-4">
+                                                    <div class="col-xl-3">
                                                         <div class="form-group">
                                                             <label for="full_name">{{ __('Employee Name') }}</label>
                                                             {!! Form::select('full_name', $full_name, request('full_name'), [
@@ -417,7 +417,17 @@
                                                         </div>
                                                     </div>
                                                 @endif --}}
-                                                <div class="col-xl-4">
+                                                <div class="col-xl-3">
+                                                    <div class="form-group">
+                                                        <label for="user_id">{{ __('Employee') }}</label>
+                                                        {!! Form::select('user_id', $employees, request('user_id'), [
+                                                            'placeholder' => __('Select employee'),
+                                                            'id' => 'user_id',
+                                                            'class' => 'form-control select2',
+                                                        ]) !!}
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-3">
                                                     <div class="form-group">
                                                         <label for="area_id">{{ __('Area') }}</label>
                                                         {!! Form::select('area_id', $area_id, request('area_id'), [
@@ -673,6 +683,7 @@
                         d.date1 = "{{ request('date1') }}";
                         d.date2 = "{{ request('date2') }}";
                         d.area_id = "{{ request('area_id') }}";
+                        d.user_id = "{{ request('user_id') }}";
                     },
                     error: function(xhr, error, thrown) {
                         console.log('AJAX Error:', xhr.responseText);
