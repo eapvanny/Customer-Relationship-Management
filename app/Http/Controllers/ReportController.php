@@ -824,10 +824,11 @@ class ReportController extends Controller
     {
         $date1 = $request->input('date1');
         $date2 = $request->input('date2');
+        $user_id = $request->input('user_id');
         $area_id = $request->input('area_id');
 
         return Excel::download(
-            new ReportsExport($date1, $date2, $area_id),
+            new ReportsExport($date1, $date2, $user_id, $area_id),
             'reports_' . now()->format('Y_m_d_His') . '.xlsx'
         );
 
