@@ -113,9 +113,10 @@
                                             <th>{{ __('Area') }}</th>
                                             <th>{{ __('Username') }}</th>
                                             {{-- <th>{{ __('Email') }}</th> --}}
-                                            @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
+                                            {{-- @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
                                                 <th>{{ __('Managed By') }}</th>
-                                            @endif
+                                            @endif --}}
+                                            <th>{{ __('Managed By') }}</th>
                                             <th>{{ __('Phone No.') }}</th>
                                             <th>{{ __('Role') }}</th>
                                             <th>{{ __('User Type') }}</th>
@@ -197,13 +198,12 @@
                         data: 'username',
                         name: 'username'
                     },
-                    @if (auth()->user()->role_id != AppHelper::USER_MANAGER)
-                        {
-                            data: 'managed_by',
-                            name: 'managed_by',
-                            orderable: false
-                        },
-                    @endif {
+                    {
+                        data: 'managed_by',
+                        name: 'managed_by',
+                        orderable: false
+                    },
+                    {
                         data: 'phone_no',
                         name: 'phone_no'
                     },
