@@ -354,13 +354,15 @@ class CustomerController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'city' => 'required|string|max:255',
             'country' => 'required|string|max:255',
-            'outlet_photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+             // File upload
+            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50',
+            // Base64 image
             'outlet_photo_base64' => 'nullable|string',
         ];
 
         // Make outlet_photo required if neither file nor base64 is provided
         if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64')) {
-            $rules['outlet_photo'] = 'required|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50';
+            $rules['outlet_photo'] = 'required|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50';
         }
 
         $validator = Validator::make($request->all(), $rules);
