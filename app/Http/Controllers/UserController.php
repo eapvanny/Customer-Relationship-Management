@@ -577,7 +577,7 @@ class UserController extends Controller
         }
 
         $this->validate($request, $rules);
-        $createdBy = auth()->user()->role_id;
+        $createdBy = auth()->id();
         $userData = [
             'family_name' => $request->family_name,
             'name' => $request->name,
