@@ -472,6 +472,7 @@
                                     <thead>
                                         <tr>
                                             <th>{{ __('Area') }}</th>
+                                            <th>{{ __('Employee Name') }}</th>
                                             <th>{{ __("Depo's Name") }}</th>
                                             <th>{{ __('Customer Name') }}</th>
                                             <th>{{ __('Customer Code') }}</th>
@@ -691,6 +692,7 @@
                 },
                 columns: [
                     { data: 'area', name: 'area' },
+                    { data: 'employee_name', name: 'employee_name' },
                     { data: 'outlet_id', name: 'outlet_id' },
                     { data: 'customer', name: 'customer' },
                     { data: 'customer_code', name: 'customer_code' },

@@ -31,7 +31,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $is_filter = false;
-        $query = User::with(['role', 'manager']);
+        $query = User::with(['role', 'manager','supervisor']);
 
         $loggedInUser = auth()->user();
         $loggedInUserRole = $loggedInUser->role_id;
@@ -178,8 +178,8 @@ class UserController extends Controller
                     return __($data->username);
                 })
                 ->addColumn('managed_by', function ($data) {
-                    return $data->manager
-                        ? (auth()->user()->user_lang == 'en' ? $data->manager->getFullNameLatinAttribute() : $data->manager->getFullNameAttribute())
+                    return $data->supervisor
+                        ? (auth()->user()->user_lang == 'en' ? $data->supervisor->getFullNameLatinAttribute() : $data->supervisor->getFullNameAttribute())
                         : '<span class="text-danger">' . __("No Manager") . '</span>';
                 })
                 ->addColumn('phone_no', function ($data) {
@@ -200,31 +200,43 @@ class UserController extends Controller
                         : '<span style="color: red;">' . __('Inactive') . '</span>';
                 })
                 ->addColumn('action', function ($data) {
+                    $user = auth()->user();
+                    // USER_EMPLOYEE cannot do any action
+                    if ($user->role_id == AppHelper::USER_EMPLOYEE) {
+                        return '<span style="font-weight:bold; color:red;">No Action</span>';
+                    }
                     $button = '<div class="change-action-item">';
-                    $actions = false;
+                    // Edit (all except USER_EMPLOYEE)
+                    $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm">
+                                    <i class="fa fa-edit"></i>
+                                </a>';
+                    // Disable
+                    if ($data->status == 1) {
+                        $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" 
+                                        title="Disable" data-id="' . $data->id . '">
+                                        <i class="fa fa-ban"></i>
+                                    </a>';
+                    }
+                    // Enable
+                    if ($data->status == 0) {
+                        $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" 
+                                        title="Enable" data-id="' . $data->id . '">
+                                        <i class="fa fa-check"></i>
+                                    </a>';
+                    }
+                    // Forgot password (Super Admin only)
+                    if ($user->role_id == AppHelper::USER_SUPER_ADMIN) {
+                        $button .= '<a title="Forgot Password" href="' . route('forget.password', $data->id) . '" 
+                                        class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                    </a>';
+                    }
 
-                    if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) {
-                        $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
-                        $actions = true;
-                    }
-                    if ((auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) && $data->status == 1) {
-                        $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" title="Disable" data-id="' . $data->id . '"><i class="fa fa-ban"></i></a>';
-                        $actions = true;
-                    }
-                    if ((auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_MANAGER) && $data->status == 0) {
-                        $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" title="Enable" data-id="' . $data->id . '"><i class="fa fa-check"></i></a>';
-                        $actions = true;
-                    }
-                    if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN) {
-                        $button .= '<a title="forgotPassword" href="' . route('forget.password', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa-solid fa-arrows-rotate"></i></a>';
-                        $actions = true;
-                    }
-                    if (!$actions) {
-                        $button .= '<span style="font-weight:bold; color:red;">No Action</span>';
-                    }
                     $button .= '</div>';
+
                     return $button;
                 })
+
                 ->rawColumns(['action', 'photo', 'status', 'managed_by'])
                 ->make(true);
         }
@@ -245,7 +257,10 @@ class UserController extends Controller
             AppHelper::USER_ADMINISTRATOR,
             AppHelper::USER_DIRECTOR,
             AppHelper::USER_ADMIN,
-            AppHelper::USER_MANAGER
+            AppHelper::USER_MANAGER,
+            AppHelper::USER_RSM,
+            AppHelper::USER_ASM,
+            AppHelper::USER_SUP
         ])) {
             return response()->json([
                 'success' => false,
@@ -285,7 +300,10 @@ class UserController extends Controller
                 AppHelper::USER_ADMINISTRATOR,
                 AppHelper::USER_DIRECTOR,
                 AppHelper::USER_ADMIN,
-                AppHelper::USER_MANAGER
+                AppHelper::USER_MANAGER,
+                AppHelper::USER_RSM,
+                AppHelper::USER_ASM,
+                AppHelper::USER_SUP
             ])) {
             return response()->json([
                 'success' => false,

@@ -196,6 +196,8 @@ class CustomerController extends Controller
                         AppHelper::USER_MANAGER,
                         AppHelper::USER_RSM,
                         AppHelper::USER_ASM,
+                        AppHelper::USER_SUP,
+                        AppHelper::USER_EMPLOYEE
                     ]);
 
                     if ($canEdit) {

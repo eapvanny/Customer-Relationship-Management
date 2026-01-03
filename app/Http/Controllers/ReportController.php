@@ -191,6 +191,15 @@ class ReportController extends Controller
                     ->addColumn('area', function ($data) {
                         return $data->customer && $data->customer->area_id ? AppHelper::getAreaNameById($data->customer->area_id) ?? 'N/A' : AppHelper::getAreaNameById($data->area_id) ?? 'N/A';
                     })
+                    ->addColumn('employee_name', function ($data) {
+                        $user = $data->user;
+                        if ($user) {
+                            return auth()->user()->user_lang == 'en'
+                                ? $user->getFullNameLatinAttribute()
+                                : $user->getFullNameAttribute();
+                        }
+                        return 'N/A';
+                    })
                     ->addColumn('outlet_id', function ($data) {
                         return $data->customer->depo ? $data->customer->depo->name ?? 'N/A' : 'N/A';
                     })

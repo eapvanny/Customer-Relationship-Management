@@ -78,7 +78,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'manager_id');
     }
-
+    public function supervisor()
+    {
+        return $this->belongsTo(User::class, 'sup_id');
+    }
     // Optional: Relationship to get users managed by this user
     public function managedUsers()
     {
