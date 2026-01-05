@@ -694,12 +694,22 @@ class UserController extends Controller
             'name' => 'required|min:2|max:255',
             'family_name_latin' => 'required|min:2|max:255',
             'name_latin' => 'required|min:2|max:255',
-            'username' => 'required|min:2|max:255|unique:users,username,' . $id,
+            'username' => [
+                'required',
+                'min:2',
+                'max:255',
+                Rule::unique('users', 'username')->where(fn ($q) => $q->where('status', 1))->ignore($id),
+            ],
             'password' => 'nullable|min:6|max:50',
             'phone_no' => 'required',
             'role_id' => 'required',
             'gender' => 'required',
-            'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card,' . $id,
+            'staff_id_card' => [
+                'required',
+                'min:3',
+                'max:10',
+                Rule::unique('users', 'staff_id_card')->where(fn ($q) => $q->where('status', 1))->ignore($id),
+            ],
             'position' => 'required',
             'area' => 'required',
             'type' => 'required',
@@ -732,25 +742,11 @@ class UserController extends Controller
             'name_latin' => $request->name_latin,
             'role_id' => $request->role_id,
             'gender' => $request->gender,
-            'username' => [
-                'required',
-                'min:2',
-                'max:255',
-                Rule::unique('users', 'username')
-                    ->where(fn ($q) => $q->where('status', 1))
-                    ->ignore($id),
-            ],
+            'username' => $request->username,
             'email' => $request->email,
             'phone_no' => $request->phone_no,
             'status' => $request->status,
-            'staff_id_card' => [
-                'required',
-                'min:3',
-                'max:10',
-                Rule::unique('users', 'staff_id_card')
-                    ->where(fn ($q) => $q->where('status', 1))
-                    ->ignore($id),
-            ],
+            'staff_id_card' => $request->staff_id_card,
             'position' => $request->position,
             'area' => $request->area,
             'type' => $request->type,
