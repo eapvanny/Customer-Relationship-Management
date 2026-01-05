@@ -231,6 +231,13 @@ class UserController extends Controller
                                         <i class="fa-solid fa-arrows-rotate"></i>
                                     </a>';
                     }
+                    if ($user->role_id == AppHelper::USER_SUPER_ADMIN) {
+                        // Delete (Super Admin only)
+                        $button .= '<a href="' . route('user.destroy', $data->id) . '" class="btn btn-danger btn-sm delete" 
+                                        title="Delete">
+                                        <i class="fa fa-trash"></i> 
+                                    </a>';
+                    }
 
                     $button .= '</div>';
 
@@ -565,12 +572,24 @@ class UserController extends Controller
             'name' => 'required|min:2|max:255',
             'family_name_latin' => 'required|min:2|max:255',
             'name_latin' => 'required|min:2|max:255',
-            'username' => 'required|min:2|max:255|unique:users,username',
+            'username' => [
+                'required',
+                'min:2',
+                'max:255',
+                Rule::unique('users', 'username')->where(fn ($q) => $q->where('status', 1)),
+            ],
             'password' => 'required|min:6|max:50',
             'phone_no' => 'required',
             'role_id' => 'required',
             'gender' => 'required',
-            'staff_id_card' => 'required|min:3|max:10|unique:users,staff_id_card',
+            'staff_id_card' => [
+                'required',
+                'min:3',
+                'max:10',
+                Rule::unique('users', 'staff_id_card')->where(function ($query) {
+                    return $query->where('status', 1);
+                }),
+            ],
             'position' => 'required',
             'area' => 'required',
             'type' => 'required'
