@@ -91,6 +91,7 @@ class UserController extends Controller
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
                     ])->where('type', AppHelper::SALE)
+                        ->where('status', 1)
                         ->orWhere('id', $loggedInUserId);
                 });
             } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
@@ -101,7 +102,8 @@ class UserController extends Controller
                             AppHelper::USER_EMPLOYEE
                         ])
                         ->where('type', AppHelper::SALE)
-                        ->where('rsm_id', $loggedInUserId);
+                        ->where('rsm_id', $loggedInUserId)
+                        ->where('status', 1);
                 })
                 ->orWhere('id', $loggedInUserId);
             } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
@@ -110,7 +112,8 @@ class UserController extends Controller
                         AppHelper::USER_SUP,
                         AppHelper::USER_EMPLOYEE
                     ])->where('type', AppHelper::SALE)
-                        ->where('asm_id', $loggedInUserId);
+                        ->where('asm_id', $loggedInUserId)
+                        ->where('status', 1);
                 })
                 ->orWhere('id', $loggedInUserId);
             } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
@@ -118,6 +121,7 @@ class UserController extends Controller
                     $q->where('role_id', AppHelper::USER_EMPLOYEE)
                         ->where('type', AppHelper::SALE)
                         ->where('sup_id', $loggedInUserId)
+                        ->where('status', 1)
                         ->orWhere('id', $loggedInUserId);
                 });
             } elseif ($loggedInUserRole == AppHelper::USER_EMPLOYEE) {

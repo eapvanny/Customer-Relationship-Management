@@ -491,7 +491,7 @@
                         </h4>
                         <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('report.index') }}" class="btn btn-default">{{ __('Cancel') }}</a>
-                            <button type="submit" class="submitClick btn btn-info pull-right text-white"><i
+                            <button type="submit" id="submitBtn" class="submitClick btn btn-info pull-right text-white"><i
                                     class="fa @if ($report) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($report)
                                     {{ __('Update') }}
@@ -1610,6 +1610,17 @@
                 $('#btn-remove-outlet-photo').removeClass('d-none');
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+            const submitBtn = document.getElementById('submitBtn');
+
+            form.addEventListener('submit', function () {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+            });
+        });
+
         // $('#outlet').on('input', function() {
         //     let outletValue = $(this).val().trim();
 

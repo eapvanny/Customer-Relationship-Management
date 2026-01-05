@@ -434,7 +434,7 @@
                         <h4>{{ __('Customer') }}</h4>
                         <div class="action-btn-top none_fly_action_btn">
                             <a href="{{ URL::route('customer.index') }}" class="btn btn-default"> {{ __('Cancel') }} </a>
-                            <button type="submit" class="submitClick btn btn-info pull-right text-white">
+                            <button type="submit" class="submitClick btn btn-info pull-right text-white" onclick="disableButtons(this)">
                                 <i class="fa @if ($customer) fa-refresh @else fa-check-circle @endif"></i>
                                 @if ($customer)
                                     {{ __('Update') }}
@@ -443,7 +443,7 @@
                                 @endif
                             </button>
                             @if (!$customer)
-                                <button type="submit" class="submitClick submitAndContinue btn btn-success text-white">
+                                <button type="submit" class="submitClick submitAndContinue btn btn-success text-white" onclick="disableButtons(this)">
                                     <i class="fa fa-plus-circle"></i> {{ __('Save & Add New') }}
                                 </button>
                                 <div class="boxfooter"></div>

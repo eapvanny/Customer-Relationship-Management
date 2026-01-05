@@ -49,7 +49,7 @@
                         </h4>
                         <div class="box-tools pull-right">
                             <a href="{{ URL::route('depo.index') }}" class="btn btn-default">{{__('Cancel')}}</a>
-                            <button type="submit" class="btn btn-info pull-right text-white"><i
+                            <button type="submit" class="submitClick btn btn-info pull-right text-white" onclick="disableButtons(this)"><i
                                     class="fa @if ($depo) fa-refresh @else fa-plus-circle @endif"></i>
                                 @if ($depo)
                                     {{__('Update')}}
@@ -58,7 +58,7 @@
                                 @endif
                             </button>
                             @if(!$depo)
-                                <button type="submit" class="submitClick submitAndContinue btn btn-success text-white">
+                                <button type="submit" class="submitClick submitAndContinue btn btn-success text-white" onclick="disableButtons(this)">
                                 <i class="fa fa-plus-circle"></i> {{ __('Save & Add New') }}
                                 </button>
                                 <div class="boxfooter"></div>
