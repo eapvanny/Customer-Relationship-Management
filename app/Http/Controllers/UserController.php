@@ -732,11 +732,25 @@ class UserController extends Controller
             'name_latin' => $request->name_latin,
             'role_id' => $request->role_id,
             'gender' => $request->gender,
-            'username' => $request->username,
+            'username' => [
+                'required',
+                'min:2',
+                'max:255',
+                Rule::unique('users', 'username')
+                    ->where(fn ($q) => $q->where('status', 1))
+                    ->ignore($id),
+            ],
             'email' => $request->email,
             'phone_no' => $request->phone_no,
             'status' => $request->status,
-            'staff_id_card' => $request->staff_id_card,
+            'staff_id_card' => [
+                'required',
+                'min:3',
+                'max:10',
+                Rule::unique('users', 'staff_id_card')
+                    ->where(fn ($q) => $q->where('status', 1))
+                    ->ignore($id),
+            ],
             'position' => $request->position,
             'area' => $request->area,
             'type' => $request->type,
