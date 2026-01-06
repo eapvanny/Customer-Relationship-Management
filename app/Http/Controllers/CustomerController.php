@@ -566,10 +566,10 @@ class CustomerController extends Controller
         return Excel::download(new CustomerExport(), 'customers_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 
-    // public function destroy($id)
-    // {
-    //     $customer = Customer::findOrFail($id);
-    //     $customer->delete();
-    //     return redirect()->back()->with('success', "Customer has been deleted!");
-    // }
+    public function destroy($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->delete();
+        return redirect()->back()->with('success', "Customer has been deleted!");
+    }
 }
