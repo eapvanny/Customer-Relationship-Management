@@ -898,29 +898,40 @@
                 $('#btn-remove-outlet-photo').removeClass('d-none');
             @endif
 
-            function startOutletCamera(facingMode) {
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    outletVideo.setAttribute('playsinline', 'true');
-                    outletVideo.setAttribute('autoplay', 'true');
-                    navigator.mediaDevices.getUserMedia({
+            async function startOutletCamera(facingMode = 'user') {
+                try {
+                    stopOutletCamera(); // IMPORTANT
+
+                    const constraints = {
+                        audio: false,
                         video: {
-                            facingMode: facingMode,
+                            facingMode: { ideal: facingMode },
                             width: { ideal: 1280 },
                             height: { ideal: 720 }
                         }
-                    })
-                    .then(function(stream) {
-                        outletVideo.srcObject = stream;
-                        outletVideo.play();
-                    })
-                    .catch(function(error) {
-                        alert('Unable to access camera: ' + error.message);
-                        console.error('Camera error:', error);
-                        outletCameraModal.addClass('d-none');
-                        $('#outlet_photo').click();
-                    });
-                } else {
-                    alert('Camera not supported on this device.');
+                    };
+
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                    outletVideo.setAttribute('playsinline', true);
+                    outletVideo.setAttribute('autoplay', true);
+                    outletVideo.srcObject = stream;
+
+                    await outletVideo.play();
+
+                } catch (error) {
+                    console.error('Camera error:', error);
+
+                    alert(
+                        'Camera cannot be opened.\n\n' +
+                        'Possible reasons:\n' +
+                        '• Camera permission denied\n' +
+                        '• Camera already in use\n' +
+                        '• Browser does not support camera\n\n' +
+                        'Please upload photo manually.'
+                    );
+
+                    outletCameraModal.addClass('d-none');
                     $('#outlet_photo').click();
                 }
             }
@@ -932,10 +943,15 @@
                 startOutletCamera(outletCurrentFacingMode);
             });
 
-            $('#switch-outlet-camera-btn').on('click', function() {
-                outletCurrentFacingMode = (outletCurrentFacingMode === 'user') ? 'environment' : 'user';
+            $('#switch-outlet-camera-btn').on('click', function () {
+                outletCurrentFacingMode =
+                    outletCurrentFacingMode === 'user' ? 'environment' : 'user';
+
                 stopOutletCamera();
-                startOutletCamera(outletCurrentFacingMode);
+
+                setTimeout(() => {
+                    startOutletCamera(outletCurrentFacingMode);
+                }, 300);
             });
 
             $('#capture-outlet-btn').on('click', function(e) {
@@ -985,9 +1001,11 @@
 
             function stopOutletCamera() {
                 if (outletVideo.srcObject) {
-                    outletVideo.srcObject.getTracks().forEach(track => track.stop());
+                    outletVideo.srcObject.getTracks().forEach(track => {
+                        track.stop();
+                    });
+                    outletVideo.srcObject = null;
                 }
-                outletVideo.srcObject = null;
             }
 
             
