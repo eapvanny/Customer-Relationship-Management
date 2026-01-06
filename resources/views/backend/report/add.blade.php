@@ -1184,6 +1184,44 @@
                     $('#photo').click();
                 }
             }
+            async function startCamera(facingMode = 'user') {
+                try {
+                    stopCamera(); // IMPORTANT
+
+                    const constraints = {
+                        audio: false,
+                        video: {
+                            facingMode: { ideal: facingMode },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    };
+
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                    video.setAttribute('playsinline', true);
+                    video.setAttribute('autoplay', true);
+                    video.srcObject = stream;
+
+                    await video.play();
+
+                } catch (error) {
+                    console.error('Camera error:', error);
+
+                    alert(
+                        'Camera cannot be opened.\n\n' +
+                        'Possible reasons:\n' +
+                        '• Camera permission denied\n' +
+                        '• Camera already in use\n' +
+                        '• Browser does not support camera\n\n' +
+                        'Please upload photo manually.'
+                    );
+
+                    CameraModal.addClass('d-none');
+                    $('#photo').click();
+                }
+            }
+
 
             // Use click event only, targeting the button specifically
             $('[data-action="open-camera"]').on('click', function(e) {
@@ -1193,11 +1231,17 @@
                 startCamera(currentFacingMode);
             });
 
-            $('#switch-camera-btn').on('click', function() {
-                currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+            $('#switch-camera-btn').on('click', function () {
+                currentFacingMode =
+                    currentFacingMode === 'user' ? 'environment' : 'user';
+
                 stopCamera();
-                startCamera(currentFacingMode);
+
+                setTimeout(() => {
+                    startCamera(currentFacingMode);
+                }, 300);
             });
+
 
             $('#capture-btn').on('click', function(e) {
                 e.preventDefault();
@@ -1246,9 +1290,11 @@
 
             function stopCamera() {
                 if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject.getTracks().forEach(track => {
+                        track.stop();
+                    });
+                    video.srcObject = null;
                 }
-                video.srcObject = null;
             }
 
             const selectedAreaId = '{{ old('area', $report->area_id ?? '') }}';
