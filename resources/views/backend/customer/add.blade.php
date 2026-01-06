@@ -984,6 +984,20 @@
                 outletCameraModal.addClass('d-none');
             });
 
+            // $('#outlet_photo').on('change', function(e) {
+            //     const file = e.target.files[0];
+            //     if (file) {
+            //         const reader = new FileReader();
+            //         reader.onload = function(e) {
+            //             outletImgPreview.attr('src', e.target.result).removeClass('d-none');
+            //             outletImgInput.val(e.target.result);
+            //             $('#btn-upload-outlet-photo').addClass('d-none');
+            //             $('#btn-remove-outlet-photo').removeClass('d-none');
+            //             updateOutletCameraLabel();
+            //         };
+            //         reader.readAsDataURL(file);
+            //     }
+            // });
             $('#outlet_photo').on('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -991,13 +1005,11 @@
                     reader.onload = function(e) {
                         outletImgPreview.attr('src', e.target.result).removeClass('d-none');
                         outletImgInput.val(e.target.result);
-                        $('#btn-upload-outlet-photo').addClass('d-none');
-                        $('#btn-remove-outlet-photo').removeClass('d-none');
-                        updateOutletCameraLabel();
                     };
                     reader.readAsDataURL(file);
                 }
             });
+
 
             function stopOutletCamera() {
                 if (outletVideo.srcObject) {
