@@ -13,6 +13,7 @@ use App\Exports\ReportsExport;
 use App\Models\Customer;
 use App\Models\Depo;
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Excel as ExcelExcel;
@@ -510,44 +511,78 @@ class ReportController extends Controller
 
         // Handle main photo file upload if exists
         if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'uploads/' . $fileName;
-            Storage::put($filePath, file_get_contents($file));
-            $data['photo'] = $filePath;
+            try {
+                $file = $request->file('photo');
+                $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+                $filePath = 'uploads/' . $fileName;
+
+                // Resize and compress the image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                // Optional: Check image size after compression
+                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
+                // if ($sizeInKB > 500) {
+                //     // If still too large, resize to smaller dimensions
+                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
+                // }
+
+                Storage::put($filePath, $resizedImage);
+                $data['photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process main photo: ' . $e->getMessage())->withInput();
+            }
         }
 
         // Handle main base64 image if provided
         if ($request->photo_base64) {
-            $image = str_replace('data:image/png;base64,', '', $request->photo_base64);
-            $image = str_replace(' ', '+', $image);
-            $imageData = base64_decode($image);
+            try {
+                // Resize and compress base64 image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->photo_base64);
 
-            $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.png';
-            Storage::put($fileName, $imageData);
-
-            $data['photo'] = $fileName;
+                $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.jpg';
+                Storage::put($fileName, $resizedImage);
+                $data['photo'] = $fileName;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process main photo: ' . $e->getMessage())->withInput();
+            }
         }
 
         // Handle outlet photo file upload if exists
         if ($request->hasFile('outlet_photo')) {
-            $file = $request->file('outlet_photo');
-            $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'uploads/' . $fileName;
-            Storage::put($filePath, file_get_contents($file));
-            $data['outlet_photo'] = $filePath;
+            try {
+                $file = $request->file('outlet_photo');
+                $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+                $filePath = 'uploads/' . $fileName;
+
+                // Resize and compress the image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                // Optional: Check image size after compression
+                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
+                // if ($sizeInKB > 500) {
+                //     // If still too large, resize to smaller dimensions
+                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
+                // }
+
+                Storage::put($filePath, $resizedImage);
+                $data['outlet_photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process outlet photo: ' . $e->getMessage())->withInput();
+            }
         }
 
         // Handle outlet base64 image if provided
         if ($request->outlet_photo_base64) {
-            $image = str_replace('data:image/png;base64,', '', $request->outlet_photo_base64);
-            $image = str_replace(' ', '+', $image);
-            $imageData = base64_decode($image);
+            try {
+                // Resize and compress base64 image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64);
 
-            $fileName = 'uploads/outlet_' . time() . '_' . Str::random(10) . '.png';
-            Storage::put($fileName, $imageData);
-
-            $data['outlet_photo'] = $fileName;
+                $fileName = 'uploads/outlet_' . time() . '_' . Str::random(10) . '.jpg';
+                Storage::put($fileName, $resizedImage);
+                $data['outlet_photo'] = $fileName;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process outlet photo: ' . $e->getMessage())->withInput();
+            }
         }
 
         // Generate unique report number
@@ -560,35 +595,39 @@ class ReportController extends Controller
         $newSoNumber = $lastSoNumber + 1;
         $soNumber = $prefix . '-' . str_pad($newSoNumber, 7, '0', STR_PAD_LEFT);
 
-        // Store report data
-        Report::create([
-            'user_id' => auth()->id(),
-            'so_number' => $soNumber,
-            'area_id' => $request->area,
-            'outlet_id' => $request->outlet_id,
-            'driver_id' => $driverId,
-            'driver_status' => $hasDriver,
-            'customer_id' => $request->customer_id,
-            'customer_type' => $request->customer_type,
-            'date' => Carbon::now('Asia/Phnom_Penh'),
-            '250_ml' => $request['250_ml'],
-            '350_ml' => $request['350_ml'],
-            '600_ml' => $request['600_ml'],
-            '1500_ml' => $request['1500_ml'],
-            'other' => $request->other,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'city' => $request->city,
-            'country' => $request->country,
-            'qty' => $request->qty,
-            'posm' => $request->posm,
-            'qty2' => $request->qty2,
-            'posm2' => $request->posm2,
-            'qty3' => $request->qty3,
-            'posm3' => $request->posm3,
-            'photo' => $data['photo'],
-            'outlet_photo' => $data['outlet_photo'],
-        ]);
+        try {
+            // Store report data
+            Report::create([
+                'user_id' => auth()->id(),
+                'so_number' => $soNumber,
+                'area_id' => $request->area,
+                'outlet_id' => $request->outlet_id,
+                'driver_id' => $driverId,
+                'driver_status' => $hasDriver,
+                'customer_id' => $request->customer_id,
+                'customer_type' => $request->customer_type,
+                'date' => Carbon::now('Asia/Phnom_Penh'),
+                '250_ml' => $request['250_ml'],
+                '350_ml' => $request['350_ml'],
+                '600_ml' => $request['600_ml'],
+                '1500_ml' => $request['1500_ml'],
+                'other' => $request->other,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'city' => $request->city,
+                'country' => $request->country,
+                'qty' => $request->qty,
+                'posm' => $request->posm,
+                'qty2' => $request->qty2,
+                'posm2' => $request->posm2,
+                'qty3' => $request->qty3,
+                'posm3' => $request->posm3,
+                'photo' => $data['photo'],
+                'outlet_photo' => $data['outlet_photo'],
+            ]);
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create report: ' . $e->getMessage())->withInput();
+        }
 
         $adminUsers = User::whereIn('role_id', [
             AppHelper::USER_SUPER_ADMIN,
@@ -661,9 +700,9 @@ class ReportController extends Controller
             'longitude' => 'required|numeric',
             'city' => 'required|string',
             'country' => 'required|string',
-            'photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp,gif,bmp|max:10000|dimensions:min_width=50,min_height=50',
             'photo_base64' => 'nullable|string',
-            'outlet_photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp,gif,bmp|max:10000|dimensions:min_width=50,min_height=50',
             'outlet_photo_base64' => 'nullable|string',
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
@@ -678,8 +717,8 @@ class ReportController extends Controller
             $rules['outlet_photo'] = 'required|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50';
         }
 
-
         $this->validate($request, $rules);
+
         $data = [
             'area_id' => $request->area,
             'outlet_id' => $request->outlet_id,
@@ -704,6 +743,7 @@ class ReportController extends Controller
             'photo' => $report->photo, // Preserve existing photo by default
             'outlet_photo' => $report->outlet_photo,
         ];
+
         if (!$report->so_number) {
             $authUser = auth()->user();
             $areaName = $request->area;
@@ -728,63 +768,101 @@ class ReportController extends Controller
 
         // Handle new photo upload via file input
         if ($request->hasFile('photo')) {
-            if ($report->photo && Storage::exists($report->photo)) {
-                Storage::delete($report->photo);
-            }
+            try {
+                // Delete existing photo if exists
+                if ($report->photo && Storage::exists($report->photo)) {
+                    Storage::delete($report->photo);
+                }
 
-            $file = $request->file('photo');
-            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'Uploads/' . $fileName;
-            Storage::put($filePath, file_get_contents($file));
-            $data['photo'] = $filePath;
+                $file = $request->file('photo');
+                $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+                $filePath = 'Uploads/' . $fileName;
+
+                // Resize and compress the image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                Storage::put($filePath, $resizedImage);
+                $data['photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process main photo: ' . $e->getMessage())->withInput();
+            }
         }
         // Handle base64 image if provided
-        elseif ($request->filled('photo_base64') && preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $request->photo_base64)) {
-            if ($report->photo && Storage::exists($report->photo)) {
-                Storage::delete($report->photo);
-            }
+        elseif ($request->filled('photo_base64')) {
+            try {
+                // Delete existing photo if exists
+                if ($report->photo && Storage::exists($report->photo)) {
+                    Storage::delete($report->photo);
+                }
 
-            $imageData = base64_decode(preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $request->photo_base64));
-            $fileName = time() . '_' . md5(uniqid()) . '.png';
-            $filePath = 'Uploads/' . $fileName;
-            Storage::put($filePath, $imageData);
-            $data['photo'] = $filePath;
+                // Resize and compress base64 image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->photo_base64);
+
+                $fileName = time() . '_' . md5(uniqid()) . '.jpg';
+                $filePath = 'Uploads/' . $fileName;
+                Storage::put($filePath, $resizedImage);
+                $data['photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process main photo: ' . $e->getMessage())->withInput();
+            }
         }
         // Handle existing photo if no new photo is provided
         elseif ($request->filled('oldphoto') && Storage::exists($request->oldphoto)) {
             $data['photo'] = $request->oldphoto;
         }
-        // Handle new photo upload via file input
-        if ($request->hasFile('outlet_photo')) {
-            if ($report->outlet_photo && Storage::exists($report->outlet_photo)) {
-                Storage::delete($report->outlet_photo);
-            }
 
-            $file = $request->file('outlet_photo');
-            $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'Uploads/' . $fileName;
-            Storage::put($filePath, file_get_contents($file));
-            $data['outlet_photo'] = $filePath;
+        // Handle new outlet photo upload via file input
+        if ($request->hasFile('outlet_photo')) {
+            try {
+                // Delete existing outlet photo if exists
+                if ($report->outlet_photo && Storage::exists($report->outlet_photo)) {
+                    Storage::delete($report->outlet_photo);
+                }
+
+                $file = $request->file('outlet_photo');
+                $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+                $filePath = 'Uploads/' . $fileName;
+
+                // Resize and compress the image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                Storage::put($filePath, $resizedImage);
+                $data['outlet_photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process outlet photo: ' . $e->getMessage())->withInput();
+            }
         }
         // Handle base64 image if provided
-        elseif ($request->filled('outlet_photo_base64') && preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $request->outlet_photo_base64)) {
-            if ($report->outlet_photo && Storage::exists($report->outlet_photo)) {
-                Storage::delete($report->outlet_photo);
-            }
+        elseif ($request->filled('outlet_photo_base64')) {
+            try {
+                // Delete existing outlet photo if exists
+                if ($report->outlet_photo && Storage::exists($report->outlet_photo)) {
+                    Storage::delete($report->outlet_photo);
+                }
 
-            $imageData = base64_decode(preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $request->outlet_photo_base64));
-            $fileName = time() . '_' . md5(uniqid()) . '.png';
-            $filePath = 'Uploads/' . $fileName;
-            Storage::put($filePath, $imageData);
-            $data['outlet_photo'] = $filePath;
-        } elseif ($request->filled('outlet_photo_base64') && Storage::exists($request->old_outlet_photo)) {
-            $data['photo'] = $request->old_outlet_photo;
+                // Resize and compress base64 image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64);
+
+                $fileName = 'outlet_' . time() . '_' . md5(uniqid()) . '.jpg';
+                $filePath = 'Uploads/' . $fileName;
+                Storage::put($filePath, $resizedImage);
+                $data['outlet_photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process outlet photo: ' . $e->getMessage())->withInput();
+            }
+        }
+        // Handle existing outlet photo if no new photo is provided
+        elseif ($request->filled('old_outlet_photo') && Storage::exists($request->old_outlet_photo)) {
+            $data['outlet_photo'] = $request->old_outlet_photo;
         }
 
-        // Update report
-        $report->update($data);
-
-        return redirect()->route('report.index')->with('success', 'Report has been updated!');
+        try {
+            // Update report
+            $report->update($data);
+            return redirect()->route('report.index')->with('success', 'Report has been updated!');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update report: ' . $e->getMessage())->withInput();
+        }
     }
 
 

@@ -354,7 +354,7 @@ class CustomerController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'city' => 'required|string|max:255',
             'country' => 'required|string|max:255',
-             // File upload
+            // File upload
             'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50',
             // Base64 image
             'outlet_photo_base64' => 'nullable|string',
@@ -407,20 +407,41 @@ class CustomerController extends Controller
 
         // Handle outlet photo file upload if exists
         if ($request->hasFile('outlet_photo')) {
-            $file = $request->file('outlet_photo');
-            $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'Uploads/' . $fileName;
-            Storage::disk('public')->put($filePath, file_get_contents($file));
-            $data['outlet_photo'] = $filePath;
+            try {
+                $file = $request->file('outlet_photo');
+                $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+                $filePath = 'Uploads/' . $fileName;
+
+                // Resize and compress the image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                // Optional: Check image size after compression
+                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
+                // if ($sizeInKB > 500) {
+                //     // If still too large, resize to smaller dimensions
+                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
+                // }
+
+                Storage::disk('public')->put($filePath, $resizedImage);
+
+                $data['outlet_photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process image: ' . $e->getMessage())->withInput();
+            }
         }
         // Handle outlet base64 image if provided and no file is uploaded
         elseif ($request->filled('outlet_photo_base64')) {
-            $image = str_replace('data:image/png;base64,', '', $request->outlet_photo_base64);
-            $image = str_replace(' ', '+', $image);
-            $imageData = base64_decode($image);
-            $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(10) . '.png';
-            Storage::disk('public')->put($fileName, $imageData);
-            $data['outlet_photo'] = $fileName;
+            try {
+                // Resize and compress base64 image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64);
+
+                $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(10) . '.jpg';
+                Storage::disk('public')->put($fileName, $resizedImage);
+
+                $data['outlet_photo'] = $fileName;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process image: ' . $e->getMessage())->withInput();
+            }
         }
 
         try {
@@ -468,13 +489,13 @@ class CustomerController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'city' => 'required|string|max:255',
             'country' => 'required|string|max:255',
-            'outlet_photo' => 'nullable|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50',
+            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50',
             'outlet_photo_base64' => 'nullable|string',
         ];
 
         // Make outlet_photo required if neither file nor base64 is provided and no existing photo exists
         if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64') && !$customer->outlet_photo) {
-            $rules['outlet_photo'] = 'required|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50';
+            $rules['outlet_photo'] = 'required|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50';
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -485,13 +506,11 @@ class CustomerController extends Controller
 
         // Prepare data for update
         $data = [
-            // 'user_id' => auth()->user()->id,
             'name' => $request->name,
             'phone' => $request->phone,
             'area_id' => $request->area,
             'depo_id' => $request->depo_id,
             'customer_type' => $request->customer_type,
-            // 'user_type' => auth()->user()->type,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'city' => $request->city,
@@ -522,28 +541,49 @@ class CustomerController extends Controller
 
         // Handle outlet photo file upload if exists
         if ($request->hasFile('outlet_photo')) {
-            // Delete existing photo if it exists
-            if ($customer->outlet_photo && Storage::disk('public')->exists($customer->outlet_photo)) {
-                Storage::disk('public')->delete($customer->outlet_photo);
+            try {
+                // Delete existing photo if it exists
+                if ($customer->outlet_photo && Storage::disk('public')->exists($customer->outlet_photo)) {
+                    Storage::disk('public')->delete($customer->outlet_photo);
+                }
+
+                $file = $request->file('outlet_photo');
+                $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
+                $filePath = 'Uploads/' . $fileName;
+
+                // Resize and compress the image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                // Optional: Check image size after compression
+                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
+                // if ($sizeInKB > 500) {
+                //     // If still too large, resize to smaller dimensions
+                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
+                // }
+
+                Storage::disk('public')->put($filePath, $resizedImage);
+                $data['outlet_photo'] = $filePath;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process image: ' . $e->getMessage())->withInput();
             }
-            $file = $request->file('outlet_photo');
-            $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'Uploads/' . $fileName;
-            Storage::disk('public')->put($filePath, file_get_contents($file));
-            $data['outlet_photo'] = $filePath;
         }
         // Handle outlet base64 image if provided and no file is uploaded
         elseif ($request->filled('outlet_photo_base64')) {
-            // Delete existing photo if it exists
-            if ($customer->outlet_photo && Storage::disk('public')->exists($customer->outlet_photo)) {
-                Storage::disk('public')->delete($customer->outlet_photo);
+            try {
+                // Delete existing photo if it exists
+                if ($customer->outlet_photo && Storage::disk('public')->exists($customer->outlet_photo)) {
+                    Storage::disk('public')->delete($customer->outlet_photo);
+                }
+
+                // Resize and compress base64 image using AppHelper
+                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64);
+
+                $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(10) . '.jpg';
+                Storage::disk('public')->put($fileName, $resizedImage);
+                $data['outlet_photo'] = $fileName;
+            } catch (Exception $e) {
+                return redirect()->back()->with('error', 'Failed to process image: ' . $e->getMessage())->withInput();
             }
-            $image = str_replace('data:image/png;base64,', '', $request->outlet_photo_base64);
-            $image = str_replace(' ', '+', $image);
-            $imageData = base64_decode($image);
-            $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(10) . '.png';
-            Storage::disk('public')->put($fileName, $imageData);
-            $data['outlet_photo'] = $fileName;
         }
         // Clear outlet_photo if existing photo is deleted and no new photo is provided
         elseif ($request->has('delete_outlet_photo') && $customer->outlet_photo) {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Helpers;
 
+use Exception;
+
 class AppHelper
 {
     // Existing constants and methods...
@@ -262,5 +264,224 @@ public static function getAreaIdByText($areaText)
     }
     
     return [];
+}
+
+// resize image function
+// AppHelper.php
+public static function resizeAndCompressImage($file)
+{
+    // Create image from uploaded file
+    $image = null;
+    $mimeType = $file->getMimeType();
+    
+    switch ($mimeType) {
+        case 'image/jpeg':
+            $image = imagecreatefromjpeg($file->path());
+            break;
+        case 'image/png':
+            $image = imagecreatefrompng($file->path());
+            break;
+        case 'image/webp':
+            $image = imagecreatefromwebp($file->path());
+            break;
+        case 'image/gif':
+            $image = imagecreatefromgif($file->path());
+            break;
+        default:
+            throw new Exception('Unsupported image format');
+    }
+    
+    return self::processImageResize($image, $mimeType);
+}
+
+public static function resizeAndCompressBase64Image($base64String)
+{
+    // Decode base64 string
+    $image = str_replace('data:image/png;base64,', '', $base64String);
+    $image = str_replace(' ', '+', $image);
+    $imageData = base64_decode($image);
+    
+    // Create image from string
+    $imageResource = imagecreatefromstring($imageData);
+    
+    if ($imageResource === false) {
+        throw new Exception('Failed to create image from base64 string');
+    }
+    
+    // Process the image
+    $result = self::processImageResize($imageResource, 'image/jpeg');
+    
+    // Free memory
+    imagedestroy($imageResource);
+    
+    return $result;
+}
+
+private static function processImageResize($image, $mimeType = 'image/jpeg')
+{
+    // Get original dimensions
+    $originalWidth = imagesx($image);
+    $originalHeight = imagesy($image);
+    
+    // Define maximum dimensions (you can adjust these values)
+    $maxWidth = 1200;
+    $maxHeight = 1200;
+    
+    // Calculate new dimensions maintaining aspect ratio
+    if ($originalWidth > $maxWidth || $originalHeight > $maxHeight) {
+        $ratio = $originalWidth / $originalHeight;
+        
+        if ($maxWidth / $maxHeight > $ratio) {
+            $newWidth = $maxHeight * $ratio;
+            $newHeight = $maxHeight;
+        } else {
+            $newWidth = $maxWidth;
+            $newHeight = $maxWidth / $ratio;
+        }
+        
+        // Create new image with calculated dimensions
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency for PNG and GIF
+        if ($mimeType == 'image/png' || $mimeType == 'image/gif') {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+        
+        // Resize the image
+        imagecopyresampled($newImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+        
+        // Free original image memory
+        imagedestroy($image);
+        $image = $newImage;
+    }
+    
+    // Capture the compressed image
+    ob_start();
+    
+    // Adjust quality based on mime type
+    switch ($mimeType) {
+        case 'image/jpeg':
+            imagejpeg($image, null, 75); // 75% quality for JPEG
+            break;
+        case 'image/png':
+            imagepng($image, null, 7); // Compression level 7 (0-9) for PNG
+            break;
+        case 'image/webp':
+            imagewebp($image, null, 80); // 80% quality for WebP
+            break;
+        case 'image/gif':
+            imagegif($image);
+            break;
+        default:
+            // Default to JPEG if unsupported
+            imagejpeg($image, null, 75);
+            break;
+    }
+    
+    $compressedImage = ob_get_clean();
+    
+    // Free memory
+    imagedestroy($image);
+    
+    return $compressedImage;
+}
+
+// Optional: Helper method to get image size in KB
+public static function getImageSizeInKB($imageContent)
+{
+    return strlen($imageContent) / 1024;
+}
+
+// Optional: Method to resize to specific dimensions
+public static function resizeToSpecificSize($file, $maxWidth = 800, $maxHeight = 800, $quality = 75)
+{
+    $image = null;
+    $mimeType = $file->getMimeType();
+    
+    switch ($mimeType) {
+        case 'image/jpeg':
+            $image = imagecreatefromjpeg($file->path());
+            break;
+        case 'image/png':
+            $image = imagecreatefrompng($file->path());
+            break;
+        case 'image/webp':
+            $image = imagecreatefromwebp($file->path());
+            break;
+        case 'image/gif':
+            $image = imagecreatefromgif($file->path());
+            break;
+        default:
+            throw new Exception('Unsupported image format');
+    }
+    
+    return self::processResizeWithCustomSettings($image, $mimeType, $maxWidth, $maxHeight, $quality);
+}
+
+private static function processResizeWithCustomSettings($image, $mimeType, $maxWidth, $maxHeight, $quality)
+{
+    // Get original dimensions
+    $originalWidth = imagesx($image);
+    $originalHeight = imagesy($image);
+    
+    // Calculate new dimensions maintaining aspect ratio
+    if ($originalWidth > $maxWidth || $originalHeight > $maxHeight) {
+        $ratio = $originalWidth / $originalHeight;
+        
+        if ($maxWidth / $maxHeight > $ratio) {
+            $newWidth = $maxHeight * $ratio;
+            $newHeight = $maxHeight;
+        } else {
+            $newWidth = $maxWidth;
+            $newHeight = $maxWidth / $ratio;
+        }
+        
+        // Create new image
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency
+        if ($mimeType == 'image/png' || $mimeType == 'image/gif') {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+        
+        // Resize
+        imagecopyresampled($newImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+        imagedestroy($image);
+        $image = $newImage;
+    }
+    
+    // Capture output
+    ob_start();
+    
+    switch ($mimeType) {
+        case 'image/jpeg':
+            imagejpeg($image, null, $quality);
+            break;
+        case 'image/png':
+            // Convert PNG quality (0-9) from percentage
+            $pngQuality = 9 - round(($quality / 100) * 9);
+            imagepng($image, null, $pngQuality);
+            break;
+        case 'image/webp':
+            imagewebp($image, null, $quality);
+            break;
+        case 'image/gif':
+            imagegif($image);
+            break;
+        default:
+            imagejpeg($image, null, $quality);
+            break;
+    }
+    
+    $result = ob_get_clean();
+    imagedestroy($image);
+    
+    return $result;
 }
 }
