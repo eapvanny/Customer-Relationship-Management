@@ -75,53 +75,25 @@
 <script>
     $(document).ready(function() {
         const table = $('#datatable').DataTable({
-            processing: false,
-            serverSide: false,
-             ajax:{
-                    url: "{!! route('customer.index',Request::query()) !!}",
-                },
-            pageLength: 10,
+            processing: true,
+            serverSide: true,   // IMPORTANT
+            ajax: {
+                url: "{!! route('customer.index', Request::query()) !!}",
+                type: "GET"
+            },
+            pageLength: 10,     // 10 per page
+            lengthMenu: [10, 25, 50, 100],
+
             columns: [
-                {
-                    data: 'DT_RowIndex',
-                    name: 'DT_RowIndex',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'created_by',
-                    name: 'created_by'
-                },
-                {
-                    data: 'area_id',
-                    name: 'area_id'
-                },
-                {
-                    data: 'depo_id',
-                    name: 'depo_id'
-                },
-                {
-                    data: 'customer_code',
-                    name: 'customer_code'
-                },
-                {
-                    data: 'customer_name',
-                    name: 'customer_name'
-                },
-                {
-                    data: 'customer_type',
-                    name: 'customer_type'
-                },
-                {
-                    data: 'phone',
-                    name: 'phone'
-                },
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                }
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'created_by', name: 'created_by' },
+                { data: 'area_id', name: 'area_id' },
+                { data: 'depo_id', name: 'depo_id' },
+                { data: 'customer_code', name: 'customer_code' },
+                { data: 'customer_name', name: 'customer_name' },
+                { data: 'customer_type', name: 'customer_type' },
+                { data: 'phone', name: 'phone' },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
 
