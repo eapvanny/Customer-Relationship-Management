@@ -96,7 +96,7 @@ class DepoController extends Controller
                     $query->where('id', 0);
                 }
 
-                $depos = $query->orderBy('id', 'desc')->get();
+                $depos = $query->orderBy('id', 'desc');
                 return DataTables::of($depos)
                     ->addIndexColumn()
                     ->addColumn('created_by', function ($depo) {
