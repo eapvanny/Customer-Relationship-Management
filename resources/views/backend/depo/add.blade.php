@@ -75,7 +75,7 @@
                         @method('PUT')
                     @endif
                     <div class="row">
-                        <div class="col-md-6 col-xl-6">
+                        <div class="col-md-6 col-xl-6 col-sm-6">
                             <div class="form-group has-feedback">
                                 <label for="area">{{ __('Area') }} <span class="text-danger">*</span></label>
                                 <select name="area" id="area" class="form-control select2" required>
@@ -95,7 +95,18 @@
                                 <span class="text-danger">{{ $errors->first('area') }}</span>
                             </div>
                         </div>
-                        <div class="col-md-6 col-xl-6">
+                        {{-- <div class="col-md-4 col-xl-4 col-sm-12">
+                            <div class="form-group">
+                                <label for="user_id">{{ __('Employee') }}</label>
+                                {!! Form::select('user_id', [], request('user_id'), [
+                                    'placeholder' => __('Select area first'),
+                                    'id' => 'user_id',
+                                    'class' => 'form-control select2',
+                                ]) !!}
+
+                            </div>
+                        </div> --}}
+                        <div class="col-md-6 col-xl-6 col-sm-6">
                             <div class="form-group has-feedback">
                                 <label for="name">{{ __('Depo Name') }} <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="name" name="name"
@@ -121,6 +132,59 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
+
+            // $('#area').on('change', function() {
+            //     let areaVal  = $('#area').val(); // value (id)
+            //     let areaText = $('#area option:selected').text().trim(); // text
+
+            //     let $userSelect = $('#user_id');
+
+            //     // 👉 If area is empty
+            //     if(!areaVal){
+            //         $userSelect.empty();
+            //         $userSelect.append(`<option value="">{{ __('Select area first') }}</option>`);
+            //         $userSelect.trigger('change.select2');
+            //         return; // stop here, no ajax
+            //     }
+
+            //     // Else load users
+            //     $.ajax({
+            //         type: "POST",
+            //         url: "{{ route('ajax.getUserArea') }}",
+            //         data: {
+            //             _token: "{{ csrf_token() }}",
+            //             area: areaText
+            //         },
+            //         success: function(response) {
+
+            //             // clear old options
+            //             $userSelect.empty();
+
+            //             // add placeholder
+            //             $userSelect.append(`<option value="">{{ __('Select employee') }}</option>`);
+
+            //             if(response.users.length > 0){
+            //                 $.each(response.users, function(index, user){
+            //                     $userSelect.append(
+            //                         `<option value="${user.id}">${user.text}</option>`
+            //                     );
+            //                 });
+            //             } else {
+            //                 $userSelect.append(
+            //                     `<option value="">{{ __('No employee found') }}</option>`
+            //                 );
+            //             }
+
+            //             // refresh select2
+            //             $userSelect.trigger('change.select2');
+
+            //         },
+            //         error: function(xhr, status, error) {
+            //             console.error('AJAX Error: ' + status + error);
+            //         }
+            //     });
+            // });
+
 
             
             $(".submitClick").on('click', function(){

@@ -414,7 +414,8 @@ class ReportController extends Controller
         }
 
         $query = Customer::where('area_id', $areaId)
-            ->where('depo_id', $outletId);
+            ->where('depo_id', $outletId)
+            ->where('user_id', $authUser->id); // Only customers assigned to this user
 
         if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
             // Further filter if needed (e.g., customers assigned to this user)

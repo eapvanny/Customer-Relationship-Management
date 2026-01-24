@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AjaxBackendController;
 use App\Http\Controllers\AsmimportController;
 use App\Http\Controllers\AsmprogramController;
 use App\Http\Controllers\AuthController;
@@ -115,6 +116,8 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/get-depos-by-area', [CustomerController::class, 'getDeposByArea'])->name('get-depos-by-area');
     //Depo
     Route::resource('depo', DepoController::class);
+
+    Route::post('ajax/get-user-area', [AjaxBackendController::class, 'getUserArea'])->name('ajax.getUserArea');
 
 
     // SE section start
