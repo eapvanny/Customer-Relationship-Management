@@ -186,7 +186,7 @@ class ReportController extends Controller
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
-                $reports = $query->orderBy('id', 'desc')->get();
+                $reports = $query->orderBy('id', 'desc');
 
                 return DataTables::of($reports)
                     ->addColumn('area', function ($data) {
