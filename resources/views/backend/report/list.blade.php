@@ -670,7 +670,7 @@
             @endif
 
             var table = $('#datatable').DataTable({
-                processing: false,
+                processing: true,
                 serverSide: true,
                 pageLength: 10,
                 ajax: {
@@ -690,6 +690,9 @@
                         console.log('AJAX Error:', xhr.responseText);
                     }
                 },
+                pageLength: 10,     // 10 per page
+                lengthMenu: [10, 25, 50, 100],
+                
                 columns: [
                     { data: 'area', name: 'area' },
                     { data: 'employee_name', name: 'employee_name' },

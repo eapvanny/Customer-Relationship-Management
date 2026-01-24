@@ -87,6 +87,8 @@
                         console.log('AJAX Error: ', xhr.responseText);
                     }
                 },
+                pageLength: 10,     // 10 per page
+                lengthMenu: [10, 25, 50, 100],
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'created_by', name: 'created_by' },
