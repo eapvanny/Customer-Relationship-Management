@@ -169,6 +169,8 @@
                         console.log(xhr.responseText); // Log the error for debugging
                     }
                 },
+                pageLength: 10,     // 10 per page
+                lengthMenu: [10, 25, 50, 100],
                 columns: [{
                         data: 'photo',
                         name: 'photo',
