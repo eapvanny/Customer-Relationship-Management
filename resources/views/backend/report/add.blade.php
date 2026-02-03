@@ -1134,7 +1134,7 @@
             let imgInput = $('#img-preview');
             let cameraModal = $('#camera-modal');
             let cameraLabel = $('#camera-label');
-            let currentFacingMode = 'user';
+            let currentFacingMode = 'environment'; // Start with back camera if front is 'user'
 
             // Function to update camera label based on photo presence
             function updateCameraLabel() {
