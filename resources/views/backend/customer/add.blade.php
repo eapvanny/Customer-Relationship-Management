@@ -881,7 +881,7 @@
             let outletImgInput = $('#outlet-img-preview');
             let outletCameraModal = $('#outlet-camera-modal');
             let outletCameraLabel = $('#outlet-camera-label');
-            let outletCurrentFacingMode = 'user';
+            let outletCurrentFacingMode = 'environment'; // Start with back camera if front is 'user'
 
             function updateOutletCameraLabel() {
                 if (outletImgPreview.hasClass('d-none')) {

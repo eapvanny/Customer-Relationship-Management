@@ -13,6 +13,8 @@ use Exception;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cache;
 
 class CustomerController extends Controller
 {
@@ -337,123 +339,117 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        // Get all valid area IDs (numeric keys)
-        $areaIds = [];
-        foreach (AppHelper::getAreas() as $group) {
-            $areaIds = array_merge($areaIds, array_keys($group));
-        }
+        /* ------------------------------------
+        | 1. Cache area IDs (FAST)
+        |------------------------------------*/
+        $areaIds = Cache::rememberForever('area_ids', function () {
+            $ids = [];
+            foreach (AppHelper::getAreas() as $group) {
+                $ids = array_merge($ids, array_keys($group));
+            }
+            return $ids;
+        });
 
-        // Validation rules
+        /* ------------------------------------
+        | 2. Validation (LIGHT & FAST)
+        |------------------------------------*/
         $rules = [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
-            'area' => 'required|in:' . implode(',', $areaIds),
+            'phone' => 'required|string|max:50',
+            'area' => ['required', Rule::in($areaIds)],
             'depo_id' => 'required|exists:depos,id',
             'customer_type' => 'required|string',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'city' => 'required|string|max:255',
             'country' => 'required|string|max:255',
-            // File upload
-            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50',
-            // Base64 image
+
+            // Image (no svg – faster & safer)
+            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'outlet_photo_base64' => 'nullable|string',
         ];
 
-        // Make outlet_photo required if neither file nor base64 is provided
         if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64')) {
-            $rules['outlet_photo'] = 'required|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000|dimensions:min_width=50,min_height=50';
+            $rules['outlet_photo'] = 'required';
         }
 
-        $validator = Validator::make($request->all(), $rules);
+        $request->validate($rules);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-        $userType = auth()->user()->type;
-        // Determine prefix based on user type
-        switch ($userType) {
-            case AppHelper::SALE:
-                $prefix = 'CPP';
-                break;
-            case AppHelper::SE:
-                $prefix = 'CPV';
-                break;
-            default:
-                $prefix = 'CUS'; // fallback/default prefix
-                break;
-        }
-        // Generate unique customer code
-        $lastCustomer = Customer::orderBy('id', 'desc')->first();
-        $lastCodeNumber = $lastCustomer && $lastCustomer->code ? (int) substr($lastCustomer->code, 4) : 0;
-        $newCodeNumber = $lastCodeNumber + 1;
-        $code = $prefix . '-' . str_pad($newCodeNumber, 5, '0', STR_PAD_LEFT);
+        /* ------------------------------------
+        | 3. Customer prefix by user type
+        |------------------------------------*/
+        $prefix = match (auth()->user()->type) {
+            AppHelper::SALE => 'CPP',
+            AppHelper::SE   => 'CPV',
+            default         => 'CUS',
+        };
 
-        // Prepare data for storage
-        $data = [
-            'user_id' => auth()->user()->id,
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'area_id' => $request->area,
-            'depo_id' => $request->depo_id,
+        /* ------------------------------------
+        | 4. Save customer FIRST (INSTANT)
+        |------------------------------------*/
+        $customer = Customer::create([
+            'user_id'       => auth()->id(),
+            'name'          => $request->name,
+            'phone'         => $request->phone,
+            'area_id'       => $request->area,
+            'depo_id'       => $request->depo_id,
             'customer_type' => $request->customer_type,
-            'user_type' => auth()->user()->type,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'city' => $request->city,
-            'country' => $request->country,
-            'code' => $code,
-        ];
+            'user_type'     => auth()->user()->type,
+            'latitude'      => $request->latitude,
+            'longitude'     => $request->longitude,
+            'city'          => $request->city,
+            'country'       => $request->country,
+        ]);
 
-        // Handle outlet photo file upload if exists
-        if ($request->hasFile('outlet_photo')) {
-            try {
-                $file = $request->file('outlet_photo');
-                $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-                $filePath = 'Uploads/' . $fileName;
+        /* ------------------------------------
+        | 5. Generate customer code (NO SCAN)
+        |------------------------------------*/
+        $customer->update([
+            'code' => $prefix . '-' . str_pad($customer->id, 5, '0', STR_PAD_LEFT),
+        ]);
 
-                // Resize and compress the image using AppHelper
-                $resizedImage = AppHelper::resizeAndCompressImage($file);
-
-                // Optional: Check image size after compression
-                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
-                // if ($sizeInKB > 500) {
-                //     // If still too large, resize to smaller dimensions
-                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
-                // }
-
-                Storage::disk('public')->put($filePath, $resizedImage);
-
-                $data['outlet_photo'] = $filePath;
-            } catch (Exception $e) {
-                return redirect()->back()->with('error', 'Failed to process image: ' . $e->getMessage())->withInput();
-            }
-        }
-        // Handle outlet base64 image if provided and no file is uploaded
-        elseif ($request->filled('outlet_photo_base64')) {
-            try {
-                // Resize and compress base64 image using AppHelper
-                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64);
-
-                $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(10) . '.jpg';
-                Storage::disk('public')->put($fileName, $resizedImage);
-
-                $data['outlet_photo'] = $fileName;
-            } catch (Exception $e) {
-                return redirect()->back()->with('error', 'Failed to process image: ' . $e->getMessage())->withInput();
-            }
-        }
-
+        /* ------------------------------------
+        | 6. Handle outlet image (OPTIMIZED)
+        |------------------------------------*/
         try {
-            Customer::create($data);
+            if ($request->hasFile('outlet_photo')) {
 
-            if ($request->has('saveandcontinue')) {
-                return redirect()->route('customer.create')->with('success', 'Customer created successfully.');
+                $file = $request->file('outlet_photo');
+                $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
+
+                // Resize light (FAST)
+                $image = AppHelper::resizeToSpecificSize($file, 1024, 1024, 70);
+
+                Storage::disk('public')->put($fileName, $image);
+
+                $customer->update(['outlet_photo' => $fileName]);
             }
-            return redirect()->route('customer.index')->with('success', 'Customer created successfully.');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create customer: ' . $e->getMessage())->withInput();
+            elseif ($request->filled('outlet_photo_base64')) {
+
+                $fileName = 'Uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
+
+                $image = AppHelper::resizeAndCompressBase64Image(
+                    $request->outlet_photo_base64,
+                    1024,
+                    70
+                );
+
+                Storage::disk('public')->put($fileName, $image);
+
+                $customer->update(['outlet_photo' => $fileName]);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Image upload failed: ' . $e->getMessage())
+                ->withInput();
         }
+
+        /* ------------------------------------
+        | 7. Redirect
+        |------------------------------------*/
+        return $request->has('saveandcontinue')
+            ? redirect()->route('customer.create')->with('success', 'Customer created successfully.')
+            : redirect()->route('customer.index')->with('success', 'Customer created successfully.');
     }
 
     public function edit(Customer $customer)
