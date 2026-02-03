@@ -20,7 +20,8 @@ use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
-
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use function Laravel\Prompts\error;
 
 class ReportController extends Controller
@@ -464,195 +465,172 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
-        $areaIds = [];
-        foreach (AppHelper::getAreas() as $group) {
-            $areaIds = array_merge($areaIds, array_keys($group));
-        }
-        $hasDriver = $request->input('has_driver'); // 'yes' or 'no'
-        $driverId = $request->input('driver_id');   // value if 'yes', null if 'no'
+        /* ------------------------------------
+        | 1. Cache area IDs (FAST)
+        |------------------------------------*/
+        $areaIds = Cache::rememberForever('area_ids', function () {
+            $ids = [];
+            foreach (AppHelper::getAreas() as $group) {
+                $ids = array_merge($ids, array_keys($group));
+            }
+            return $ids;
+        });
+
+        /* ------------------------------------
+        | 2. Validation (LIGHT)
+        |------------------------------------*/
         $rules = [
-            'area' => 'required|in:' . implode(',', $areaIds),
+            'area' => ['required', Rule::in($areaIds)],
             'outlet_id' => 'required',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'city' => 'required|string',
-            'country' => 'required|string',
-            'photo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp,gif,bmp|max:10000|dimensions:min_width=50,min_height=50',
+            'city' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'photo_base64' => 'nullable|string',
-            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp,gif,bmp|max:10000|dimensions:min_width=50,min_height=50',
+
+            'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'outlet_photo_base64' => 'nullable|string',
+
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
             'driver_id' => 'required_if:has_driver,yes|nullable|numeric',
         ];
 
-        // Make outlet_photo required if neither file nor base64 is provided
-        if (!$request->hasFile('outlet_photo') && !$request->outlet_photo_base64) {
-            $rules['outlet_photo'] = 'required|mimes:jpeg,jpg,png|max:10000|dimensions:min_width=50,min_height=50';
+        if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64')) {
+            $rules['outlet_photo'] = 'required';
         }
 
-        $this->validate($request, $rules);
+        $request->validate($rules);
 
-        $data = $request->except(['photo', 'photo_base64', 'outlet_photo', 'outlet_photo_base64']);
-        $data['photo'] = null;
-        $data['outlet_photo'] = null;
+        /* ------------------------------------
+        | 3. Driver logic (UNCHANGED)
+        |------------------------------------*/
+        $hasDriver = $request->input('has_driver');
+        $driverId  = $request->input('driver_id');
 
-        // Handle driver_id and has_driver logic
         if (!$hasDriver && !$driverId) {
-            // Fetch the most recent report created today by the logged-in user
             $recentReport = Report::where('user_id', auth()->id())
                 ->whereDate('created_at', Carbon::today('Asia/Phnom_Penh'))
+                ->latest('id')
                 ->first();
 
             if ($recentReport) {
                 $hasDriver = $recentReport->driver_status;
-                $driverId = $recentReport->driver_id;
+                $driverId  = $recentReport->driver_id;
             }
         }
 
-        // Handle main photo file upload if exists
-        if ($request->hasFile('photo')) {
-            try {
-                $file = $request->file('photo');
-                $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-                $filePath = 'uploads/' . $fileName;
+        /* ------------------------------------
+        | 4. Create report FIRST (FAST DB)
+        |------------------------------------*/
+        $prefix = AppHelper::getAreaNameById($request->area);
 
-                // Resize and compress the image using AppHelper
-                $resizedImage = AppHelper::resizeAndCompressImage($file);
+        $report = Report::create([
+            'user_id'        => auth()->id(),
+            'area_id'        => $request->area,
+            'outlet_id'      => $request->outlet_id,
+            'driver_id'      => $driverId,
+            'driver_status'  => $hasDriver,
+            'customer_id'    => $request->customer_id,
+            'customer_type'  => $request->customer_type,
+            'date'           => now('Asia/Phnom_Penh'),
 
-                // Optional: Check image size after compression
-                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
-                // if ($sizeInKB > 500) {
-                //     // If still too large, resize to smaller dimensions
-                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
-                // }
+            '250_ml'         => $request['250_ml'],
+            '350_ml'         => $request['350_ml'],
+            '600_ml'         => $request['600_ml'],
+            '1500_ml'        => $request['1500_ml'],
+            'other'          => $request->other,
 
-                Storage::put($filePath, $resizedImage);
-                $data['photo'] = $filePath;
-            } catch (Exception $e) {
-                return redirect()->back()->with('error', 'Failed to process main photo: ' . $e->getMessage())->withInput();
-            }
-        }
+            'latitude'       => $request->latitude,
+            'longitude'      => $request->longitude,
+            'city'           => $request->city,
+            'country'        => $request->country,
 
-        // Handle main base64 image if provided
-        if ($request->photo_base64) {
-            try {
-                // Resize and compress base64 image using AppHelper
-                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->photo_base64);
+            'qty'            => $request->qty,
+            'posm'           => $request->posm,
+            'qty2'           => $request->qty2,
+            'posm2'          => $request->posm2,
+            'qty3'           => $request->qty3,
+            'posm3'          => $request->posm3,
+        ]);
 
-                $fileName = 'uploads/' . time() . '_' . Str::random(10) . '.jpg';
-                Storage::put($fileName, $resizedImage);
-                $data['photo'] = $fileName;
-            } catch (Exception $e) {
-                return redirect()->back()->with('error', 'Failed to process main photo: ' . $e->getMessage())->withInput();
-            }
-        }
+        /* ------------------------------------
+        | 5. SO Number (NO TABLE SCAN)
+        |------------------------------------*/
+        $report->update([
+            'so_number' => $prefix . '-' . str_pad($report->id, 7, '0', STR_PAD_LEFT),
+        ]);
 
-        // Handle outlet photo file upload if exists
-        if ($request->hasFile('outlet_photo')) {
-            try {
-                $file = $request->file('outlet_photo');
-                $fileName = 'outlet_' . time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-                $filePath = 'uploads/' . $fileName;
-
-                // Resize and compress the image using AppHelper
-                $resizedImage = AppHelper::resizeAndCompressImage($file);
-
-                // Optional: Check image size after compression
-                // $sizeInKB = AppHelper::getImageSizeInKB($resizedImage);
-                // if ($sizeInKB > 500) {
-                //     // If still too large, resize to smaller dimensions
-                //     $resizedImage = AppHelper::resizeToSpecificSize($file, 800, 800, 60);
-                // }
-
-                Storage::put($filePath, $resizedImage);
-                $data['outlet_photo'] = $filePath;
-            } catch (Exception $e) {
-                return redirect()->back()->with('error', 'Failed to process outlet photo: ' . $e->getMessage())->withInput();
-            }
-        }
-
-        // Handle outlet base64 image if provided
-        if ($request->outlet_photo_base64) {
-            try {
-                // Resize and compress base64 image using AppHelper
-                $resizedImage = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64);
-
-                $fileName = 'uploads/outlet_' . time() . '_' . Str::random(10) . '.jpg';
-                Storage::put($fileName, $resizedImage);
-                $data['outlet_photo'] = $fileName;
-            } catch (Exception $e) {
-                return redirect()->back()->with('error', 'Failed to process outlet photo: ' . $e->getMessage())->withInput();
-            }
-        }
-
-        // Generate unique report number
-        $authUser = auth()->user();
-        $areaName = $request->area;
-        $prefix = AppHelper::getAreaNameById($areaName);
-        // Get the last report that starts with the current prefix
-        $lastReport = Report::orderBy('id', 'desc')->first();
-        $lastSoNumber = $lastReport && $lastReport->so_number ? (int) substr($lastReport->so_number, 6) : 0;
-        $newSoNumber = $lastSoNumber + 1;
-        $soNumber = $prefix . '-' . str_pad($newSoNumber, 7, '0', STR_PAD_LEFT);
-
+        /* ------------------------------------
+        | 6. Image handling (OPTIMIZED)
+        |------------------------------------*/
         try {
-            // Store report data
-            Report::create([
-                'user_id' => auth()->id(),
-                'so_number' => $soNumber,
-                'area_id' => $request->area,
-                'outlet_id' => $request->outlet_id,
-                'driver_id' => $driverId,
-                'driver_status' => $hasDriver,
-                'customer_id' => $request->customer_id,
-                'customer_type' => $request->customer_type,
-                'date' => Carbon::now('Asia/Phnom_Penh'),
-                '250_ml' => $request['250_ml'],
-                '350_ml' => $request['350_ml'],
-                '600_ml' => $request['600_ml'],
-                '1500_ml' => $request['1500_ml'],
-                'other' => $request->other,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'city' => $request->city,
-                'country' => $request->country,
-                'qty' => $request->qty,
-                'posm' => $request->posm,
-                'qty2' => $request->qty2,
-                'posm2' => $request->posm2,
-                'qty3' => $request->qty3,
-                'posm3' => $request->posm3,
-                'photo' => $data['photo'],
-                'outlet_photo' => $data['outlet_photo'],
-            ]);
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create report: ' . $e->getMessage())->withInput();
+            if ($request->hasFile('photo')) {
+                $fileName = 'uploads/photo_' . time() . '_' . Str::random(8) . '.jpg';
+                $image = AppHelper::resizeToSpecificSize(
+                    $request->file('photo'),
+                    1024,
+                    1024,
+                    70
+                );
+                Storage::put($fileName, $image);
+                $report->update(['photo' => $fileName]);
+            }
+            elseif ($request->filled('photo_base64')) {
+                $fileName = 'uploads/photo_' . time() . '_' . Str::random(8) . '.jpg';
+                $image = AppHelper::resizeAndCompressBase64Image(
+                    $request->photo_base64,
+                    1024,
+                    70
+                );
+                Storage::put($fileName, $image);
+                $report->update(['photo' => $fileName]);
+            }
+
+            if ($request->hasFile('outlet_photo')) {
+                $fileName = 'uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
+                $image = AppHelper::resizeToSpecificSize(
+                    $request->file('outlet_photo'),
+                    1024,
+                    1024,
+                    70
+                );
+                Storage::put($fileName, $image);
+                $report->update(['outlet_photo' => $fileName]);
+            }
+            elseif ($request->filled('outlet_photo_base64')) {
+                $fileName = 'uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
+                $image = AppHelper::resizeAndCompressBase64Image(
+                    $request->outlet_photo_base64,
+                    1024,
+                    70
+                );
+                Storage::put($fileName, $image);
+                $report->update(['outlet_photo' => $fileName]);
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Image upload failed: ' . $e->getMessage());
         }
 
+        /* ------------------------------------
+        | 7. Notifications (UNCHANGED)
+        |------------------------------------*/
         $adminUsers = User::whereIn('role_id', [
             AppHelper::USER_SUPER_ADMIN,
             AppHelper::USER_ADMIN
         ])->pluck('id')->toArray();
 
-        $managerId = auth()->user()->manager_id;
-
-        $notificationUsers = $adminUsers;
-
-        if ($managerId) {
-            $notificationUsers[] = $managerId;
+        if (auth()->user()->manager_id) {
+            $adminUsers[] = auth()->user()->manager_id;
         }
 
-        // Remove duplicate user IDs (if any)
-        // $notificationUsers = array_unique($notificationUsers);
-
-        // event(new ReportRequest(
-        //     __("A new Request has been created by ") . auth()->user()->family_name . ' ' . auth()->user()->name,
-        //     $notificationUsers
-        // ));
-
-        return redirect()->route('report.index')->with('success', "Report has been created!");
+        return redirect()
+            ->route('report.index')
+            ->with('success', 'Report has been created!');
     }
+
 
 
     public function edit($id)
