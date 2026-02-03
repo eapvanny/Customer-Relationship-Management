@@ -670,34 +670,6 @@ $(document).ready(function() {
             }
         });
     }
-    //disable button after click to prevent multiple submission
-    function disableButtons(clickedButton) {
-        // Get all submit buttons
-        const submitButtons = document.querySelectorAll('.submitClick');
-        
-        // Disable all submit buttons
-        submitButtons.forEach(button => {
-            button.disabled = true;
-            button.classList.add('disabled');
-        });
-        
-        // Add loading state to clicked button
-        clickedButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
-        
-        // Re-enable buttons after form submission (in case of validation errors)
-        setTimeout(() => {
-            // This will re-enable buttons if form submission fails
-            // You can remove this if you handle form validation differently
-            const form = document.querySelector('form');
-            form.addEventListener('invalid', () => {
-                submitButtons.forEach(button => {
-                    button.disabled = false;
-                    button.classList.remove('disabled');
-                    // Restore original text (you might need to store original text in data attributes)
-                });
-            }, { once: true });
-        }, 100);
-    }
 </script>
 <!-- Extra js from child page -->
 @yield("extraScript")
