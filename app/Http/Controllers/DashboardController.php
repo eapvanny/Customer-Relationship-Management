@@ -41,7 +41,7 @@ class DashboardController extends Controller
             ->count();
 
         // Get All Users count (from the User table)
-        $allUsers = User::count();
+        $allUsers = User::where('status', '1')->count();
 
         // Get All Customers count (from the Customer table)
         $allCustomers = Customer::count();
