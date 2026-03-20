@@ -59,6 +59,8 @@ class DashboardController extends Controller
         for ($i = 1; $i <= 12; $i++) {
             $monthlyData[] = $monthlyChatReports[$i] ?? 0;
         }
+
+        $userActive = Report::pluck('user_id')->unique()->count();
         
         // Pass a flag to show the popup (if needed)
             return view('backend.dashboard', [
@@ -67,7 +69,8 @@ class DashboardController extends Controller
             'allUsers' => $allUsers,
             'allCustomers' => $allCustomers,
             'monthlyData' => $monthlyData,
-            'show_popup' => true // Optional: control the loader visibility
+            'show_popup' => true, // Optional: control the loader visibility
+            'userActive' => $userActive
         ]);
     }
 
