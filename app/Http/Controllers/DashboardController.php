@@ -33,6 +33,9 @@ class DashboardController extends Controller
         }
        
         // Get All Reports count (total reports based on the filtered query)
+        $query->whereYear('created_at', now()->year);
+
+        // Get count
         $allReports = $query->count();
 
         // Get Today's Reports count (filtered query with date constraint)
