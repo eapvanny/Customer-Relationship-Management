@@ -304,7 +304,6 @@
         }
     </style>
 @endsection
-
 <!-- Page body extra class -->
 @section('bodyCssClass')
 @endsection
@@ -458,16 +457,19 @@
                         <div class="box-body">
                            <div class="row">
                                 <div class="col-6">
-                                    @hasTypePermission('view import')
+                                    {{-- @hasTypePermission('view import') --}}
+                                    @if (auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
                                         <a class="btn btn-primary btn-sm" 
                                             href="{{route('import.form')}}">
-                                            <i class="fa fa-upload"></i> {{__('import')}}
+                                            <i class="fa-solid fa-download"></i> {{__('import')}}
                                         </a>
-                                    @endHasTypePermission
+                                    @endif
+                                        
+                                    {{-- @endHasTypePermission --}}
                                     
                                     <a class="btn btn-success btn-sm" 
                                     href="{{ route('report.export') . '?' . http_build_query(request()->only(['date1', 'date2', 'user_id', 'area_id'])) }}">
-                                        <i class="fa-solid fa-download"></i> {{ __('Export') }}
+                                        <i class="fa fa-upload"></i> {{ __('Export') }}
                                     </a>
                                 </div>
                             </div>

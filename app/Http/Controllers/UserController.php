@@ -212,11 +212,11 @@ class UserController extends Controller
                     }
                     $button = '<div class="change-action-item">';
                     // Edit (all except USER_EMPLOYEE)
-                    if($user->can('update user')) {
+                    // if($user->can('update user')) {
                         $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm">
                                     <i class="fa fa-edit"></i>
                                 </a>';
-                    }
+                    // }
                     // Disable
                     if($user->role_id != AppHelper::USER_ADMIN && $user->role_id != AppHelper::USER_EMPLOYEE) {
                         if ($data->status == 1) {
