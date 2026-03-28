@@ -38,7 +38,19 @@ class Report extends Model
         'manager_id',
         'so_number',
         'driver_id',
-        'driver_status'
+        'driver_status',
+        'area',
+        'customer_name',
+        'outlet_name',
+        'user_name',
+        'cus_type',
+        'address',
+        'posm_name1',
+        'posm_name2',
+        'posm_name3',
+        'sup_name',
+        'rsm_name',
+        'status',
     ];
 
     public function user()

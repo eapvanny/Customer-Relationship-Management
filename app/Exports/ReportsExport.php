@@ -14,6 +14,7 @@ class ReportsExport implements FromView
     protected $date2;
     protected $user_id;
     protected $area_id;
+    protected $area_value;
 
     public function __construct($date1, $date2, $user_id, $area_id)
     {
@@ -21,6 +22,7 @@ class ReportsExport implements FromView
         $this->user_id = $user_id;
         $this->date2 = $date2;
         $this->area_id = $area_id;
+        $this->area_value = AppHelper::getAreaValue($area_id);
     }
 
     public function view(): View
@@ -120,7 +122,8 @@ class ReportsExport implements FromView
 
         // Apply area_id filter
         if ($this->area_id) {
-            $query->where('area_id', $this->area_id);
+            $query->where('area_id', $this->area_id)
+                ->orWhere('area', 'like', '%' . $this->area_value . '%');
         }
 
         return view('exports.reports', [

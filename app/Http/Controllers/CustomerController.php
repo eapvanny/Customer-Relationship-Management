@@ -192,7 +192,7 @@ class CustomerController extends Controller
                         AppHelper::USER_SUPER_ADMIN,
                         AppHelper::USER_ADMINISTRATOR,
                         AppHelper::USER_DIRECTOR,
-                        AppHelper::USER_ADMIN,
+                        // AppHelper::USER_ADMIN,
                         AppHelper::USER_MANAGER,
                         AppHelper::USER_RSM,
                         AppHelper::USER_ASM,

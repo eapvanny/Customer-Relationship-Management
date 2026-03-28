@@ -338,12 +338,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
-                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
-                    <h6 style="font-weight: 900;">{{ __('user active ') }}</h6>
-                    <h3 id="all-report" style="font-weight: 900;">{{ $userActive }}</h3>
-                </div>
-            </div>
+            
             <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
                     <h6 style="font-weight: 900;">{{ __('All Report') }}</h6>
@@ -366,6 +361,12 @@
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #feb559;">
                     <h6 style="font-weight: 900;">{{ __('All User') }}</h6>
                     <h3 id="all-user" style="font-weight: 900;">{{ $allUsers }}</h3>
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
+                    <h6 style="font-weight: 900;">{{ __('User Active') }}</h6>
+                    <h3 id="all-report" style="font-weight: 900;">{{ $userActive }}</h3>
                 </div>
             </div>
         </div>

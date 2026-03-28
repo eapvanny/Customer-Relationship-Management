@@ -105,6 +105,10 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::resource('report', ReportController::class);
     Route::get('/get-reports', [ReportController::class, 'getReports'])->name('get-reports');
     Route::get('/export-report', [ReportController::class, 'export'])->name('report.export');
+    //import report
+    Route::get('form-import', [ReportController::class, 'formImport'])->name('import.form');
+    // In your web.php routes file
+    Route::post('save-import', [ReportController::class, 'saveImport'])->name('save.import');
     Route::post('/reports/mark-as-seen', [ReportController::class, 'markAsSeen'])->name('reports.markAsSeen');
 
     //customer

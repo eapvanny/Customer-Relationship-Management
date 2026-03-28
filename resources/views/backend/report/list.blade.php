@@ -365,18 +365,17 @@
                             data-bs-target="#filterContainer">
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
-
-                        @if($showModal)
-                            <button type="button" class="btn btn-info text-white" id="openModalBtn">
-                                <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
-                            </button>
-                        @else
-                            <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
-                                <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
-                            </a>
-                        @endif
-
-
+                        @hasTypePermission('create report')
+                            @if($showModal)
+                                <button type="button" class="btn btn-info text-white" id="openModalBtn">
+                                    <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                                </button>
+                            @else
+                                <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
+                                    <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                                </a>
+                            @endif
+                        @endHasTypePermission
                     </div>
                 </div>
                 <div class="wrap-outter-box">
@@ -458,7 +457,14 @@
                         <!-- /.box-header -->
                         <div class="box-body">
                            <div class="row">
-                                <div class="col-12">
+                                <div class="col-6">
+                                    @hasTypePermission('view import')
+                                        <a class="btn btn-primary btn-sm" 
+                                            href="{{route('import.form')}}">
+                                            <i class="fa fa-upload"></i> {{__('import')}}
+                                        </a>
+                                    @endHasTypePermission
+                                    
                                     <a class="btn btn-success btn-sm" 
                                     href="{{ route('report.export') . '?' . http_build_query(request()->only(['date1', 'date2', 'user_id', 'area_id'])) }}">
                                         <i class="fa-solid fa-download"></i> {{ __('Export') }}
@@ -481,6 +487,7 @@
                                             <th>{{ __('600ml') }}</th>
                                             <th>{{ __('1500ml') }}</th>
                                             <th>{{ __('Default') }}</th>
+                                            <th>{{ __('Status') }}</th>
                                             <th class="notexport" style="max-width: 82px">{{ __('Action') }}</th>
                                         </tr>
                                     </thead>
@@ -684,6 +691,7 @@
                         d.date1 = "{{ request('date1') }}";
                         d.date2 = "{{ request('date2') }}";
                         d.area_id = "{{ request('area_id') }}";
+                        d.areaText = $('#area_id option:selected').text();
                         d.user_id = "{{ request('user_id') }}";
                     },
                     error: function(xhr, error, thrown) {
@@ -704,6 +712,7 @@
                     { data: '600ml', name: '600ml' },
                     { data: '1500ml', name: '1500ml' },
                     { data: 'default', name: 'default' },
+                    { data: 'status', name: 'status' },
                     { 
                         data: 'action', 
                         name: 'action',

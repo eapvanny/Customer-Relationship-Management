@@ -48,6 +48,7 @@
             <th>{{ __('Quantity2')}}</th>
             <th>{{ __('POSM3')}}</th>
             <th>{{ __('Quantity3')}}</th>
+            <th>{{ __('Status')}}</th>
         </tr>
     </thead>
     <tbody>
@@ -67,21 +68,51 @@
                 $reportUser = $row->user;
                 $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
                 $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
-                $posm = isset(AppHelper::MATERIAL[$row->posm]) ? __(AppHelper::MATERIAL[$row->posm]) : 'N/A';
-                $posm2 = isset(AppHelper::MATERIAL[$row->posm2]) ? __(AppHelper::MATERIAL[$row->posm2]) : 'N/A';
-                $posm3 = isset(AppHelper::MATERIAL[$row->posm3]) ? __(AppHelper::MATERIAL[$row->posm3]) : 'N/A';
+                $posm  = isset(AppHelper::MATERIAL[$row->posm])  ? __(AppHelper::MATERIAL[$row->posm])  : ($row->posm_name1 ?? 'N/A');
+                $posm2 = isset(AppHelper::MATERIAL[$row->posm2]) ? __(AppHelper::MATERIAL[$row->posm2]) : ($row->posm_name2 ?? 'N/A');
+                $posm3 = isset(AppHelper::MATERIAL[$row->posm3]) ? __(AppHelper::MATERIAL[$row->posm3]) : ($row->posm_name3 ?? 'N/A');
                 // Check if outlet_photo or photo exists, otherwise set to 'No_Photo'
                 $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'No_Photo';
                 $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'No_Photo';
             @endphp
             <tr>
-                <td>{{ AppHelper::getAreaNameById($row->area_id) ?? 'N/A' }}</td>
-                <td>{{ $reportUser ? ($reportUser->user_lang === 'en' ? ($reportUser->full_name_latin ?? 'N/A') : ($reportUser->full_name ?? 'N/A')) : 'N/A' }}</td>
+                <td>
+                    {{ AppHelper::getAreaNameById($row->area_id) 
+                        ?? $row->area 
+                        ?? 'N/A' }}
+                </td>
+                <td>
+                    {{ $reportUser
+                        ? ($reportUser->user_lang === 'en'
+                            ? ($reportUser->full_name_latin ?? $row->user_name ?? 'N/A')
+                            : ($reportUser->full_name ?? $row->user_name ?? 'N/A'))
+                        : ($row->user_name ?? 'N/A')
+                    }}
+                </td>
                 <td>{{ $row->driver_id ?? 'N/A' }}</td>
-                <td>{{ $sup ? ($sup->user_lang === 'en' ? ($sup->full_name_latin ?? 'N/A') : ($sup->full_name ?? 'N/A')) : 'N/A' }}</td>
-                <td>{{ $rsm ? ($rsm->user_lang === 'en' ? ($rsm->full_name_latin ?? 'N/A') : ($rsm->full_name ?? 'N/A')) : 'N/A' }}</td>
-                <td>{{ $row->customer->depo->name ?? 'N/A' }}</td>
-                <td>{{ $row->customer->name ?? 'N/A' }}</td>
+                <td>
+                    {{ $sup
+                        ? ($sup->user_lang === 'en'
+                            ? ($sup->full_name_latin ?? $row->sup_name ?? 'N/A')
+                            : ($sup->full_name ?? $row->sup_name ?? 'N/A'))
+                        : ($row->sup_name ?? 'N/A')
+                    }}
+                </td>
+
+                <td>
+                    {{ $rsm
+                        ? ($rsm->user_lang === 'en'
+                            ? ($rsm->full_name_latin ?? $row->rsm_name ?? 'N/A')
+                            : ($rsm->full_name ?? $row->rsm_name ?? 'N/A'))
+                        : ($row->rsm_name ?? 'N/A')
+                    }}
+                </td>
+                <td>
+                    {{ $row->customer?->depo?->name 
+                        ?? $row->outlet_name 
+                        ?? 'N/A' }}
+                </td>
+                <td>{{ $row->customer->name ?? $row->customer_name ?? 'N/A' }}</td>
                 <td>{{ $row->customer->code ?? 'N/A' }}</td>
                 <td>{{ $row->so_number ?? 'N/A' }}</td>
                 <td>{{ $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y') : 'N/A' }}</td>
@@ -113,6 +144,7 @@
                 <td>{{ $row->qty2 ?? 'N/A' }}</td>
                 <td>{{ $posm3 ?? 'N/A' }}</td>
                 <td>{{ $row->qty3 ?? 'N/A' }}</td>
+                <td>{{ $row->status ?? '' }}</td>
             </tr>
         @endforeach
         <tr>

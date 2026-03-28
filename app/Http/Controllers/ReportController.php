@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Exports\ReportsExport;
+use App\Imports\ReportsImport;
 use App\Models\Customer;
 use App\Models\Depo;
 use App\Models\User;
@@ -175,7 +176,9 @@ class ReportController extends Controller
 
         if ($request->filled('area_id')) {
             $is_filter = true;
-            $query->where('reports.area_id', $request->area_id);
+            $areaValue = AppHelper::getAreaValue($request->area_id);
+            $query->where('reports.area_id', $request->area_id)
+                    ->orWhere('reports.area', 'like', '%' . $areaValue . '%');
         }
 
         // Filter by selected employee
@@ -191,22 +194,52 @@ class ReportController extends Controller
 
                 return DataTables::of($reports)
                     ->addColumn('area', function ($data) {
-                        return $data->customer && $data->customer->area_id ? AppHelper::getAreaNameById($data->customer->area_id) ?? 'N/A' : AppHelper::getAreaNameById($data->area_id) ?? 'N/A';
+                        return !empty($data->area_id)
+                            ? AppHelper::getAreaNameById($data->area_id)
+                            : ($data->area ?? 'N/A');
                     })
                     ->addColumn('employee_name', function ($data) {
                         $user = $data->user;
-                        if ($user) {
+
+                        // If relation exists
+                        if (!empty($user)) {
                             return auth()->user()->user_lang == 'en'
                                 ? $user->getFullNameLatinAttribute()
                                 : $user->getFullNameAttribute();
                         }
+
+                        // Fallback to user_name column
+                        if (!empty($data->user_name)) {
+                            return $data->user_name;
+                        }
+
                         return 'N/A';
                     })
                     ->addColumn('outlet_id', function ($data) {
-                        return $data->customer->depo ? $data->customer->depo->name ?? 'N/A' : 'N/A';
+                        // If depo relation exists
+                        if (!empty($data->customer) && !empty($data->customer->depo)) {
+                            return $data->customer->depo->name ?? 'N/A';
+                        }
+
+                        // Fallback to outlet_name column
+                        if (!empty($data->outlet_name)) {
+                            return $data->outlet_name;
+                        }
+
+                        return 'N/A';
                     })
                     ->addColumn('customer', function ($data) {
-                        return $data->customer ? $data->customer->name ?? 'N/A' : 'N/A';
+                        // If relation exists
+                        if (!empty($data->customer)) {
+                            return $data->customer->name ?? 'N/A';
+                        }
+
+                        // Fallback to customer_name column
+                        if (!empty($data->customer_name)) {
+                            return $data->customer_name;
+                        }
+
+                        return 'N/A';
                     })
                     ->addColumn('customer_code', function ($data) {
                         return $data->customer ? $data->customer->code ?? 'N/A' : 'N/A';
@@ -222,14 +255,22 @@ class ReportController extends Controller
                         $val_1500ml = intval($data->{'1500_ml'} ?? 0);
                         return $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
                     })
+                    ->addColumn('status', function ($data) {
+                        $color = '';
+                        if ($data->status === 'import') {
+                            $color = '#206797'; // Orange for imported
+                        } 
+                        return '<span style="color: ' . $color . ';">' . ($data->status ?? '-') . '</span>';
+
+                    })
                     ->addColumn('action', function ($data) {
                         $show = '<span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show"><i class="fa fa-fw fa-eye"></i></a>';
-                        $edit = auth()->user()->can('update report')
+                        $edit = auth()->user()->can('update report') && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN
                             ? '<a title="Edit" href="' . route('report.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></span>'
                             : '';
                         return $show . ' ' . $edit;
                     })
-                    ->rawColumns(['action'])
+                    ->rawColumns(['action','status']) // Allow HTML in action and status columns
                     ->make(true);
             } catch (\Exception $e) {
                 Log::error('DataTables error in ReportController@index: ' . $e->getMessage(), [
@@ -327,51 +368,85 @@ class ReportController extends Controller
 
     public function show($id)
     {
-        $report = Report::with(['user', 'customer'])->find($id);
+        $report = Report::with(['user', 'customer', 'depo'])->find($id);
 
         if (!$report) {
             return response()->json(['error' => 'Report not found'], 404);
         }
 
         $user = $report->user;
-        $employee_name = 'N/A';
 
-        if ($user) {
-            $employee_name = auth()->user()->user_lang == 'en'
-                ? $user->getFullNameLatinAttribute()
-                : $user->getFullNameAttribute();
-        }
+        // ✅ Employee Name (with fallback user_name)
+        $employee_name = $user
+            ? (auth()->user()->user_lang == 'en'
+                ? ($user->getFullNameLatinAttribute() ?? $report->user_name ?? 'N/A')
+                : ($user->getFullNameAttribute() ?? $report->user_name ?? 'N/A'))
+            : ($report->user_name ?? 'N/A');
+
+        // ✅ POSM with fallback
         $posm = isset(AppHelper::MATERIAL[$report->posm])
             ? __(AppHelper::MATERIAL[$report->posm])
-            : 'Unknown';
+            : ($report->posm_name1 ?? 'N/A');
+
         $posm2 = isset(AppHelper::MATERIAL[$report->posm2])
             ? __(AppHelper::MATERIAL[$report->posm2])
-            : 'Unknown';
+            : ($report->posm_name2 ?? 'N/A');
+
         $posm3 = isset(AppHelper::MATERIAL[$report->posm3])
             ? __(AppHelper::MATERIAL[$report->posm3])
-            : 'Unknown';
+            : ($report->posm_name3 ?? 'N/A');
+
         return response()->json([
             'report' => [
-                'photo' => $report->photo ? asset('storage/' . $report->photo) : asset('images/avatar.png'),
-                'outlet_photo' => $report->outlet_photo ? asset('storage/' . $report->outlet_photo) : asset('images/avatar.png'),
+                'photo' => $report->photo
+                    ? asset('storage/' . $report->photo)
+                    : asset('images/avatar.png'),
+
+                'outlet_photo' => $report->outlet_photo
+                    ? asset('storage/' . $report->outlet_photo)
+                    : asset('images/avatar.png'),
+
                 'employee_name' => $employee_name,
-                'staff_id_card' => $user->staff_id_card ?? 'N/A',
-                'area' => AppHelper::getAreaName($report->area_id),
-                'outlet' => $report->depo->name ?? 'N/A',
-                'customer' => $report->customer->name ?? 'N/A',
+
+                'staff_id_card' => $user->staff_id_card ?? $report->driver_id ?? 'N/A',
+
+                // ✅ Area fallback
+                'area' => AppHelper::getAreaNameById($report->area_id)
+                    ?? $report->area
+                    ?? 'N/A',
+
+                // ✅ Outlet fallback
+                'outlet' => optional($report->depo)->name
+                    ?? $report->outlet_name
+                    ?? 'N/A',
+
+                // ✅ Customer fallback
+                'customer' => optional($report->customer)->name
+                    ?? $report->customer_name
+                    ?? 'N/A',
+
                 'customer_type' => $report->customer_type,
-                'date' => $report->date,
+
+                'date' => Carbon::parse($report->date)->format('d-m-Y h:i A'),
+
                 'other' => $report->other ?? 'N/A',
+
                 '250_ml' => $report->{'250_ml'},
                 '350_ml' => $report->{'350_ml'},
                 '600_ml' => $report->{'600_ml'},
                 '1500_ml' => $report->{'1500_ml'},
-                'phone' => $report->customer->phone,
+
+                // ✅ Phone safe
+                'phone' => optional($report->customer)->phone ?? 'N/A',
+
                 'city' => $report->city,
+
                 'posm' => $posm,
                 'qty' => $report->qty,
+
                 'posm2' => $posm2,
                 'qty2' => $report->qty2,
+
                 'posm3' => $posm3,
                 'qty3' => $report->qty3,
             ]
@@ -886,6 +961,35 @@ class ReportController extends Controller
 
         return response()->json($reports);
     }
+
+    public function formImport()
+    {
+        return view('backend.report.import');
+    }
+
+    public function saveImport(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:4096', // max 4MB
+        ]);
+        
+        try {
+            // Import the file
+            Excel::import(new ReportsImport, $request->file('file'));
+            
+            // Redirect with success message
+            return redirect()->route('report.index')
+                ->with('success', 'Reports imported successfully!');
+                
+        } catch (\Exception $e) {
+            // Handle any errors
+            return redirect()->back()
+                ->with('error', 'Error importing file: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
     public function export(Request $request)
     {
         $date1 = $request->input('date1');

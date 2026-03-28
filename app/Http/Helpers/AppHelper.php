@@ -201,14 +201,21 @@ class AppHelper
         ];
 
     public static function getAreaNameById($areaId)
-    {
-    foreach (self::AREAS as $area => $rooms) {
-            if (isset($rooms[$areaId])) {
-                return $rooms[$areaId];
-            }
-        }
-        return 'Unknown Area'; // fallback if not found
+{
+    if (empty($areaId)) {
+        return null;
     }
+
+    foreach (self::AREAS as $area => $rooms) {
+        if (isset($rooms[$areaId])) {
+            return $rooms[$areaId];
+        } elseif ($areaId == $area) {
+            return $area;
+        }
+    }
+
+    return null; // let caller decide fallback
+}
 
      public static function getAreas()
     {
@@ -225,6 +232,16 @@ public static function getAreaIdByText($areaText)
     }
     return null;
 }
+
+public static function getAreaValue($areaKey)
+    {
+        foreach (self::AREAS as $group) {
+            if (isset($group[$areaKey])) {
+                return $group[$areaKey];
+            }
+        }
+        return null;
+    }
 
 
     /**

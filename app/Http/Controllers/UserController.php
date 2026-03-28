@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Can;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
@@ -211,22 +212,26 @@ class UserController extends Controller
                     }
                     $button = '<div class="change-action-item">';
                     // Edit (all except USER_EMPLOYEE)
-                    $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm">
+                    if($user->can('update user')) {
+                        $button .= '<a title="Edit" href="' . route('user.edit', $data->id) . '" class="btn btn-primary btn-sm">
                                     <i class="fa fa-edit"></i>
                                 </a>';
-                    // Disable
-                    if ($data->status == 1) {
-                        $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" 
-                                        title="Disable" data-id="' . $data->id . '">
-                                        <i class="fa fa-ban"></i>
-                                    </a>';
                     }
-                    // Enable
-                    if ($data->status == 0) {
-                        $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" 
-                                        title="Enable" data-id="' . $data->id . '">
-                                        <i class="fa fa-check"></i>
-                                    </a>';
+                    // Disable
+                    if($user->role_id != AppHelper::USER_ADMIN && $user->role_id != AppHelper::USER_EMPLOYEE) {
+                        if ($data->status == 1) {
+                            $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" 
+                                            title="Disable" data-id="' . $data->id . '">
+                                            <i class="fa fa-ban"></i>
+                                        </a>';
+                        }
+                        // Enable
+                        if ($data->status == 0) {
+                            $button .= '<a href="javascript:void(0)" class="btn btn-success btn-sm enable-user" 
+                                            title="Enable" data-id="' . $data->id . '">
+                                            <i class="fa fa-check"></i>
+                                        </a>';
+                        }
                     }
                     // Forgot password (Super Admin only)
                     if ($user->role_id == AppHelper::USER_SUPER_ADMIN) {
