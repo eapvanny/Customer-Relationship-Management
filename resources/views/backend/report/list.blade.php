@@ -417,7 +417,7 @@
                                                 @endif --}}
                                                 <div class="col-xl-3">
                                                     <div class="form-group">
-                                                        <label for="user_id">{{ __('Employee') }}</label>
+                                                        <label for="user_id">{{ __('Filter By Supervisor') }}</label>
                                                         {!! Form::select('user_id', $employees, request('user_id'), [
                                                             'placeholder' => __('Select employee'),
                                                             'id' => 'user_id',
@@ -461,7 +461,7 @@
                                     @if (auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
                                         <a class="btn btn-primary btn-sm" 
                                             href="{{route('import.form')}}">
-                                            <i class="fa-solid fa-download"></i> {{__('import')}}
+                                            <i class="fa-solid fa-download"></i> {{__('Import')}}
                                         </a>
                                     @endif
                                         
@@ -526,11 +526,30 @@
                                 <div class="row">
                                     <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item"><i class="fa fa-user"></i>
-                                                <strong>{{ __('Employee Name') }}:</strong> <span
-                                                    id="modalEmployeeName"></span></li>
-                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i>
-                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span></li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fa fa-user me-2" style="width: 20px;"></i>
+                                                    <strong>{{ __('Employee Name') }}:</strong>
+                                                    <span id="modalEmployeeName" class="ms-2"></span>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa fa-id-card me-2" style="width: 20px;"></i>
+                                                    <strong>{{ __('Staff ID') }}:</strong>
+                                                    <span id="modalIdCard" class="ms-2"></span>
+                                                </div>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fa-solid fa-truck me-2" style="width: 20px;"></i>
+                                                    <strong>{{ __('Driver Name') }}:</strong>
+                                                    <span id="modalDriverName" class="ms-2"></span>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-solid fa-id-card me-2" style="width: 20px;"></i>
+                                                    <strong>{{ __('Driver ID') }}:</strong>
+                                                    <span id="modalDriverId" class="ms-2"></span>
+                                                </div>
+                                            </li>
                                             <li class="list-group-item"><i class="fa-solid fa-chart-area"></i>
                                                 <strong>{{ __('Area') }}:</strong> <span id="modalArea"></span></li>
                                             <li class="list-group-item"><i class="fa fa-user"></i>
@@ -625,13 +644,15 @@
                     </div>
                      <!-- Driver ID input -->
                     <div class="mb-3" id="driverIdGroup" style="display: none;">
+                        <label for="driverName" class="form-label fw-semibold">
+                            {{ __('Driver Name') }} <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="driverName" name="driver_name" autocomplete="off">
+                        
                         <label for="driverId" class="form-label fw-semibold">
                             {{ __('Driver ID') }} <span class="text-danger">*</span>
                         </label>
                         <input type="number" class="form-control" id="driverId" name="driverId" autocomplete="off">
-                        <div class="invalid-feedback">
-                            {{ __('Driver ID is required.') }}
-                        </div>
                     </div>
                 </div>
 
@@ -752,6 +773,8 @@
                         $('#modalPhotoOutlet').attr('src', report.outlet_photo);
                         $('#modalEmployeeName').text(report.employee_name);
                         $('#modalIdCard').text(report.staff_id_card);
+                        $('#modalDriverName').text(report.driver_name);
+                        $('#modalDriverId').text(report.driver_id);
                         $('#modalArea').text(report.area);
                         $('#modalCustomerName').text(report.customer);
                         $('#modalOutlet').text(report.outlet);
@@ -809,6 +832,7 @@
 
                 const hasDriver = $('input[name="hasDriver"]:checked').val();
                 const driverId = $('#driverId').val().trim();
+                const driverName = $('#driverName').val().trim(); // Get Driver Name
 
                 let isValid = true;
 
@@ -820,14 +844,17 @@
                     $('#radioError').hide();
                 }
 
-                // Validate Driver ID only if "Yes" is selected
-                if (hasDriver === 'yes' && driverId === '') {
-                    $('#driverId').addClass('is-invalid');
-                    isValid = false;
-                } else {
-                    $('#driverId').removeClass('is-invalid');
+                // Validate Driver ID AND Driver Name if "Yes" is selected
+                if (hasDriver === 'yes') {
+                    if (driverId === '') {
+                        $('#driverId').addClass('is-invalid');
+                        isValid = false;
+                    }
+                    if (driverName === '') {
+                        $('#driverName').addClass('is-invalid'); // Add is-invalid if empty
+                        isValid = false;
+                    }
                 }
-
                 if (!isValid) {
                     return;
                 }
@@ -835,11 +862,11 @@
                 // Build URL with query parameters
                 let url = "{{ route('report.create') }}" + "?has_driver=" + hasDriver;
 
-                if (hasDriver === 'yes') {
+               if (hasDriver === 'yes') {
                     url += "&driver_id=" + encodeURIComponent(driverId);
+                    url += "&driver_name=" + encodeURIComponent(driverName); // Append Driver Name
                 }
 
-                // Redirect with parameters
                 window.location.href = url;
             });
 

@@ -15,6 +15,11 @@ class ReportsImport implements ToModel, WithHeadingRow, WithValidation
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
+    protected $date;
+    public function __construct($date)
+    {
+        $this->date = $date;
+    }
     public function model(array $row)
     {
 
@@ -26,11 +31,14 @@ class ReportsImport implements ToModel, WithHeadingRow, WithValidation
         'customer_name' => $row['customer_name'] ?? null,
         'outlet_name' => $row['outlet_name'] ?? null,
         'driver_id' => $row['driver_id'] ?? null,
+        'driver_name' => $row['driver_name'] ?? null,
+        'sup_id' => $row['sup_id'] ?? null,
         'sup_name' => $row['sup_name'] ?? null,
         'rsm_name' => $row['rsm_name'] ?? null,
-        'user_name' => $row['user_name'] ?? null,
+        'ssp_id' => $row['ssp_id'] ?? null,
+        'ssp_name' => $row['ssp_name'] ?? null,
         'cus_type' => $row['cus_type'] ?? null,
-        'date' => now('Asia/Phnom_Penh'),
+        'date' => $this->date->toDateString(),
 
         '250_ml' => $row['250_ml'] ?? null,
         '350_ml' => $row['350_ml'] ?? null,
@@ -69,14 +77,20 @@ class ReportsImport implements ToModel, WithHeadingRow, WithValidation
             'area' => 'required|string|max:255',
             'customer_name' => 'required|string|max:255',
             'outlet_name' => 'required|string|max:255',
-            'user_name' => 'required|string|max:255',
+            'ssp_name' => 'required|string|max:255',
+            'ssp_id' => 'nullable',
+            'driver_id' => 'nullable',
+            'driver_name' => 'nullable|string|max:255',
+            'sup_id' => 'nullable',
             'cus_type' => 'nullable|string|max:255',
             '250_ml' => 'nullable|integer|min:0',
             '350_ml' => 'nullable|integer|min:0',
             '600_ml' => 'nullable|integer|min:0',
             '1500_ml' => 'nullable|integer|min:0',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            // 'latitude' => 'nullable|numeric|between:-90,90',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            // 'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string|max:500',
             'qty' => 'nullable|integer|min:0',
             'posm_name1' => 'nullable|string|max:255',

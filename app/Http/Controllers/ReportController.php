@@ -156,6 +156,7 @@ class ReportController extends Controller
         }
         // Get employees for dropdown
         $employees = $employeeQuery
+            ->where('role_id', AppHelper::USER_SUP) 
             ->get(['id', 'username', 'family_name', 'name']) // only needed columns
             ->mapWithKeys(function ($user) {
                 return [$user->id => $user->username . ' (' . $user->full_name . ')'];
@@ -182,11 +183,29 @@ class ReportController extends Controller
         }
 
         // Filter by selected employee
+        // if ($request->filled('user_id')) {
+        //     $is_filter = true;
+        //     $query->where('reports.user_id', $request->user_id);
+        // }
+        
+        // filter by supervisor (sup_id in users table)
         if ($request->filled('user_id')) {
             $is_filter = true;
-            $query->where('reports.user_id', $request->user_id);
-        }
 
+            $userId = $request->user_id;
+            // get staff_id_card from selected user
+            $staffIdCard = User::where('id', $userId)->value('staff_id_card');
+            $query->where(function ($q) use ($userId, $staffIdCard) {
+                // Case 1: report.user_id -> users.sup_id
+                $q->whereHas('user', function ($q2) use ($userId) {
+                    $q2->where('sup_id', $userId);
+                });
+                // Case 2: report.sup_id = users.staff_id_card
+                if ($staffIdCard) {
+                    $q->orWhere('sup_id', $staffIdCard);
+                }
+            });
+        }
         // Handle DataTables AJAX
         if ($request->ajax()) {
             try {
@@ -208,9 +227,9 @@ class ReportController extends Controller
                                 : $user->getFullNameAttribute();
                         }
 
-                        // Fallback to user_name column
-                        if (!empty($data->user_name)) {
-                            return $data->user_name;
+                        // Fallback to ssp_name column
+                        if (!empty($data->ssp_name)) {
+                            return $data->ssp_name;
                         }
 
                         return 'N/A';
@@ -376,12 +395,12 @@ class ReportController extends Controller
 
         $user = $report->user;
 
-        // ✅ Employee Name (with fallback user_name)
+        // ✅ Employee Name (with fallback ssp_name)
         $employee_name = $user
             ? (auth()->user()->user_lang == 'en'
-                ? ($user->getFullNameLatinAttribute() ?? $report->user_name ?? 'N/A')
-                : ($user->getFullNameAttribute() ?? $report->user_name ?? 'N/A'))
-            : ($report->user_name ?? 'N/A');
+                ? ($user->getFullNameLatinAttribute() ?? $report->ssp_name ?? 'N/A')
+                : ($user->getFullNameAttribute() ?? $report->ssp_name ?? 'N/A'))
+            : ($report->ssp_name ?? 'N/A');
 
         // ✅ POSM with fallback
         $posm = isset(AppHelper::MATERIAL[$report->posm])
@@ -408,7 +427,9 @@ class ReportController extends Controller
 
                 'employee_name' => $employee_name,
 
-                'staff_id_card' => $user->staff_id_card ?? $report->driver_id ?? 'N/A',
+                'staff_id_card' => $user->staff_id_card ?? $report->ssp_id ?? 'N/A',
+                'driver_name' => $report->driver_name ?? 'N/A',
+                'driver_id' => $report->driver_id ?? 'N/A',
 
                 // ✅ Area fallback
                 'area' => AppHelper::getAreaNameById($report->area_id)
@@ -427,7 +448,8 @@ class ReportController extends Controller
 
                 'customer_type' => $report->customer_type,
 
-                'date' => Carbon::parse($report->date)->format('d-m-Y h:i A'),
+                // 'date' => Carbon::parse($report->date)->format('d-m-Y h:i A'),
+                'date' => Carbon::parse($report->date)->format('d-m-Y'),
 
                 'other' => $report->other ?? 'N/A',
 
@@ -439,8 +461,7 @@ class ReportController extends Controller
                 // ✅ Phone safe
                 'phone' => optional($report->customer)->phone ?? 'N/A',
 
-                'city' => $report->city,
-
+                'city' => $report->city ?? $report->address ?? 'N/A',
                 'posm' => $posm,
                 'qty' => $report->qty,
 
@@ -571,6 +592,7 @@ class ReportController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
             'driver_id' => 'required_if:has_driver,yes|nullable|numeric',
+            'driver_name' => 'required_if:has_driver,yes|nullable|string|max:255',
         ];
 
         if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64')) {
@@ -584,7 +606,8 @@ class ReportController extends Controller
         |------------------------------------*/
         $hasDriver = $request->input('has_driver');
         $driverId  = $request->input('driver_id');
-
+        $driverName = $request->input('driver_name'); // Get Name
+        // dd($hasDriver, $driverId, $driverName);
         if (!$hasDriver && !$driverId) {
             $recentReport = Report::where('user_id', auth()->id())
                 ->whereDate('created_at', Carbon::today('Asia/Phnom_Penh'))
@@ -594,6 +617,7 @@ class ReportController extends Controller
             if ($recentReport) {
                 $hasDriver = $recentReport->driver_status;
                 $driverId  = $recentReport->driver_id;
+                $driverName = $recentReport->driver_name; // Get from recent
             }
         }
 
@@ -607,6 +631,7 @@ class ReportController extends Controller
             'area_id'        => $request->area,
             'outlet_id'      => $request->outlet_id,
             'driver_id'      => $driverId,
+            'driver_name'   => $driverName, // Save Name
             'driver_status'  => $hasDriver,
             'customer_id'    => $request->customer_id,
             'customer_type'  => $request->customer_type,
@@ -972,11 +997,13 @@ class ReportController extends Controller
         // Validate the request
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:4096', // max 4MB
+            'date' => 'required|date',
         ]);
-        
+        $date = Carbon::parse($request->date)
+            ->timezone('Asia/Phnom_Penh');
         try {
             // Import the file
-            Excel::import(new ReportsImport, $request->file('file'));
+            Excel::import(new ReportsImport($date), $request->file('file'));
             
             // Redirect with success message
             return redirect()->route('report.index')

@@ -52,8 +52,18 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group has-feedback">
-                                <label for="file">{{ __('Select Excel File') }}</label>
+                                <label for="file">{{ __('Select Excel File') }} <span class="text-danger"> *</span></label>
                                 <input type="file" name="file" id="file" class="form-control" required>
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('file') }}</span>
+                            </div>
+                        </div>  
+                        <div class="col-md-6">
+                            <div class="form-group has-feedback">
+                                <label for="date">{{ __('Select Date') }} <span class="text-danger"> *</span></label>
+                                <input type="date" name="date" id="date" class="form-control" required>
+                                <span class="form-control-feedback"></span>
+                                <span class="text-danger">{{ $errors->first('date') }}</span>
                             </div>
                         </div>
                     </div>

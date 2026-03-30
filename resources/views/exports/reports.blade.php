@@ -23,10 +23,13 @@
     <thead>
         <tr>
             <th>{{ __('Area') }}</th>
-            <th>{{ __('SSP') }}</th>
+            <th>{{ __('SSP_NAME') }}</th>
+            <th>{{ __('SSP_ID') }}</th>
+            <th>{{ __('Driver Name') }}</th>
             <th>{{ __('Driver ID') }}</th>
-            <th>{{ __('SUP') }}</th>
-            <th>{{ __('RSM') }}</th>
+            <th>{{ __('SUP_NAME') }}</th>
+            <th>{{ __('SUP_ID') }}</th>
+            <th>{{ __('RSM_NAME') }}</th>
             <th>{{ __('Depo Name') }}</th>
             <th>{{ __('Customer Name') }}</th>
             <th>{{ __('Customer Code') }}</th>
@@ -84,11 +87,13 @@
                 <td>
                     {{ $reportUser
                         ? ($reportUser->user_lang === 'en'
-                            ? ($reportUser->full_name_latin ?? $row->user_name ?? 'N/A')
-                            : ($reportUser->full_name ?? $row->user_name ?? 'N/A'))
-                        : ($row->user_name ?? 'N/A')
+                            ? ($reportUser->full_name_latin ?? $row->ssp_name ?? 'N/A')
+                            : ($reportUser->full_name ?? $row->ssp_name ?? 'N/A'))
+                        : ($row->ssp_name ?? 'N/A')
                     }}
                 </td>
+                <td>{{ optional($reportUser)->staff_id_card ?? $row->ssp_id ?? 'N/A' }}</td>
+                <td>{{ $row->driver_name ?? 'N/A' }}</td>
                 <td>{{ $row->driver_id ?? 'N/A' }}</td>
                 <td>
                     {{ $sup
@@ -98,7 +103,7 @@
                         : ($row->sup_name ?? 'N/A')
                     }}
                 </td>
-
+                <td>{{ optional($sup)->staff_id_card ?? $row->sup_id ?? 'N/A' }}</td>
                 <td>
                     {{ $rsm
                         ? ($rsm->user_lang === 'en'
@@ -115,7 +120,7 @@
                 <td>{{ $row->customer->name ?? $row->customer_name ?? 'N/A' }}</td>
                 <td>{{ $row->customer->code ?? 'N/A' }}</td>
                 <td>{{ $row->so_number ?? 'N/A' }}</td>
-                <td>{{ $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y') : 'N/A' }}</td>
+                <td>{{ $row->date ? \Carbon\Carbon::parse($row->date)->format('d-M-Y') : 'N/A' }}</td>
                 <td>{{ $val_250ml }}</td>
                 <td>{{ $val_350ml }}</td>
                 <td>{{ $val_600ml }}</td>
@@ -123,7 +128,12 @@
                 <td>{{ $default }}</td>
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
-                <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td>
+                {{-- <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td> --}}
+                <td>
+                    {{ ($row->city && $row->country)
+                        ? $row->city . ', ' . $row->country
+                        : ($row->address ?? 'N/A') }}
+                </td>
                 <td>
                     @if ($OutletUrl === 'No_Photo')
                         {{ __('No_Photo') }}
@@ -148,7 +158,7 @@
             </tr>
         @endforeach
         <tr>
-            <td colspan="10">{{ __('Total') }}</td>
+            <td colspan="13">{{ __('Total') }}</td>
             <td>{{ $total_250ml }}</td>
             <td>{{ $total_350ml }}</td>
             <td>{{ $total_600ml }}</td>

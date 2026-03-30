@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Http\Helpers\AppHelper;
 use App\Models\Report;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -116,10 +117,30 @@ class ReportsExport implements FromView
             $query->whereBetween('date', [$startDate, $endDate]);
         }
         // Apply user_id filter
+        // if ($this->user_id) {
+        //     $query->where('user_id', $this->user_id);
+        // }
+        // if ($this->user_id) {
+        //     $query->whereHas('user', function ($q) {
+        //         $q->where('sup_id', $this->user_id);
+        //     });
+        // }
         if ($this->user_id) {
-            $query->where('user_id', $this->user_id);
-        }
+            $userId = $this->user_id;
 
+            $staffIdCard = User::where('id', $userId)->value('staff_id_card');
+
+            $query->where(function ($q) use ($userId, $staffIdCard) {
+
+                $q->whereHas('user', function ($q2) use ($userId) {
+                    $q2->where('sup_id', $userId);
+                });
+
+                if ($staffIdCard) {
+                    $q->orWhere('sup_id', $staffIdCard);
+                }
+            });
+        }
         // Apply area_id filter
         if ($this->area_id) {
             $query->where('area_id', $this->area_id)
