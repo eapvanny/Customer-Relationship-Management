@@ -233,6 +233,16 @@ public static function getAreaIdByText($areaText)
     return null;
 }
 
+public static function getAreaGroupIds($areaId)
+{
+    foreach (self::AREAS as $group => $areas) {
+        if (array_key_exists($areaId, $areas)) {
+            return array_keys($areas); // return [1,2,3,4]
+        }
+    }
+    return [$areaId]; // fallback
+}
+
 public static function getAreaValue($areaKey)
     {
         foreach (self::AREAS as $group) {

@@ -1337,6 +1337,8 @@
                             area_id: areaId
                         },
                         success: function(response) {
+                            const outlets = response.outlets;
+                            const customers = response.customers;
                             $outletSelect.empty().append(
                                 '<option value="">{{ __('Select Depo') }}</option>');
 
@@ -1345,20 +1347,27 @@
                                     '<option value="">{{ __('Depo Not Found!') }}</option>'
                                     );
                             } else {
-                                $.each(response, function(id, name) {
-                                    // Pre-select outlet if it matches selectedOutletId
-                                    const isSelected = id == selectedOutletId ?
-                                        'selected' : '';
-                                    $outletSelect.append(
-                                        `<option value="${id}" ${isSelected}>${name}</option>`
-                                        );
+                                $.each(outlets, function(id, name) {
+                                    $outletSelect.append(`<option value="${id}">${name}</option>`);
                                 });
                             }
                             $outletSelect.trigger('change.select2');
 
+                            // ✅ Fill customers immediately
+                            $customerSelect.empty().append('<option value="">{{ __('Select Customer') }}</option>');
+
+                            if (Object.keys(customers).length === 0) {
+                                $customerSelect.append('<option value="">{{ __('Customer Not Found!') }}</option>');
+                            } else {
+                                $.each(customers, function(id, name) {
+                                    $customerSelect.append(`<option value="${id}">${name}</option>`);
+                                });
+                            }
+                            $customerSelect.trigger('change.select2');
                             // Trigger outlet change if an outlet is selected
                             if (selectedOutletId && areaId == selectedAreaId) {
                                 $outletSelect.val(selectedOutletId).trigger('change');
+                                $customerSelect.val(selectedCustomerId).trigger('change');
                             }
                         },
                         error: function() {
@@ -1375,59 +1384,59 @@
             });
 
             // Handle outlet change
-            $('#outlet_id').on('change', function() {
-                const areaId = $('#area').val();
-                const outletId = $(this).val();
-                const $customerSelect = $('#customer_id');
-                const $customerTypeSelect = $('#customer_type');
+            // $('#outlet_id').on('change', function() {
+            //     const areaId = $('#area').val();
+            //     const outletId = $(this).val();
+            //     const $customerSelect = $('#customer_id');
+            //     const $customerTypeSelect = $('#customer_type');
 
-                // Clear dependent selects
-                $customerSelect.empty().append('<option value="">{{ __('Select Customer') }}</option>')
-                    .trigger('change.select2');
-                $customerTypeSelect.empty().append(
-                    '<option value="">{{ __('Select customer first') }}</option>').trigger(
-                    'change.select2');
+            //     // Clear dependent selects
+            //     $customerSelect.empty().append('<option value="">{{ __('Select Customer') }}</option>')
+            //         .trigger('change.select2');
+            //     $customerTypeSelect.empty().append(
+            //         '<option value="">{{ __('Select customer first') }}</option>').trigger(
+            //         'change.select2');
 
-                if (areaId && outletId) {
-                    $.ajax({
-                        url: '{{ route('customers.getNames') }}',
-                        type: 'GET',
-                        data: {
-                            area_id: areaId,
-                            outlet_id: outletId
-                        },
-                        success: function(response) {
-                            if (response.success && response.customers.length > 0) {
-                                $.each(response.customers, function(index, customer) {
-                                    // Pre-select customer if it matches selectedCustomerId
-                                    const isSelected = customer.id ==
-                                        selectedCustomerId ? 'selected' : '';
-                                    $customerSelect.append(
-                                        `<option value="${customer.id}" ${isSelected}>${customer.name}</option>`
-                                    );
-                                });
-                            } else {
-                                $customerSelect.append(
-                                    '<option value="">{{ __('No customers found') }}</option>'
-                                    );
-                            }
-                            $customerSelect.trigger('change.select2');
+            //     if (areaId && outletId) {
+            //         $.ajax({
+            //             url: '{{ route('customers.getNames') }}',
+            //             type: 'GET',
+            //             data: {
+            //                 area_id: areaId,
+            //                 outlet_id: outletId
+            //             },
+            //             success: function(response) {
+            //                 if (response.success && response.customers.length > 0) {
+            //                     $.each(response.customers, function(index, customer) {
+            //                         // Pre-select customer if it matches selectedCustomerId
+            //                         const isSelected = customer.id ==
+            //                             selectedCustomerId ? 'selected' : '';
+            //                         $customerSelect.append(
+            //                             `<option value="${customer.id}" ${isSelected}>${customer.name}</option>`
+            //                         );
+            //                     });
+            //                 } else {
+            //                     $customerSelect.append(
+            //                         '<option value="">{{ __('No customers found') }}</option>'
+            //                         );
+            //                 }
+            //                 $customerSelect.trigger('change.select2');
 
-                            // Trigger customer change if a customer is selected
-                            if (selectedCustomerId && outletId == selectedOutletId) {
-                                $customerSelect.val(selectedCustomerId).trigger('change');
-                            }
-                        },
-                        error: function(xhr) {
-                            $customerSelect.empty().append(
-                                '<option value="">{{ __('Error loading customers') }}</option>'
-                                ).trigger('change.select2');
-                            console.error('Error:', xhr.responseJSON?.error ||
-                                'Failed to load customers');
-                        }
-                    });
-                }
-            });
+            //                 // Trigger customer change if a customer is selected
+            //                 if (selectedCustomerId && outletId == selectedOutletId) {
+            //                     $customerSelect.val(selectedCustomerId).trigger('change');
+            //                 }
+            //             },
+            //             error: function(xhr) {
+            //                 $customerSelect.empty().append(
+            //                     '<option value="">{{ __('Error loading customers') }}</option>'
+            //                     ).trigger('change.select2');
+            //                 console.error('Error:', xhr.responseJSON?.error ||
+            //                     'Failed to load customers');
+            //             }
+            //         });
+            //     }
+            // });
 
             // Handle customer change
             $('#customer_id').on('change', function() {
@@ -1439,7 +1448,7 @@
                 // Clear customer type select
                 $customerTypeSelect.empty().append('<option value="">{{ __('Loading...') }}</option>').trigger('change.select2');
 
-                if (areaId && outletId && customerId) {
+                if (areaId && customerId) {
                     $.ajax({
                         url: '{{ route('customers.getCustomerTypes') }}',
                         type: 'GET',

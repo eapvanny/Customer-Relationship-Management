@@ -41,17 +41,17 @@ class ReportController extends Controller
         $user = Auth::user();
         $query = Report::with(['user', 'customer', 'customer.depo']);
 
-        $hasNoReports = !Report::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
+        // $hasNoReports = !Report::where('user_id', $user->id)
+        //     ->whereDate('created_at', Carbon::today())
+        //     ->exists();
 
-        $hasUnassignedReportToday = Report::where('user_id', $user->id)
-            ->whereNull('driver_id')
-            ->whereNull('driver_status')
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
+        // $hasUnassignedReportToday = Report::where('user_id', $user->id)
+        //     ->whereNull('driver_id')
+        //     ->whereNull('driver_status')
+        //     ->whereDate('created_at', Carbon::today())
+        //     ->exists();
 
-        $showModal = $hasNoReports || $hasUnassignedReportToday;
+        // $showModal = $hasNoReports || $hasUnassignedReportToday;
 
         if ($user) {
             $userRole = $user->role_id;
@@ -155,9 +155,27 @@ class ReportController extends Controller
             }
         }
         // Get employees for dropdown
+        $loginRole = auth()->user()->role_id;
+
+        $employeeQuery->when(in_array($loginRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMINISTRATOR,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR,
+                AppHelper::USER_MANAGER,
+                AppHelper::USER_RSM,
+                AppHelper::USER_ASM,
+            ]), function ($q) {
+                // High-level users → see Supervisors
+                $q->where('role_id', AppHelper::USER_SUP);
+            })
+            ->when($loginRole == AppHelper::USER_SUP, function ($q) {
+                // Supervisor → see Employees
+                $q->where('role_id', AppHelper::USER_EMPLOYEE);
+            });
+
         $employees = $employeeQuery
-            ->where('role_id', AppHelper::USER_SUP) 
-            ->get(['id', 'username', 'family_name', 'name']) // only needed columns
+            ->get(['id', 'username', 'family_name', 'name'])
             ->mapWithKeys(function ($user) {
                 return [$user->id => $user->username . ' (' . $user->full_name . ')'];
             })
@@ -198,7 +216,8 @@ class ReportController extends Controller
             $query->where(function ($q) use ($userId, $staffIdCard) {
                 // Case 1: report.user_id -> users.sup_id
                 $q->whereHas('user', function ($q2) use ($userId) {
-                    $q2->where('sup_id', $userId);
+                    $q2->where('sup_id', $userId)
+                        ->orWhere('reports.user_id', $userId);
                 });
                 // Case 2: report.sup_id = users.staff_id_card
                 if ($staffIdCard) {
@@ -299,7 +318,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('backend.report.list', compact('is_filter', 'area_id', 'showModal', 'employees'));
+        return view('backend.report.list', compact('is_filter', 'area_id', 'employees'));
     }
 
 
@@ -449,7 +468,7 @@ class ReportController extends Controller
                 'customer_type' => $report->customer_type,
 
                 // 'date' => Carbon::parse($report->date)->format('d-m-Y h:i A'),
-                'date' => Carbon::parse($report->date)->format('d-m-Y'),
+                'date' => Carbon::parse($report->date)->format('d-M-Y'),
 
                 'other' => $report->other ?? 'N/A',
 
@@ -482,9 +501,11 @@ class ReportController extends Controller
         if (!$areaId) {
             return response()->json([], 400);
         }
+        $areaIds = AppHelper::getAreaGroupIds($areaId);
 
         $query = Depo::where('area_id', $areaId);
 
+        $queryCustomer = Customer::whereIn('area_id', $areaIds);
         if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
             // Filter outlets accessible by SALE or SE users
             $query->where('user_type', $authUser->type);
@@ -494,8 +515,12 @@ class ReportController extends Controller
         }
 
         $outlets = $query->pluck('name', 'id')->toArray();
+        $customers = $queryCustomer->pluck('name', 'id')->toArray();
 
-        return response()->json($outlets);
+        return response()->json([
+            'outlets' => $outlets,
+            'customers' => $customers
+        ]);
     }
 
 

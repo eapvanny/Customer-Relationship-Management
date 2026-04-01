@@ -27,7 +27,9 @@
                 <div class="wrap-outter-header-title">
                     <h4>{{ __('Depo List') }}</h4>
                     <div class="box-tools pull-right">
-                        <a class="btn btn-info text-white" href="{{ URL::route('depo.create') }}"><i class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
+                        @hasTypePermission('create depo')
+                            <a class="btn btn-info text-white" href="{{ URL::route('depo.create') }}"><i class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
+                        @endHasTypePermission
                     </div>
                 </div>
                 <div class="wrap-outter-box">

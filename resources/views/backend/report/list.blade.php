@@ -365,7 +365,7 @@
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
                         @hasTypePermission('create report')
-                            @if($showModal)
+                            {{-- @if($showModal)
                                 <button type="button" class="btn btn-info text-white" id="openModalBtn">
                                     <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
                                 </button>
@@ -373,7 +373,10 @@
                                 <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
                                     <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
                                 </a>
-                            @endif
+                            @endif --}}
+                            <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
+                                <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                            </a>
                         @endHasTypePermission
                     </div>
                 </div>
@@ -526,30 +529,11 @@
                                 <div class="row">
                                     <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6">
                                         <ul class="list-group list-group-unbordered profile-log">
-                                            <li class="list-group-item">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <i class="fa fa-user me-2" style="width: 20px;"></i>
-                                                    <strong>{{ __('Employee Name') }}:</strong>
-                                                    <span id="modalEmployeeName" class="ms-2"></span>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fa fa-id-card me-2" style="width: 20px;"></i>
-                                                    <strong>{{ __('Staff ID') }}:</strong>
-                                                    <span id="modalIdCard" class="ms-2"></span>
-                                                </div>
-                                            </li>
-                                            <li class="list-group-item">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <i class="fa-solid fa-truck me-2" style="width: 20px;"></i>
-                                                    <strong>{{ __('Driver Name') }}:</strong>
-                                                    <span id="modalDriverName" class="ms-2"></span>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fa-solid fa-id-card me-2" style="width: 20px;"></i>
-                                                    <strong>{{ __('Driver ID') }}:</strong>
-                                                    <span id="modalDriverId" class="ms-2"></span>
-                                                </div>
-                                            </li>
+                                            <li class="list-group-item"><i class="fa fa-user"></i>
+                                                <strong>{{ __('Employee Name') }}:</strong> <span
+                                                    id="modalEmployeeName"></span></li>
+                                            <li class="list-group-item"><i class="fa-solid fa-id-card"></i>
+                                                <strong>{{ __('Staff ID') }}:</strong> <span id="modalIdCard"></span></li>
                                             <li class="list-group-item"><i class="fa-solid fa-chart-area"></i>
                                                 <strong>{{ __('Area') }}:</strong> <span id="modalArea"></span></li>
                                             <li class="list-group-item"><i class="fa fa-user"></i>
@@ -614,7 +598,7 @@
         </div>
     </div>
     <!-- Modal form select id pru-->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true" data-bs-backdrop="static"
+{{-- <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true" data-bs-backdrop="static"
      data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content shadow rounded-4">
@@ -642,7 +626,6 @@
                             {{ __('Please select Yes or No.') }}
                         </div>
                     </div>
-                     <!-- Driver ID input -->
                     <div class="mb-3" id="driverIdGroup" style="display: none;">
                         <label for="driverName" class="form-label fw-semibold">
                             {{ __('Driver Name') }} <span class="text-danger">*</span>
@@ -658,13 +641,12 @@
 
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-arrow-right"></i> {{ __('Continue') }}</button>
-                    {{-- <button type="button" class="btn btn-secondary btnClose"
-                        data-bs-dismiss="modal">{{ __('Cancel') }}</button> --}}
+                    
                 </div>
             </form>
         </div>
     </div>
-</div>
+</div> --}}
 
     <!-- /.content -->
 @endsection
@@ -806,81 +788,82 @@
                 $('.img-popup').val('');
             });
 
-            $('#openModalBtn').on('click', function () {
+            /*$('#openModalBtn').on('click', function () {
                 $('#confirmModal').modal('show');
             });
+            */
 
 
             // Show/hide Customer ID input and clear radio error on selection
             // Show/hide Driver ID input and clear radio error on selection
-            $('input[name="hasDriver"]').on('change', function () {
-                $('#radioError').hide();
+            // $('input[name="hasDriver"]').on('change', function () {
+            //     $('#radioError').hide();
 
-                if ($(this).val() === 'yes') {
-                    $('#driverIdGroup').show();
-                    $('#driverId').prop('required', true);
-                } else {
-                    $('#driverIdGroup').hide();
-                    $('#driverId').prop('required', false).val('');
-                    $('#driverId').removeClass('is-invalid');
-                }
-            });
+            //     if ($(this).val() === 'yes') {
+            //         $('#driverIdGroup').show();
+            //         $('#driverId').prop('required', true);
+            //     } else {
+            //         $('#driverIdGroup').hide();
+            //         $('#driverId').prop('required', false).val('');
+            //         $('#driverId').removeClass('is-invalid');
+            //     }
+            // });
 
             // Handle form submission
-            $('#redirectForm').on('submit', function (e) {
-                e.preventDefault();
+            // $('#redirectForm').on('submit', function (e) {
+            //     e.preventDefault();
 
-                const hasDriver = $('input[name="hasDriver"]:checked').val();
-                const driverId = $('#driverId').val().trim();
-                const driverName = $('#driverName').val().trim(); // Get Driver Name
+            //     const hasDriver = $('input[name="hasDriver"]:checked').val();
+            //     const driverId = $('#driverId').val().trim();
+            //     const driverName = $('#driverName').val().trim(); // Get Driver Name
 
-                let isValid = true;
+            //     let isValid = true;
 
-                // Validate radio selection
-                if (!hasDriver) {
-                    $('#radioError').show();
-                    isValid = false;
-                } else {
-                    $('#radioError').hide();
-                }
+            //     // Validate radio selection
+            //     if (!hasDriver) {
+            //         $('#radioError').show();
+            //         isValid = false;
+            //     } else {
+            //         $('#radioError').hide();
+            //     }
 
-                // Validate Driver ID AND Driver Name if "Yes" is selected
-                if (hasDriver === 'yes') {
-                    if (driverId === '') {
-                        $('#driverId').addClass('is-invalid');
-                        isValid = false;
-                    }
-                    if (driverName === '') {
-                        $('#driverName').addClass('is-invalid'); // Add is-invalid if empty
-                        isValid = false;
-                    }
-                }
-                if (!isValid) {
-                    return;
-                }
+            //     // Validate Driver ID AND Driver Name if "Yes" is selected
+            //     if (hasDriver === 'yes') {
+            //         if (driverId === '') {
+            //             $('#driverId').addClass('is-invalid');
+            //             isValid = false;
+            //         }
+            //         if (driverName === '') {
+            //             $('#driverName').addClass('is-invalid'); // Add is-invalid if empty
+            //             isValid = false;
+            //         }
+            //     }
+            //     if (!isValid) {
+            //         return;
+            //     }
 
-                // Build URL with query parameters
-                let url = "{{ route('report.create') }}" + "?has_driver=" + hasDriver;
+            //     // Build URL with query parameters
+            //     let url = "{{ route('report.create') }}" + "?has_driver=" + hasDriver;
 
-               if (hasDriver === 'yes') {
-                    url += "&driver_id=" + encodeURIComponent(driverId);
-                    url += "&driver_name=" + encodeURIComponent(driverName); // Append Driver Name
-                }
+            //    if (hasDriver === 'yes') {
+            //         url += "&driver_id=" + encodeURIComponent(driverId);
+            //         url += "&driver_name=" + encodeURIComponent(driverName); // Append Driver Name
+            //     }
 
-                window.location.href = url;
-            });
+            //     window.location.href = url;
+            // });
 
-            // Reset form when modal is closed
-            $('#confirmModal').on('hidden.bs.modal', function () {
-                // Clear radio selection
-                $('input[name="hasDriver"]').prop('checked', false);
-                // Hide radio error
-                $('#radioError').hide();
-                // Hide driver ID input and clear its value
-                $('#driverIdGroup').hide();
-                $('#driverId').prop('required', false).val('');
-                $('#driverId').removeClass('is-invalid');
-            });
+            // // Reset form when modal is closed
+            // $('#confirmModal').on('hidden.bs.modal', function () {
+            //     // Clear radio selection
+            //     $('input[name="hasDriver"]').prop('checked', false);
+            //     // Hide radio error
+            //     $('#radioError').hide();
+            //     // Hide driver ID input and clear its value
+            //     $('#driverIdGroup').hide();
+            //     $('#driverId').prop('required', false).val('');
+            //     $('#driverId').removeClass('is-invalid');
+            // });
 
             // Handle delete
             $('#datatable').on('click', '.delete', function(e) {

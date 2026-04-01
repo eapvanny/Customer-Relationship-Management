@@ -25,8 +25,8 @@
             <th>{{ __('Area') }}</th>
             <th>{{ __('SSP_NAME') }}</th>
             <th>{{ __('SSP_ID') }}</th>
-            <th>{{ __('Driver Name') }}</th>
-            <th>{{ __('Driver ID') }}</th>
+            {{-- <th>{{ __('Driver Name') }}</th>
+            <th>{{ __('Driver ID') }}</th> --}}
             <th>{{ __('SUP_NAME') }}</th>
             <th>{{ __('SUP_ID') }}</th>
             <th>{{ __('RSM_NAME') }}</th>
@@ -93,8 +93,8 @@
                     }}
                 </td>
                 <td>{{ optional($reportUser)->staff_id_card ?? $row->ssp_id ?? 'N/A' }}</td>
-                <td>{{ $row->driver_name ?? 'N/A' }}</td>
-                <td>{{ $row->driver_id ?? 'N/A' }}</td>
+                {{-- <td>{{ $row->driver_name ?? 'N/A' }}</td>
+                <td>{{ $row->driver_id ?? 'N/A' }}</td> --}}
                 <td>
                     {{ $sup
                         ? ($sup->user_lang === 'en'
@@ -158,7 +158,7 @@
             </tr>
         @endforeach
         <tr>
-            <td colspan="13">{{ __('Total') }}</td>
+            <td colspan="11">{{ __('Total') }}</td>
             <td>{{ $total_250ml }}</td>
             <td>{{ $total_350ml }}</td>
             <td>{{ $total_600ml }}</td>

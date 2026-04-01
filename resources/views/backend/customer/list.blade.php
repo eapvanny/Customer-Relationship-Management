@@ -22,10 +22,12 @@
                     {{ __('Customer List') }}
                 </h4>
                 <div class="action-btn-top none_fly_action_btn">
-                    <a href="{{ route('customer.create') }}" class="btn btn-primary">
-                        <i class="fa fa-plus-circle"></i> 
-                        {{ __('Add New') }}
-                    </a>
+                    @hasTypePermission('create customer')
+                        <a href="{{ route('customer.create') }}" class="btn btn-primary">
+                            <i class="fa fa-plus-circle"></i> 
+                            {{ __('Add New') }}
+                        </a>
+                    @endHasTypePermission
                 </div>
             </div>
             <div class="wrap-outter-box">

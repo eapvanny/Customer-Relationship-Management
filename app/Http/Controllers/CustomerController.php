@@ -169,7 +169,7 @@ class CustomerController extends Controller
                 $query->where('id', 0); // not logged in
             }
 
-            $customers = $query->orderBy('id', 'desc');
+            $customers = $query->orderBy('id', 'desc')->get();
 
             return DataTables::of($customers)
                 ->addIndexColumn()
