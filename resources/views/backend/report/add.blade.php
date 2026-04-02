@@ -552,7 +552,7 @@
                                 <label for="customer_id">{{ __('Customer Name') }} <span
                                         class="text-danger">*</span></label>
                                 <select name="customer_id" class="form-control select2" id="customer_id" required>
-                                    <option value="">{{ __('Select outlet first') }}</option>
+                                    <option value="">{{ __('Select area first') }}</option>
                                     @foreach ($customers as $id => $name)
                                         <option value="{{ $id }}"
                                             {{ old('customer_id', $report->customer_id ?? '') == $id ? 'selected' : '' }}>
@@ -1323,7 +1323,7 @@
 
                 // Clear dependent selects
                 $outletSelect.empty().append('<option value="">{{ __('Loading...') }}</option>');
-                $customerSelect.empty().append('<option value="">{{ __('Select outlet first') }}</option>')
+                $customerSelect.empty().append('<option value="">{{ __('Select area first') }}</option>')
                     .trigger('change.select2');
                 $customerTypeSelect.empty().append(
                     '<option value="">{{ __('Select customer first') }}</option>').trigger(

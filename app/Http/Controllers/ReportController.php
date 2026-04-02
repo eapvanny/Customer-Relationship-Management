@@ -505,7 +505,8 @@ class ReportController extends Controller
 
         $query = Depo::where('area_id', $areaId);
 
-        $queryCustomer = Customer::whereIn('area_id', $areaIds);
+        // $queryCustomer = Customer::whereIn('area_id', $areaIds);
+        $queryCustomer = Customer::where('user_id', $authUser->id); // Only customers assigned to this user
         if (in_array($authUser->type, [AppHelper::SALE, AppHelper::SE])) {
             // Filter outlets accessible by SALE or SE users
             $query->where('user_type', $authUser->type);
@@ -515,7 +516,7 @@ class ReportController extends Controller
         }
 
         $outlets = $query->pluck('name', 'id')->toArray();
-        $customers = $queryCustomer->pluck('name', 'id')->toArray();
+        $customers = $queryCustomer->pluck('name', 'id');
 
         return response()->json([
             'outlets' => $outlets,
