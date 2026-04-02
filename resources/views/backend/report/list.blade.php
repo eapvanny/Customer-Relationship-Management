@@ -420,7 +420,11 @@
                                                 @endif --}}
                                                 <div class="col-xl-3">
                                                     <div class="form-group">
-                                                        <label for="user_id">{{ __('Filter By Supervisor') }}</label>
+                                                        @if (auth()->user()->role_id != AppHelper::USER_SUP)
+                                                            <label for="user_id">{{ __('Filter By Supervisor') }}</label>
+                                                        @else
+                                                            <label for="user_id">{{ __('Filter By SSP') }}</label>
+                                                        @endif
                                                         {!! Form::select('user_id', $employees, request('user_id'), [
                                                             'placeholder' => __('Select employee'),
                                                             'id' => 'user_id',
