@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Http\Helpers\AppHelper;
 use App\Models\Report;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -112,8 +113,8 @@ class ReportsExport implements FromView
         }
         // Apply date range filter
         if ($this->date1 && $this->date2) {
-            $startDate = \Carbon\Carbon::parse($this->date1)->startOfDay();
-            $endDate = \Carbon\Carbon::parse($this->date2)->endOfDay();
+            $startDate = Carbon::parse($this->date1)->startOfDay();
+            $endDate = Carbon::parse($this->date2)->endOfDay();
             $query->whereBetween('date', [$startDate, $endDate]);
         }
         // Apply user_id filter
