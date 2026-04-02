@@ -59,6 +59,12 @@ class ReportController extends Controller
             $userType = $user->type;
 
             $userIds = [$userId]; // Always include own reports
+
+            $staffIdCards = User::whereIn('id', $userIds)
+                    ->pluck('staff_id_card')
+                    ->filter()
+                    ->toArray();
+
             $allowedTypes = [AppHelper::SALE, AppHelper::SE];
 
             if ($userType == AppHelper::ALL || in_array($userRole, [
@@ -110,9 +116,29 @@ class ReportController extends Controller
                 AppHelper::USER_ADMIN,
                 AppHelper::USER_DIRECTOR
             ]))) {
-                $query->whereIn('reports.user_id', array_unique($userIds));
-                $query->whereHas('user', function ($q) use ($allowedTypes) {
-                    $q->whereIn('type', $allowedTypes);
+                // $query->whereIn('reports.user_id', array_unique($userIds));
+                // $query->whereHas('user', function ($q) use ($allowedTypes) {
+                //     $q->whereIn('type', $allowedTypes);
+                // });
+                $query->where(function ($q) use ($userIds, $staffIdCards, $allowedTypes) {
+
+                    // Case 1: Normal reports (has user_id)
+                    $q->where(function ($q1) use ($userIds, $allowedTypes) {
+                        $q1->whereIn('reports.user_id', $userIds)
+                            ->whereHas('user', function ($q2) use ($allowedTypes) {
+                                $q2->whereIn('type', $allowedTypes);
+                            });
+                    });
+
+                    // Case 2: Imported reports (NO user_id, match by ssp_id)
+                    if (!empty($staffIdCards)) {
+                        $q->orWhereIn('reports.ssp_id', $staffIdCards);
+                    }
+
+                    // Case 3: Imported reports (match by sup_id)
+                    if (!empty($staffIdCards)) {
+                        $q->orWhereIn('reports.sup_id', $staffIdCards);
+                    }
                 });
             }
         } else {
@@ -210,19 +236,30 @@ class ReportController extends Controller
         if ($request->filled('user_id')) {
             $is_filter = true;
 
-            $userId = $request->user_id;
-            // get staff_id_card from selected user
-            $staffIdCard = User::where('id', $userId)->value('staff_id_card');
-            $query->where(function ($q) use ($userId, $staffIdCard) {
-                // Case 1: report.user_id -> users.sup_id
-                $q->whereHas('user', function ($q2) use ($userId) {
-                    $q2->where('sup_id', $userId)
-                        ->orWhere('reports.user_id', $userId);
-                });
-                // Case 2: report.sup_id = users.staff_id_card
+            $selectedUserId = $request->user_id;
+
+            // Get selected user's staff_id_card
+            $staffIdCard = User::where('id', $selectedUserId)->value('staff_id_card');
+
+            $query->where(function ($q) use ($selectedUserId, $staffIdCard) {
+
+                //  Case 1: Normal reports (linked by user_id)
+                $q->where('reports.user_id', $selectedUserId);
+
+                //  Case 2: Imported reports (ssp_id = staff_id_card)
                 if ($staffIdCard) {
-                    $q->orWhere('sup_id', $staffIdCard);
+                    $q->orWhere('reports.ssp_id', $staffIdCard);
                 }
+
+                //  Case 3: Imported reports (sup_id = staff_id_card)
+                if ($staffIdCard) {
+                    $q->orWhere('reports.sup_id', $staffIdCard);
+                }
+
+                //  Case 4: Reports under this supervisor (team members)
+                $q->orWhereHas('user', function ($q2) use ($selectedUserId) {
+                    $q2->where('sup_id', $selectedUserId);
+                });
             });
         }
         // Handle DataTables AJAX
@@ -414,14 +451,14 @@ class ReportController extends Controller
 
         $user = $report->user;
 
-        // ✅ Employee Name (with fallback ssp_name)
+        //  Employee Name (with fallback ssp_name)
         $employee_name = $user
             ? (auth()->user()->user_lang == 'en'
                 ? ($user->getFullNameLatinAttribute() ?? $report->ssp_name ?? 'N/A')
                 : ($user->getFullNameAttribute() ?? $report->ssp_name ?? 'N/A'))
             : ($report->ssp_name ?? 'N/A');
 
-        // ✅ POSM with fallback
+        //  POSM with fallback
         $posm = isset(AppHelper::MATERIAL[$report->posm])
             ? __(AppHelper::MATERIAL[$report->posm])
             : ($report->posm_name1 ?? 'N/A');
@@ -450,17 +487,17 @@ class ReportController extends Controller
                 'driver_name' => $report->driver_name ?? 'N/A',
                 'driver_id' => $report->driver_id ?? 'N/A',
 
-                // ✅ Area fallback
+                //  Area fallback
                 'area' => AppHelper::getAreaNameById($report->area_id)
                     ?? $report->area
                     ?? 'N/A',
 
-                // ✅ Outlet fallback
+                //  Outlet fallback
                 'outlet' => optional($report->depo)->name
                     ?? $report->outlet_name
                     ?? 'N/A',
 
-                // ✅ Customer fallback
+                //  Customer fallback
                 'customer' => optional($report->customer)->name
                     ?? $report->customer_name
                     ?? 'N/A',
@@ -477,7 +514,7 @@ class ReportController extends Controller
                 '600_ml' => $report->{'600_ml'},
                 '1500_ml' => $report->{'1500_ml'},
 
-                // ✅ Phone safe
+                //  Phone safe
                 'phone' => optional($report->customer)->phone ?? 'N/A',
 
                 'city' => $report->city ?? $report->address ?? 'N/A',
@@ -1049,9 +1086,15 @@ class ReportController extends Controller
         $date2 = $request->input('date2');
         $user_id = $request->input('user_id');
         $area_id = $request->input('area_id');
+        $user_id = $request->input('user_id');
 
+        $staffIdCard = null;
+        if ($user_id) {
+            $staffIdCard = User::where('id', $user_id)->value('staff_id_card');
+        }
+        // dd($date1, $date2, $user_id, $staffIdCard);
         return Excel::download(
-            new ReportsExport($date1, $date2, $user_id, $area_id),
+            new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard),
             'reports_' . now()->format('Y_m_d_His') . '.xlsx'
         );
 
