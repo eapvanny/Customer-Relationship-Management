@@ -581,14 +581,14 @@
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
-                            <img style="border: 1px solid #cfcfcf; width: auto; height: 350px; object-fit: cover;" id="modalPhotoOutlet" src=""
+                            <img loading="lazy" style="border: 1px solid #cfcfcf; width: auto; height: 350px; object-fit: cover;" id="modalPhotoOutlet" src=""
                                 class="img-fluid photo-detail" alt="Photo_outlet Detail">
                             <div class="text-center mt-3">
                                 <b>{{ __('Outlet Photo') }}</b>
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12 col-lg-12 col-xl-6 mt-2">
-                            <img style="border: 1px solid #cfcfcf;  width: auto; height: 350px; object-fit: cover;" id="modalPhoto" src=""
+                            <img loading="lazy" style="border: 1px solid #cfcfcf;  width: auto; height: 350px; object-fit: cover;" id="modalPhoto" src=""
                                 class="img-fluid photo-detail" alt="Photo Detail">
                             <div class="text-center mt-3">
                                 <b>{{ __('POSM Photo') }}</b>
@@ -690,7 +690,7 @@
             var table = $('#datatable').DataTable({
                 processing: true,
                 serverSide: true,
-                pageLength: 10,
+                // pageLength: 10,
                 ajax: {
                     url: "{{ route('report.index') }}",
                     type: "GET",
