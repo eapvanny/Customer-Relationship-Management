@@ -999,9 +999,9 @@
                 </div>
             </div>
 
-            <input type="hidden" name="has_driver" value="{{ request('has_driver') }}">
+            {{-- <input type="hidden" name="has_driver" value="{{ request('has_driver') }}">
             <input type="hidden" name="driver_id" value="{{ request('driver_id') }}">
-            <input type="hidden" name="driver_name" value="{{ request('driver_name') }}">
+            <input type="hidden" name="driver_name" value="{{ request('driver_name') }}"> --}}
         </form>
     </section>
 @endsection

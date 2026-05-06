@@ -625,18 +625,16 @@ class ReportController extends Controller
     public function store(Request $request)
     {
         /* ------------------------------------
-        | 1. Cache area IDs (FAST)
+        | 1. Cache area IDs (once)
         |------------------------------------*/
         $areaIds = Cache::rememberForever('area_ids', function () {
-            $ids = [];
-            foreach (AppHelper::getAreas() as $group) {
-                $ids = array_merge($ids, array_keys($group));
-            }
-            return $ids;
+            return collect(AppHelper::getAreas())
+                ->flatMap(fn($group) => array_keys($group))
+                ->toArray();
         });
 
         /* ------------------------------------
-        | 2. Validation (LIGHT)
+        | 2. Validation (optimized)
         |------------------------------------*/
         $rules = [
             'area' => ['required', Rule::in($areaIds)],
@@ -654,8 +652,6 @@ class ReportController extends Controller
 
             'customer_id' => 'required|exists:customers,id',
             'customer_type' => 'required',
-            'driver_id' => 'required_if:has_driver,yes|nullable|numeric',
-            'driver_name' => 'required_if:has_driver,yes|nullable|string|max:255',
         ];
 
         if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64')) {
@@ -665,129 +661,82 @@ class ReportController extends Controller
         $request->validate($rules);
 
         /* ------------------------------------
-        | 3. Driver logic (UNCHANGED)
-        |------------------------------------*/
-        $hasDriver = $request->input('has_driver');
-        $driverId  = $request->input('driver_id');
-        $driverName = $request->input('driver_name'); // Get Name
-        // dd($hasDriver, $driverId, $driverName);
-        if (!$hasDriver && !$driverId) {
-            $recentReport = Report::where('user_id', auth()->id())
-                ->whereDate('created_at', Carbon::today('Asia/Phnom_Penh'))
-                ->latest('id')
-                ->first();
-
-            if ($recentReport) {
-                $hasDriver = $recentReport->driver_status;
-                $driverId  = $recentReport->driver_id;
-                $driverName = $recentReport->driver_name; // Get from recent
-            }
-        }
-
-        /* ------------------------------------
-        | 4. Create report FIRST (FAST DB)
+        | 3. Prepare data (single insert)
         |------------------------------------*/
         $prefix = AppHelper::getAreaNameById($request->area);
 
-        $report = Report::create([
+        $data = [
             'user_id'        => auth()->id(),
             'area_id'        => $request->area,
             'outlet_id'      => $request->outlet_id,
-            'driver_id'      => $driverId,
-            'driver_name'   => $driverName, // Save Name
-            'driver_status'  => $hasDriver,
             'customer_id'    => $request->customer_id,
             'customer_type'  => $request->customer_type,
             'date'           => now('Asia/Phnom_Penh'),
 
-            '250_ml'         => $request['250_ml'],
-            '350_ml'         => $request['350_ml'],
-            '600_ml'         => $request['600_ml'],
-            '1500_ml'        => $request['1500_ml'],
-            'other'          => $request->other,
+            '250_ml'  => $request['250_ml'],
+            '350_ml'  => $request['350_ml'],
+            '600_ml'  => $request['600_ml'],
+            '1500_ml' => $request['1500_ml'],
+            'other'   => $request->other,
 
-            'latitude'       => $request->latitude,
-            'longitude'      => $request->longitude,
-            'city'           => $request->city,
-            'country'        => $request->country,
+            'latitude'  => $request->latitude,
+            'longitude' => $request->longitude,
+            'city'      => $request->city,
+            'country'   => $request->country,
 
-            'qty'            => $request->qty,
-            'posm'           => $request->posm,
-            'qty2'           => $request->qty2,
-            'posm2'          => $request->posm2,
-            'qty3'           => $request->qty3,
-            'posm3'          => $request->posm3,
-        ]);
-
-        /* ------------------------------------
-        | 5. SO Number (NO TABLE SCAN)
-        |------------------------------------*/
-        $report->update([
-            'so_number' => $prefix . '-' . str_pad($report->id, 7, '0', STR_PAD_LEFT),
-        ]);
+            'qty'   => $request->qty,
+            'posm'  => $request->posm,
+            'qty2'  => $request->qty2,
+            'posm2' => $request->posm2,
+            'qty3'  => $request->qty3,
+            'posm3' => $request->posm3,
+        ];
 
         /* ------------------------------------
-        | 6. Image handling (OPTIMIZED)
+        | 4. Handle images BEFORE insert (reduce update queries)
         |------------------------------------*/
         try {
+            // PHOTO
             if ($request->hasFile('photo')) {
                 $fileName = 'uploads/photo_' . time() . '_' . Str::random(8) . '.jpg';
-                $image = AppHelper::resizeToSpecificSize(
-                    $request->file('photo'),
-                    1024,
-                    1024,
-                    70
-                );
+                $image = AppHelper::resizeToSpecificSize($request->file('photo'), 1024, 1024, 70);
                 Storage::put($fileName, $image);
-                $report->update(['photo' => $fileName]);
-            }
-            elseif ($request->filled('photo_base64')) {
+                $data['photo'] = $fileName;
+            } elseif ($request->filled('photo_base64')) {
                 $fileName = 'uploads/photo_' . time() . '_' . Str::random(8) . '.jpg';
-                $image = AppHelper::resizeAndCompressBase64Image(
-                    $request->photo_base64,
-                    1024,
-                    70
-                );
+                $image = AppHelper::resizeAndCompressBase64Image($request->photo_base64, 1024, 70);
                 Storage::put($fileName, $image);
-                $report->update(['photo' => $fileName]);
+                $data['photo'] = $fileName;
             }
 
+            // OUTLET PHOTO
             if ($request->hasFile('outlet_photo')) {
                 $fileName = 'uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
-                $image = AppHelper::resizeToSpecificSize(
-                    $request->file('outlet_photo'),
-                    1024,
-                    1024,
-                    70
-                );
+                $image = AppHelper::resizeToSpecificSize($request->file('outlet_photo'), 1024, 1024, 70);
                 Storage::put($fileName, $image);
-                $report->update(['outlet_photo' => $fileName]);
-            }
-            elseif ($request->filled('outlet_photo_base64')) {
+                $data['outlet_photo'] = $fileName;
+            } elseif ($request->filled('outlet_photo_base64')) {
                 $fileName = 'uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
-                $image = AppHelper::resizeAndCompressBase64Image(
-                    $request->outlet_photo_base64,
-                    1024,
-                    70
-                );
+                $image = AppHelper::resizeAndCompressBase64Image($request->outlet_photo_base64, 1024, 70);
                 Storage::put($fileName, $image);
-                $report->update(['outlet_photo' => $fileName]);
+                $data['outlet_photo'] = $fileName;
             }
+
         } catch (\Exception $e) {
             return back()->with('error', 'Image upload failed: ' . $e->getMessage());
         }
 
         /* ------------------------------------
-        | 7. Notifications (UNCHANGED)
+        | 5. Insert ONCE (fast)
         |------------------------------------*/
-        $adminUsers = User::whereIn('role_id', [
-            AppHelper::USER_SUPER_ADMIN,
-            AppHelper::USER_ADMIN
-        ])->pluck('id')->toArray();
+        $report = Report::create($data);
 
-        if (auth()->user()->manager_id) {
-            $adminUsers[] = auth()->user()->manager_id;
-        }
+        /* ------------------------------------
+        | 6. SO Number (only 1 update left)
+        |------------------------------------*/
+        $report->update([
+            'so_number' => $prefix . '-' . str_pad($report->id, 7, '0', STR_PAD_LEFT),
+        ]);
 
         return redirect()
             ->route('report.index')
