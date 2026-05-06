@@ -1703,13 +1703,21 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('form');
+            const form = document.querySelector('#entryForm');
             const submitBtn = document.getElementById('submitBtn');
 
-            form.addEventListener('submit', function () {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
-            });
+            if (form && submitBtn) {
+                form.addEventListener('submit', function (e) {
+                    // Prevent double submit
+                    if (submitBtn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+                });
+            }
         });
 
         // $('#outlet').on('input', function() {

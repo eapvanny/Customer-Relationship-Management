@@ -24,11 +24,61 @@ class DashboardController extends Controller
         // }
         $query = Report::with('user');
         $user = auth()->user();
-        if ($user->role_id === AppHelper::USER_MANAGER) {
+         if ($user->role_id === AppHelper::USER_MANAGER) {
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('manager_id', $user->id);
             });
-        } elseif ($user->role_id !== AppHelper::USER_SUPER_ADMIN && $user->role_id !== AppHelper::USER_ADMIN) {
+        } 
+        elseif ($user->role_id === AppHelper::USER_RSM) {
+            // Get all user IDs under this RSM (ASM, SUP, Employee)
+            $userIdsUnderRsm = User::where('rsm_id', $user->id)
+                ->orWhereIn('asm_id', function($query) use ($user) {
+                    $query->select('id')
+                        ->from('users')
+                        ->where('rsm_id', $user->id);
+                })
+                ->orWhereIn('sup_id', function($query) use ($user) {
+                    $query->select('id')
+                        ->from('users')
+                        ->whereIn('asm_id', function($subQuery) use ($user) {
+                            $subQuery->select('id')
+                                    ->from('users')
+                                    ->where('rsm_id', $user->id);
+                        });
+                })
+                ->pluck('id')
+                ->toArray();
+            
+            // Include the RSM's own reports if needed
+            $userIdsUnderRsm[] = $user->id;
+            
+            $query->whereIn('user_id', $userIdsUnderRsm);
+        }
+        elseif ($user->role_id === AppHelper::USER_ASM) {
+            // Get all user IDs under this ASM (SUP and Employee)
+            $userIdsUnderAsm = User::where('asm_id', $user->id)
+                ->orWhere('sup_id', 'in', function($query) use ($user) {
+                    $query->select('id')
+                        ->from('users')
+                        ->where('asm_id', $user->id);
+                })
+                ->pluck('id')
+                ->toArray();
+            
+            $userIdsUnderAsm[] = $user->id;
+            $query->whereIn('user_id', $userIdsUnderAsm);
+        }
+        elseif ($user->role_id === AppHelper::USER_SUP) {
+            // Get all user IDs under this SUP (Employees)
+            $userIdsUnderSup = User::where('sup_id', $user->id)
+                ->pluck('id')
+                ->toArray();
+            
+            $userIdsUnderSup[] = $user->id;
+            $query->whereIn('user_id', $userIdsUnderSup);
+        }
+        elseif ($user->role_id !== AppHelper::USER_SUPER_ADMIN && 
+                $user->role_id !== AppHelper::USER_ADMIN) {
             $query->where('user_id', $user->id);
         }
        
