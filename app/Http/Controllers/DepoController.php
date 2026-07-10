@@ -99,6 +99,22 @@ class DepoController extends Controller
                 $depos = $query->orderBy('id', 'desc');
                 return DataTables::of($depos)
                     ->addIndexColumn()
+                    ->filter(function ($query) use ($request) {
+
+                        if ($search = $request->input('search.value')) {
+
+                            $areaIds = AppHelper::getAreaIdsBySearch($search);
+
+                            $query->where(function ($q) use ($search, $areaIds) {
+
+                                $q->where('name', 'LIKE', "%{$search}%");
+
+                                if (!empty($areaIds)) {
+                                    $q->orWhereIn('area_id', $areaIds);
+                                }
+                            });
+                        }
+                    })
                     ->addColumn('created_by', function ($depo) {
                         return $depo->user ? ($depo->user->user_lang === 'en' ? ($depo->user->full_name_latin ?? 'N/A') : ($depo->user->user_lang === 'kh' ? ($depo->user->full_name ?? 'N/A') : 'N/A')) : 'N/A';
                     })

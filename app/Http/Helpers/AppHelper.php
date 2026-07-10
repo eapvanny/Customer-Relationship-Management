@@ -217,6 +217,21 @@ class AppHelper
 
     return null; // let caller decide fallback
 }
+//search area by text and return area ids
+public static function getAreaIdsBySearch($search)
+{
+    $areaIds = [];
+
+    foreach (self::AREAS as $manager => $areas) {
+        foreach ($areas as $id => $code) {
+            if (stripos($code, $search) !== false || stripos($manager, $search) !== false) {
+                $areaIds[] = $id;
+            }
+        }
+    }
+
+    return $areaIds;
+}
 
      public static function getAreas()
     {

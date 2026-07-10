@@ -268,6 +268,27 @@ class ReportController extends Controller
                 $reports = $query->orderBy('id', 'desc');
 
                 return DataTables::of($reports)
+                    ->filter(function ($query) use ($request) {
+
+                        if ($search = $request->input('search.value')) {
+
+                            $areaIds = AppHelper::getAreaIdsBySearch($search);
+
+                            $query->where(function ($q) use ($search, $areaIds) {
+                                $q->orWhereHas('user', function ($userQuery) use ($search) {
+                                    $userQuery->where(function ($q) use ($search) {
+                                        $q->where('family_name', 'LIKE', "%{$search}%")
+                                        ->orWhere('name', 'LIKE', "%{$search}%")
+                                        ->orWhere('family_name_latin', 'LIKE', "%{$search}%")
+                                        ->orWhere('name_latin', 'LIKE', "%{$search}%");
+                                    });
+                                });
+                                if (!empty($areaIds)) {
+                                    $q->orWhereIn('area_id', $areaIds);
+                                }
+                            });
+                        }
+                    })
                     ->addColumn('area', function ($data) {
                         return !empty($data->area_id)
                             ? AppHelper::getAreaNameById($data->area_id)
