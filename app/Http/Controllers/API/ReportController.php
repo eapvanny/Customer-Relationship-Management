@@ -165,12 +165,12 @@ class ReportController extends Controller
                     ['size' => '1500ML', 'quantity' => $report->{'1500_ml'} ?? 0],
                 ],
                 'formatted_date' => Carbon::parse($report->date)->format('d F, Y'),
-                'sale_photo_url' => $report->photo
-                    ? ($baseUrl . $report->photo) // Assuming photo is stored in storage/app/public
-                    : 'https://via.placeholder.com/200',
-                'posm_photo_url' => $report->outlet_photo
-                    ? ($baseUrl . $report->outlet_photo)
-                    : 'https://via.placeholder.com/200',
+                'sale_photo_url' => $report->outlet_photo
+                    ? asset('storage/' . $report->outlet_photo)
+                    : asset('images/avatar.png'),
+                'posm_photo_url' => $report->photo
+                    ? asset('storage/' . $report->photo)
+                    : asset('images/avatar.png'),
                 'material_type' => $report->material_type ?? 'T-Shirt',
                 'material_quantity' => $report->material_quantity ?? 2,
                 'latitude' => $report->latitude ?? 11.5241,
