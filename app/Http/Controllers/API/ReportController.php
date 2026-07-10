@@ -171,8 +171,18 @@ class ReportController extends Controller
                 'posm_photo_url' => $report->photo
                     ? asset('storage/' . $report->photo)
                     : asset('images/avatar.png'),
-                'material_type' => $report->material_type ?? 'T-Shirt',
-                'material_quantity' => $report->material_quantity ?? 2,
+                'material_type' => isset(AppHelper::MATERIAL[$report->posm])
+                    ? __(AppHelper::MATERIAL[$report->posm])
+                    : ($report->posm_name1 ?? 'N/A'),
+                'material_quantity' => $report->qty ?? 'N/A',
+                'material_type2' => isset(AppHelper::MATERIAL[$report->posm2])
+                    ? __(AppHelper::MATERIAL[$report->posm2])
+                    : ($report->posm_name2 ?? 'N/A'),
+                'material_quantity2' => $report->qty2 ?? 'N/A',
+                'material_type3' => isset(AppHelper::MATERIAL[$report->posm3])
+                    ? __(AppHelper::MATERIAL[$report->posm3])
+                    : ($report->posm_name3 ?? 'N/A'),
+                'material_quantity3' => $report->qty3 ?? 'N/A',
                 'latitude' => $report->latitude ?? 11.5241,
                 'longitude' => $report->longitude ?? 104.9390,
                 'address' => $report->address ?? 'Ta Ngov Kandal, Khan Chbar Ampov, Phnom Penh',
