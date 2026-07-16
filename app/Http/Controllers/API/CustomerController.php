@@ -148,12 +148,12 @@ class CustomerController extends Controller
 
         if (!$areaId) {
             return response()->json([
-                'message'=>'Area is required'
-            ],400);
+                'message' => 'Area is required'
+            ], 400);
         }
 
 
-        $query = Depo::where('area_id',$areaId);
+        $query = Depo::where('area_id', $areaId);
 
 
         if ($authUser && in_array($authUser->type, [
@@ -161,12 +161,12 @@ class CustomerController extends Controller
             AppHelper::SE
         ])) {
 
-            $query->where('user_type',$authUser->type);
+            $query->where('user_type', $authUser->type);
         }
 
 
         return response()->json(
-            $query->select('id','name')->get()
+            $query->select('id', 'name')->get()
         );
     }
     public function store(Request $request)
@@ -194,7 +194,7 @@ class CustomerController extends Controller
             $rules = [
                 'name' => 'required|string|max:255',
                 'phone' => 'required|string|max:255',
-                'area' => 'required|in:' . implode(',', $areaIds),
+                'area_id' => 'required|in:' . implode(',', $areaIds),
                 'depo_id' => 'required|exists:depos,id',
                 'customer_type' => 'required|string',
                 'latitude' => 'required|numeric|between:-90,90',
@@ -202,21 +202,8 @@ class CustomerController extends Controller
                 'city' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
 
-                'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000',
-
-                'outlet_photo_base64' => 'nullable|string',
+                'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,heic|max:10000',
             ];
-
-
-            if (
-                !$request->hasFile('outlet_photo') &&
-                !$request->filled('outlet_photo_base64')
-            ) {
-
-                $rules['outlet_photo'] =
-                    'required|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000';
-            }
-
 
             $validator = Validator::make($request->all(), $rules);
 
@@ -248,8 +235,6 @@ class CustomerController extends Controller
                     break;
             }
 
-
-
             $lastCustomer = Customer::orderBy('id', 'desc')->first();
 
             $lastCodeNumber = $lastCustomer && $lastCustomer->code
@@ -274,7 +259,7 @@ class CustomerController extends Controller
 
                 'phone' => $request->phone,
 
-                'area_id' => $request->area,
+                'area_id' => $request->area_id,
 
                 'depo_id' => $request->depo_id,
 
@@ -292,68 +277,26 @@ class CustomerController extends Controller
 
                 'code' => $code,
             ];
-
-
-
-
-            // Upload image from Flutter file
-
             if ($request->hasFile('outlet_photo')) {
-
 
                 $file = $request->file('outlet_photo');
 
-
-                $fileName = 'outlet_' . time() . '_' .
-                    Str::random(10) .
-                    '.' .
-                    $file->extension();
-
-
-                $filePath = 'Uploads/' . $fileName;
+                $fileName = 'Uploads/outlet_'
+                    . time() . '_'
+                    . Str::random(10)
+                    . '.'
+                    . $file->extension();
 
 
-                $image = AppHelper::resizeAndCompressImage($file);
-
-
-                Storage::disk('public')
-                    ->put($filePath, $image);
-
-
-                $data['outlet_photo'] = $filePath;
-            }
-
-
-
-            // Upload Base64 image
-
-            elseif ($request->filled('outlet_photo_base64')) {
-
-
-                $image = AppHelper::resizeAndCompressBase64Image(
-                    $request->outlet_photo_base64
+                Storage::disk('public')->put(
+                    $fileName,
+                    file_get_contents($file)
                 );
-
-
-                $fileName = 'Uploads/outlet_' .
-                    time() . '_' .
-                    Str::random(10) .
-                    '.jpg';
-
-
-                Storage::disk('public')
-                    ->put($fileName, $image);
 
 
                 $data['outlet_photo'] = $fileName;
             }
-
-
-
-
             $customer = Customer::create($data);
-
-
 
             return response()->json([
 
