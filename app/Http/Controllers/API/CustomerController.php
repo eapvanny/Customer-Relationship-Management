@@ -5,7 +5,11 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
+use Illuminate\Support\Facades\Validator;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -133,5 +137,213 @@ class CustomerController extends Controller
                 ];
             })->values(),
         ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    
+    public function store(Request $request)
+    {
+        try {
+
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+
+            // Get valid area IDs
+            $areaIds = [];
+
+            foreach (AppHelper::getAreas() as $group) {
+                $areaIds = array_merge($areaIds, array_keys($group));
+            }
+
+
+            $rules = [
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:255',
+                'area' => 'required|in:' . implode(',', $areaIds),
+                'depo_id' => 'required|exists:depos,id',
+                'customer_type' => 'required|string',
+                'latitude' => 'required|numeric|between:-90,90',
+                'longitude' => 'required|numeric|between:-180,180',
+                'city' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+
+                'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000',
+
+                'outlet_photo_base64' => 'nullable|string',
+            ];
+
+
+            if (
+                !$request->hasFile('outlet_photo') &&
+                !$request->filled('outlet_photo_base64')
+            ) {
+
+                $rules['outlet_photo'] =
+                    'required|image|mimes:jpg,jpeg,png,webp,svg,gif|max:10000';
+            }
+
+
+            $validator = Validator::make($request->all(), $rules);
+
+
+            if ($validator->fails()) {
+
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+
+
+            // Generate customer code
+
+            switch ($user->type) {
+
+                case AppHelper::SALE:
+                    $prefix = 'CPP';
+                    break;
+
+                case AppHelper::SE:
+                    $prefix = 'CPV';
+                    break;
+
+                default:
+                    $prefix = 'CUS';
+                    break;
+            }
+
+
+
+            $lastCustomer = Customer::orderBy('id', 'desc')->first();
+
+            $lastCodeNumber = $lastCustomer && $lastCustomer->code
+                ? (int) substr($lastCustomer->code, 4)
+                : 0;
+
+
+            $code = $prefix . '-' . str_pad(
+                $lastCodeNumber + 1,
+                5,
+                '0',
+                STR_PAD_LEFT
+            );
+
+
+
+            $data = [
+
+                'user_id' => $user->id,
+
+                'name' => $request->name,
+
+                'phone' => $request->phone,
+
+                'area_id' => $request->area,
+
+                'depo_id' => $request->depo_id,
+
+                'customer_type' => $request->customer_type,
+
+                'user_type' => $user->type,
+
+                'latitude' => $request->latitude,
+
+                'longitude' => $request->longitude,
+
+                'city' => $request->city,
+
+                'country' => $request->country,
+
+                'code' => $code,
+            ];
+
+
+
+
+            // Upload image from Flutter file
+
+            if ($request->hasFile('outlet_photo')) {
+
+
+                $file = $request->file('outlet_photo');
+
+
+                $fileName = 'outlet_' . time() . '_' .
+                    Str::random(10) .
+                    '.' .
+                    $file->extension();
+
+
+                $filePath = 'Uploads/' . $fileName;
+
+
+                $image = AppHelper::resizeAndCompressImage($file);
+
+
+                Storage::disk('public')
+                    ->put($filePath, $image);
+
+
+                $data['outlet_photo'] = $filePath;
+            }
+
+
+
+            // Upload Base64 image
+
+            elseif ($request->filled('outlet_photo_base64')) {
+
+
+                $image = AppHelper::resizeAndCompressBase64Image(
+                    $request->outlet_photo_base64
+                );
+
+
+                $fileName = 'Uploads/outlet_' .
+                    time() . '_' .
+                    Str::random(10) .
+                    '.jpg';
+
+
+                Storage::disk('public')
+                    ->put($fileName, $image);
+
+
+                $data['outlet_photo'] = $fileName;
+            }
+
+
+
+
+            $customer = Customer::create($data);
+
+
+
+            return response()->json([
+
+                'status' => true,
+
+                'message' => 'Customer created successfully',
+
+                'data' => $customer
+
+            ], 201);
+        } catch (Exception $e) {
+
+
+            return response()->json([
+
+                'status' => false,
+
+                'message' => $e->getMessage()
+
+            ], 500);
+        }
     }
 }
