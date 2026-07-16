@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
+use App\Models\Depo;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Illuminate\Http\Request;
@@ -138,7 +139,36 @@ class CustomerController extends Controller
             })->values(),
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
-    
+    public function getDeposByArea(Request $request)
+    {
+        $areaId = $request->query('area_id');
+
+        $authUser = auth()->user();
+
+
+        if (!$areaId) {
+            return response()->json([
+                'message'=>'Area is required'
+            ],400);
+        }
+
+
+        $query = Depo::where('area_id',$areaId);
+
+
+        if ($authUser && in_array($authUser->type, [
+            AppHelper::SALE,
+            AppHelper::SE
+        ])) {
+
+            $query->where('user_type',$authUser->type);
+        }
+
+
+        return response()->json(
+            $query->select('id','name')->get()
+        );
+    }
     public function store(Request $request)
     {
         try {

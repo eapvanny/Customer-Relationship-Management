@@ -23,6 +23,7 @@ class LoginController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
+        $user->tokens()->delete();
         // Create token
         $token = $user->createToken('auth_token')->plainTextToken;
 
