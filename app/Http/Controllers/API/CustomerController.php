@@ -140,7 +140,7 @@ class CustomerController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function create()
+    public function getAreas()
     {
         $user = auth()->user();
         $userAreaCode = $user->area ?? null;
@@ -205,33 +205,25 @@ class CustomerController extends Controller
 
     public function getDeposByArea(Request $request)
     {
-        $areaId = $request->query('area_id');
+        $request->validate([
+            'area_id' => 'required|integer'
+        ]);
 
-        $authUser = auth()->user();
+        $user = auth()->user();
 
+        $query = Depo::where('area_id', $request->area_id);
 
-        if (!$areaId) {
-            return response()->json([
-                'message' => 'Area is required'
-            ], 400);
-        }
-
-
-        $query = Depo::where('area_id', $areaId);
-
-
-        if ($authUser && in_array($authUser->type, [
+        if ($user && in_array($user->type, [
             AppHelper::SALE,
             AppHelper::SE
         ])) {
-
-            $query->where('user_type', $authUser->type);
+            $query->where('user_type', $user->type);
         }
 
-
-        return response()->json(
-            $query->select('id', 'name')->get()
-        );
+        return response()->json([
+            'status' => true,
+            'data' => $query->select('id', 'name')->get()
+        ]);
     }
     
     public function store(Request $request)
