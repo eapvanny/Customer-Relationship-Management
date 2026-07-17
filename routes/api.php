@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/customers', [APICustomer::class, 'index']); // Existing endpoint
     Route::get('/depos', [APICustomer::class,'getDeposByArea']);
+    Route::get('/customers/create', [APICustomer::class, 'create']); // New endpoint
     Route::post('/customers', [APICustomer::class, 'store']); // New endpoint
 
     Route::get('/reports', [APIReport::class, 'index']); // New endpoint: /api/reports

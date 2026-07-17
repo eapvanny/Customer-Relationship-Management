@@ -139,6 +139,16 @@ class CustomerController extends Controller
             })->values(),
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+
+    public function create()
+    {
+        $depo = Depo::pluck('name', 'id')->all();
+        return response()->json([
+            'status' => true,
+            'data' => $depo
+        ]);
+    }
+
     public function getDeposByArea(Request $request)
     {
         $areaId = $request->query('area_id');
@@ -169,6 +179,7 @@ class CustomerController extends Controller
             $query->select('id', 'name')->get()
         );
     }
+    
     public function store(Request $request)
     {
         try {
