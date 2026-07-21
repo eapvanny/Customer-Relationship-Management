@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Helpers\AppHelper;
 use App\Models\User;
 
 class UserController extends Controller
@@ -18,7 +19,7 @@ class UserController extends Controller
                 'role'          => $user->role?->name, // or $user->role?->title
                 'phone_no'      => $user->phone_no,
                 'name'          => $user->full_name,
-                'gender'        => $user->gender,
+                'gender'        => AppHelper::GENDER[$user->gender] ?? 'N/A',
                 'email'         => $user->email,
                 'photo'         => $user->photo
                     ? asset('storage/' . $user->photo)
@@ -46,7 +47,7 @@ class UserController extends Controller
                 'role'          => $user->role?->name,
                 'phone_no'      => $user->phone_no,
                 'name'          => $user->full_name,
-                'gender'        => $user->gender,
+                'gender'        => AppHelper::GENDER[$user->gender] ?? 'N/A',
                 'email'         => $user->email,
                 'photo'         => $user->photo
                     ? asset('storage/' . $user->photo)
