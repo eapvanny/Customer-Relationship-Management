@@ -226,6 +226,65 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function show($id)
+    {
+        try {
+
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            $customer = Customer::with('depo')
+                ->where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$customer) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Customer not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'id' => $customer->id,
+                    'code' => $customer->code,
+                    'name' => $customer->name,
+                    'phone' => $customer->phone,
+                    'area_id' => $customer->customer && $customer->customer->area_id
+                        ? AppHelper::getAreaNameById($customer->customer->area_id) ?? 'N/A'
+                        : AppHelper::getAreaNameById($customer->area_id) ?? 'N/A',
+                    'depo_name' => optional($customer->depo)->name,
+                    'customer_type' => $customer->customer && $customer->customer->customer_id
+                        ? AppHelper::CUSTOMER_TYPE[$customer->customer->customer_type] ?? 'N/A'
+                        : 'N/A',
+                    'latitude' => $customer->latitude,
+                    'longitude' => $customer->longitude,
+                    'address' => $customer->city,
+                    'outlet_photo' => $customer->outlet_photo
+                        ? asset('storage/' . $customer->outlet_photo)
+                        : null,
+                    'created_at' => $customer->created_at,
+                    'updated_at' => $customer->updated_at,
+                ]
+            ]);
+
+        } catch (Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         try {

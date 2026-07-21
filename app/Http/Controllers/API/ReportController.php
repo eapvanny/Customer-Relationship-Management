@@ -160,7 +160,9 @@ class ReportController extends Controller
                     : AppHelper::getAreaNameById($report->area_id) ?? 'N/A',
                 'customer_name' => $report->customer ? $report->customer->name ?? 'N/A' : 'N/A',
                 'customer_code' => $report->customer ? $report->customer->code ?? 'N/A' : 'N/A',
-                'customer_type' => 'អតិថិជនទូទៅ', // Adjust if dynamic
+                'customer_type' => $report->customer && $report->customer->customer_id
+                    ? AppHelper::CUSTOMER_TYPE[$report->customer->customer_type] ?? 'N/A'
+                    : 'N/A',
                 'outlet_name' => $report->customer->depo ? $report->customer->depo->name ?? 'N/A' : 'N/A',
                 'quantities' => [
                     ['size' => '250ML', 'quantity' => $report->{'250_ml'} ?? 0],
@@ -189,7 +191,10 @@ class ReportController extends Controller
                 'material_quantity3' => $report->qty3 ?? 'N/A',
                 'latitude' => $report->latitude ?? 11.5241,
                 'longitude' => $report->longitude ?? 104.9390,
-                'address' => $report->address ?? 'Ta Ngov Kandal, Khan Chbar Ampov, Phnom Penh',
+                // 'address' => $report->city ?? 'N/A',
+                'address' => $report->status === null
+                    ? $report->city
+                    : $report->address,
                 'other' => $report->other ?? 'No additional notes provided.',
                 'user' => [
                     'title' => $report->user->title ?? 'Mr.',
