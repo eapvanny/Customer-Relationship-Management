@@ -190,13 +190,13 @@ class ReportController extends Controller
                 'latitude' => $report->latitude ?? 11.5241,
                 'longitude' => $report->longitude ?? 104.9390,
                 'address' => $report->address ?? 'Ta Ngov Kandal, Khan Chbar Ampov, Phnom Penh',
-                'notes' => $report->notes ?? 'No additional notes provided.',
+                'other' => $report->other ?? 'No additional notes provided.',
                 'user' => [
                     'title' => $report->user->title ?? 'Mr.',
                     'name' => $report->user->name ?? 'Developer',
                     'id' => '000' . str_pad($report->user->id, 3, '0', STR_PAD_LEFT),
                     'phone' => $report->user->phone ?? '0124568888',
-                    'gender' => $report->user->gender ?? 'Male',
+                    'gender' => AppHelper::GENDER[$report->user->gender] ?? 'N/A',
                 ],
             ];
 
