@@ -394,21 +394,18 @@ class CustomerController extends Controller
                 'code' => $code,
             ];
             if ($request->hasFile('outlet_photo')) {
-
                 $file = $request->file('outlet_photo');
+                // Resize & compress image
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
 
+                // Generate filename
                 $fileName = 'Uploads/outlet_'
                     . time() . '_'
                     . Str::random(10)
-                    . '.'
-                    . $file->extension();
+                    . '.jpg'; // or use $file->extension() if your helper preserves the format
 
-
-                Storage::disk('public')->put(
-                    $fileName,
-                    file_get_contents($file)
-                );
-
+                // Save resized image
+                Storage::disk('public')->put($fileName, $resizedImage);
 
                 $data['outlet_photo'] = $fileName;
             }
@@ -508,15 +505,16 @@ class CustomerController extends Controller
 
                 $file = $request->file('outlet_photo');
 
+                // Resize & compress image
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                // Generate filename
                 $fileName = 'Uploads/outlet_' .
                     time() . '_' .
-                    Str::random(10) . '.' .
-                    $file->extension();
+                    Str::random(10) . '.jpg'; // or use $file->extension() if your helper keeps the original format
 
-                Storage::disk('public')->put(
-                    $fileName,
-                    file_get_contents($file)
-                );
+                // Save resized image
+                Storage::disk('public')->put($fileName, $resizedImage);
 
                 $data['outlet_photo'] = $fileName;
             }
