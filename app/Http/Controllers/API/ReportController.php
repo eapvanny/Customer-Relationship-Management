@@ -59,6 +59,7 @@ class ReportController extends Controller
                     'customer_type' => $report->customer_type ?? 'អតិថិជនទូទៅ',
                     'outlet_name'   => $report->customer->depo->name ?? 'N/A',
                     'quantities'    => $quantities,
+                    'other'         => $report->other ?? '',
                     'formatted_date' => Carbon::parse($report->date)->format('d F, Y'),
                 ];
             });
