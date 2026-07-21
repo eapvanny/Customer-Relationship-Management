@@ -262,9 +262,7 @@ class CustomerController extends Controller
                         ? AppHelper::getAreaNameById($customer->customer->area_id) ?? 'N/A'
                         : AppHelper::getAreaNameById($customer->area_id) ?? 'N/A',
                     'depo_name' => optional($customer->depo)->name,
-                    'customer_type' => $customer->customer && $customer->customer->id
-                        ? AppHelper::CUSTOMER_TYPE[$customer->customer->customer_type] ?? 'N/A'
-                        : 'N/A',
+                    'customer_type' => AppHelper::CUSTOMER_TYPE[$customer->customer_type] ?? 'N/A',
                     'latitude' => $customer->latitude,
                     'longitude' => $customer->longitude,
                     'address' => $customer->city,
