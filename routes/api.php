@@ -4,7 +4,7 @@ use App\Http\Controllers\API\CustomerController as APICustomer;
 use App\Http\Controllers\API\DashboardController as APIDashboard;
 use App\Http\Controllers\API\LoginController;
 use App\Http\Controllers\API\ReportController as APIReport;
-use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\UserController as APIUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,14 +22,19 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [LoginController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::get('/users', [APIUserController::class, 'index']);
+    Route::get('/users/{id}', [APIUserController::class, 'show']);
+    Route::put('/profile', [APIUserController::class, 'updateUserProfile']);
+    // Optional for multipart/form-data
+    Route::post('/profile', [APIUserController::class, 'updateUserProfile']);
     Route::get('/dashboard', [APIDashboard::class, 'index']);
 
     Route::get('/customers', [APICustomer::class, 'index']); // Existing endpoint
     Route::get('/areas', [APICustomer::class, 'getAreas']);
     Route::get('/depos', [APICustomer::class, 'getDeposByArea']);
     Route::post('/customers', [APICustomer::class, 'store']); // New endpoint
+    Route::put('/customers/{id}', [APICustomer::class, 'update']);
+    Route::post('/customers/{id}', [APICustomer::class, 'update']); // Optional for Flutter if using multipart/form-data
 
     Route::get('/reports', [APIReport::class, 'index']); // New endpoint: /api/reports
     Route::get('/getCustomerReport', [APIReport::class, 'getCustomerReport']); // New endpoint: /api/getCustomerReport

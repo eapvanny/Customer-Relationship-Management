@@ -225,7 +225,7 @@ class CustomerController extends Controller
             'data' => $query->select('id', 'name')->get()
         ]);
     }
-    
+
     public function store(Request $request)
     {
         try {
@@ -373,6 +373,107 @@ class CustomerController extends Controller
 
                 'message' => $e->getMessage()
 
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            $customer = Customer::find($id);
+
+            if (!$customer) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Customer not found'
+                ], 404);
+            }
+
+            // Get valid area IDs
+            $areaIds = [];
+
+            foreach (AppHelper::getAreas() as $group) {
+                $areaIds = array_merge($areaIds, array_keys($group));
+            }
+
+            $rules = [
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:255',
+                'area_id' => 'required|in:' . implode(',', $areaIds),
+                'depo_id' => 'required|exists:depos,id',
+                'customer_type' => 'required|string',
+                'latitude' => 'required|numeric|between:-90,90',
+                'longitude' => 'required|numeric|between:-180,180',
+                'city' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp,heic|max:10000',
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = [
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'area_id' => $request->area_id,
+                'depo_id' => $request->depo_id,
+                'customer_type' => $request->customer_type,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'city' => $request->city,
+                'country' => $request->country,
+            ];
+
+            if ($request->hasFile('outlet_photo')) {
+
+                // Delete old photo
+                if ($customer->outlet_photo && Storage::disk('public')->exists($customer->outlet_photo)) {
+                    Storage::disk('public')->delete($customer->outlet_photo);
+                }
+
+                $file = $request->file('outlet_photo');
+
+                $fileName = 'Uploads/outlet_' .
+                    time() . '_' .
+                    Str::random(10) . '.' .
+                    $file->extension();
+
+                Storage::disk('public')->put(
+                    $fileName,
+                    file_get_contents($file)
+                );
+
+                $data['outlet_photo'] = $fileName;
+            }
+
+            $customer->update($data);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Customer updated successfully',
+                'data' => $customer->fresh()
+            ], 200);
+        } catch (Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
             ], 500);
         }
     }
