@@ -160,7 +160,7 @@ class ReportController extends Controller
                     : AppHelper::getAreaNameById($report->area_id) ?? 'N/A',
                 'customer_name' => $report->customer ? $report->customer->name ?? 'N/A' : 'N/A',
                 'customer_code' => $report->customer ? $report->customer->code ?? 'N/A' : 'N/A',
-                'customer_type' => $report->customer && $report->customer->customer_id
+                'customer_type' => $report->customer
                     ? AppHelper::CUSTOMER_TYPE[$report->customer->customer_type] ?? 'N/A'
                     : 'N/A',
                 'outlet_name' => $report->customer->depo ? $report->customer->depo->name ?? 'N/A' : 'N/A',
@@ -170,7 +170,7 @@ class ReportController extends Controller
                     ['size' => '600ML', 'quantity' => $report->{'600_ml'} ?? 0],
                     ['size' => '1500ML', 'quantity' => $report->{'1500_ml'} ?? 0],
                 ],
-                'formatted_date' => Carbon::parse($report->date)->format('d F, Y'),
+                'formatted_date' => Carbon::parse($report->date)->format('d M, Y'),
                 'sale_photo_url' => $report->outlet_photo
                     ? asset('storage/' . $report->outlet_photo)
                     : asset('images/avatar.png'),
