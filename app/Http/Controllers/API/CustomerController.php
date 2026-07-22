@@ -265,7 +265,8 @@ class CustomerController extends Controller
                     'customer_type' => AppHelper::CUSTOMER_TYPE[$customer->customer_type] ?? 'N/A',
                     'latitude' => $customer->latitude,
                     'longitude' => $customer->longitude,
-                    'address' => $customer->city,
+                    'city' => $customer->city,
+                    'country' => $customer->country,
                     'outlet_photo' => $customer->outlet_photo
                         ? asset('storage/' . $customer->outlet_photo)
                         : null,
