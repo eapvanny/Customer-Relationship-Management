@@ -173,12 +173,12 @@ class ReportController extends Controller
             // ==============================
             // Reports
             // ==============================
-
+            $perPage = (int) $request->get('per_page', 20);
             $reports = $query
-                ->orderByDesc('id')
-                ->get();
+                        ->orderByDesc('id')
+                        ->paginate($perPage);
 
-            $reportsData = $reports->map(function ($report) {
+            $reportsData = $reports->getCollection()->map(function ($report) {
 
                 return [
 
@@ -232,6 +232,16 @@ class ReportController extends Controller
                 'success' => true,
                 'show_modal' => $showModal,
                 'data' => $reportsData,
+
+                'pagination' => [
+                    'current_page' => $reports->currentPage(),
+                    'last_page'    => $reports->lastPage(),
+                    'per_page'     => $reports->perPage(),
+                    'total'        => $reports->total(),
+                    'from'         => $reports->firstItem(),
+                    'to'           => $reports->lastItem(),
+                    'has_more'     => $reports->hasMorePages(),
+                ],
             ]);
 
         } catch (\Exception $e) {
