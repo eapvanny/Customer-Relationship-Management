@@ -280,7 +280,18 @@ class ReportController extends Controller
                                         $q->where('family_name', 'LIKE', "%{$search}%")
                                         ->orWhere('name', 'LIKE', "%{$search}%")
                                         ->orWhere('family_name_latin', 'LIKE', "%{$search}%")
-                                        ->orWhere('name_latin', 'LIKE', "%{$search}%");
+                                        ->orWhere('name_latin', 'LIKE', "%{$search}%")
+                                        // Search Khmer full name
+                                            ->orWhereRaw(
+                                                "CONCAT(family_name, ' ', name) LIKE ?",
+                                                ["%{$search}%"]
+                                            )
+
+                                            // Search Latin full name
+                                            ->orWhereRaw(
+                                                "CONCAT(family_name_latin, ' ', name_latin) LIKE ?",
+                                                ["%{$search}%"]
+                                            );
                                     });
                                 });
                                 if (!empty($areaIds)) {

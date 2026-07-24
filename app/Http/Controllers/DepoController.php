@@ -107,7 +107,28 @@ class DepoController extends Controller
 
                             $query->where(function ($q) use ($search, $areaIds) {
 
-                                $q->where('name', 'LIKE', "%{$search}%");
+                                $q->where('name', 'LIKE', "%{$search}%")
+                                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                                    $userQuery->where(function ($q) use ($search) {
+
+                                        $q->where('family_name', 'LIKE', "%{$search}%")
+                                            ->orWhere('name', 'LIKE', "%{$search}%")
+                                            ->orWhere('family_name_latin', 'LIKE', "%{$search}%")
+                                            ->orWhere('name_latin', 'LIKE', "%{$search}%")
+
+                                            // Search Khmer full name
+                                            ->orWhereRaw(
+                                                "CONCAT(family_name, ' ', name) LIKE ?",
+                                                ["%{$search}%"]
+                                            )
+
+                                            // Search Latin full name
+                                            ->orWhereRaw(
+                                                "CONCAT(family_name_latin, ' ', name_latin) LIKE ?",
+                                                ["%{$search}%"]
+                                            );
+                                    });
+                                });
 
                                 if (!empty($areaIds)) {
                                     $q->orWhereIn('area_id', $areaIds);

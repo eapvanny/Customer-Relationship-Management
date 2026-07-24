@@ -174,28 +174,42 @@ class CustomerController extends Controller
             return DataTables::of($customers)
                 ->addIndexColumn()
                 ->filter(function ($query) use ($request) {
+                    if ($search = $request->input('search.value')) {
 
-                        if ($search = $request->input('search.value')) {
+                        $areaIds = AppHelper::getAreaIdsBySearch($search);
 
-                            $areaIds = AppHelper::getAreaIdsBySearch($search);
+                        $query->where(function ($q) use ($search, $areaIds) {
 
-                            $query->where(function ($q) use ($search, $areaIds) {
+                            $q->where('name', 'LIKE', "%{$search}%")
 
-                                $q->where('name', 'LIKE', "%{$search}%");
-                                $q->orWhereHas('user', function ($userQuery) use ($search) {
+                                ->orWhereHas('user', function ($userQuery) use ($search) {
                                     $userQuery->where(function ($q) use ($search) {
+
                                         $q->where('family_name', 'LIKE', "%{$search}%")
-                                        ->orWhere('name', 'LIKE', "%{$search}%")
-                                        ->orWhere('family_name_latin', 'LIKE', "%{$search}%")
-                                        ->orWhere('name_latin', 'LIKE', "%{$search}%");
+                                            ->orWhere('name', 'LIKE', "%{$search}%")
+                                            ->orWhere('family_name_latin', 'LIKE', "%{$search}%")
+                                            ->orWhere('name_latin', 'LIKE', "%{$search}%")
+
+                                            // Search Khmer full name
+                                            ->orWhereRaw(
+                                                "CONCAT(family_name, ' ', name) LIKE ?",
+                                                ["%{$search}%"]
+                                            )
+
+                                            // Search Latin full name
+                                            ->orWhereRaw(
+                                                "CONCAT(family_name_latin, ' ', name_latin) LIKE ?",
+                                                ["%{$search}%"]
+                                            );
                                     });
                                 });
-                                if (!empty($areaIds)) {
-                                    $q->orWhereIn('area_id', $areaIds);
-                                }
-                            });
-                        }
-                    })
+
+                            if (!empty($areaIds)) {
+                                $q->orWhereIn('area_id', $areaIds);
+                            }
+                        });
+                    }
+                })
                 ->addColumn('created_by', function ($customer) {
                     if (!$customer->user) return 'N/A';
                     return $customer->user->user_lang === 'en'
