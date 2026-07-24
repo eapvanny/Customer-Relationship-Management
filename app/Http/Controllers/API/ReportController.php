@@ -21,57 +21,230 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+
         if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
-        $query = Report::with(['user', 'customer', 'customer.depo']);
-
-        // Check modal condition
-        $hasNoReports = !Report::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
-
-        $hasUnassignedReportToday = Report::where('user_id', $user->id)
-            ->whereNull('driver_id')
-            ->whereNull('driver_status')
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
-
-        $showModal = $hasNoReports || $hasUnassignedReportToday;
-
         try {
-            $reports = $query->orderBy('id', 'desc')->limit(40)->get();
+
+            $query = Report::with([
+                'user',
+                'customer',
+                'customer.depo'
+            ]);
+
+            $userRole = $user->role_id;
+            $userId   = $user->id;
+            $userType = $user->type;
+
+            $userIds = [$userId];
+
+            $staffIdCards = User::whereIn('id', $userIds)
+                ->pluck('staff_id_card')
+                ->filter()
+                ->toArray();
+
+            $allowedTypes = [
+                AppHelper::SALE,
+                AppHelper::SE,
+            ];
+
+            // ==============================
+            // Permission
+            // ==============================
+
+            if (
+                $userType == AppHelper::ALL ||
+                in_array($userRole, [
+                    AppHelper::USER_SUPER_ADMIN,
+                    AppHelper::USER_ADMIN,
+                    AppHelper::USER_DIRECTOR
+                ])
+            ) {
+
+                // See everything
+
+            } elseif ($userRole == AppHelper::USER_MANAGER) {
+
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('manager_id', $userId)
+                        ->orWhere('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+                $userIds = array_merge($userIds, $managedUserIds);
+
+            } elseif ($userRole == AppHelper::USER_RSM) {
+
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+                $userIds = array_merge($userIds, $managedUserIds);
+
+            } elseif ($userRole == AppHelper::USER_SUP) {
+
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+                $userIds = array_merge($userIds, $managedUserIds);
+
+            } elseif ($userRole == AppHelper::USER_ASM) {
+
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->whereJsonContains('asm_id', (string)$userId)
+                        ->orWhere('asm_id', $userId);
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+                $userIds = array_merge($userIds, $managedUserIds);
+            }
+
+            if (
+                !(
+                    $userType == AppHelper::ALL ||
+                    in_array($userRole, [
+                        AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMIN,
+                        AppHelper::USER_DIRECTOR
+                    ])
+                )
+            ) {
+
+                $query->where(function ($q) use ($userIds, $staffIdCards, $allowedTypes) {
+
+                    // Normal reports
+                    $q->where(function ($q1) use ($userIds, $allowedTypes) {
+                        $q1->whereIn('reports.user_id', array_unique($userIds))
+                            ->whereHas('user', function ($q2) use ($allowedTypes) {
+                                $q2->whereIn('type', $allowedTypes);
+                            });
+                    });
+
+                    // Imported by SSP
+                    if (!empty($staffIdCards)) {
+                        $q->orWhereIn('reports.ssp_id', $staffIdCards);
+                    }
+
+                    // Imported by SUP
+                    if (!empty($staffIdCards)) {
+                        $q->orWhereIn('reports.sup_id', $staffIdCards);
+                    }
+
+                });
+            }
+
+            // ==============================
+            // Modal
+            // ==============================
+
+            $hasNoReports = !Report::where('user_id', $userId)
+                ->whereDate('created_at', Carbon::today())
+                ->exists();
+
+            $hasUnassignedReportToday = Report::where('user_id', $userId)
+                ->whereNull('driver_id')
+                ->whereNull('driver_status')
+                ->whereDate('created_at', Carbon::today())
+                ->exists();
+
+            $showModal = $hasNoReports || $hasUnassignedReportToday;
+
+            // ==============================
+            // Reports
+            // ==============================
+
+            $reports = $query
+                ->orderByDesc('id')
+                ->get();
 
             $reportsData = $reports->map(function ($report) {
-                $quantities = [
-                    ['size' => '250ML', 'quantity' => $report->{'250_ml'} ?? 0],
-                    ['size' => '350ML', 'quantity' => $report->{'350_ml'} ?? 0],
-                    ['size' => '600ML', 'quantity' => $report->{'600_ml'} ?? 0],
-                    ['size' => '1500ML', 'quantity' => $report->{'1500_ml'} ?? 0],
-                ];
 
                 return [
-                    'id'            => $report->id,
-                    'report_id'     => 'S-' . str_pad($report->id, 3, '0', STR_PAD_LEFT),
-                    'customer_name' => $report->customer->name ?? 'N/A',
-                    'customer_code' => $report->customer->code ?? 'N/A',
-                    'customer_type' => $report->customer_type ?? 'អតិថិជនទូទៅ',
-                    'outlet_name'   => $report->customer->depo->name ?? 'N/A',
-                    'quantities'    => $quantities,
-                    'other'         => $report->other ?? '',
-                    'formatted_date' => Carbon::parse($report->date)->format('d F, Y'),
+
+                    'id' => $report->id,
+
+                    'report_id' => 'S-' . str_pad($report->id, 3, '0', STR_PAD_LEFT),
+
+                    'customer_name' => $report->customer->name
+                        ?? $report->customer_name
+                        ?? 'N/A',
+
+                    'customer_code' => $report->customer->code
+                        ?? 'N/A',
+
+                    'customer_type' => $report->customer_type
+                        ?? 'អតិថិជនទូទៅ',
+
+                    'outlet_name' => optional($report->customer?->depo)->name
+                        ?? $report->outlet_name
+                        ?? 'N/A',
+
+                    'quantities' => [
+                        [
+                            'size' => '250ML',
+                            'quantity' => (int) ($report->{'250_ml'} ?? 0)
+                        ],
+                        [
+                            'size' => '350ML',
+                            'quantity' => (int) ($report->{'350_ml'} ?? 0)
+                        ],
+                        [
+                            'size' => '600ML',
+                            'quantity' => (int) ($report->{'600_ml'} ?? 0)
+                        ],
+                        [
+                            'size' => '1500ML',
+                            'quantity' => (int) ($report->{'1500_ml'} ?? 0)
+                        ],
+                    ],
+
+                    'other' => $report->other ?? '',
+
+                    'formatted_date' => $report->date
+                        ? Carbon::parse($report->date)->format('d F, Y')
+                        : null,
+
                 ];
             });
 
             return response()->json([
-                'success'    => true,
-                'data'       => $reportsData,
+                'success' => true,
                 'show_modal' => $showModal,
-            ], 200);
+                'data' => $reportsData,
+            ]);
+
         } catch (\Exception $e) {
-            Log::error('API Error in ReportController@index: ' . $e->getMessage());
-            return response()->json(['error' => 'Server error.'], 500);
+
+            Log::error('API ReportController@index', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error'
+            ], 500);
         }
     }
 
