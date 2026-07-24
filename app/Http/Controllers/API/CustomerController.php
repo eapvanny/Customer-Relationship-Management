@@ -38,18 +38,22 @@ class CustomerController extends Controller
          * SALE + EMPLOYEE → only own customers
          */
         if ($userType == AppHelper::SALE && $roleId == AppHelper::USER_EMPLOYEE) {
+
             $query->where('user_id', $userId);
+
         } else {
 
             /** ---------------- AREA FILTER ---------------- */
             $allowedAreaIds = [];
 
             if ($rawArea) {
+
                 $normalized = preg_replace('/^[A-Za-z]+-/', '', $rawArea);
                 $areas = AppHelper::getAreas();
 
                 // S-04
                 if (preg_match('/^S-\d+$/', $normalized)) {
+
                     foreach ($areas as $subs) {
                         foreach ($subs as $id => $txt) {
                             if ($txt === $normalized) {
@@ -57,23 +61,29 @@ class CustomerController extends Controller
                             }
                         }
                     }
+
                 }
                 // R1-01
                 elseif (preg_match('/^R\d+-\d{2}$/', $normalized)) {
+
                     foreach ($areas as $group => $subs) {
                         if (str_contains($group, "($normalized)")) {
                             $allowedAreaIds = array_keys($subs);
                         }
                     }
+
                 }
                 // R1
                 elseif (preg_match('/^R\d+$/', $normalized)) {
+
                     foreach ($areas as $group => $subs) {
                         if (str_contains($group, "($normalized-")) {
                             $allowedAreaIds = array_merge($allowedAreaIds, array_keys($subs));
                         }
                     }
+
                 } elseif (is_numeric($areaId)) {
+
                     $allowedAreaIds[] = $areaId;
                 }
             }
@@ -95,14 +105,18 @@ class CustomerController extends Controller
 
                     $q->where('user_id', $user->id)
                         ->orWhereHas('user', function ($u) use ($user) {
+
                             $u->where('manager_id', $user->id)
                                 ->orWhere('rsm_id', $user->id)
-                                ->orWhereJsonContains('asm_id', (string)$user->id)
-                                ->orWhereJsonContains('sup_id', (string)$user->id);
+                                ->orWhereJsonContains('asm_id', (string) $user->id)
+                                ->orWhereJsonContains('sup_id', (string) $user->id);
+
                         });
 
                     foreach (['manager_id', 'rsm_id', 'asm_id', 'sup_id'] as $field) {
+
                         $ids = AppHelper::normalizeIds($user->$field);
+
                         if (!empty($ids)) {
                             $q->orWhereIn('user_id', $ids);
                         }
@@ -117,11 +131,17 @@ class CustomerController extends Controller
             }
         }
 
-        $customers = $query->latest()->get();
+        // Pagination
+        $perPage = $request->input('per_page', 20);
+
+        $customers = $query
+            ->latest()
+            ->paginate($perPage);
 
         return response()->json([
             'status' => true,
-            'data' => $customers->map(function ($c) {
+
+            'data' => collect($customers->items())->map(function ($c) {
                 return [
                     'id' => $c->id,
                     'created_by' => $c->user
@@ -137,6 +157,16 @@ class CustomerController extends Controller
                     'phone' => (string) $c->phone,
                 ];
             })->values(),
+
+            'pagination' => [
+                'current_page' => $customers->currentPage(),
+                'last_page'    => $customers->lastPage(),
+                'per_page'     => $customers->perPage(),
+                'total'        => $customers->total(),
+                'from'         => $customers->firstItem(),
+                'to'           => $customers->lastItem(),
+                'has_more'     => $customers->hasMorePages(),
+            ]
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
