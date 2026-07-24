@@ -485,9 +485,63 @@ class CustomerController extends Controller
 
         // Load depos based on the customer's area
         $depos = [];
+        $user = auth()->user();
+        $userAreaCode = $user->area ?? null; // Example: "R1", "R1-01", "S-04", etc.
+        $userRoleId = $user->role_id ?? null;
+
+        // Define which roles can see ALL areas (no filtering)
+        $fullAccessRoles = [
+            AppHelper::USER_SUPER_ADMIN,      // 1
+            AppHelper::USER_ADMINISTRATOR,    // 2
+            AppHelper::USER_ADMIN,            // 3
+            AppHelper::USER_DIRECTOR,         // 4
+            AppHelper::USER_MANAGER,          // 5
+            // Add more if needed in the future
+        ];
         $areas = AppHelper::getAreas();
+
+        if ($userAreaCode && !in_array($userRoleId, $fullAccessRoles)) {
+            $areas = collect($areas)
+                ->filter(function ($subItems, $areaName) use ($userAreaCode) {
+
+                    // === RSM LEVEL (ex: "R1", "R2") ===
+                    if (preg_match('/^R\d$/', $userAreaCode)) {
+                        // Keep all sub-areas under same region (e.g. R1-01, R1-02)
+                        return str_contains($areaName, $userAreaCode . '-');
+                    }
+
+                    // === ASM LEVEL (ex: "R1-01") ===
+                    if (preg_match('/^R\d-\d{2}$/', $userAreaCode)) {
+                        // Keep only that specific ASM area
+                        return str_contains($areaName, $userAreaCode);
+                    }
+
+                    // === SALE LEVEL (ex: "S-04") ===
+                    if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                        // Keep only areas containing this sales code
+                        foreach ($subItems as $code) {
+                            if ($code === $userAreaCode) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    return false;
+                })
+                ->map(function ($subItems, $areaName) use ($userAreaCode) {
+                    // If Sales (S-xx), keep only their own code in sublist
+                    if (preg_match('/^S-\d+$/', $userAreaCode)) {
+                        return collect($subItems)
+                            ->filter(fn($code) => $code === $userAreaCode)
+                            ->toArray();
+                    }
+                    return $subItems;
+                })
+                ->toArray();
+        }
         if ($customer->area_id) {
-            $depos = \App\Models\Depo::where('area_id', $customer->area_id)->pluck('name', 'id');
+            $depos = Depo::where('area_id', $customer->area_id)->pluck('name', 'id');
         }
         return view('backend.customer.add', compact('customer', 'customerType', 'depos', 'areas'));
     }
