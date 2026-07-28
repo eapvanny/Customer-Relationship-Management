@@ -233,6 +233,20 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function getAllDepoArea()
+    {
+        $depos = Depo::select('id', 'name', 'area_id')->get();
+        $areas = AppHelper::getAreas();
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'depos' => $depos,
+                'areas' => $areas,
+            ],
+        ]);
+    }
+
     public function getDeposByArea(Request $request)
     {
         $request->validate([
