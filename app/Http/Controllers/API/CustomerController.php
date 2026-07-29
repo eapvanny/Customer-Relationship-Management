@@ -237,12 +237,13 @@ class CustomerController extends Controller
     {
         $depos = Depo::select('id', 'name', 'area_id')->get();
         $areas = AppHelper::getAreas();
-
+        $customer = Customer::select('id','name','user_id')->get();
         return response()->json([
             'status' => true,
             'data' => [
                 'depos' => $depos,
                 'areas' => $areas,
+                'customer' => $customer,
             ],
         ]);
     }
