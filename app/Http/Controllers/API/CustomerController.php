@@ -227,17 +227,10 @@ class CustomerController extends Controller
                 ->toArray();
         }
 
-        return response()->json([
-            'status' => true,
-            'data' => $areas
-        ]);
-    }
+        $areaId = AppHelper::getAreaIdByText($userAreaCode);
+        $depos = Depo::where('area_id',$areaId)->pluck('name','id');
+        $customer = Customer::where('user_id',$user->id)->pluck('name','id');
 
-    public function getAllDepoArea()
-    {
-        $depos = Depo::select('id', 'name', 'area_id')->get();
-        $areas = AppHelper::getAreas();
-        $customer = Customer::select('id','name','user_id')->get();
         return response()->json([
             'status' => true,
             'data' => [
@@ -247,6 +240,21 @@ class CustomerController extends Controller
             ],
         ]);
     }
+
+    // public function getAllDepoArea()
+    // {
+    //     $depos = Depo::select('id', 'name', 'area_id')->get();
+    //     $areas = AppHelper::getAreas();
+    //     $customer = Customer::select('id','name','user_id')->get();
+    //     return response()->json([
+    //         'status' => true,
+    //         'data' => [
+    //             'depos' => $depos,
+    //             'areas' => $areas,
+    //             'customer' => $customer,
+    //         ],
+    //     ]);
+    // }
 
     public function getDeposByArea(Request $request)
     {
