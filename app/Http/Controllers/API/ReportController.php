@@ -171,6 +171,58 @@ class ReportController extends Controller
             $showModal = $hasNoReports || $hasUnassignedReportToday;
 
             // ==============================
+            // Filters
+            // ==============================
+
+            // Customer Type
+            if ($request->filled('customer_type')) {
+                $query->where('customer_type', $request->customer_type);
+            }
+
+            // Quantity
+            if ($request->filled('quantity')) {
+                switch ($request->quantity) {
+                    case '250ML':
+                        $query->where('250_ml', '>', 0);
+                        break;
+
+                    case '350ML':
+                        $query->where('350_ml', '>', 0);
+                        break;
+
+                    case '600ML':
+                        $query->where('600_ml', '>', 0);
+                        break;
+
+                    case '1500ML':
+                        $query->where('1500_ml', '>', 0);
+                        break;
+                }
+            }
+
+            // Search
+            if ($request->filled('search')) {
+
+                $search = trim($request->search);
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_code', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($qq) use ($search) {
+                            $qq->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
+                    });
+
+                });
+            }
+
+            // Date
+            if ($request->filled('date')) {
+                $query->whereDate('date', $request->date);
+            }
+
+            // ==============================
             // Reports
             // ==============================
             $perPage = (int) $request->get('per_page', 20);
