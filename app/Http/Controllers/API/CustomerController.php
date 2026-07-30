@@ -131,6 +131,55 @@ class CustomerController extends Controller
             }
         }
 
+        // ==============================
+        // Filters
+        // ==============================
+
+        // Customer Type
+        if ($request->filled('customer_type')) {
+
+            $customerType = $request->customer_type;
+
+            // If Flutter sends ID
+            if (is_numeric($customerType)) {
+
+                $query->where('customer_type', $customerType);
+
+            } else {
+
+                // If Flutter sends text
+                $typeId = array_search($customerType, AppHelper::CUSTOMER_TYPE);
+
+                if ($typeId !== false) {
+                    $query->where('customer_type', $typeId);
+                }
+            }
+        }
+
+        // Area
+        if ($request->filled('area_id')) {
+            $query->where('area_id', $request->area_id);
+        }
+
+        // Depo
+        if ($request->filled('depo_id')) {
+            $query->where('depo_id', $request->depo_id);
+        }
+
+        // Search
+        if ($request->filled('search')) {
+
+            $search = trim($request->search);
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('code', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+
+            });
+        }
+
         // Pagination
         $perPage = $request->input('per_page', 20);
 
