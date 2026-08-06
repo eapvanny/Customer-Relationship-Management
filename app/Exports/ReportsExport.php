@@ -18,15 +18,31 @@ class ReportsExport implements FromView
     protected $area_id;
     protected $area_value;
     protected $staffIdCard;
+    protected $ml250;
+    protected $ml350;
+    protected $ml600;
+    protected $ml1500;
 
-
-    public function __construct($date1, $date2, $user_id, $area_id, $staffIdCard)
-    {
+    public function __construct(
+        $date1,
+        $date2,
+        $user_id,
+        $area_id,
+        $staffIdCard,
+        $ml250 = null,
+        $ml350 = null,
+        $ml600 = null,
+        $ml1500 = null
+    ) {
         $this->date1 = $date1;
-        $this->user_id = $user_id;
         $this->date2 = $date2;
+        $this->user_id = $user_id;
         $this->area_id = $area_id;
         $this->staffIdCard = $staffIdCard;
+        $this->ml250 = $ml250;
+        $this->ml350 = $ml350;
+        $this->ml600 = $ml600;
+        $this->ml1500 = $ml1500;
         $this->area_value = AppHelper::getAreaValue($area_id);
     }
 
@@ -164,6 +180,22 @@ class ReportsExport implements FromView
                 $q->where('area_id', $this->area_id)
                     ->orWhere('area', 'like', '%' . $this->area_value . '%');
             });
+        }
+
+        if ($this->ml250) {
+            $query->where('250_ml', '>', 0);
+        }
+
+        if ($this->ml350) {
+            $query->where('350_ml', '>', 0);
+        }
+
+        if ($this->ml600) {
+            $query->where('600_ml', '>', 0);
+        }
+
+        if ($this->ml1500) {
+            $query->where('1500_ml', '>', 0);
         }
 
         return view('exports.reports', [

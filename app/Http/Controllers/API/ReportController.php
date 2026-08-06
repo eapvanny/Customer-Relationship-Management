@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exports\ReportsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Excel;
+
 class ReportController extends Controller
 {
     public function index(Request $request)
@@ -680,5 +683,23 @@ class ReportController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new ReportsExport(
+                $request->date1,
+                $request->date2,
+                $request->user_id,
+                $request->area_id,
+                User::where('id', $request->user_id)->value('staff_id_card'),
+                $request->ml250,
+                $request->ml350,
+                $request->ml600,
+                $request->ml1500
+            ),
+            'reports_' . now()->format('Y_m_d_His') . '.xlsx'
+        );
     }
 }

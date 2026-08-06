@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exports\CustomerExport;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
@@ -11,7 +12,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-
+use Maatwebsite\Excel\Facades\Excel;
 class CustomerController extends Controller
 {
     //
@@ -634,5 +635,12 @@ class CustomerController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function export()
+    {
+        $fileName = 'customers_' . now()->format('Y_m_d_His') . '.xlsx';
+
+        return Excel::download(new CustomerExport(), $fileName);
     }
 }
