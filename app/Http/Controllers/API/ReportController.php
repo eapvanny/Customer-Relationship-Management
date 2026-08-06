@@ -685,21 +685,45 @@ class ReportController extends Controller
         }
     }
 
+    // public function export(Request $request)
+    // {
+    //     return Excel::download(
+    //         new ReportsExport(
+    //             $request->date1,
+    //             $request->date2,
+    //             $request->user_id,
+    //             $request->area_id,
+    //             User::where('id', $request->user_id)->value('staff_id_card'),
+    //             $request->ml250,
+    //             $request->ml350,
+    //             $request->ml600,
+    //             $request->ml1500
+    //         ),
+    //         'reports_' . now()->format('Y_m_d_His') . '.xlsx'
+    //     );
+    // }
     public function export(Request $request)
     {
+        $date1 = $request->input('date1');
+        $date2 = $request->input('date2');
+        $user_id = $request->input('user_id');
+        $area_id = $request->input('area_id');
+        $user_id = $request->input('user_id');
+        $ml250 = $request->input('250_ml');
+        $ml350 = $request->input('350_ml');
+        $ml600 = $request->input('600_ml');
+        $ml1500 = $request->input('1500_ml');
+
+        $staffIdCard = null;
+        if ($user_id) {
+            $staffIdCard = User::where('id', $user_id)->value('staff_id_card');
+        }
+        // dd($date1, $date2, $user_id, $staffIdCard);
         return Excel::download(
-            new ReportsExport(
-                $request->date1,
-                $request->date2,
-                $request->user_id,
-                $request->area_id,
-                User::where('id', $request->user_id)->value('staff_id_card'),
-                $request->ml250,
-                $request->ml350,
-                $request->ml600,
-                $request->ml1500
-            ),
+            new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard, $ml250, $ml350, $ml600, $ml1500),
             'reports_' . now()->format('Y_m_d_His') . '.xlsx'
         );
+
+        // return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 }

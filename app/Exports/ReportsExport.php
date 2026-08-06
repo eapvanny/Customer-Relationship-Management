@@ -29,10 +29,10 @@ class ReportsExport implements FromView
         $user_id,
         $area_id,
         $staffIdCard,
-        $ml250 = null,
-        $ml350 = null,
-        $ml600 = null,
-        $ml1500 = null
+        $ml250,
+        $ml350,
+        $ml600,
+        $ml1500,
     ) {
         $this->date1 = $date1;
         $this->date2 = $date2;
