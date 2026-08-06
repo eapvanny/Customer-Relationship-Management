@@ -89,6 +89,8 @@ class DashboardController extends Controller
 
         if ($userIds !== null) {
             $reportQuery->whereIn('user_id', $userIds);
+            $weeklyReportQuery = Report::whereIn('user_id', $userIds)
+                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
         }
 
         $reportQuery->whereYear('created_at', now()->year);
@@ -98,6 +100,8 @@ class DashboardController extends Controller
 
         if ($userIds !== null) {
             $customerQuery->whereIn('user_id', $userIds);
+            $weeklyCustomerQuery = Customer::whereIn('user_id', $userIds)
+                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
         }
 
         // User Query
@@ -144,6 +148,8 @@ class DashboardController extends Controller
             'allCustomers' => $allCustomers,
             'userActive' => $userActive,
             'monthlyReports' => $monthlyData,
+            'weeklyReports' => $weeklyReportQuery->count(),
+            'weeklyCustomers' => $weeklyCustomerQuery->count(),
         ]);
     }
 }
