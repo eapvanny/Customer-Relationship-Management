@@ -34,10 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/depos', [APICustomer::class, 'getDeposByArea']);
     Route::get('/areaDepo', [APICustomer::class, 'getAllDepoArea']);
     Route::post('/customers', [APICustomer::class, 'store']); // New endpoint
+    Route::get('/customers/export', [APICustomer::class, 'export']); // New endpoint for exporting customers
     Route::get('/customers/{id}', [APICustomer::class, 'show']);
     Route::put('/customers/{id}', [APICustomer::class, 'update']);
     Route::post('/customers/{id}', [APICustomer::class, 'update']); // Optional for Flutter if using multipart/form-data
-    Route::get('/customers/export', [APICustomer::class, 'export']); // New endpoint for exporting customers
 
     Route::get('/reports', [APIReport::class, 'index']); // New endpoint: /api/reports
     Route::get('/getCustomerReport', [APIReport::class, 'getCustomerReport']); // New endpoint: /api/getCustomerReport
