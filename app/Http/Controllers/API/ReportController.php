@@ -723,7 +723,5 @@ class ReportController extends Controller
             new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard, $ml250, $ml350, $ml600, $ml1500),
             'reports_' . now()->format('Y_m_d_His') . '.xlsx'
         );
-
-        // return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 }
