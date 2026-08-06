@@ -704,24 +704,215 @@ class ReportController extends Controller
     // }
     public function export(Request $request)
     {
-        $date1 = $request->input('date1');
-        $date2 = $request->input('date2');
-        $user_id = $request->input('user_id');
-        $area_id = $request->input('area_id');
-        $user_id = $request->input('user_id');
+        $date1 = $request->date1;
+        $date2 = $request->date2;
+        $user_id = $request->user_id;
+        $area_id = $request->area_id;
+
         $ml250 = $request->input('250_ml');
         $ml350 = $request->input('350_ml');
         $ml600 = $request->input('600_ml');
         $ml1500 = $request->input('1500_ml');
 
-        $staffIdCard = null;
-        if ($user_id) {
-            $staffIdCard = User::where('id', $user_id)->value('staff_id_card');
+        $areaValue = AppHelper::getAreaValue($area_id);
+
+        $user = auth()->user();
+
+        $query = Report::with([
+            'user',
+            'customer'
+        ])->orderByDesc('id');
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.'
+            ], 401);
         }
-        // dd($date1, $date2, $user_id, $staffIdCard);
-        return Excel::download(
-            new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard, $ml250, $ml350, $ml600, $ml1500),
-            'reports_' . now()->format('Y_m_d_His') . '.xlsx'
-        );
+
+        $userRole = $user->role_id;
+        $userId   = $user->id;
+        $userType = $user->type;
+
+        $allowedTypes = [
+            AppHelper::SALE,
+            AppHelper::SE
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | User Permission
+        |--------------------------------------------------------------------------
+        */
+
+        $userIds = [$userId];
+
+        if (!($userType == AppHelper::ALL || in_array($userRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
+
+            $managedUserIds = User::where(function ($q) use ($userId) {
+                $q->where('manager_id', $userId)
+                    ->orWhere('rsm_id', $userId)
+                    ->orWhere('sup_id', $userId)
+                    ->orWhere('asm_id', $userId);
+            })
+                ->whereIn('type', $allowedTypes)
+                ->pluck('id')
+                ->toArray();
+
+            $userIds = array_merge($userIds, $managedUserIds);
+        }
+
+        $staffCards = User::whereIn('id', $userIds)
+            ->pluck('staff_id_card')
+            ->filter()
+            ->toArray();
+
+        if (!($userType == AppHelper::ALL || in_array($userRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
+
+            $query->where(function ($q) use ($userIds, $staffCards, $allowedTypes) {
+
+                $q->where(function ($q2) use ($userIds, $allowedTypes) {
+
+                    $q2->whereIn('reports.user_id', $userIds)
+                        ->whereHas('user', function ($q3) use ($allowedTypes) {
+                            $q3->whereIn('type', $allowedTypes);
+                        });
+
+                });
+
+                if (!empty($staffCards)) {
+                    $q->orWhereIn('reports.ssp_id', $staffCards);
+                    $q->orWhereIn('reports.sup_id', $staffCards);
+                }
+
+            });
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($date1 && $date2) {
+
+            $query->whereBetween('date', [
+                Carbon::parse($date1)->startOfDay(),
+                Carbon::parse($date2)->endOfDay()
+            ]);
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | User Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user_id) {
+
+            $staffIdCard = User::where('id', $user_id)
+                ->value('staff_id_card');
+
+            $teamUserIds = User::where(function ($q) use ($user_id) {
+                $q->where('manager_id', $user_id)
+                    ->orWhere('rsm_id', $user_id)
+                    ->orWhere('sup_id', $user_id)
+                    ->orWhere('asm_id', $user_id);
+            })->pluck('id')->toArray();
+
+            $teamStaffCards = User::whereIn('id', $teamUserIds)
+                ->pluck('staff_id_card')
+                ->filter()
+                ->toArray();
+
+            $query->where(function ($q) use (
+                $user_id,
+                $staffIdCard,
+                $teamUserIds,
+                $teamStaffCards
+            ) {
+
+                $q->where('reports.user_id', $user_id);
+
+                if (!empty($teamUserIds)) {
+                    $q->orWhereIn('reports.user_id', $teamUserIds);
+                }
+
+                if ($staffIdCard) {
+
+                    $q->orWhere('reports.ssp_id', $staffIdCard)
+                        ->orWhere('reports.sup_id', $staffIdCard);
+
+                }
+
+                if (!empty($teamStaffCards)) {
+
+                    $q->orWhereIn('reports.ssp_id', $teamStaffCards)
+                        ->orWhereIn('reports.sup_id', $teamStaffCards);
+
+                }
+
+            });
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Area
+        |--------------------------------------------------------------------------
+        */
+
+        if ($area_id) {
+
+            $query->where(function ($q) use ($area_id, $areaValue) {
+
+                $q->where('area_id', $area_id)
+                    ->orWhere('area', 'like', "%{$areaValue}%");
+
+            });
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Bottle Size
+        |--------------------------------------------------------------------------
+        */
+
+        if ($ml250) {
+            $query->where('250_ml', '>', 0);
+        }
+
+        if ($ml350) {
+            $query->where('350_ml', '>', 0);
+        }
+
+        if ($ml600) {
+            $query->where('600_ml', '>', 0);
+        }
+
+        if ($ml1500) {
+            $query->where('1500_ml', '>', 0);
+        }
+
+        $reports = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Report export data.',
+            'total'   => $reports->count(),
+            'data'    => $reports
+        ]);
     }
+
 }

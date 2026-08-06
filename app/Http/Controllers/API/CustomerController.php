@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
 use App\Models\Depo;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Illuminate\Http\Request;
@@ -637,10 +638,142 @@ class CustomerController extends Controller
         }
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        $fileName = 'customers_' . now()->format('Y_m_d_His') . '.xlsx';
+        $loggedInUser = auth()->user();
 
-        return Excel::download(new CustomerExport(), $fileName);
+        if (!$loggedInUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.'
+            ], 401);
+        }
+
+        $query = Customer::with([
+            'user',
+            'depo'
+        ])->orderByDesc('id');
+
+        $loggedInUserRole = $loggedInUser->role_id;
+        $loggedInUserId   = $loggedInUser->id;
+        $loggedInUserType = $loggedInUser->type;
+
+        $allowedTypes = [
+            AppHelper::SALE,
+            AppHelper::SE
+        ];
+
+        $userIds = [$loggedInUserId];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Managed Users
+        |--------------------------------------------------------------------------
+        */
+
+        if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
+
+            if ($loggedInUserRole == AppHelper::USER_MANAGER) {
+
+                $managedUserIds = User::where(function ($q) use ($loggedInUserId) {
+                    $q->where('manager_id', $loggedInUserId)
+                        ->orWhere('rsm_id', $loggedInUserId)
+                        ->orWhere('sup_id', $loggedInUserId)
+                        ->orWhere('asm_id', $loggedInUserId);
+                })
+                ->whereIn('type', $allowedTypes)
+                ->pluck('id')
+                ->toArray();
+
+            } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
+
+                $managedUserIds = User::where(function ($q) use ($loggedInUserId) {
+                    $q->where('rsm_id', $loggedInUserId)
+                        ->orWhere('sup_id', $loggedInUserId)
+                        ->orWhere('asm_id', $loggedInUserId);
+                })
+                ->whereIn('type', $allowedTypes)
+                ->pluck('id')
+                ->toArray();
+
+            } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
+
+                $managedUserIds = User::where(function ($q) use ($loggedInUserId) {
+                    $q->where('sup_id', $loggedInUserId)
+                        ->orWhere('asm_id', $loggedInUserId);
+                })
+                ->whereIn('type', $allowedTypes)
+                ->pluck('id')
+                ->toArray();
+
+            } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
+
+                $managedUserIds = User::where('asm_id', $loggedInUserId)
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+            } else {
+
+                $managedUserIds = [];
+
+            }
+
+            $userIds = array_merge($userIds, $managedUserIds);
+
+            $query->whereIn('user_id', array_unique($userIds));
+
+            $query->whereHas('user', function ($q) use ($allowedTypes) {
+                $q->whereIn('type', $allowedTypes);
+            });
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Optional Filters
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('area_id')) {
+            $query->where('area_id', $request->area_id);
+        }
+
+        if ($request->filled('customer_type')) {
+            $query->where('customer_type', $request->customer_type);
+        }
+
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('customer_name', 'like', "%{$search}%")
+                ->orWhere('customer_code', 'like', "%{$search}%")
+                ->orWhere('owner_name', 'like', "%{$search}%")
+                ->orWhere('phone_number', 'like', "%{$search}%")
+                ->orWhere('address', 'like', "%{$search}%");
+
+            });
+
+        }
+
+        $customers = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer export data.',
+            'total' => $customers->count(),
+            'data' => $customers
+        ]);
     }
 }
