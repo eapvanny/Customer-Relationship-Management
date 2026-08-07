@@ -177,6 +177,11 @@ class DashboardController extends Controller
             'weeklyCustomers' => $weeklyCustomerQuery->count(),
             'saleTarget' => $saleTarget,
             'rank' => $rank,
+            'rankTargets' => [
+                'Rank A' => '2600 boxes',
+                'Rank B' => '3000 boxes',
+                'Rank C' => '3500 boxes',
+            ],
         ]);
     }
 }
