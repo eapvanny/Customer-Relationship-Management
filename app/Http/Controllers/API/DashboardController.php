@@ -7,6 +7,7 @@ use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
 use App\Models\Report;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -78,52 +79,67 @@ class DashboardController extends Controller
                 return [$user->id];
         }
     }
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
         $userIds = $this->getUserIdsByRole($user);
 
-        // Report Query
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filter Year + Week Range
+        |--------------------------------------------------------------------------
+        */
+
+        $year = $request->year ?? now()->year;
+        $startWeek = $request->start_week ?? 1;
+        $endWeek = $request->end_week ?? 52;
+
+
+        // Get start date from week
+        $startDate = Carbon::now()
+            ->setISODate($year, $startWeek)
+            ->startOfWeek();
+
+
+        // Get end date from week
+        $endDate = Carbon::now()
+            ->setISODate($year, $endWeek)
+            ->endOfWeek();
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Report Query
+        |--------------------------------------------------------------------------
+        */
+
         $reportQuery = Report::query();
+
 
         if ($userIds !== null) {
             $reportQuery->whereIn('user_id', $userIds);
-            $weeklyReportQuery = Report::whereIn('user_id', $userIds)
-                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
         }
 
-        $reportQuery->whereYear('created_at', now()->year);
 
-        // Customer Query
-        $customerQuery = Customer::query();
-
-        if ($userIds !== null) {
-            $customerQuery->whereIn('user_id', $userIds);
-            $weeklyCustomerQuery = Customer::whereIn('user_id', $userIds)
-                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-        }
-
-        // User Query
-        $userQuery = User::where('status', 1);
-
-        if ($userIds !== null) {
-            $userQuery->whereIn('id', $userIds);
-        }
-
-        $allReports = (clone $reportQuery)->count();
+        $reportQuery->whereBetween(
+            'created_at',
+            [$startDate, $endDate]
+        );
 
         $todayReports = (clone $reportQuery)
             ->whereDate('created_at', today())
             ->count();
 
-        $allCustomers = (clone $customerQuery)->count();
+        $userQuery = User::where('status',1);
+
+        if ($userIds !== null) {
+            $userQuery->whereIn('id',$userIds);
+        }
 
         $allUsers = (clone $userQuery)->count();
-
-        $userActive = (clone $reportQuery)
-            ->distinct('user_id')
-            ->count('user_id');
 
         // Monthly Report
         $months = (clone $reportQuery)
@@ -133,23 +149,130 @@ class DashboardController extends Controller
             ->pluck('total', 'month')
             ->toArray();
 
+
+
         $monthlyData = [];
 
-        for ($i = 1; $i <= 12; $i++) {
+        for($i=1;$i<=12;$i++)
+        {
             $monthlyData[] = $months[$i] ?? 0;
         }
 
+         $userActive = (clone $reportQuery)
+            ->distinct('user_id')
+            ->count('user_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Customer Query
+        |--------------------------------------------------------------------------
+        */
+
+        $customerQuery = Customer::query();
+
+
+        if ($userIds !== null) {
+            $customerQuery->whereIn('user_id', $userIds);
+        }
+
+
+        $customerQuery->whereBetween(
+            'created_at',
+            [$startDate, $endDate]
+        );
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Daily Chart Data Monday - Sunday
+        |--------------------------------------------------------------------------
+        */
+
+        $reportsByDay = (clone $reportQuery)
+            ->selectRaw("
+                EXTRACT(ISODOW FROM created_at) as day,
+                COUNT(*) as total
+            ")
+            ->groupBy('day')
+            ->pluck('total','day')
+            ->toArray();
+
+
+
+        $customersByDay = (clone $customerQuery)
+            ->selectRaw("
+                EXTRACT(ISODOW FROM created_at) as day,
+                COUNT(*) as total
+            ")
+            ->groupBy('day')
+            ->pluck('total','day')
+            ->toArray();
+
+
+
+        $days = [
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday',
+            7 => 'Sunday',
+        ];
+
+
+        $weeklyReports = [];
+        $weeklyCustomers = [];
+
+
+        foreach($days as $key=>$day)
+        {
+            $weeklyReports[] = [
+                'day'=>$day,
+                'total'=>$reportsByDay[$key] ?? 0
+            ];
+
+
+            $weeklyCustomers[] = [
+                'day'=>$day,
+                'total'=>$customersByDay[$key] ?? 0
+            ];
+        }
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Response
+        |--------------------------------------------------------------------------
+        */
+
         return response()->json([
-            'status' => true,
+
+            'status'=>true,
             'userRole' => $user->role->name,
-            'allReports' => $allReports,
-            'todayReports' => $todayReports,
-            'allUsers' => $allUsers,
-            'allCustomers' => $allCustomers,
-            'userActive' => $userActive,
-            'monthlyReports' => $monthlyData,
-            'weeklyReports' => $weeklyReportQuery->count(),
-            'weeklyCustomers' => $weeklyCustomerQuery->count(),
+            'filter'=>[
+                'year'=>$year,
+                'start_week'=>$startWeek,
+                'end_week'=>$endWeek,
+                'start_date'=>$startDate->format('Y-m-d'),
+                'end_date'=>$endDate->format('Y-m-d'),
+            ],
+
+
+            'weeklyReports'=>$weeklyReports,
+
+            'weeklyCustomers'=>$weeklyCustomers,
+
+
+            'allReports'=>(clone $reportQuery)->count(),
+            'todayReports'=>$todayReports,
+            'allUsers'=>$allUsers,
+            'userActive'=>$userActive,
+            'monthlyReports'=>$monthlyData,
+            'allCustomers'=>(clone $customerQuery)->count(),
+
         ]);
     }
 }
