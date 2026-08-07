@@ -85,7 +85,6 @@ class DashboardController extends Controller
 
         $userIds = $this->getUserIdsByRole($user);
 
-
         /*
         |--------------------------------------------------------------------------
         | Filter Year + Week Range
@@ -96,19 +95,13 @@ class DashboardController extends Controller
         $startWeek = $request->start_week ?? 1;
         $endWeek = $request->end_week ?? 52;
 
-
-        // Get start date from week
         $startDate = Carbon::now()
             ->setISODate($year, $startWeek)
             ->startOfWeek();
 
-
-        // Get end date from week
         $endDate = Carbon::now()
             ->setISODate($year, $endWeek)
             ->endOfWeek();
-
-
 
         /*
         |--------------------------------------------------------------------------
@@ -118,49 +111,52 @@ class DashboardController extends Controller
 
         $reportQuery = Report::query();
 
-
         if ($userIds !== null) {
             $reportQuery->whereIn('user_id', $userIds);
         }
 
-
-        $reportQuery->whereBetween(
-            'created_at',
-            [$startDate, $endDate]
-        );
+        $reportQuery->whereBetween('created_at', [$startDate, $endDate]);
 
         $todayReports = (clone $reportQuery)
             ->whereDate('created_at', today())
             ->count();
 
-        $userQuery = User::where('status',1);
+        /*
+        |--------------------------------------------------------------------------
+        | Users
+        |--------------------------------------------------------------------------
+        */
+
+        $userQuery = User::where('status', 1);
 
         if ($userIds !== null) {
-            $userQuery->whereIn('id',$userIds);
+            $userQuery->whereIn('id', $userIds);
         }
 
         $allUsers = (clone $userQuery)->count();
 
-        // Monthly Report
+        $userActive = (clone $reportQuery)
+            ->distinct()
+            ->count('user_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Reports (MySQL/MariaDB)
+        |--------------------------------------------------------------------------
+        */
+
         $months = (clone $reportQuery)
-            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(*) as total')
-            ->groupBy('month')
-            ->orderBy('month')
+            ->selectRaw('MONTH(created_at) AS month, COUNT(*) AS total')
+            ->groupByRaw('MONTH(created_at)')
+            ->orderByRaw('MONTH(created_at)')
             ->pluck('total', 'month')
             ->toArray();
 
-
-
         $monthlyData = [];
 
-        for($i=1;$i<=12;$i++)
-        {
+        for ($i = 1; $i <= 12; $i++) {
             $monthlyData[] = $months[$i] ?? 0;
         }
-
-         $userActive = (clone $reportQuery)
-            ->distinct('user_id')
-            ->count('user_id');
 
         /*
         |--------------------------------------------------------------------------
@@ -170,46 +166,29 @@ class DashboardController extends Controller
 
         $customerQuery = Customer::query();
 
-
         if ($userIds !== null) {
             $customerQuery->whereIn('user_id', $userIds);
         }
 
-
-        $customerQuery->whereBetween(
-            'created_at',
-            [$startDate, $endDate]
-        );
-
-
+        $customerQuery->whereBetween('created_at', [$startDate, $endDate]);
 
         /*
         |--------------------------------------------------------------------------
-        | Daily Chart Data Monday - Sunday
+        | Weekly Reports (Monday-Sunday)
         |--------------------------------------------------------------------------
         */
 
         $reportsByDay = (clone $reportQuery)
-            ->selectRaw("
-                WEEKDAY(created_at) + 1 AS day,
-                COUNT(*) AS total
-            ")
-            ->groupByRaw("WEEKDAY(created_at)")
+            ->selectRaw('WEEKDAY(created_at) + 1 AS day, COUNT(*) AS total')
+            ->groupByRaw('WEEKDAY(created_at)')
             ->pluck('total', 'day')
             ->toArray();
-
-
 
         $customersByDay = (clone $customerQuery)
-            ->selectRaw("
-                WEEKDAY(created_at) + 1 AS day,
-                COUNT(*) AS total
-            ")
-            ->groupByRaw("WEEKDAY(created_at)")
+            ->selectRaw('WEEKDAY(created_at) + 1 AS day, COUNT(*) AS total')
+            ->groupByRaw('WEEKDAY(created_at)')
             ->pluck('total', 'day')
             ->toArray();
-
-
 
         $days = [
             1 => 'Monday',
@@ -221,26 +200,21 @@ class DashboardController extends Controller
             7 => 'Sunday',
         ];
 
-
         $weeklyReports = [];
         $weeklyCustomers = [];
 
+        foreach ($days as $key => $day) {
 
-        foreach($days as $key=>$day)
-        {
             $weeklyReports[] = [
-                'day'=>$day,
-                'total'=>$reportsByDay[$key] ?? 0
+                'day'   => $day,
+                'total' => $reportsByDay[$key] ?? 0,
             ];
-
 
             $weeklyCustomers[] = [
-                'day'=>$day,
-                'total'=>$customersByDay[$key] ?? 0
+                'day'   => $day,
+                'total' => $customersByDay[$key] ?? 0,
             ];
         }
-
-
 
         /*
         |--------------------------------------------------------------------------
@@ -249,30 +223,27 @@ class DashboardController extends Controller
         */
 
         return response()->json([
+            'status' => true,
 
-            'status'=>true,
             'userRole' => $user->role->name,
-            'filter'=>[
-                'year'=>$year,
-                'start_week'=>$startWeek,
-                'end_week'=>$endWeek,
-                'start_date'=>$startDate->format('Y-m-d'),
-                'end_date'=>$endDate->format('Y-m-d'),
+
+            'filter' => [
+                'year'       => $year,
+                'start_week' => $startWeek,
+                'end_week'   => $endWeek,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date'   => $endDate->format('Y-m-d'),
             ],
 
+            'weeklyReports'   => $weeklyReports,
+            'weeklyCustomers' => $weeklyCustomers,
 
-            'weeklyReports'=>$weeklyReports,
-
-            'weeklyCustomers'=>$weeklyCustomers,
-
-
-            'allReports'=>(clone $reportQuery)->count(),
-            'todayReports'=>$todayReports,
-            'allUsers'=>$allUsers,
-            'userActive'=>$userActive,
-            'monthlyReports'=>$monthlyData,
-            'allCustomers'=>(clone $customerQuery)->count(),
-
+            'allReports'    => (clone $reportQuery)->count(),
+            'todayReports'  => $todayReports,
+            'allUsers'      => $allUsers,
+            'userActive'    => $userActive,
+            'monthlyReports'=> $monthlyData,
+            'allCustomers'  => (clone $customerQuery)->count(),
         ]);
     }
 }
