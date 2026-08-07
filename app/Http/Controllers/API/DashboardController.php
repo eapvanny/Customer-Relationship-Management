@@ -139,6 +139,31 @@ class DashboardController extends Controller
             $monthlyData[] = $months[$i] ?? 0;
         }
 
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+
+        $saleTarget = (clone $reportQuery)
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->selectRaw("
+                COALESCE(SUM(
+                    COALESCE(`250_ml`,0) +
+                    COALESCE(`350_ml`,0) +
+                    COALESCE(`600_ml`,0) +
+                    COALESCE(`1500_ml`,0)
+                ),0) as total_sale
+            ")
+            ->value('total_sale');
+
+        $rank = 'No Rank';
+
+        if ($saleTarget >= 3500) {
+            $rank = 'Rank C';
+        } elseif ($saleTarget >= 3000) {
+            $rank = 'Rank B';
+        } elseif ($saleTarget >= 2600) {
+            $rank = 'Rank A';
+        }
+
         return response()->json([
             'status' => true,
             'userRole' => $user->role->name,
@@ -150,6 +175,8 @@ class DashboardController extends Controller
             'monthlyReports' => $monthlyData,
             'weeklyReports' => $weeklyReportQuery->count(),
             'weeklyCustomers' => $weeklyCustomerQuery->count(),
+            'saleTarget' => $saleTarget,
+            'rank' => $rank,
         ]);
     }
 }
