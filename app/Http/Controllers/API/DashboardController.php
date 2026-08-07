@@ -191,22 +191,22 @@ class DashboardController extends Controller
 
         $reportsByDay = (clone $reportQuery)
             ->selectRaw("
-                EXTRACT(ISODOW FROM created_at) as day,
-                COUNT(*) as total
+                WEEKDAY(created_at) + 1 AS day,
+                COUNT(*) AS total
             ")
-            ->groupBy('day')
-            ->pluck('total','day')
+            ->groupByRaw("WEEKDAY(created_at)")
+            ->pluck('total', 'day')
             ->toArray();
 
 
 
         $customersByDay = (clone $customerQuery)
             ->selectRaw("
-                EXTRACT(ISODOW FROM created_at) as day,
-                COUNT(*) as total
+                WEEKDAY(created_at) + 1 AS day,
+                COUNT(*) AS total
             ")
-            ->groupBy('day')
-            ->pluck('total','day')
+            ->groupByRaw("WEEKDAY(created_at)")
+            ->pluck('total', 'day')
             ->toArray();
 
 
