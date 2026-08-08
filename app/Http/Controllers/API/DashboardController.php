@@ -7,6 +7,7 @@ use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
 use App\Models\Report;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -78,39 +79,62 @@ class DashboardController extends Controller
                 return [$user->id];
         }
     }
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
         $userIds = $this->getUserIdsByRole($user);
 
-        // Report Query
-        $reportQuery = Report::query();
+        // ==============================
+        // Filter
+        // ==============================
+        $currentYear = now()->year;
+        $year = (int) $request->input('year', $currentYear);
+        // Allow only 2025 -> Current Year
+        if ($year < 2025) {
+            $year = 2025;
+        }
+
+        if ($year > $currentYear) {
+            $year = $currentYear;
+        }
+        $startWeek = $request->input('start_week', now()->weekOfYear);
+        $endWeek = $request->input('end_week', $startWeek);
+
+        $startDate = Carbon::create($year, 1, 1)
+            ->setISODate($year, $startWeek)
+            ->startOfWeek(Carbon::MONDAY)
+            ->startOfDay();
+
+        $endDate = Carbon::create($year, 1, 1)
+            ->setISODate($year, $endWeek)
+            ->endOfWeek(Carbon::SUNDAY)
+            ->endOfDay();
+
+        // ==============================
+        // Base Queries (Current Year)
+        // ==============================
+        $reportQuery = Report::query()->whereYear('created_at', $year);
+
+        $customerQuery = Customer::query()->whereYear('created_at', $year);
 
         if ($userIds !== null) {
             $reportQuery->whereIn('user_id', $userIds);
-            $weeklyReportQuery = Report::whereIn('user_id', $userIds)
-                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-        }
-
-        $reportQuery->whereYear('created_at', now()->year);
-
-        // Customer Query
-        $customerQuery = Customer::query();
-
-        if ($userIds !== null) {
             $customerQuery->whereIn('user_id', $userIds);
-            $weeklyCustomerQuery = Customer::whereIn('user_id', $userIds)
-                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
         }
 
+        // ==============================
         // User Query
+        // ==============================
         $userQuery = User::where('status', 1);
 
         if ($userIds !== null) {
             $userQuery->whereIn('id', $userIds);
         }
 
+        // ==============================
+        // Dashboard Counts
+        // ==============================
         $allReports = (clone $reportQuery)->count();
 
         $todayReports = (clone $reportQuery)
@@ -125,7 +149,9 @@ class DashboardController extends Controller
             ->distinct('user_id')
             ->count('user_id');
 
+        // ==============================
         // Monthly Report
+        // ==============================
         $months = (clone $reportQuery)
             ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(*) as total')
             ->groupBy('month')
@@ -139,16 +165,65 @@ class DashboardController extends Controller
             $monthlyData[] = $months[$i] ?? 0;
         }
 
-        $startOfMonth = now()->startOfMonth();
-        $endOfMonth = now()->endOfMonth();
+        // ==============================
+        // Weekly Total
+        // ==============================
+        $weeklyReports = (clone $reportQuery)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
 
+        $weeklyCustomers = (clone $customerQuery)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        // ==============================
+        // Chart Monday -> Sunday
+        // ==============================
+        $reportByDay = (clone $reportQuery)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('WEEKDAY(created_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day')
+            ->toArray();
+
+        $customerByDay = (clone $customerQuery)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('WEEKDAY(created_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day')
+            ->toArray();
+
+        $dayLabels = [
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+            'Sunday'
+        ];
+
+        $reportChart = [];
+        $customerChart = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $reportChart[] = $reportByDay[$i] ?? 0;
+            $customerChart[] = $customerByDay[$i] ?? 0;
+        }
+
+        // ==============================
+        // Sale Target
+        // ==============================
         $saleTarget = (clone $reportQuery)
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->selectRaw("
                 COALESCE(SUM(
-                    COALESCE(`250_ml`,0) +
-                    COALESCE(`350_ml`,0) +
-                    COALESCE(`600_ml`,0) +
+                    COALESCE(`250_ml`,0)+
+                    COALESCE(`350_ml`,0)+
+                    COALESCE(`600_ml`,0)+
                     COALESCE(`1500_ml`,0)
                 ),0) as total_sale
             ")
@@ -164,19 +239,39 @@ class DashboardController extends Controller
             $rank = 'Rank A';
         }
 
+        // ==============================
+        // Response
+        // ==============================
         return response()->json([
             'status' => true,
+
+            'year' => $year,
+            'start_week' => $startWeek,
+            'end_week' => $endWeek,
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+
             'userRole' => $user->role->name,
+
             'allReports' => $allReports,
             'todayReports' => $todayReports,
             'allUsers' => $allUsers,
             'allCustomers' => $allCustomers,
             'userActive' => $userActive,
+
             'monthlyReports' => $monthlyData,
-            'weeklyReports' => $weeklyReportQuery->count(),
-            'weeklyCustomers' => $weeklyCustomerQuery->count(),
+
+            'weeklyReports' => $weeklyReports,
+            'weeklyCustomers' => $weeklyCustomers,
+
+            // Chart Data
+            'dayLabels' => $dayLabels,
+            'reportData' => $reportChart,
+            'customerData' => $customerChart,
+
             'saleTarget' => $saleTarget,
             'rank' => $rank,
+
             'rankTargets' => [
                 'Rank A' => '2600 boxes',
                 'Rank B' => '3000 boxes',
