@@ -6,9 +6,10 @@
 
 @section('extraStyle')
     <style>
-        h6{
+        h6 {
             font-size: 19px;
         }
+
         .infinity {
             width: 120px;
             height: 60px;
@@ -218,24 +219,24 @@
         }
 
         /* body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #fff;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: #fff;
 
-            .dribbble {
-                position: fixed;
-                display: block;
-                right: 20px;
-                bottom: 20px;
-
-                img {
+                .dribbble {
+                    position: fixed;
                     display: block;
-                    height: 28px;
+                    right: 20px;
+                    bottom: 20px;
+
+                    img {
+                        display: block;
+                        height: 28px;
+                    }
                 }
-            }
-        } */
+            } */
 
         .infinity-wrapper {
             position: fixed;
@@ -269,6 +270,7 @@
                 display: none;
             }
         }
+
         .calendar-move-today {
             background-color: transparent;
             color: black;
@@ -277,6 +279,71 @@
         .calendar-move-today.active {
             background-color: #4299e1;
             color: white;
+        }
+
+        .progress-circle {
+
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+        }
+
+
+        .circle-content {
+
+            width: 140px;
+            height: 140px;
+
+            background: white;
+            border-radius: 50%;
+
+            display: flex;
+            flex-direction: column;
+
+            justify-content: center;
+            align-items: center;
+
+        }
+
+
+
+        .target-item {
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            padding: 14px 18px;
+
+            background: #f8f9fa;
+
+            border-radius: 12px;
+
+            margin-bottom: 12px;
+
+            font-size: 16px;
+
+        }
+
+
+
+        .rank-box {
+
+            padding: 15px 18px;
+
+            background: linear-gradient(135deg,
+                    #fff7d6,
+                    #ffffff);
+
+            border-radius: 15px;
+
+            border-left: 5px solid #ffc107;
+
         }
     </style>
 @endsection
@@ -329,7 +396,7 @@
                 <div class="sub-head">
                     <div class="row w-100">
                         <div class="col-12 col-md-12 col-xxl-6 d-flex justify-content-left">
-                            <h4 style="font-weight: 900">{{__('Customer Relationship Management')}}</h4>
+                            <h4 style="font-weight: 900">{{ __('Customer Relationship Management') }}</h4>
                         </div>
                         {{-- <div class="col-md-4 date-container">
                             <input class="select2" type="date">
@@ -338,7 +405,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
                     <h6 style="font-weight: 900;">{{ __('All Report') }}</h6>
@@ -369,6 +436,166 @@
                     <h3 id="all-report" style="font-weight: 900;">{{ $userActive }}</h3>
                 </div>
             </div>
+        </div>
+    </section>
+    <section>
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 fw-bold">
+                    <i class="fa fa-bullseye text-warning"></i>
+                    {{ __('Monthly Sales Target') }}
+                </h4>
+                <div class="form-group has-feedback">
+                    <select name="employee_id" id="employee_id" class="form-control select2">
+                        <option value="">{{ __('Select Employee') }}</option>
+                    </select>
+                </div>
+                @if ($currentRank == 'Rank C')
+                    <span class="badge bg-success px-3 py-2">
+                        <i class="fa fa-trophy"></i> {{__('Completed')}}
+                    </span>
+                @else
+                    <span class="badge bg-warning text-dark px-3 py-2">
+                        <i class="fa fa-spinner"></i> {{__('In Progress')}}
+                    </span>
+                @endif
+            </div>
+
+
+            <div class="card-body">
+
+                <div class="row align-items-center">
+
+
+                    {{-- Circle Progress --}}
+                    <div class="col-md-4 text-center">
+
+                        <div class="progress-circle mx-auto"
+                            style="
+                            background: conic-gradient(
+                                {{ $progressColor }} {{ $targetPercent }}%,
+                                #eeeeee {{ $targetPercent }}%
+                            );">
+
+                            <div class="circle-content">
+                                <h2 class="fw-bold mb-0">
+                                    {{ $targetPercent }}%
+                                </h2>
+                                <small class="text-muted">
+                                    {{__('Completed')}}
+                                </small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- Detail --}}
+                    <div class="col-md-8">
+
+
+                        <div class="rank-box mb-3">
+
+                            <div>
+                                <span class="text-muted">
+                                    <i class="fa fa-trophy"></i> {{__('Current Rank')}}
+                                </span>
+
+                            </div>
+
+                            <h3 class="fw-bold mb-0" style="color: {{ $progressColor }}">
+                                {{ $currentRank }}
+                            </h3>
+
+                        </div>
+
+
+
+                        <div class="target-item">
+
+                            <span>
+                                <i class="fa fa-shopping-cart"></i> {{__('Actual Sales')}}
+                            </span>
+
+                            <b>
+                                {{ number_format($soldThisMonth) }} {{__('Boxes')}}
+                            </b>
+
+                        </div>
+
+                        <div class="target-item">
+
+                            <span>
+                                <i class="fa fa-hourglass-half"></i> {{__('Remaining')}}
+                            </span>
+
+                            <b class="text-danger">
+
+                                @if ($remaining > 0)
+                                    {{ number_format($remaining) }} {{__('Boxes')}}
+                                @else
+                                    {{__('Completed')}} <i class="fa fa-check-circle text-success"></i>
+                                @endif
+
+                            </b>
+
+                        </div>
+
+                        <div class="target-item">
+
+                            <span>
+                                <i class="fa fa-trophy"></i> {{__('Next Rank')}}
+                            </span>
+
+                            <b>
+                                {{ $nextRank ?? __('Completed All Rank') }}
+                            </b>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                {{-- Progress Bar --}}
+                <div class="mt-4">
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <small>
+                            Progress to {{ $nextRank ?? 'Rank C' }}
+                        </small>
+
+                        <small class="fw-bold">
+                            {{ $targetPercent }}%
+                        </small>
+
+                    </div>
+
+
+                    <div class="progress rounded-pill" style="height:12px;">
+
+                        <div class="progress-bar"
+                            style="
+                        width: {{ $targetPercent }}%;
+                        background-color: {{ $progressColor }};
+                    ">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
         </div>
     </section>
     <section>

@@ -50,6 +50,13 @@
                     </ul>
                 </li>
             @endHasTypePermission
+            @hasTypePermission('view target')
+                <li>
+                    <a href="{{ route('target.index') }}" class="text-decoration-none">
+                        <i class="fa fa-solid fa-bullseye"></i> <span>{{ __('Target') }}</span>
+                    </a>
+                </li>
+            @endHasTypePermission
             @hasTypePermission('view report')
                 <li>
                     <a href="{{ route('report.index') }}" class="text-decoration-none">

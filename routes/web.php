@@ -31,6 +31,7 @@ use App\Http\Controllers\SportclubController;
 use App\Http\Controllers\SportclubimportController;
 use App\Http\Controllers\SubwholesaleController;
 use App\Http\Controllers\SubwholesaleImportController;
+use App\Http\Controllers\TargetController;
 use App\Http\Controllers\TranslationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesaleController;
@@ -100,6 +101,9 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
     //permission
     Route::resource('permission', PermissionController::class);
+
+    // Target
+    Route::resource('target', TargetController::class);
 
     //Report
     Route::resource('report', ReportController::class);
