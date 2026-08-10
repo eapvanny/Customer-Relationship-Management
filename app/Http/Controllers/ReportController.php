@@ -523,13 +523,24 @@ class ReportController extends Controller
                 'driver_id' => $report->driver_id ?? 'N/A',
 
                 //  Area fallback
-                'area' => $report->status === 'consumer'
-                    ? ($report->user?->area ?? 'N/A')
-                    : (
-                        !empty($report->area_id)
-                            ? AppHelper::getAreaNameById($report->area_id)
-                            : ($report->area ?? 'N/A')
-                    ),
+                'area' => (function () use ($report) {
+                    // Consumer → get area from user
+                    if ($report->status === 'consumer') {
+                        return $report->user->area ?? 'N/A';
+                    }
+
+                    // Import → use report area
+                    if ($report->status === 'import') {
+                        return $report->area ?? 'N/A';
+                    }
+
+                    // Other status → get area name from area_id
+                    if ($report->area_id) {
+                        return AppHelper::getAreaNameById($report->area_id) ?? 'N/A';
+                    }
+
+                    return 'N/A';
+                })(),
 
                 //  Outlet fallback
                 'outlet' => optional($report->depo)->name

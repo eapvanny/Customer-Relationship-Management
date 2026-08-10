@@ -394,19 +394,32 @@ class ReportController extends Controller
             $reportData = [
                 'id' => $report->id,
                 'report_id' => 'S-' . str_pad($report->id, 3, '0', STR_PAD_LEFT),
-                'area' => $report->status === 'consumer'
-                    ? ($report->user?->area ?? 'N/A')
-                    : (
-                        !empty($report->area_id)
-                            ? AppHelper::getAreaNameById($report->area_id)
-                            : ($report->area ?? 'N/A')
-                    ),
-                'customer_name' => $report->customer?->name ?? 'N/A',
-                'customer_code' => $report->customer?->code ?? 'N/A',
-                'customer_type' => $report->customer
-                    ? (AppHelper::CUSTOMER_TYPE[$report->customer->customer_type] ?? 'N/A')
+                'area' => (function () use ($report) {
+                    // Consumer → get area from user
+                    if ($report->status === 'consumer') {
+                        return $report->user->area ?? 'N/A';
+                    }
+
+                    // Import → use report area
+                    if ($report->status === 'import') {
+                        return $report->area ?? 'N/A';
+                    }
+
+                    // Other status → get area name from area_id
+                    if ($report->area_id) {
+                        return AppHelper::getAreaNameById($report->area_id) ?? 'N/A';
+                    }
+
+                    return 'N/A';
+                })(),
+                'customer_name' => optional($report->customer)->name
+                    ?? $report->customer_name
+                    ?? 'N/A',
+                'customer_code' => optional($report->customer)->code ?? 'N/A',
+                'customer_type' => $report->customer_type
+                    ? (AppHelper::CUSTOMER_TYPE[$report->customer_type] ?? 'N/A')
                     : 'N/A',
-                'outlet_name' => $report->customer?->depo?->name ?? 'N/A',
+                'outlet_name' => optional($report->customer)->depo->name ?? 'N/A',
                 'quantities' => [
                     ['size' => '250ML', 'quantity' => $report->{'250_ml'} ?? 0],
                     ['size' => '350ML', 'quantity' => $report->{'350_ml'} ?? 0],
