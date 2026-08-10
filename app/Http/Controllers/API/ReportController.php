@@ -394,9 +394,13 @@ class ReportController extends Controller
             $reportData = [
                 'id' => $report->id,
                 'report_id' => 'S-' . str_pad($report->id, 3, '0', STR_PAD_LEFT),
-                'area' => $report->customer && $report->customer->area_id
-                    ? AppHelper::getAreaNameById($report->customer->area_id) ?? 'N/A'
-                    : AppHelper::getAreaNameById($report->area_id) ?? 'N/A',
+                'area' => $report->status === 'consumer'
+                    ? ($report->user?->area ?? 'N/A')
+                    : (
+                        !empty($report->area_id)
+                            ? AppHelper::getAreaNameById($report->area_id)
+                            : ($report->area ?? 'N/A')
+                    ),
                 'customer_name' => $report->customer ? $report->customer->name ?? 'N/A' : 'N/A',
                 'customer_code' => $report->customer ? $report->customer->code ?? 'N/A' : 'N/A',
                 'customer_type' => $report->customer
