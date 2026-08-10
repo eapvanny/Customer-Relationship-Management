@@ -22,6 +22,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use function Laravel\Prompts\error;
 
@@ -301,9 +302,11 @@ class ReportController extends Controller
                         }
                     })
                     ->addColumn('area', function ($data) {
-                        return !empty($data->area_id)
-                            ? AppHelper::getAreaNameById($data->area_id)
-                            : ($data->area ?? 'N/A');
+                        if (!empty($data->area_id)) {
+                            return AppHelper::getAreaNameById($data->area_id);
+                        }
+
+                        return $data->user?->area ?? 'N/A';
                     })
                     ->addColumn('employee_name', function ($data) {
                         $user = $data->user;
@@ -775,7 +778,121 @@ class ReportController extends Controller
             ->with('success', 'Report has been created!');
     }
 
+    public function storeConsumer(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_name' => ['required', 'string', 'max:255'],
 
+            '250_ml' => ['nullable', 'integer', 'min:0'],
+            '350_ml' => ['nullable', 'integer', 'min:0'],
+            '600_ml' => ['nullable', 'integer', 'min:0'],
+            '1500_ml' => ['nullable', 'integer', 'min:0'],
+
+            'other' => ['nullable', 'string'],
+            'status' => ['required', 'in:consumer'],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Report
+            |--------------------------------------------------------------------------
+            */
+
+            $report = new Report();
+
+            $report->user_id = auth()->id();
+            $report->customer_name = $validated['customer_name'];
+            $report->customer_type = AppHelper::អ្នកប្រើប្រាស់ចុងក្រោយ​;
+            $report->date = Carbon::now('Asia/Phnom_Penh');
+
+            $report->{'250_ml'} = $validated['250_ml'] ?? 0;
+            $report->{'350_ml'} = $validated['350_ml'] ?? 0;
+            $report->{'600_ml'} = $validated['600_ml'] ?? 0;
+            $report->{'1500_ml'} = $validated['1500_ml'] ?? 0;
+
+            $report->other = $validated['other'] ?? null;
+            $report->status = $validated['status'];
+
+            /*
+            |--------------------------------------------------------------------------
+            | Save first
+            |--------------------------------------------------------------------------
+            */
+
+            $report->save();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate Global SO Number
+            |--------------------------------------------------------------------------
+            |
+            | Example:
+            | S-111-0000001
+            | S-45-0000002
+            | S-111-0000003
+            |
+            */
+
+            $prefix = auth()->user()->area;
+
+            // Get latest SO number from ALL areas
+            $lastSoNumber = Report::whereNotNull('so_number')
+                ->orderByDesc('id')
+                ->value('so_number');
+
+            if ($lastSoNumber) {
+
+                // Get last 7 digits
+                $lastNumber = (int) substr($lastSoNumber, -7);
+
+                $nextNumber = $lastNumber + 1;
+
+            } else {
+
+                // First SO number
+                $nextNumber = 1;
+            }
+
+            $soNumber = $prefix . '-' . str_pad(
+                $nextNumber,
+                7,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update SO Number
+            |--------------------------------------------------------------------------
+            */
+
+            $report->update([
+                'so_number' => $soNumber,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->back()
+                ->with('success', __('Consumer report added successfully.'));
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    __('Failed to add consumer report: ') . $e->getMessage()
+                );
+        }
+    }
 
     public function edit($id)
     {

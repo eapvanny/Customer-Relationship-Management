@@ -107,6 +107,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
     //Report
     Route::resource('report', ReportController::class);
+    Route::post('/report/consumer', [ReportController::class, 'storeConsumer'])->name('consumer.store');
     Route::get('/get-reports', [ReportController::class, 'getReports'])->name('get-reports');
     Route::get('/export-report', [ReportController::class, 'export'])->name('report.export');
     //import report

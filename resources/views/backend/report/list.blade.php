@@ -481,6 +481,11 @@
                                         <i class="fa fa-upload"></i> {{ __('Export') }}
                                     </a>
                                 </div>
+                                <div class="col-6 text-end">
+                                    <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#addModal">
+                                        <i class="fa fa-plus-circle"></i> {{ __('Add Report Consumer') }}
+                                    </button>
+                                </div>
                             </div>
                             <div class="table-responsive mt-4">
                                 <table id="datatable"
@@ -604,6 +609,204 @@
         </div>
     </div>
     <!-- Modal form select id pru-->
+    <!-- Add Modal -->
+    <div class="modal fade"
+     id="addModal"
+     tabindex="-1"
+     aria-labelledby="addModalLabel"
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">
+                    <i class="fa fa-regular fa-folder-open"></i>
+                    {{ __('Report For Consumer') }}
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <form action="{{ route('consumer.store') }}" method="POST">
+                @csrf
+
+                <div class="modal-body">
+
+                    <div class="row">
+
+                        {{-- Customer Name --}}
+                        <div class="col-12 mb-3">
+                            <div class="form-group has-feedback">
+                                <label for="customer_name">
+                                    {{ __('Customer Name') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <input type="text"
+                                       name="customer_name"
+                                       id="customer_name"
+                                       class="form-control"
+                                       value="{{ old('customer_name') }}"
+                                       required>
+
+                                <span class="fa fa-user form-control-feedback"></span>
+
+                                @error('customer_name')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- 250ml --}}
+                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
+                            <div class="form-group">
+                                <label for="250_ml">
+                                    {{ __('250ml') }}
+                                    <span>{{ __('(Boxes)') }}</span>
+                                </label>
+
+                                <input type="number"
+                                       class="form-control"
+                                       name="250_ml"
+                                       id="250_ml"
+                                       min="0"
+                                       value="{{ old('250_ml') }}">
+
+                                @error('250_ml')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- 350ml --}}
+                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
+                            <div class="form-group">
+                                <label for="350_ml">
+                                    {{ __('350ml') }}
+                                    <span>{{ __('(Boxes)') }}</span>
+                                </label>
+
+                                <input type="number"
+                                       class="form-control"
+                                       name="350_ml"
+                                       id="350_ml"
+                                       min="0"
+                                       value="{{ old('350_ml') }}">
+
+                                @error('350_ml')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- 600ml --}}
+                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
+                            <div class="form-group">
+                                <label for="600_ml">
+                                    {{ __('600ml') }}
+                                    <span>{{ __('(Boxes)') }}</span>
+                                </label>
+
+                                <input type="number"
+                                       class="form-control"
+                                       name="600_ml"
+                                       id="600_ml"
+                                       min="0"
+                                       value="{{ old('600_ml') }}">
+
+                                @error('600_ml')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- 1500ml --}}
+                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
+                            <div class="form-group">
+                                <label for="1500_ml">
+                                    {{ __('1500ml') }}
+                                    <span>{{ __('(Boxes)') }}</span>
+                                </label>
+
+                                <input type="number"
+                                       class="form-control"
+                                       name="1500_ml"
+                                       id="1500_ml"
+                                       min="0"
+                                       value="{{ old('1500_ml') }}">
+
+                                @error('1500_ml')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Other --}}
+                        <div class="col-lg-12 col-md-12 col-xl-6 mb-3">
+                            <div class="form-group">
+                                <label for="other">
+                                    {{ __('Other') }}
+                                </label>
+
+                                <textarea class="form-control"
+                                          name="other"
+                                          id="other"
+                                          rows="2"
+                                          placeholder="{{ __('Enter other here...') }}">{{ old('other') }}</textarea>
+
+                                @error('other')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Status --}}
+                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
+                            <div class="form-group">
+                                <label for="status">
+                                    {{ __('Status') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <select name="status"
+                                        id="status"
+                                        class="form-control"
+                                        required>
+                                    <option value="consumer" selected>
+                                        {{ __('Consumer') }}
+                                    </option>
+                                </select>
+
+                                @error('status')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit"
+                            class="btn btn-info text-white">
+                        <i class="fa fa-save"></i>
+                        {{ __('Save') }}
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
 {{-- <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true" data-bs-backdrop="static"
      data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-md">

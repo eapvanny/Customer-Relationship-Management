@@ -80,9 +80,11 @@
             @endphp
             <tr>
                 <td>
-                    {{ AppHelper::getAreaNameById($row->area_id) 
-                        ?? $row->area 
-                        ?? 'N/A' }}
+                    {{
+                        !empty($row->area_id)
+                            ? AppHelper::getAreaNameById($row->area_id)
+                            : ($row->user?->area ?? 'N/A')
+                    }}
                 </td>
                 <td>
                     {{ $reportUser

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -681,6 +682,124 @@ class ReportController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeConsumer(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_name' => ['required', 'string', 'max:255'],
+
+            '250_ml' => ['nullable', 'integer', 'min:0'],
+            '350_ml' => ['nullable', 'integer', 'min:0'],
+            '600_ml' => ['nullable', 'integer', 'min:0'],
+            '1500_ml' => ['nullable', 'integer', 'min:0'],
+
+            'other' => ['nullable', 'string'],
+            'status' => ['required', 'in:consumer'],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            $user = auth()->user();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Report
+            |--------------------------------------------------------------------------
+            */
+
+            $report = new Report();
+
+            $report->user_id = $user->id;
+            $report->customer_name = $validated['customer_name'];
+            $report->customer_type = AppHelper::អ្នកប្រើប្រាស់ចុងក្រោយ​;
+            $report->date = Carbon::now('Asia/Phnom_Penh');
+
+            $report->{'250_ml'} = $validated['250_ml'] ?? 0;
+            $report->{'350_ml'} = $validated['350_ml'] ?? 0;
+            $report->{'600_ml'} = $validated['600_ml'] ?? 0;
+            $report->{'1500_ml'} = $validated['1500_ml'] ?? 0;
+
+            $report->other = $validated['other'] ?? null;
+            $report->status = $validated['status'];
+
+            $report->save();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate Global SO Number
+            |--------------------------------------------------------------------------
+            */
+
+            $prefix = $user->area;
+
+            $lastSoNumber = Report::whereNotNull('so_number')
+                ->orderByDesc('id')
+                ->value('so_number');
+
+            if ($lastSoNumber) {
+                $lastNumber = (int) substr($lastSoNumber, -7);
+                $nextNumber = $lastNumber + 1;
+            } else {
+                $nextNumber = 1;
+            }
+
+            $soNumber = $prefix . '-' . str_pad(
+                $nextNumber,
+                7,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Save SO Number
+            |--------------------------------------------------------------------------
+            */
+
+            $report->update([
+                'so_number' => $soNumber,
+            ]);
+
+            DB::commit();
+
+            /*
+            |--------------------------------------------------------------------------
+            | API Response
+            |--------------------------------------------------------------------------
+            */
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Consumer report created successfully.',
+                'data' => [
+                    'id' => $report->id,
+                    'so_number' => $report->so_number,
+                    'user_id' => $report->user_id,
+                    'customer_name' => $report->customer_name,
+                    'customer_type' => $report->customer_type,
+                    'date' => $report->date,
+                    '250_ml' => $report->{'250_ml'},
+                    '350_ml' => $report->{'350_ml'},
+                    '600_ml' => $report->{'600_ml'},
+                    '1500_ml' => $report->{'1500_ml'},
+                    'other' => $report->other,
+                    'status' => $report->status,
+                ],
+            ], 201);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create consumer report.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
