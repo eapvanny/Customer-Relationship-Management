@@ -401,12 +401,12 @@ class ReportController extends Controller
                             ? AppHelper::getAreaNameById($report->area_id)
                             : ($report->area ?? 'N/A')
                     ),
-                'customer_name' => $report->customer ? $report->customer->name ?? 'N/A' : 'N/A',
-                'customer_code' => $report->customer ? $report->customer->code ?? 'N/A' : 'N/A',
+                'customer_name' => $report->customer?->name ?? 'N/A',
+                'customer_code' => $report->customer?->code ?? 'N/A',
                 'customer_type' => $report->customer
-                    ? AppHelper::CUSTOMER_TYPE[$report->customer->customer_type] ?? 'N/A'
+                    ? (AppHelper::CUSTOMER_TYPE[$report->customer->customer_type] ?? 'N/A')
                     : 'N/A',
-                'outlet_name' => $report->customer->depo ? $report->customer->depo->name ?? 'N/A' : 'N/A',
+                'outlet_name' => $report->customer?->depo?->name ?? 'N/A',
                 'quantities' => [
                     ['size' => '250ML', 'quantity' => $report->{'250_ml'} ?? 0],
                     ['size' => '350ML', 'quantity' => $report->{'350_ml'} ?? 0],
@@ -440,11 +440,15 @@ class ReportController extends Controller
                     : $report->address,
                 'other' => $report->other ?? 'No additional notes provided.',
                 'user' => [
-                    'title' => $report->user->title ?? 'Mr.',
-                    'name' => $report->user->name ?? 'Developer',
-                    'id' => '000' . str_pad($report->user->id, 3, '0', STR_PAD_LEFT),
-                    'phone' => $report->user->phone ?? '0124568888',
-                    'gender' => AppHelper::GENDER[$report->user->gender] ?? 'N/A',
+                    'title' => $report->user?->title ?? 'Mr.',
+                    'name' => $report->user?->name ?? 'Developer',
+                    'id' => $report->user
+                        ? '000' . str_pad($report->user->id, 3, '0', STR_PAD_LEFT)
+                        : 'N/A',
+                    'phone' => $report->user?->phone ?? '0124568888',
+                    'gender' => $report->user
+                        ? (AppHelper::GENDER[$report->user->gender] ?? 'N/A')
+                        : 'N/A',
                 ],
             ];
 
