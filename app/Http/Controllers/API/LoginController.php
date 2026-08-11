@@ -16,15 +16,20 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        // Eager load the role relationship
-        $user = User::with('role')->where('username', $request->username)->first();
+        $user = User::with('role')
+            ->where('username', $request->username)
+            ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
+        // Remove old tokens
         $user->tokens()->delete();
-        // Create token
+
+        // Create new token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
