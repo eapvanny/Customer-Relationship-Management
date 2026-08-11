@@ -394,24 +394,12 @@ class ReportController extends Controller
             $reportData = [
                 'id' => $report->id,
                 'report_id' => 'S-' . str_pad($report->id, 3, '0', STR_PAD_LEFT),
-                'area' => (function () use ($report) {
-                    // Consumer → get area from user
-                    if ($report->status === 'consumer') {
-                        return $report->user->area ?? 'N/A';
-                    }
-
-                    // Import → use report area
-                    if ($report->status === 'import') {
-                        return $report->area ?? 'N/A';
-                    }
-
-                    // Other status → get area name from area_id
-                    if ($report->area_id) {
-                        return AppHelper::getAreaNameById($report->area_id) ?? 'N/A';
-                    }
-
-                    return 'N/A';
-                })(),
+                'area' => $report->area_id
+                    ? (AppHelper::getAreaNameById($report->area_id) ?? 'N/A')
+                    : ($report->status === 'import'
+                        ? ($report->area ?? 'N/A')
+                        : ($report->user->area ?? 'N/A')
+                    ),
                 'customer_name' => optional($report->customer)->name
                     ?? $report->customer_name
                     ?? 'N/A',

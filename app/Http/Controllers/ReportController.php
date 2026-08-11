@@ -525,9 +525,9 @@ class ReportController extends Controller
                 //  Area fallback
                 'area' => $report->area_id
                     ? (AppHelper::getAreaNameById($report->area_id) ?? 'N/A')
-                    : ($report->status === 'consumer'
-                        ? ($report->user->area ?? 'N/A')
-                        : ($report->area ?? 'N/A')
+                    : ($report->status === 'import'
+                        ? ($report->area ?? 'N/A')
+                        : ($report->user->area ?? 'N/A')
                     ),
 
                 //  Outlet fallback
