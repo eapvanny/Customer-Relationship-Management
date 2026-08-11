@@ -446,11 +446,35 @@
                     <i class="fa fa-bullseye text-warning"></i>
                     {{ __('Monthly Sales Target') }}
                 </h4>
-                <div class="form-group has-feedback">
-                    <select name="employee_id" id="employee_id" class="form-control select2">
-                        <option value="">{{ __('Select Employee') }}</option>
-                    </select>
-                </div>
+                <form method="GET" action="{{ url()->current() }}">
+                    <div class="form-group has-feedback"
+                        style="width: 300px; margin-right: 10px;">
+
+                        <select name="employee_id"
+                                id="employee_id"
+                                class="form-control select2"
+                                onchange="this.form.submit()">
+
+                            <option value="">
+                                {{ __('Select Employee') }}
+                            </option>
+
+                            @foreach($allUsersEmployee as $employee)
+
+                                <option value="{{ $employee->id }}"
+                                    {{ $selectedEmployeeId == $employee->id ? 'selected' : '' }}>
+
+                                    {{ app()->getLocale() === 'en'
+                                        ? $employee->full_name_latin
+                                        : $employee->full_name }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+                    </div>
+                </form>
                 @if ($currentRank == 'Rank C')
                     <span class="badge bg-success px-3 py-2">
                         <i class="fa fa-trophy"></i> {{__('Completed')}}

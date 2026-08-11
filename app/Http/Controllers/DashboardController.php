@@ -93,6 +93,9 @@ class DashboardController extends Controller
 
         // Get All Users count (from the User table)
         $allUsers = User::where('status', '1')->count();
+        $allUsersEmployee = User::where('role_id', AppHelper::USER_EMPLOYEE)
+                    ->where('status', '1')
+                    ->get();
 
         // Get All Customers count (from the Customer table)
         $allCustomers = Customer::count();
@@ -114,9 +117,10 @@ class DashboardController extends Controller
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
 
-        $soldThisMonth = (clone $query)
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+        // Get monthly sales for each employee
+        $employeeSales = (clone $query)
             ->selectRaw("
+                user_id,
                 COALESCE(
                     SUM(
                         COALESCE(`250_ml`, 0) +
@@ -127,14 +131,29 @@ class DashboardController extends Controller
                     0
                 ) AS total
             ")
-            ->value('total');
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->orderByDesc('total')
+            ->get();
 
+        // Highest-selling employee
+        $topEmployee = $employeeSales->first();
+        // If user selected an employee, use that employee.
+        // Otherwise automatically use the top-selling employee.
+        $selectedEmployeeId = request()->input('employee_id')
+            ?? ($topEmployee->user_id ?? null);
+
+        $soldThisMonth = $employeeSales
+            ->where('user_id', $selectedEmployeeId)
+            ->first()
+            ->total ?? 0;
 
         // Rank Target
         $rankTargets = [
-            'Rank A' => 2600,
+            'Rank C' => 2600,
             'Rank B' => 3000,
-            'Rank C' => 3500,
+            'Rank A' => 3500,
         ];
 
         $currentRank = 'No Rank';
@@ -143,26 +162,26 @@ class DashboardController extends Controller
 
 
         // Find Current Rank and Next Rank
-        if ($soldThisMonth >= $rankTargets['Rank C']) {
+        if ($soldThisMonth >= $rankTargets['Rank A']) {
 
-            $currentRank = 'Rank C';
+            $currentRank = 'Rank A';
             $nextRank = null;
             $remaining = 0;
         } elseif ($soldThisMonth >= $rankTargets['Rank B']) {
 
             $currentRank = 'Rank B';
-            $nextRank = 'Rank C';
-            $remaining = $rankTargets['Rank C'] - $soldThisMonth;
-        } elseif ($soldThisMonth >= $rankTargets['Rank A']) {
+            $nextRank = 'Rank A';
+            $remaining = $rankTargets['Rank A'] - $soldThisMonth;
+        } elseif ($soldThisMonth >= $rankTargets['Rank C']) {
 
-            $currentRank = 'Rank A';
+            $currentRank = 'Rank C';
             $nextRank = 'Rank B';
             $remaining = $rankTargets['Rank B'] - $soldThisMonth;
         } else {
 
             $currentRank = 'No Rank';
-            $nextRank = 'Rank A';
-            $remaining = $rankTargets['Rank A'] - $soldThisMonth;
+            $nextRank = 'Rank C';
+            $remaining = $rankTargets['Rank C'] - $soldThisMonth;
         }
 
 
@@ -173,9 +192,12 @@ class DashboardController extends Controller
             $targetPercent = round(
                 ($soldThisMonth / $rankTargets[$nextRank]) * 100
             );
+
+            $targetPercent = min($targetPercent, 100);
         } else {
             $targetPercent = 100;
         }
+
         $progressColor = '#dc3545'; // Red
 
         if ($targetPercent >= 100) {
@@ -211,6 +233,9 @@ class DashboardController extends Controller
             'monthlyData' => $monthlyData,
             'show_popup' => true, // Optional: control the loader visibility
             'userActive' => $userActive,
+            'allUsersEmployee' => $allUsersEmployee,
+            // Employee filter
+            'selectedEmployeeId' => $selectedEmployeeId,
             // Sales Target
             'soldThisMonth' => $soldThisMonth,
             'currentRank' => $currentRank,
