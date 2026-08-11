@@ -21,6 +21,9 @@ class CustomerController extends Controller
     {
         $user = auth()->user();
 
+        // ============================================================
+        // Authentication
+        // ============================================================
         if (!$user) {
             return response()->json([
                 'status' => false,
@@ -28,71 +31,120 @@ class CustomerController extends Controller
             ], 401);
         }
 
+        // ============================================================
+        // Base Query
+        // ============================================================
         $query = Customer::with(['user', 'depo']);
 
         $roleId   = $user->role_id;
         $userId   = $user->id;
         $userType = $user->type;
-        $rawArea  = $user->area;
-        $areaId   = AppHelper::getAreaIdByText($rawArea);
 
-        /**
-         * SALE + EMPLOYEE → only own customers
-         */
-        if ($userType == AppHelper::SALE && $roleId == AppHelper::USER_EMPLOYEE) {
+        $rawAreaText     = $user->area;
+        $loggedUserAreaId = AppHelper::getAreaIdByText($rawAreaText);
 
+        // ============================================================
+        // SALE + EMPLOYEE
+        // Show only customers created by the logged-in employee
+        // ============================================================
+        if (
+            $userType == AppHelper::SALE &&
+            $roleId == AppHelper::USER_EMPLOYEE
+        ) {
             $query->where('user_id', $userId);
-
         } else {
 
-            /** ---------------- AREA FILTER ---------------- */
+            // ========================================================
+            // AREA FILTER
+            // Same logic as Web Application
+            // ========================================================
             $allowedAreaIds = [];
 
-            if ($rawArea) {
+            if ($rawAreaText) {
 
-                $normalized = preg_replace('/^[A-Za-z]+-/', '', $rawArea);
+                // Remove role prefix:
+                // ASM-R1-01 -> R1-01
+                // RSM-R1    -> R1
+                // SUP-S-04  -> S-04
+                $normalized = preg_replace(
+                    '/^[A-Za-z]+-/',
+                    '',
+                    $rawAreaText
+                );
+
                 $areas = AppHelper::getAreas();
 
-                // S-04
+                // ====================================================
+                // Case 1: Specific S-XX
+                // Example: S-04
+                // ====================================================
                 if (preg_match('/^S-\d+$/', $normalized)) {
 
-                    foreach ($areas as $subs) {
-                        foreach ($subs as $id => $txt) {
-                            if ($txt === $normalized) {
+                    foreach ($areas as $group => $subs) {
+
+                        foreach ($subs as $id => $sText) {
+
+                            if ($sText === $normalized) {
+                                $allowedAreaIds[] = $id;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
+                // ====================================================
+                // Case 2: Specific subregion
+                // Example: R1-01
+                // ====================================================
+                elseif (preg_match('/^R\d+-\d{2}$/', $normalized)) {
+
+                    foreach ($areas as $group => $subs) {
+
+                        if (strpos($group, "($normalized)") !== false) {
+
+                            foreach ($subs as $id => $sText) {
                                 $allowedAreaIds[] = $id;
                             }
                         }
                     }
-
                 }
-                // R1-01
-                elseif (preg_match('/^R\d+-\d{2}$/', $normalized)) {
 
-                    foreach ($areas as $group => $subs) {
-                        if (str_contains($group, "($normalized)")) {
-                            $allowedAreaIds = array_keys($subs);
-                        }
-                    }
-
-                }
-                // R1
+                // ====================================================
+                // Case 3: RSM region
+                // Example: R1
+                // Get all R1-01, R1-02, R1-03...
+                // ====================================================
                 elseif (preg_match('/^R\d+$/', $normalized)) {
 
                     foreach ($areas as $group => $subs) {
-                        if (str_contains($group, "($normalized-")) {
-                            $allowedAreaIds = array_merge($allowedAreaIds, array_keys($subs));
+
+                        if (strpos($group, "($normalized-") !== false) {
+
+                            foreach ($subs as $id => $sText) {
+                                $allowedAreaIds[] = $id;
+                            }
                         }
                     }
+                }
 
-                } elseif (is_numeric($areaId)) {
+                // ====================================================
+                // Case 4: Numeric Area ID
+                // ====================================================
+                elseif (is_numeric($loggedUserAreaId)) {
 
-                    $allowedAreaIds[] = $areaId;
+                    $allowedAreaIds[] = $loggedUserAreaId;
                 }
             }
 
-            $allowedAreaIds = array_unique($allowedAreaIds);
+            // Remove duplicates
+            $allowedAreaIds = array_values(
+                array_unique($allowedAreaIds)
+            );
 
-            /** ---------------- ROLE FILTER ---------------- */
+            // ========================================================
+            // ADMIN ROLES
+            // Same as Web Application
+            // ========================================================
             $adminRoles = [
                 AppHelper::USER_SUPER_ADMIN,
                 AppHelper::USER_ADMINISTRATOR,
@@ -101,125 +153,350 @@ class CustomerController extends Controller
                 AppHelper::USER_MANAGER,
             ];
 
-            if (!($user->type == AppHelper::ALL || in_array($roleId, $adminRoles))) {
+            // ========================================================
+            // Non-admin + non-ALL users
+            // Apply user hierarchy + area restriction
+            // ========================================================
+            if (
+                !(
+                    $userType == AppHelper::ALL ||
+                    in_array($roleId, $adminRoles)
+                )
+            ) {
 
-                $query->where(function ($q) use ($user) {
+                $query->where(function ($q) use ($user, $userId) {
 
-                    $q->where('user_id', $user->id)
-                        ->orWhereHas('user', function ($u) use ($user) {
+                    // =================================================
+                    // 1. Customers created by logged-in user
+                    // =================================================
+                    $q->where('user_id', $userId)
 
-                            $u->where('manager_id', $user->id)
-                                ->orWhere('rsm_id', $user->id)
-                                ->orWhereJsonContains('asm_id', (string) $user->id)
-                                ->orWhereJsonContains('sup_id', (string) $user->id);
+                        // =============================================
+                        // 2. Customers created by users under
+                        //    logged-in user's hierarchy
+                        // =============================================
+                        ->orWhereHas('user', function ($u) use ($userId) {
 
+                            // Manager
+                            $u->where('manager_id', $userId)
+
+                                // RSM
+                                ->orWhere('rsm_id', $userId)
+
+                                // ASM
+                                ->orWhere(function ($jsonQuery) use ($userId) {
+
+                                    $jsonQuery
+                                        ->whereJsonContains(
+                                            'asm_id',
+                                            (string) $userId
+                                        )
+                                        ->orWhere(
+                                            'asm_id',
+                                            $userId
+                                        );
+                                })
+
+                                // SUP
+                                ->orWhere(function ($jsonQuery) use ($userId) {
+
+                                    $jsonQuery
+                                        ->whereJsonContains(
+                                            'sup_id',
+                                            (string) $userId
+                                        )
+                                        ->orWhere(
+                                            'sup_id',
+                                            $userId
+                                        );
+                                });
                         });
 
-                    foreach (['manager_id', 'rsm_id', 'asm_id', 'sup_id'] as $field) {
+                    // =================================================
+                    // 3. Customers created by user's managers
+                    // =================================================
 
-                        $ids = AppHelper::normalizeIds($user->$field);
+                    $managerIds = AppHelper::normalizeIds(
+                        $user->manager_id
+                    );
 
-                        if (!empty($ids)) {
-                            $q->orWhereIn('user_id', $ids);
-                        }
+                    $rsmIds = AppHelper::normalizeIds(
+                        $user->rsm_id
+                    );
+
+                    $asmIds = AppHelper::normalizeIds(
+                        $user->asm_id
+                    );
+
+                    $supIds = AppHelper::normalizeIds(
+                        $user->sup_id
+                    );
+
+                    if (!empty($managerIds)) {
+                        $q->orWhereIn('user_id', $managerIds);
+                    }
+
+                    if (!empty($rsmIds)) {
+                        $q->orWhereIn('user_id', $rsmIds);
+                    }
+
+                    if (!empty($asmIds)) {
+                        $q->orWhereIn('user_id', $asmIds);
+                    }
+
+                    if (!empty($supIds)) {
+                        $q->orWhereIn('user_id', $supIds);
                     }
                 });
 
+                // ====================================================
+                // Apply Area Restriction
+                // ====================================================
                 if (!empty($allowedAreaIds)) {
-                    $query->whereIn('area_id', $allowedAreaIds);
+
+                    $query->whereIn(
+                        'area_id',
+                        $allowedAreaIds
+                    );
+
                 } else {
-                    $query->whereRaw('1 = 0');
+
+                    // Same behavior as Web Application
+                    if ($rawAreaText) {
+                        $query->where('id', 0);
+                    }
                 }
             }
         }
 
-        // ==============================
-        // Filters
-        // ==============================
+        // ============================================================
+        // API FILTERS
+        // ============================================================
 
+        // ------------------------------------------------------------
         // Customer Type
+        // ------------------------------------------------------------
         if ($request->filled('customer_type')) {
 
             $customerType = $request->customer_type;
 
-            // If Flutter sends ID
+            // Flutter sends ID
             if (is_numeric($customerType)) {
 
-                $query->where('customer_type', $customerType);
+                $query->where(
+                    'customer_type',
+                    $customerType
+                );
 
             } else {
 
-                // If Flutter sends text
-                $typeId = array_search($customerType, AppHelper::CUSTOMER_TYPE);
+                // Flutter sends text
+                $typeId = array_search(
+                    $customerType,
+                    AppHelper::CUSTOMER_TYPE
+                );
 
                 if ($typeId !== false) {
-                    $query->where('customer_type', $typeId);
+
+                    $query->where(
+                        'customer_type',
+                        $typeId
+                    );
                 }
             }
         }
 
+        // ------------------------------------------------------------
         // Area
+        // ------------------------------------------------------------
         if ($request->filled('area_id')) {
-            $query->where('area_id', $request->area_id);
+
+            $query->where(
+                'area_id',
+                $request->area_id
+            );
         }
 
+        // ------------------------------------------------------------
         // Depo
+        // ------------------------------------------------------------
         if ($request->filled('depo_id')) {
-            $query->where('depo_id', $request->depo_id);
+
+            $query->where(
+                'depo_id',
+                $request->depo_id
+            );
         }
 
+        // ------------------------------------------------------------
         // Search
+        // Same useful search behavior as Web Application
+        // ------------------------------------------------------------
         if ($request->filled('search')) {
 
             $search = trim($request->search);
 
-            $query->where(function ($q) use ($search) {
+            // Search area text such as:
+            // S-04, R1-01, R1...
+            $areaIds = AppHelper::getAreaIdsBySearch($search);
 
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search, $areaIds) {
 
+                // Customer name
+                $q->where(
+                    'name',
+                    'LIKE',
+                    "%{$search}%"
+                )
+
+                    // Customer code
+                    ->orWhere(
+                        'code',
+                        'LIKE',
+                        "%{$search}%"
+                    )
+
+                    // Phone
+                    ->orWhere(
+                        'phone',
+                        'LIKE',
+                        "%{$search}%"
+                    )
+
+                    // Search creator
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+
+                        $userQuery->where(function ($q) use ($search) {
+
+                            $q->where(
+                                'family_name',
+                                'LIKE',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'name',
+                                'LIKE',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'family_name_latin',
+                                'LIKE',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'name_latin',
+                                'LIKE',
+                                "%{$search}%"
+                            )
+
+                            // Khmer full name
+                            ->orWhereRaw(
+                                "CONCAT(family_name, ' ', name) LIKE ?",
+                                ["%{$search}%"]
+                            )
+
+                            // Latin full name
+                            ->orWhereRaw(
+                                "CONCAT(family_name_latin, ' ', name_latin) LIKE ?",
+                                ["%{$search}%"]
+                            );
+                        });
+                    });
+
+                // Search by area
+                if (!empty($areaIds)) {
+
+                    $q->orWhereIn(
+                        'area_id',
+                        $areaIds
+                    );
+                }
             });
         }
 
+        // ============================================================
         // Pagination
-        $perPage = $request->input('per_page', 20);
+        // ============================================================
+        $perPage = (int) $request->input('per_page', 20);
+
+        // Prevent very large requests
+        $perPage = min($perPage, 100);
 
         $customers = $query
-            ->latest()
+            ->orderByDesc('id')
             ->paginate($perPage);
 
+        // ============================================================
+        // Response
+        // ============================================================
         return response()->json([
+
             'status' => true,
 
-            'data' => collect($customers->items())->map(function ($c) {
-                return [
-                    'id' => $c->id,
-                    'created_by' => $c->user
-                        ? ($c->user->user_lang == 'en'
-                            ? $c->user->full_name_latin
-                            : $c->user->full_name)
-                        : 'N/A',
-                    'area' => AppHelper::getAreaNameById($c->area_id),
-                    'depo' => optional($c->depo)->name ?? 'N/A',
-                    'customer_code' => (string) $c->code,
-                    'customer_name' => (string) $c->name,
-                    'customer_type' => (string) (AppHelper::CUSTOMER_TYPE[$c->customer_type] ?? 'N/A'),
-                    'phone' => (string) $c->phone,
-                ];
-            })->values(),
+            'data' => collect($customers->items())
+                ->map(function ($customer) {
+
+                    return [
+
+                        'id' => $customer->id,
+
+                        'created_by' => $customer->user
+                            ? (
+                                $customer->user->user_lang == 'en'
+                                    ? (
+                                        $customer->user->full_name_latin
+                                        ?? 'N/A'
+                                    )
+                                    : (
+                                        $customer->user->full_name
+                                        ?? 'N/A'
+                                    )
+                            )
+                            : 'N/A',
+
+                        'area' => AppHelper::getAreaNameById(
+                            $customer->area_id
+                        ),
+
+                        'depo' => optional(
+                            $customer->depo
+                        )->name ?? 'N/A',
+
+                        'customer_code' => (string) $customer->code,
+
+                        'customer_name' => (string) $customer->name,
+
+                        'customer_type' => (string) (
+                            AppHelper::CUSTOMER_TYPE[
+                                $customer->customer_type
+                            ] ?? 'N/A'
+                        ),
+
+                        'phone' => (string) $customer->phone,
+                    ];
+                })
+                ->values(),
 
             'pagination' => [
+
                 'current_page' => $customers->currentPage(),
-                'last_page'    => $customers->lastPage(),
-                'per_page'     => $customers->perPage(),
-                'total'        => $customers->total(),
-                'from'         => $customers->firstItem(),
-                'to'           => $customers->lastItem(),
-                'has_more'     => $customers->hasMorePages(),
+
+                'last_page' => $customers->lastPage(),
+
+                'per_page' => $customers->perPage(),
+
+                'total' => $customers->total(),
+
+                'from' => $customers->firstItem(),
+
+                'to' => $customers->lastItem(),
+
+                'has_more' => $customers->hasMorePages(),
             ]
+
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+
 
     public function getAreas()
     {
