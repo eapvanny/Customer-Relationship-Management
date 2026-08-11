@@ -166,7 +166,7 @@ class DashboardController extends Controller
         $allUsers = (clone $userQuery)->count();
         
         // All Employee Users (for dropdown filter)
-        $allUsersEmployee = User::where('status', 1)
+        $allUsersEmployee = (clone $userQuery)
             ->where('role_id', AppHelper::USER_EMPLOYEE)
             ->get()
             ->map(function ($user) {
