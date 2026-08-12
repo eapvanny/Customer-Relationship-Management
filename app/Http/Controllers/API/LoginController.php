@@ -27,7 +27,7 @@ class LoginController extends Controller
         }
 
         // Remove old tokens
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
 
         // Create new token
         $token = $user->createToken('auth_token')->plainTextToken;

@@ -651,7 +651,7 @@ class UserController extends Controller
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'Uploads/' . $fileName;
+            $filePath = 'uploads/' . $fileName;
             Storage::put($filePath, file_get_contents($file));
             $userData['photo'] = $filePath;
         }
@@ -776,7 +776,7 @@ class UserController extends Controller
 
             $file = $request->file('photo');
             $fileName = time() . '_' . md5($file->getClientOriginalName()) . '.' . $file->extension();
-            $filePath = 'Uploads/' . $fileName;
+            $filePath = 'uploads/' . $fileName;
             Storage::put($filePath, file_get_contents($file));
             $userData['photo'] = $filePath;
         }
