@@ -86,15 +86,15 @@ class DashboardController extends Controller
         
         // Year filter
         $year = (int) $request->input('year', $currentYear);
-        if ($year < 2025 || $year > $currentYear) {
-            $year = $currentYear;
-        }
+        // if ($year < 2025 || $year > $currentYear) {
+        //     $year = $currentYear;
+        // }
 
         // Month filter
         $month = (int) $request->input('month', $currentMonth);
-        if ($month < 1 || $month > 12) {
-            $month = $currentMonth;
-        }
+        // if ($month < 1 || $month > 12) {
+        //     $month = $currentMonth;
+        // }
 
         // User ID filter (from allUsersEmployee)
         $targetUserId = $request->input('user_id', null);
