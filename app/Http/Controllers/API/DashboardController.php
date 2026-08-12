@@ -317,9 +317,9 @@ class DashboardController extends Controller
             'rank' => $rank,
 
             'rankTargets' => [
-                'Rank A' => '2600 boxes',
+                'Rank A' => '3500 boxes',
                 'Rank B' => '3000 boxes',
-                'Rank C' => '3500 boxes',
+                'Rank C' => '2600 boxes',
             ],
         ]);
     }
