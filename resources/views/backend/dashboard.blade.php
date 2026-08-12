@@ -460,16 +460,15 @@
                             </option>
 
                             @foreach($allUsersEmployee as $employee)
-
                                 <option value="{{ $employee->id }}"
-                                    {{ $selectedEmployeeId == $employee->id ? 'selected' : '' }}>
+                                    {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}>
 
                                     {{ app()->getLocale() === 'en'
                                         ? $employee->full_name_latin
-                                        : $employee->full_name }}
+                                        : $employee->full_name
+                                    }}
 
                                 </option>
-
                             @endforeach
 
                         </select>

@@ -18,109 +18,282 @@ class DashboardController extends Controller
     }
     public function index()
     {
-        // $query = Report::query();
-        // if (auth()->user()->role_id == AppHelper::USER_EMPLOYEE) {
-        //     $query->where('user_id', auth()->user()->id);
-        // }
-        $query = Report::with('user');
         $user = auth()->user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Allowed User IDs Based On Management Hierarchy
+        |--------------------------------------------------------------------------
+        |
+        | null = all users
+        |
+        */
+
+        $allowedUserIds = null;
+
+        // ============================================================
+        // MANAGER
+        // Manager -> Employees
+        // ============================================================
         if ($user->role_id === AppHelper::USER_MANAGER) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('manager_id', $user->id);
-            });
-        } elseif ($user->role_id === AppHelper::USER_RSM) {
-            // Get all user IDs under this RSM (ASM, SUP, Employee)
-            $userIdsUnderRsm = User::where('rsm_id', $user->id)
-                ->orWhereIn('asm_id', function ($query) use ($user) {
-                    $query->select('id')
-                        ->from('users')
-                        ->where('rsm_id', $user->id);
-                })
-                ->orWhereIn('sup_id', function ($query) use ($user) {
-                    $query->select('id')
-                        ->from('users')
-                        ->whereIn('asm_id', function ($subQuery) use ($user) {
-                            $subQuery->select('id')
-                                ->from('users')
-                                ->where('rsm_id', $user->id);
-                        });
-                })
+
+            $allowedUserIds = User::where('manager_id', $user->id)
+                ->pluck('id')
+                ->push($user->id)
+                ->unique()
+                ->values()
+                ->toArray();
+        }
+
+        // ============================================================
+        // RSM
+        // RSM -> ASM -> SUP -> EMPLOYEE
+        // ============================================================
+        elseif ($user->role_id === AppHelper::USER_RSM) {
+
+            // Get ASM under this RSM
+            $asmIds = User::where('rsm_id', $user->id)
                 ->pluck('id')
                 ->toArray();
 
-            // Include the RSM's own reports if needed
-            $userIdsUnderRsm[] = $user->id;
+            // Get SUP under those ASM
+            $supIds = [];
 
-            $query->whereIn('user_id', $userIdsUnderRsm);
-        } elseif ($user->role_id === AppHelper::USER_ASM) {
-            // Get all user IDs under this ASM (SUP and Employee)
-            $userIdsUnderAsm = User::where('asm_id', $user->id)
-                ->orWhere('sup_id', 'in', function ($query) use ($user) {
-                    $query->select('id')
-                        ->from('users')
-                        ->where('asm_id', $user->id);
-                })
+            if (!empty($asmIds)) {
+                $supIds = User::whereIn('asm_id', $asmIds)
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            // Get Employees under those SUP
+            $employeeIds = [];
+
+            if (!empty($supIds)) {
+                $employeeIds = User::whereIn('sup_id', $supIds)
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            $allowedUserIds = array_merge(
+                [$user->id],
+                $asmIds,
+                $supIds,
+                $employeeIds
+            );
+
+            $allowedUserIds = array_values(
+                array_unique($allowedUserIds)
+            );
+        }
+
+        // ============================================================
+        // ASM
+        // ASM -> SUP -> EMPLOYEE
+        // ============================================================
+        elseif ($user->role_id === AppHelper::USER_ASM) {
+
+            // Get SUP under this ASM
+            $supIds = User::where('asm_id', $user->id)
                 ->pluck('id')
                 ->toArray();
 
-            $userIdsUnderAsm[] = $user->id;
-            $query->whereIn('user_id', $userIdsUnderAsm);
-        } elseif ($user->role_id === AppHelper::USER_SUP) {
-            // Get all user IDs under this SUP (Employees)
-            $userIdsUnderSup = User::where('sup_id', $user->id)
+            // Get Employees under those SUP
+            $employeeIds = [];
+
+            if (!empty($supIds)) {
+                $employeeIds = User::whereIn('sup_id', $supIds)
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            $allowedUserIds = array_merge(
+                [$user->id],
+                $supIds,
+                $employeeIds
+            );
+
+            $allowedUserIds = array_values(
+                array_unique($allowedUserIds)
+            );
+        }
+
+        // ============================================================
+        // SUP
+        // SUP -> EMPLOYEE
+        // ============================================================
+        elseif ($user->role_id === AppHelper::USER_SUP) {
+
+            $employeeIds = User::where('sup_id', $user->id)
                 ->pluck('id')
                 ->toArray();
 
-            $userIdsUnderSup[] = $user->id;
-            $query->whereIn('user_id', $userIdsUnderSup);
-        } elseif (
+            $allowedUserIds = array_merge(
+                [$user->id],
+                $employeeIds
+            );
+
+            $allowedUserIds = array_values(
+                array_unique($allowedUserIds)
+            );
+        }
+
+        // ============================================================
+        // OTHER USERS
+        // Only own data
+        // ============================================================
+        elseif (
             $user->role_id !== AppHelper::USER_SUPER_ADMIN &&
             $user->role_id !== AppHelper::USER_ADMIN
         ) {
-            $query->where('user_id', $user->id);
+
+            $allowedUserIds = [$user->id];
         }
 
-        // Get All Reports count (total reports based on the filtered query)
-        $query->whereYear('created_at', now()->year);
 
-        // Get count
-        $allReports = $query->count();
+        /*
+        |--------------------------------------------------------------------------
+        | Report Query
+        |--------------------------------------------------------------------------
+        */
 
-        // Get Today's Reports count (filtered query with date constraint)
+        $query = Report::with('user')
+            ->whereYear('created_at', now()->year);
+
+        if ($allowedUserIds !== null) {
+            $query->whereIn('user_id', $allowedUserIds);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | All Reports
+        |--------------------------------------------------------------------------
+        */
+
+        $allReports = (clone $query)->count();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Today's Reports
+        |--------------------------------------------------------------------------
+        */
+
         $todayReports = (clone $query)
             ->whereDate('created_at', today())
             ->count();
 
-        // Get All Users count (from the User table)
-        $allUsers = User::where('status', '1')->count();
-        $allUsersEmployee = User::where('role_id', AppHelper::USER_EMPLOYEE)
-                    ->where('status', '1')
-                    ->get();
 
-        // Get All Customers count (from the Customer table)
-        $allCustomers = Customer::count();
+        /*
+        |--------------------------------------------------------------------------
+        | All Active Users
+        |--------------------------------------------------------------------------
+        */
 
-        // Get monthly chat report data
+        $allUsersQuery = User::where('status', '1');
+
+        if ($allowedUserIds !== null) {
+            $allUsersQuery->whereIn('id', $allowedUserIds);
+        }
+
+        $allUsers = $allUsersQuery->count();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Employees For Dropdown
+        |--------------------------------------------------------------------------
+        |
+        | IMPORTANT:
+        | Only employees under the current management are shown.
+        |
+        */
+
+        $allUsersEmployeeQuery = User::query()
+            ->where('role_id', AppHelper::USER_EMPLOYEE)
+            ->where('status', '1');
+
+        if ($allowedUserIds !== null) {
+            $allUsersEmployeeQuery->whereIn('id', $allowedUserIds);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sort Employee Name
+        |--------------------------------------------------------------------------
+        |
+        | full_name is an Eloquent accessor, NOT a database column.
+        |
+        */
+
+        if (app()->getLocale() === 'en') {
+
+            $allUsersEmployeeQuery
+                ->orderBy('family_name_latin')
+                ->orderBy('name_latin');
+
+        } else {
+
+            $allUsersEmployeeQuery
+                ->orderBy('family_name')
+                ->orderBy('name');
+        }
+
+        $allUsersEmployee = $allUsersEmployeeQuery->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Customers
+        |--------------------------------------------------------------------------
+        */
+
+        $allCustomersQuery = Customer::query();
+
+        if ($allowedUserIds !== null) {
+            $allCustomersQuery->whereIn('user_id', $allowedUserIds);
+        }
+
+        $allCustomers = $allCustomersQuery->count();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Report Data
+        |--------------------------------------------------------------------------
+        */
+
         $monthlyChatReports = (clone $query)
-            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(id) as count')
-            ->whereYear('created_at', date('Y'))
+            ->selectRaw(
+                'EXTRACT(MONTH FROM created_at) as month,
+                COUNT(id) as count'
+            )
+            ->whereYear('created_at', now()->year)
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('count', 'month')
             ->toArray();
 
         $monthlyData = [];
+
         for ($i = 1; $i <= 12; $i++) {
             $monthlyData[] = $monthlyChatReports[$i] ?? 0;
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Sales
+        |--------------------------------------------------------------------------
+        */
+
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
 
-        // Get monthly sales for each employee
         $employeeSales = (clone $query)
             ->selectRaw("
                 user_id,
+
                 COALESCE(
                     SUM(
                         COALESCE(`250_ml`, 0) +
@@ -131,117 +304,262 @@ class DashboardController extends Controller
                     0
                 ) AS total
             ")
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereBetween(
+                'created_at',
+                [$startOfMonth, $endOfMonth]
+            )
             ->whereNotNull('user_id')
             ->groupBy('user_id')
             ->orderByDesc('total')
             ->get();
 
-        // Highest-selling employee
+
+        /*
+        |--------------------------------------------------------------------------
+        | Top Employee
+        |--------------------------------------------------------------------------
+        */
+
         $topEmployee = $employeeSales->first();
-        // If user selected an employee, use that employee.
-        // Otherwise automatically use the top-selling employee.
-        $selectedEmployeeId = request()->input('employee_id')
-            ?? ($topEmployee->user_id ?? null);
 
-        $soldThisMonth = $employeeSales
-            ->where('user_id', $selectedEmployeeId)
-            ->first()
-            ->total ?? 0;
 
-        // Rank Target
+        /*
+        |--------------------------------------------------------------------------
+        | Selected Employee
+        |--------------------------------------------------------------------------
+        */
+
+        $selectedEmployeeId = request()->input('employee_id');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get IDs Of Employees In Dropdown
+        |--------------------------------------------------------------------------
+        */
+
+        $allowedEmployeeIds = $allUsersEmployee
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->toArray();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Selected Employee
+        |--------------------------------------------------------------------------
+        |
+        | If employee_id is empty OR employee is not under current manager,
+        | automatically select the highest-selling employee.
+        |
+        */
+
+        if (
+            !$selectedEmployeeId ||
+            !in_array(
+                (int) $selectedEmployeeId,
+                $allowedEmployeeIds,
+                true
+            )
+        ) {
+
+            $selectedEmployeeId = $topEmployee->user_id ?? null;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selected Employee Sales
+        |--------------------------------------------------------------------------
+        */
+
+        $selectedEmployeeSale = $employeeSales
+            ->firstWhere(
+                'user_id',
+                (int) $selectedEmployeeId
+            );
+
+        $soldThisMonth = $selectedEmployeeSale->total ?? 0;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Rank Targets
+        |--------------------------------------------------------------------------
+        */
+
         $rankTargets = [
             'Rank C' => 2600,
             'Rank B' => 3000,
             'Rank A' => 3500,
         ];
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate Rank
+        |--------------------------------------------------------------------------
+        */
+
         $currentRank = 'No Rank';
         $nextRank = null;
         $remaining = 0;
 
-
-        // Find Current Rank and Next Rank
         if ($soldThisMonth >= $rankTargets['Rank A']) {
 
             $currentRank = 'Rank A';
             $nextRank = null;
             $remaining = 0;
+
         } elseif ($soldThisMonth >= $rankTargets['Rank B']) {
 
             $currentRank = 'Rank B';
             $nextRank = 'Rank A';
-            $remaining = $rankTargets['Rank A'] - $soldThisMonth;
+
+            $remaining =
+                $rankTargets['Rank A'] - $soldThisMonth;
+
         } elseif ($soldThisMonth >= $rankTargets['Rank C']) {
 
             $currentRank = 'Rank C';
             $nextRank = 'Rank B';
-            $remaining = $rankTargets['Rank B'] - $soldThisMonth;
+
+            $remaining =
+                $rankTargets['Rank B'] - $soldThisMonth;
+
         } else {
 
             $currentRank = 'No Rank';
             $nextRank = 'Rank C';
-            $remaining = $rankTargets['Rank C'] - $soldThisMonth;
+
+            $remaining =
+                $rankTargets['Rank C'] - $soldThisMonth;
         }
 
 
-        // Percentage based on next rank
-        $targetPercent = 0;
+        /*
+        |--------------------------------------------------------------------------
+        | Target Percentage
+        |--------------------------------------------------------------------------
+        */
 
         if ($nextRank) {
+
             $targetPercent = round(
                 ($soldThisMonth / $rankTargets[$nextRank]) * 100
             );
 
-            $targetPercent = min($targetPercent, 100);
+            $targetPercent = min(
+                $targetPercent,
+                100
+            );
+
         } else {
+
             $targetPercent = 100;
         }
 
-        $progressColor = '#dc3545'; // Red
+
+        /*
+        |--------------------------------------------------------------------------
+        | Progress Color
+        |--------------------------------------------------------------------------
+        */
+
+        $progressColor = '#dc3545';
 
         if ($targetPercent >= 100) {
 
-            $progressColor = '#198754'; // Green
+            $progressColor = '#198754';
 
         } elseif ($targetPercent >= 80) {
 
-            $progressColor = '#20c997'; // Teal
+            $progressColor = '#20c997';
 
         } elseif ($targetPercent >= 60) {
 
-            $progressColor = '#0d6efd'; // Blue
+            $progressColor = '#0d6efd';
 
         } elseif ($targetPercent >= 40) {
 
-            $progressColor = '#ffc107'; // Yellow
+            $progressColor = '#ffc107';
 
         } elseif ($targetPercent >= 20) {
 
-            $progressColor = '#fd7e14'; // Orange
-
+            $progressColor = '#fd7e14';
         }
 
-        $userActive = Report::pluck('user_id')->unique()->count();
 
-        // Pass a flag to show the popup (if needed)
+        /*
+        |--------------------------------------------------------------------------
+        | Active Users
+        |--------------------------------------------------------------------------
+        */
+
+        $userActiveQuery = Report::query()
+            ->whereYear('created_at', now()->year)
+            ->whereNotNull('user_id');
+
+        if ($allowedUserIds !== null) {
+            $userActiveQuery->whereIn(
+                'user_id',
+                $allowedUserIds
+            );
+        }
+
+        $userActive = $userActiveQuery
+            ->distinct('user_id')
+            ->count('user_id');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Dashboard
+        |--------------------------------------------------------------------------
+        */
+
         return view('backend.dashboard', [
+
             'allReports' => $allReports,
+
             'todayReports' => $todayReports,
+
             'allUsers' => $allUsers,
+
             'allCustomers' => $allCustomers,
+
             'monthlyData' => $monthlyData,
-            'show_popup' => true, // Optional: control the loader visibility
+
+            'show_popup' => true,
+
             'userActive' => $userActive,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employee Dropdown
+            |--------------------------------------------------------------------------
+            */
+
             'allUsersEmployee' => $allUsersEmployee,
-            // Employee filter
+
             'selectedEmployeeId' => $selectedEmployeeId,
-            // Sales Target
+
+            /*
+            |--------------------------------------------------------------------------
+            | Sales Target
+            |--------------------------------------------------------------------------
+            */
+
             'soldThisMonth' => $soldThisMonth,
+
             'currentRank' => $currentRank,
+
             'nextRank' => $nextRank,
+
             'remaining' => $remaining,
+
             'targetPercent' => $targetPercent,
+
             'progressColor' => $progressColor,
         ]);
     }
