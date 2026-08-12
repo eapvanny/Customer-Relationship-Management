@@ -156,7 +156,20 @@ class DashboardController extends Controller
         // Dashboard Counts
         // ==============================
         $allReports = (clone $reportQuery)->count();
+        $performanceReports = Report::query()
+            ->whereYear('created_at', $year)
+            ->whereIn('user_id', $userIds)
+            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(id) as count')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('count', 'month')
+            ->toArray();
 
+        $performanceData = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $performanceData[] = $performanceReports[$i] ?? 0;
+        }
         $todayReports = (clone $reportQuery)
             ->whereDate('created_at', today())
             ->count();
@@ -289,7 +302,7 @@ class DashboardController extends Controller
             'userActive' => $userActive,
 
             'monthlyReports' => $monthlyData,
-
+            'performanceReports' => $performanceData,
             'weeklyReports' => $weeklyReports,
             'weeklyCustomers' => $weeklyCustomers,
 
