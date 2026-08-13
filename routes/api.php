@@ -20,10 +20,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/login', [LoginController::class, 'login']);
-
+Route::post('/users', [APIUserController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [APIUserController::class, 'index']);
-    Route::post('/users', [APIUserController::class, 'store']);
     Route::get('/users/{id}', [APIUserController::class, 'show']);
     Route::put('/profile', [APIUserController::class, 'updateUserProfile']);
     // Optional for multipart/form-data

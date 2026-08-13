@@ -110,7 +110,7 @@ class UserController extends Controller
                 'manager_id' => 2,
                 'rsm_id' => 72,
                 'sup_id' => 73,
-                'asm_id' => json_encode([69]),
+                'asm_id' => '["69"]', // Direct string format
                 'user_lang' => 'kh',
             ];
 
