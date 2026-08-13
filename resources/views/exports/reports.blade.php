@@ -89,7 +89,7 @@
                 <td>
                     {{ $reportUser
                         ? ($reportUser->user_lang === 'en'
-                            ? ($reportUser->full_name_latin ?? $row->ssp_name ?? $reportUser->full_name ?? 'N/A')
+                            ? ($reportUser->full_name_latin ?? $row->ssp_name ?? 'N/A')
                             : ($reportUser->full_name ?? $row->ssp_name ?? $reportUser->full_name_latin ?? 'N/A'))
                         : ($row->ssp_name ?? 'N/A')
                     }}
