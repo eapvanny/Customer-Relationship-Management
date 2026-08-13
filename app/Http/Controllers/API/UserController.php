@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -64,8 +65,20 @@ class UserController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'staff_id_card' => 'required|string|max:100|unique:users,staff_id_card',
-                'username' => 'required|string|max:255|unique:users,username',
+                'staff_id_card' => [
+                    'required',
+                    'min:3',
+                    'max:10',
+                    Rule::unique('users', 'staff_id_card')->where(function ($query) {
+                        return $query->where('status', 1);
+                    }),
+                ],
+                'username' => [
+                    'required',
+                    'min:2',
+                    'max:255',
+                    Rule::unique('users', 'username')->where(fn ($q) => $q->where('status', 1)),
+                ],
                 'phone_no' => 'required|string|max:30',
                 'name_latin' => 'required|string|max:255',
                 'family_name_latin' => 'required|string|max:255',
@@ -123,19 +136,10 @@ class UserController extends Controller
             // Load role relationship
             $user->load('role');
 
-            // Create Sanctum token automatically
-            $token = $user->createToken('auth_token')->plainTextToken;
-
             return response()->json([
                 'status' => true,
                 'message' => 'User created and logged in successfully',
-
                 'user' => $user,
-
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-
-                'redirect' => 'dashboard',
             ], 201);
 
         } catch (\Exception $e) {
