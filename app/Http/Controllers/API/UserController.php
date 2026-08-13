@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\AppHelper;
+use App\Models\Role;
 use App\Models\User;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -133,8 +135,13 @@ class UserController extends Controller
             // Create user
             $user = User::create($userData);
 
-            // Load role relationship
-            $user->load('role');
+            $role = Role::findOrFail(9); // Assuming role_id 9 exists
+            $user->syncRoles($role->name);
+
+            UserRole::create([
+                'user_id' => $user->id,
+                'role_id' => 9,
+            ]);
 
             return response()->json([
                 'status' => true,
