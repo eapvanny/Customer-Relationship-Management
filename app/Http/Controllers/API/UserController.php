@@ -79,7 +79,7 @@ class UserController extends Controller
                     'max:255',
                     Rule::unique('users', 'username')->where(fn ($q) => $q->where('status', 1)),
                 ],
-                'phone_no' => 'required|string|max:30',
+                'phone_no' => 'nullable|string|max:30',
                 'name_latin' => 'required|string|max:255',
                 'family_name_latin' => 'required|string|max:255',
                 'gender' => 'required',
