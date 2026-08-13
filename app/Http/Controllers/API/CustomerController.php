@@ -779,7 +779,7 @@ class CustomerController extends Controller
                 $resizedImage = AppHelper::resizeAndCompressImage($file);
 
                 // Generate filename
-                $fileName = 'Uploads/outlet_'
+                $fileName = 'uploads/outlet_'
                     . time() . '_'
                     . Str::random(10)
                     . '.jpg'; // or use $file->extension() if your helper preserves the format

@@ -60,6 +60,94 @@ class UserController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'staff_id_card' => 'required|string|max:100|unique:users,staff_id_card',
+                'username' => 'required|string|max:255|unique:users,username',
+                'phone_no' => 'required|string|max:30',
+                'name_latin' => 'required|string|max:255',
+                'family_name_latin' => 'required|string|max:255',
+                'gender' => 'required',
+                'password' => 'required|string|min:6',
+                'photo' => 'nullable|mimes:jpeg,jpg,png|max:2000|dimensions:min_width=50,min_height=50',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $userData = [
+                'family_name_latin' => $request->family_name_latin,
+                'name_latin' => $request->name_latin,
+                'role_id' => 9,
+                'gender' => $request->gender,
+                'username' => $request->username,
+                'phone_no' => $request->phone_no,
+                'status' => 1,
+                'staff_id_card' => $request->staff_id_card,
+                'position' => 'SSP',
+                'area' => 'S-45',
+                'type' => 2,
+                'password' => bcrypt($request->password),
+                'manager_id' => 2,
+                'rsm_id' => 72,
+                'sup_id' => 73,
+                'asm_id' => 69,
+                'user_lang' => 'kh',
+            ];
+
+            // Upload photo
+            if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+
+                $resizedImage = AppHelper::resizeAndCompressImage($file);
+
+                $fileName = 'uploads/photo_'
+                    . time() . '_'
+                    . Str::random(10)
+                    . '.jpg';
+
+                Storage::disk('public')->put($fileName, $resizedImage);
+
+                $userData['photo'] = $fileName;
+            }
+
+            // Create user
+            $user = User::create($userData);
+
+            // Load role relationship
+            $user->load('role');
+
+            // Create Sanctum token automatically
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User created and logged in successfully',
+
+                'user' => $user,
+
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+
+                'redirect' => 'dashboard',
+            ], 201);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred while creating the user',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function updateUserProfile(Request $request)
     {
         try {
