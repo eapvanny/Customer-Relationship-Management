@@ -832,24 +832,21 @@ class ReportController extends Controller
     // }
     public function export(Request $request)
     {
-        $date1 = $request->date1;
-        $date2 = $request->date2;
-        $user_id = $request->user_id;
-        $area_id = $request->area_id;
+        $date1    = $request->input('date1');
+        $date2    = $request->input('date2');
+        $user_id  = $request->input('user_id');
+        $area_id  = $request->input('area_id');
 
-        $ml250 = $request->input('250_ml');
-        $ml350 = $request->input('350_ml');
-        $ml600 = $request->input('600_ml');
+        $ml250  = $request->input('250_ml');
+        $ml350  = $request->input('350_ml');
+        $ml600  = $request->input('600_ml');
         $ml1500 = $request->input('1500_ml');
 
-        $areaValue = AppHelper::getAreaValue($area_id);
+        $areaValue = $area_id
+            ? AppHelper::getAreaValue($area_id)
+            : null;
 
         $user = auth()->user();
-
-        $query = Report::with([
-            'user',
-            'customer'
-        ])->orderByDesc('id');
 
         if (!$user) {
             return response()->json([
@@ -869,17 +866,33 @@ class ReportController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Report Query
+        |--------------------------------------------------------------------------
+        */
+
+        $query = Report::with([
+            'user',
+            'customer.depo'
+        ])->orderByDesc('id');
+
+        /*
+        |--------------------------------------------------------------------------
         | User Permission
         |--------------------------------------------------------------------------
         */
 
         $userIds = [$userId];
 
-        if (!($userType == AppHelper::ALL || in_array($userRole, [
-            AppHelper::USER_SUPER_ADMIN,
-            AppHelper::USER_ADMIN,
-            AppHelper::USER_DIRECTOR
-        ]))) {
+        $isAdmin = (
+            $userType == AppHelper::ALL ||
+            in_array($userRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ])
+        );
+
+        if (!$isAdmin) {
 
             $managedUserIds = User::where(function ($q) use ($userId) {
                 $q->where('manager_id', $userId)
@@ -892,20 +905,23 @@ class ReportController extends Controller
                 ->toArray();
 
             $userIds = array_merge($userIds, $managedUserIds);
-        }
 
-        $staffCards = User::whereIn('id', $userIds)
-            ->pluck('staff_id_card')
-            ->filter()
-            ->toArray();
+            $staffCards = User::whereIn('id', $userIds)
+                ->pluck('staff_id_card')
+                ->filter()
+                ->toArray();
 
-        if (!($userType == AppHelper::ALL || in_array($userRole, [
-            AppHelper::USER_SUPER_ADMIN,
-            AppHelper::USER_ADMIN,
-            AppHelper::USER_DIRECTOR
-        ]))) {
+            $query->where(function ($q) use (
+                $userIds,
+                $staffCards,
+                $allowedTypes
+            ) {
 
-            $query->where(function ($q) use ($userIds, $staffCards, $allowedTypes) {
+                /*
+                |----------------------------------------------------------------------
+                | Reports belonging to users
+                |----------------------------------------------------------------------
+                */
 
                 $q->where(function ($q2) use ($userIds, $allowedTypes) {
 
@@ -916,13 +932,20 @@ class ReportController extends Controller
 
                 });
 
+                /*
+                |----------------------------------------------------------------------
+                | Reports using SSP / SUP staff ID
+                |----------------------------------------------------------------------
+                */
+
                 if (!empty($staffCards)) {
-                    $q->orWhereIn('reports.ssp_id', $staffCards);
-                    $q->orWhereIn('reports.sup_id', $staffCards);
+
+                    $q->orWhereIn('reports.ssp_id', $staffCards)
+                        ->orWhereIn('reports.sup_id', $staffCards);
+
                 }
 
             });
-
         }
 
         /*
@@ -937,6 +960,22 @@ class ReportController extends Controller
                 Carbon::parse($date1)->startOfDay(),
                 Carbon::parse($date2)->endOfDay()
             ]);
+
+        } elseif ($date1) {
+
+            $query->where(
+                'date',
+                '>=',
+                Carbon::parse($date1)->startOfDay()
+            );
+
+        } elseif ($date2) {
+
+            $query->where(
+                'date',
+                '<=',
+                Carbon::parse($date2)->endOfDay()
+            );
 
         }
 
@@ -956,7 +995,9 @@ class ReportController extends Controller
                     ->orWhere('rsm_id', $user_id)
                     ->orWhere('sup_id', $user_id)
                     ->orWhere('asm_id', $user_id);
-            })->pluck('id')->toArray();
+            })
+                ->pluck('id')
+                ->toArray();
 
             $teamStaffCards = User::whereIn('id', $teamUserIds)
                 ->pluck('staff_id_card')
@@ -991,12 +1032,11 @@ class ReportController extends Controller
                 }
 
             });
-
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Area
+        | Area Filter
         |--------------------------------------------------------------------------
         */
 
@@ -1013,7 +1053,7 @@ class ReportController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Bottle Size
+        | Bottle Size Filter
         |--------------------------------------------------------------------------
         */
 
@@ -1033,13 +1073,308 @@ class ReportController extends Controller
             $query->where('1500_ml', '>', 0);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Get Reports
+        |--------------------------------------------------------------------------
+        */
+
         $reports = $query->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prepare Export Data
+        |--------------------------------------------------------------------------
+        */
+
+        $fullDomain = url('/');
+
+        $total250  = 0;
+        $total350  = 0;
+        $total600  = 0;
+        $total1500 = 0;
+
+        $data = $reports->map(function ($row) use (
+            &$total250,
+            &$total350,
+            &$total600,
+            &$total1500,
+            $fullDomain
+        ) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Bottle Values
+            |--------------------------------------------------------------------------
+            */
+
+            $val250 = intval($row->{'250_ml'} ?? 0);
+            $val350 = intval($row->{'350_ml'} ?? 0);
+            $val600 = intval($row->{'600_ml'} ?? 0);
+            $val1500 = intval($row->{'1500_ml'} ?? 0);
+
+            $default = $val250 + $val350 + $val600 + $val1500;
+
+            $total250  += $val250;
+            $total350  += $val350;
+            $total600  += $val600;
+            $total1500 += $val1500;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Users
+            |--------------------------------------------------------------------------
+            */
+
+            $reportUser = $row->user;
+
+            $sup = $reportUser
+                ? User::find($reportUser->sup_id)
+                : null;
+
+            $rsm = $reportUser
+                ? User::find($reportUser->rsm_id)
+                : null;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Language
+            |--------------------------------------------------------------------------
+            */
+
+            $language = session('user_lang', 'kh');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Area
+            |--------------------------------------------------------------------------
+            */
+
+            $area = !empty($row->area_id)
+                ? AppHelper::getAreaNameById($row->area_id)
+                : ($row->user?->area ?? 'N/A');
+
+            /*
+            |--------------------------------------------------------------------------
+            | SSP Name
+            |--------------------------------------------------------------------------
+            */
+
+            if ($reportUser) {
+
+                $sspName = $language === 'kh'
+                    ? ($reportUser->full_name
+                        ?? $reportUser->full_name_latin
+                        ?? $row->ssp_name
+                        ?? 'N/A')
+                    : ($reportUser->full_name_latin
+                        ?? $reportUser->full_name
+                        ?? $row->ssp_name
+                        ?? 'N/A');
+
+            } else {
+
+                $sspName = $row->ssp_name ?? 'N/A';
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUP Name
+            |--------------------------------------------------------------------------
+            */
+
+            if ($sup) {
+
+                $supName = $language === 'en'
+                    ? ($sup->full_name_latin
+                        ?? $row->sup_name
+                        ?? 'N/A')
+                    : ($sup->full_name
+                        ?? $row->sup_name
+                        ?? 'N/A');
+
+            } else {
+
+                $supName = $row->sup_name ?? 'N/A';
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RSM Name
+            |--------------------------------------------------------------------------
+            */
+
+            if ($rsm) {
+
+                $rsmName = $language === 'en'
+                    ? ($rsm->full_name_latin
+                        ?? $row->rsm_name
+                        ?? 'N/A')
+                    : ($rsm->full_name
+                        ?? $row->rsm_name
+                        ?? 'N/A');
+
+            } else {
+
+                $rsmName = $row->rsm_name ?? 'N/A';
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | POSM
+            |--------------------------------------------------------------------------
+            */
+
+            $posm = isset(AppHelper::MATERIAL[$row->posm])
+                ? __(AppHelper::MATERIAL[$row->posm])
+                : ($row->posm_name1 ?? 'N/A');
+
+            $posm2 = isset(AppHelper::MATERIAL[$row->posm2])
+                ? __(AppHelper::MATERIAL[$row->posm2])
+                : ($row->posm_name2 ?? 'N/A');
+
+            $posm3 = isset(AppHelper::MATERIAL[$row->posm3])
+                ? __(AppHelper::MATERIAL[$row->posm3])
+                : ($row->posm_name3 ?? 'N/A');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Photo URLs
+            |--------------------------------------------------------------------------
+            |
+            | Same idea as your web export.
+            |
+            */
+
+            $outletUrl = $row->outlet_photo
+                ? $fullDomain . '/photo/' . $this->shortEncrypt($row->outlet_photo)
+                : null;
+
+            $posmUrl = $row->photo
+                ? $fullDomain . '/photo/' . $this->shortEncrypt($row->photo)
+                : null;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Same Fields As Web Export
+            |--------------------------------------------------------------------------
+            */
+
+            return [
+
+                'area' => $area,
+
+                'ssp_name' => $sspName,
+
+                'ssp_id' => optional($reportUser)->staff_id_card
+                    ?? $row->ssp_id
+                    ?? 'N/A',
+
+                'sup_name' => $supName,
+
+                'sup_id' => optional($sup)->staff_id_card
+                    ?? $row->sup_id
+                    ?? 'N/A',
+
+                'rsm_name' => $rsmName,
+
+                'depo_name' => $row->customer?->depo?->name
+                    ?? $row->outlet_name
+                    ?? 'N/A',
+
+                'customer_name' => $row->customer?->name
+                    ?? $row->customer_name
+                    ?? 'N/A',
+
+                'customer_code' => $row->customer?->code
+                    ?? 'N/A',
+
+                'so_number' => $row->so_number
+                    ?? 'N/A',
+
+                'so_date' => $row->date
+                    ? Carbon::parse($row->date)->format('d-M-Y')
+                    : 'N/A',
+
+                '250ml' => $val250,
+
+                '350ml' => $val350,
+
+                '600ml' => $val600,
+
+                '1500ml' => $val1500,
+
+                'default' => $default,
+
+                'latitude' => $row->latitude
+                    ?? 'N/A',
+
+                'longitude' => $row->longitude
+                    ?? 'N/A',
+
+                'address' => ($row->city && $row->country)
+                    ? $row->city . ', ' . $row->country
+                    : ($row->address ?? 'N/A'),
+
+                'photo_outlet' => $outletUrl
+                    ?? 'No_Photo',
+
+                'posm_photo' => $posmUrl
+                    ?? 'No_Photo',
+
+                'posm1' => $posm,
+
+                'quantity1' => $row->qty
+                    ?? 'N/A',
+
+                'posm2' => $posm2,
+
+                'quantity2' => $row->qty2
+                    ?? 'N/A',
+
+                'posm3' => $posm3,
+
+                'quantity3' => $row->qty3
+                    ?? 'N/A',
+
+                'status' => $row->status
+                    ?? '',
+
+            ];
+        })->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Totals
+        |--------------------------------------------------------------------------
+        */
+
+        $totals = [
+            '250ml' => $total250,
+            '350ml' => $total350,
+            '600ml' => $total600,
+            '1500ml' => $total1500,
+            'default' => $total250
+                + $total350
+                + $total600
+                + $total1500,
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Response
+        |--------------------------------------------------------------------------
+        */
 
         return response()->json([
             'success' => true,
             'message' => 'Report export data.',
-            'total'   => $reports->count(),
-            'data'    => $reports
+            'total'   => $data->count(),
+            'totals'  => $totals,
+            'data'    => $data,
         ]);
     }
 
