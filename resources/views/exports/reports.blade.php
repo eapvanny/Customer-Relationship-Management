@@ -108,7 +108,7 @@
                 <td>{{ optional($sup)->staff_id_card ?? $row->sup_id ?? 'N/A' }}</td>
                 <td>
                     {{ $rsm
-                        ? ($rsm->user_lang === 'en'
+                        ? (session('user_lang', 'kh') === 'en'
                             ? ($rsm->full_name_latin ?? $row->rsm_name ?? 'N/A')
                             : ($rsm->full_name ?? $row->rsm_name ?? 'N/A'))
                         : ($row->rsm_name ?? 'N/A')
