@@ -89,9 +89,9 @@
                 <td>
                     {{ $reportUser
                         ? (session('user_lang', 'kh') === 'kh'
-                            ? ($reportUser->full_name ?? $reportUser->full_name_latin ?? $row->ssp_name ?? 'N/A')
-                            : ($reportUser->full_name_latin ?? $reportUser->full_name ?? $row->ssp_name ?? 'N/A'))
-                        : ($row->ssp_name ?? 'N/A')
+                            ? ($reportUser->full_name ?: $reportUser->full_name_latin ?: $row->ssp_name ?: 'N/A')
+                            : ($reportUser->full_name_latin ?: $reportUser->full_name ?: $row->ssp_name ?: 'N/A'))
+                        : ($row->ssp_name ?: 'N/A')
                     }}
                 </td>
                 <td>{{ optional($reportUser)->staff_id_card ?? $row->ssp_id ?? 'N/A' }}</td>
