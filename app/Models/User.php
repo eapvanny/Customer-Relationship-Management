@@ -82,6 +82,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'sup_id');
     }
+    public function rsm()
+    {
+        return $this->belongsTo(User::class, 'rsm_id');
+    }
     // Optional: Relationship to get users managed by this user
     public function managedUsers()
     {

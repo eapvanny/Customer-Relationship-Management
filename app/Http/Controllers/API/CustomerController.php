@@ -915,6 +915,27 @@ class CustomerController extends Controller
         }
     }
 
+    private function shortEncrypt($string)
+    {
+        $key = substr(hash('sha256', config('app.key')), 0, 32);
+        $iv = random_bytes(16);
+
+        $encrypted = openssl_encrypt(
+            $string,
+            'AES-256-CBC',
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+
+        $result = base64_encode($iv . $encrypted);
+
+        return rtrim(
+            strtr($result, '+/', '-_'),
+            '='
+        );
+    }
+
     public function export(Request $request)
     {
         $loggedInUser = auth()->user();
@@ -926,10 +947,11 @@ class CustomerController extends Controller
             ], 401);
         }
 
-        $query = Customer::with([
-            'user',
-            'depo'
-        ])->orderByDesc('id');
+        /*
+        |--------------------------------------------------------------------------
+        | Logged-in User
+        |--------------------------------------------------------------------------
+        */
 
         $loggedInUserRole = $loggedInUser->role_id;
         $loggedInUserId   = $loggedInUser->id;
@@ -940,117 +962,416 @@ class CustomerController extends Controller
             AppHelper::SE
         ];
 
-        $userIds = [$loggedInUserId];
+        /*
+        |--------------------------------------------------------------------------
+        | Customer Query
+        |--------------------------------------------------------------------------
+        |
+        | Eager load SUP and RSM to avoid N+1 queries.
+        |
+        */
+
+        $query = Customer::with([
+            'user.supervisor',
+            'user.rsm',
+            'depo'
+        ])->orderByDesc('id');
 
         /*
         |--------------------------------------------------------------------------
-        | Get Managed Users
+        | User Permission
         |--------------------------------------------------------------------------
         */
 
-        if (!($loggedInUserType == AppHelper::ALL || in_array($loggedInUserRole, [
-            AppHelper::USER_SUPER_ADMIN,
-            AppHelper::USER_ADMIN,
-            AppHelper::USER_DIRECTOR
-        ]))) {
+        $userIds = [$loggedInUserId];
+
+        $isAdmin = (
+            $loggedInUserType == AppHelper::ALL ||
+            in_array($loggedInUserRole, [
+                AppHelper::USER_SUPER_ADMIN,
+                AppHelper::USER_ADMIN,
+                AppHelper::USER_DIRECTOR
+            ])
+        );
+
+        if (!$isAdmin) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Manager
+            |--------------------------------------------------------------------------
+            */
 
             if ($loggedInUserRole == AppHelper::USER_MANAGER) {
 
                 $managedUserIds = User::where(function ($q) use ($loggedInUserId) {
+
                     $q->where('manager_id', $loggedInUserId)
                         ->orWhere('rsm_id', $loggedInUserId)
                         ->orWhere('sup_id', $loggedInUserId)
                         ->orWhere('asm_id', $loggedInUserId);
-                })
-                ->whereIn('type', $allowedTypes)
-                ->pluck('id')
-                ->toArray();
 
-            } elseif ($loggedInUserRole == AppHelper::USER_RSM) {
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RSM
+            |--------------------------------------------------------------------------
+            */
+
+            elseif ($loggedInUserRole == AppHelper::USER_RSM) {
 
                 $managedUserIds = User::where(function ($q) use ($loggedInUserId) {
+
                     $q->where('rsm_id', $loggedInUserId)
                         ->orWhere('sup_id', $loggedInUserId)
                         ->orWhere('asm_id', $loggedInUserId);
-                })
-                ->whereIn('type', $allowedTypes)
-                ->pluck('id')
-                ->toArray();
 
-            } elseif ($loggedInUserRole == AppHelper::USER_SUP) {
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUP
+            |--------------------------------------------------------------------------
+            */
+
+            elseif ($loggedInUserRole == AppHelper::USER_SUP) {
 
                 $managedUserIds = User::where(function ($q) use ($loggedInUserId) {
+
                     $q->where('sup_id', $loggedInUserId)
                         ->orWhere('asm_id', $loggedInUserId);
-                })
-                ->whereIn('type', $allowedTypes)
-                ->pluck('id')
-                ->toArray();
 
-            } elseif ($loggedInUserRole == AppHelper::USER_ASM) {
+                })
+                    ->whereIn('type', $allowedTypes)
+                    ->pluck('id')
+                    ->toArray();
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ASM
+            |--------------------------------------------------------------------------
+            */
+
+            elseif ($loggedInUserRole == AppHelper::USER_ASM) {
 
                 $managedUserIds = User::where('asm_id', $loggedInUserId)
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
 
-            } else {
+            }
+
+            else {
 
                 $managedUserIds = [];
 
             }
 
-            $userIds = array_merge($userIds, $managedUserIds);
+            /*
+            |--------------------------------------------------------------------------
+            | Combine Logged-in User + Managed Users
+            |--------------------------------------------------------------------------
+            */
 
-            $query->whereIn('user_id', array_unique($userIds));
+            $userIds = array_unique(
+                array_merge($userIds, $managedUserIds)
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Apply User Permission
+            |--------------------------------------------------------------------------
+            */
+
+            $query->whereIn(
+                'user_id',
+                $userIds
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Only SALE / SE Users
+            |--------------------------------------------------------------------------
+            */
 
             $query->whereHas('user', function ($q) use ($allowedTypes) {
+
                 $q->whereIn('type', $allowedTypes);
+
             });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | User Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('user_id')) {
+
+            $query->where(
+                'user_id',
+                $request->input('user_id')
+            );
 
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Optional Filters
+        | Area Filter
         |--------------------------------------------------------------------------
         */
 
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
+        if ($request->filled('area_id')) {
+
+            $query->where(
+                'area_id',
+                $request->input('area_id')
+            );
+
         }
 
-        if ($request->filled('area_id')) {
-            $query->where('area_id', $request->area_id);
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | Customer Type Filter
+        |--------------------------------------------------------------------------
+        */
 
         if ($request->filled('customer_type')) {
-            $query->where('customer_type', $request->customer_type);
+
+            $query->where(
+                'customer_type',
+                $request->input('customer_type')
+            );
+
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search Filter
+        |--------------------------------------------------------------------------
+        */
 
         if ($request->filled('search')) {
 
-            $search = $request->search;
+            $search = trim(
+                $request->input('search')
+            );
 
             $query->where(function ($q) use ($search) {
 
                 $q->where('customer_name', 'like', "%{$search}%")
-                ->orWhere('customer_code', 'like', "%{$search}%")
-                ->orWhere('owner_name', 'like', "%{$search}%")
-                ->orWhere('phone_number', 'like', "%{$search}%")
-                ->orWhere('address', 'like', "%{$search}%");
+                    ->orWhere('customer_code', 'like', "%{$search}%")
+                    ->orWhere('owner_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
 
             });
-
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Get Customers
+        |--------------------------------------------------------------------------
+        */
+
         $customers = $query->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prepare Export Data
+        |--------------------------------------------------------------------------
+        */
+
+        $fullDomain = url('/');
+
+        $data = $customers->map(function ($row) use ($fullDomain) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | User / SUP / RSM
+            |--------------------------------------------------------------------------
+            */
+
+            $user = $row->user;
+
+            $sup = $user?->supervisor;
+
+            $rsm = $user?->rsm;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Language
+            |--------------------------------------------------------------------------
+            |
+            | Same logic as your Blade:
+            |
+            | en -> full_name_latin
+            | other -> full_name
+            |
+            */
+
+            $lang = $user?->user_lang ?? 'en';
+
+            /*
+            |--------------------------------------------------------------------------
+            | SSP
+            |--------------------------------------------------------------------------
+            */
+
+            $sspName = $lang === 'en'
+                ? (
+                    $user?->full_name_latin
+                    ?? $user?->full_name
+                    ?? 'N/A'
+                )
+                : (
+                    $user?->full_name
+                    ?? $user?->full_name_latin
+                    ?? 'N/A'
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUP
+            |--------------------------------------------------------------------------
+            */
+
+            $supName = $lang === 'en'
+                ? (
+                    $sup?->full_name_latin
+                    ?? $sup?->full_name
+                    ?? 'N/A'
+                )
+                : (
+                    $sup?->full_name
+                    ?? $sup?->full_name_latin
+                    ?? 'N/A'
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | RSM
+            |--------------------------------------------------------------------------
+            */
+
+            $rsmName = $lang === 'en'
+                ? (
+                    $rsm?->full_name_latin
+                    ?? $rsm?->full_name
+                    ?? 'N/A'
+                )
+                : (
+                    $rsm?->full_name
+                    ?? $rsm?->full_name_latin
+                    ?? 'N/A'
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Area
+            |--------------------------------------------------------------------------
+            */
+
+            $area = !empty($row->area_id)
+                ? AppHelper::getAreaNameById($row->area_id)
+                : ($user?->area ?? 'N/A');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Customer Type
+            |--------------------------------------------------------------------------
+            */
+
+            $customerType = AppHelper::CUSTOMER_TYPE[$row->customer_type]
+                ?? 'N/A';
+
+            /*
+            |--------------------------------------------------------------------------
+            | Outlet Photo
+            |--------------------------------------------------------------------------
+            */
+
+            $photoUrl = $row->outlet_photo
+                ? $fullDomain
+                    . '/photo/'
+                    . $this->shortEncrypt($row->outlet_photo)
+                : 'N/A';
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Same Fields As Web Export
+            |--------------------------------------------------------------------------
+            */
+
+            return [
+
+                'area' => $area,
+
+                'spp' => $sspName,
+
+                'sup' => $supName,
+
+                'rsm' => $rsmName,
+
+                'depo_name' => $row->depo?->name
+                    ?? $row->outlet
+                    ?? 'N/A',
+
+                'customer_name' => $row->name
+                    ?? 'N/A',
+
+                'customer_code' => $row->code
+                    ?? 'N/A',
+
+                'customer_type' => $customerType,
+
+                'contact' => $row->phone
+                    ?? 'N/A',
+
+                'address' => (
+                    $row->city &&
+                    $row->country
+                )
+                    ? $row->city . ', ' . $row->country
+                    : 'N/A',
+
+                'latitude' => $row->latitude
+                    ?? 'N/A',
+
+                'longitude' => $row->longitude
+                    ?? 'N/A',
+
+                'outlet_photo' => $photoUrl,
+
+            ];
+
+        })->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Response
+        |--------------------------------------------------------------------------
+        */
 
         return response()->json([
             'success' => true,
             'message' => 'Customer export data.',
-            'total' => $customers->count(),
-            'data' => $customers
+            'total'   => $data->count(),
+            'data'    => $data,
         ]);
     }
 }
