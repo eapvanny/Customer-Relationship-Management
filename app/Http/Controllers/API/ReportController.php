@@ -830,6 +830,26 @@ class ReportController extends Controller
     //         'reports_' . now()->format('Y_m_d_His') . '.xlsx'
     //     );
     // }
+    private function shortEncrypt($string)
+    {
+        $key = substr(hash('sha256', config('app.key')), 0, 32);
+        $iv = random_bytes(16);
+
+        $encrypted = openssl_encrypt(
+            $string,
+            'AES-256-CBC',
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+
+        $result = base64_encode($iv . $encrypted);
+
+        return rtrim(
+            strtr($result, '+/', '-_'),
+            '='
+        );
+    }
     public function export(Request $request)
     {
         $date1    = $request->input('date1');
