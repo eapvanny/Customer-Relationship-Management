@@ -90,11 +90,26 @@ class User extends Authenticatable
 
     public function getFullNameAttribute()
     {
-        return $this->family_name . ' ' . $this->name;
+        $familyName = trim($this->family_name ?? '');
+        $name = trim($this->name ?? '');
+
+        if ($familyName === '' && $name === '') {
+            return null;
+        }
+
+        return trim($familyName . ' ' . $name);
     }
+
     public function getFullNameLatinAttribute()
     {
-        return $this->family_name_latin . ' ' . $this->name_latin;
+        $familyName = trim($this->family_name_latin ?? '');
+        $name = trim($this->name_latin ?? '');
+
+        if ($familyName === '' && $name === '') {
+            return null;
+        }
+
+        return trim($familyName . ' ' . $name);
     }
     // public function getPhotoUrlAttribute()
     // {
