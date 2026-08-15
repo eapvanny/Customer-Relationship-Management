@@ -222,8 +222,10 @@ class ReportController extends Controller
             }
 
             // Date
-            if ($request->filled('date')) {
-                $query->whereDate('date', $request->date);
+            if ($request->filled(['date1', 'date2'])) {
+                $startDate = Carbon::parse($request->date1)->startOfDay();
+                $endDate = Carbon::parse($request->date2)->endOfDay();
+                $query->whereBetween('reports.date', [$startDate, $endDate]);
             }
 
             // ==============================
