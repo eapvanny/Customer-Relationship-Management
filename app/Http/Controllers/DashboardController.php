@@ -156,8 +156,26 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        /*
+        |--------------------------------------------------------------------------
+        | Report Query + Date Filters
+        |--------------------------------------------------------------------------
+        */
+
+        $selectedYear = (int) request()->input('year', now()->year);
+        $fromDate = request()->input('from_date');
+        $toDate = request()->input('to_date');
+
         $query = Report::with('user')
-            ->whereYear('created_at', now()->year);
+            ->whereYear('created_at', $selectedYear);
+
+        if ($fromDate) {
+            $query->whereDate('created_at', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate('created_at', '<=', $toDate);
+        }
 
         if ($allowedUserIds !== null) {
             $query->whereIn('user_id', $allowedUserIds);
@@ -268,7 +286,6 @@ class DashboardController extends Controller
                 'EXTRACT(MONTH FROM created_at) as month,
                 COUNT(id) as count'
             )
-            ->whereYear('created_at', now()->year)
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('count', 'month')
@@ -287,31 +304,69 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $startOfMonth = now()->startOfMonth();
-        $endOfMonth = now()->endOfMonth();
+        /*
+        |--------------------------------------------------------------------------
+        | Sales Date Range
+        |--------------------------------------------------------------------------
+        */
+
+        if ($fromDate || $toDate) {
+
+            $salesStartDate = $fromDate
+                ? \Carbon\Carbon::parse($fromDate)->startOfDay()
+                : \Carbon\Carbon::create($selectedYear, 1, 1)->startOfDay();
+
+            $salesEndDate = $toDate
+                ? \Carbon\Carbon::parse($toDate)->endOfDay()
+                : \Carbon\Carbon::create($selectedYear, 12, 31)->endOfDay();
+
+        } else {
+
+            // No date filter:
+            // Show current month for the selected year.
+            if ($selectedYear == now()->year) {
+
+                $salesStartDate = now()->startOfMonth();
+                $salesEndDate = now()->endOfMonth();
+
+            } else {
+
+                $salesStartDate = \Carbon\Carbon::create(
+                    $selectedYear,
+                    1,
+                    1
+                )->startOfDay();
+
+                $salesEndDate = \Carbon\Carbon::create(
+                    $selectedYear,
+                    12,
+                    31
+                )->endOfDay();
+            }
+        }
 
         $employeeSales = (clone $query)
-            ->selectRaw("
-                user_id,
+    ->selectRaw("
+        user_id,
 
-                COALESCE(
-                    SUM(
-                        COALESCE(`250_ml`, 0) +
-                        COALESCE(`350_ml`, 0) +
-                        COALESCE(`600_ml`, 0) +
-                        COALESCE(`1500_ml`, 0)
-                    ),
-                    0
-                ) AS total
-            ")
-            ->whereBetween(
-                'created_at',
-                [$startOfMonth, $endOfMonth]
-            )
-            ->whereNotNull('user_id')
-            ->groupBy('user_id')
-            ->orderByDesc('total')
-            ->get();
+        COALESCE(
+            SUM(
+                COALESCE(`250_ml`, 0) +
+                COALESCE(`350_ml`, 0) +
+                COALESCE(`600_ml`, 0) +
+                COALESCE(`1500_ml`, 0)
+            ),
+            0
+        ) AS total
+    ")
+    ->whereBetween(
+        'created_at',
+        [$salesStartDate, $salesEndDate]
+    )
+    ->whereNotNull('user_id')
+    ->groupBy('user_id')
+    ->orderByDesc('total')
+    ->get();
 
 
         /*

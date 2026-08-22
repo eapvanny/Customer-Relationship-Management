@@ -218,6 +218,157 @@
             }
         }
 
+        .crm-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1f2937;
+        }
+
+        /* Filter wrapper */
+        .crm-filter-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            width: 100%;
+        }
+
+        /* Each filter */
+        .crm-filter-item {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        .crm-filter-item label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        /* Inputs */
+        .crm-control {
+            height: 35px !important;
+            min-height: 35px;
+            border: 1px solid #d9dee7 !important;
+            border-radius: 10px !important;
+            background-color: #fff !important;
+            font-size: 15px;
+            color: #374151;
+            padding: 0 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .crm-control:focus {
+            border-color: #4f8dcc !important;
+            box-shadow: 0 0 0 3px rgba(79, 141, 204, 0.12) !important;
+        }
+
+        /* Buttons container */
+        .crm-filter-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Common button */
+        .crm-btn {
+            height: 35px;
+            min-width: 80px;
+            border: none;
+            border-radius: 10px;
+            padding: 0 16px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none !important;
+
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Filter */
+        .crm-btn-filter {
+            color: #fff;
+            background: #4285c5;
+            box-shadow: 0 3px 7px rgba(66, 133, 197, 0.25);
+        }
+
+        .crm-btn-filter:hover {
+            color: #fff;
+            background: #3476b6;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(66, 133, 197, 0.30);
+        }
+
+        .crm-btn-filter i {
+            font-size: 14px;
+        }
+
+        /* Clear */
+        .crm-btn-clear {
+            color: #374151;
+            background: #f1f3f5;
+            border: 1px solid #d9dee7;
+        }
+
+        .crm-btn-clear:hover {
+            color: #dc3545;
+            background: #fff1f2;
+            border-color: #fecdd3;
+            transform: translateY(-1px);
+        }
+
+        .crm-btn-clear i {
+            font-size: 14px;
+        }
+
+        /* Mobile */
+        @media (max-width: 1199px) {
+            .crm-filter-wrapper {
+                flex-wrap: wrap;
+            }
+
+            .crm-filter-item {
+                flex: 1 1 calc(33.333% - 12px);
+            }
+
+            .crm-filter-buttons {
+                flex: 1 1 100%;
+            }
+
+            .crm-btn {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .crm-filter-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .crm-filter-item {
+                width: 100%;
+            }
+
+            .crm-filter-buttons {
+                width: 100%;
+            }
+
+            .crm-btn {
+                flex: 1;
+            }
+
+            .crm-title {
+                font-size: 20px;
+            }
+        }
         /* body {
                 min-height: 100vh;
                 display: flex;
@@ -394,14 +545,93 @@
             @endif
             <div class="col-md-12">
                 <div class="sub-head">
-                    <div class="row w-100">
-                        <div class="col-12 col-md-12 col-xxl-6 d-flex justify-content-left">
-                            <h4 style="font-weight: 900">{{ __('Customer Relationship Management') }}</h4>
+                    <div class="row w-100 align-items-center">
+
+                        {{-- Title --}}
+                        <div class="col-12 col-xl-5 mb-3 mb-xl-0">
+                            <h4 class="crm-title mb-0">
+                                {{ __('Customer Relationship Management') }}
+                            </h4>
                         </div>
-                        {{-- <div class="col-md-4 date-container">
-                            <input class="select2" type="date">
-                            <input class="select2" type="date">
-                        </div> --}}
+
+                        {{-- Filters --}}
+                        <div class="col-12 col-xl-7">
+                            <form method="GET" action="{{ url()->current() }}">
+                                <div class="crm-filter-wrapper">
+
+                                    {{-- Year --}}
+                                    <div class="crm-filter-item">
+                                        <label for="year">
+                                            {{ __('Year') }}
+                                        </label>
+
+                                        <select
+                                            name="year"
+                                            id="year"
+                                            class="form-control select2 crm-control"
+                                        >
+                                            @for ($year = 2024; $year <= now()->year; $year++)
+                                                <option
+                                                    value="{{ $year }}"
+                                                    {{ (int) request('year', now()->year) === $year ? 'selected' : '' }}
+                                                >
+                                                    {{ $year }}
+                                                </option>
+                                            @endfor
+                                        </select>
+                                    </div>
+
+                                    {{-- From Date --}}
+                                    <div class="crm-filter-item">
+                                        <label for="from_date">
+                                            {{ __('From Date') }}
+                                        </label>
+
+                                        <input
+                                            type="date"
+                                            name="from_date"
+                                            id="from_date"
+                                            class="form-control crm-control"
+                                            value="{{ request()->input('from_date') }}"
+                                        >
+                                    </div>
+
+                                    <div class="crm-filter-item">
+                                        <label for="to_date">
+                                            {{ __('To Date') }}
+                                        </label>
+
+                                        <input
+                                            type="date"
+                                            name="to_date"
+                                            id="to_date"
+                                            class="form-control crm-control"
+                                            value="{{ request()->input('to_date') }}"
+                                        >
+                                    </div>
+
+                                    {{-- Buttons --}}
+                                    <div class="crm-filter-buttons">
+
+                                        <button type="submit" class="crm-btn crm-btn-filter">
+                                            <i class="fas fa-filter"></i>
+                                            <span>{{ __('Filter') }}</span>
+                                        </button>
+
+                                        <a
+                                            href="{{ url()->current() }}"
+                                            class="crm-btn crm-btn-clear"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                            <span>{{ __('Clear') }}</span>
+                                        </a>
+
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -689,7 +919,7 @@
             @endif
             // Set current date for date inputs
             var currentDate = new Date().toISOString().split('T')[0];
-            $('input[type="date"]').val(currentDate);
+            // $('input[type="date"]').val(currentDate);
             var reportLabel = "{{ __('Reports') }}";
             // Data from Laravel passed as JSON
             var monthlyReporttData = @json($monthlyData);
@@ -744,6 +974,13 @@
 
         });
         $(document).ready(function() {
+            @if (!request()->has('from_date'))
+                $('#from_date').val('');
+            @endif
+
+            @if (!request()->has('to_date'))
+                $('#to_date').val('');
+            @endif
             const calendar = new Calendar('#calendar', {
                 defaultView: 'month',
                 isReadOnly: true,
