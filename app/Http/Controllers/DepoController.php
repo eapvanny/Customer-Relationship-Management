@@ -130,7 +130,7 @@ class DepoController extends Controller
 
                                         $q->where('family_name', 'LIKE', "%{$search}%")
                                             ->orWhere('name', 'LIKE', "%{$search}%")
-                                            ->orWhere('family_name_ latin', 'LIKE', "%{$search}%")
+                                            ->orWhere('family_name_latin', 'LIKE', "%{$search}%")
                                             ->orWhere('name_latin', 'LIKE', "%{$search}%")
 
                                             // Search Khmer full name
