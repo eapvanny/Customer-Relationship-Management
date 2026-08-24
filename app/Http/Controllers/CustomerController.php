@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -383,7 +384,7 @@ class CustomerController extends Controller
         // Validation rules
         $rules = [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
+            'phone' => 'required|string|max:255|unique:customers,phone',
             'area' => 'required|in:' . implode(',', $areaIds),
             'depo_id' => 'required|exists:depos,id',
             'customer_type' => 'required|string',
@@ -572,7 +573,12 @@ class CustomerController extends Controller
         // Validation rules
         $rules = [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
+            'phone' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('customers', 'phone')->ignore($customer->id),
+            ],
             'area' => 'required|in:' . implode(',', $areaIds),
             'depo_id' => 'required|exists:depos,id',
             'customer_type' => 'required|string',
