@@ -496,7 +496,7 @@ class ReportController extends Controller
         }
 
         $customers = $query
-            ->select('id', 'name')
+            ->select('id', 'name','phone')
             ->orderBy('name')
             ->get();
 
