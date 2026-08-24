@@ -481,11 +481,13 @@
                                         <i class="fa fa-upload"></i> {{ __('Export') }}
                                     </a>
                                 </div>
-                                <div class="col-6 text-end">
-                                    <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#addModal">
-                                        <i class="fa fa-plus-circle"></i> {{ __('Add Report Consumer') }}
-                                    </button>
-                                </div>
+                                @hasTypePermission('create report')
+                                    <div class="col-6 text-end">
+                                        <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#addModal">
+                                            <i class="fa fa-plus-circle"></i> {{ __('Add Report Consumer') }}
+                                        </button>
+                                    </div>
+                                @endHasTypePermission
                             </div>
                             <div class="table-responsive mt-4">
                                 <table id="datatable"
