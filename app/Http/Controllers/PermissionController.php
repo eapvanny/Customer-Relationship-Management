@@ -66,8 +66,18 @@ class PermissionController extends Controller
                 'required',
                 'min:3',
                 function ($attribute, $value, $fail) use ($request, $guardName) {
-                    if (Permission::where(['name' => $value, 'guard_name' => $guardName, 'type' => $request->type])->exists()) {
-                        $fail("The permission '{$value}' already exists for guard '{$guardName}' and type '{$request->type}'.");
+                    $exists = Permission::query()
+                        ->where('name', $value)
+                        ->where('guard_name', $guardName)
+                        ->where('type', $request->type)
+                        ->exists();
+
+                    if ($exists) {
+                        $typeName = AppHelper::USER_TYPE[$request->type] ?? $request->type;
+
+                        $fail(
+                            "The permission '{$value}' already exists for type '{$typeName}'."
+                        );
                     }
                 },
             ],
@@ -75,17 +85,24 @@ class PermissionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('permission.create')->withInput()->withErrors($validator);
+            return redirect()
+                ->route('permission.create')
+                ->withInput()
+                ->withErrors($validator);
         }
 
-        Permission::create([
+        Permission::query()->create([
             'name' => $request->name,
             'type' => $request->type,
             'guard_name' => $guardName,
         ]);
 
-        $redirect = $request->has('saveandcontinue') ? route('permission.create') : route('permission.index');
-        return redirect($redirect)->with('success', 'Permission created successfully.');
+        $redirect = $request->has('saveandcontinue')
+            ? route('permission.create')
+            : route('permission.index');
+
+        return redirect($redirect)
+            ->with('success', 'Permission created successfully.');
     }
 
     /**
