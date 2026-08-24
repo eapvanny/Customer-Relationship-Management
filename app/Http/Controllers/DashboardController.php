@@ -33,13 +33,17 @@ class DashboardController extends Controller
 
         // ============================================================
         // MANAGER
-        // Manager -> Employees
+        // All managers see all manager employees
         // ============================================================
         if ($user->role_id === AppHelper::USER_MANAGER) {
 
-            $allowedUserIds = User::where('manager_id', $user->id)
+            $allowedUserIds = User::where(function ($query) {
+
+                $query->where('role_id', AppHelper::USER_MANAGER)
+                    ->orWhere('role_id', AppHelper::USER_EMPLOYEE);
+
+            })
                 ->pluck('id')
-                ->push($user->id)
                 ->unique()
                 ->values()
                 ->toArray();

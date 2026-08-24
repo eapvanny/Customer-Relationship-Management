@@ -50,19 +50,36 @@ class DepoController extends Controller
                         // No filter for full-access rolesm,
                     } else {
                         // Find all managed users by hierarchy or same area
+                        $managerIds = User::query()
+                            ->where('role_id', AppHelper::USER_MANAGER)
+                            ->where(function ($q) use ($loggedInUser) {
+                                $q->where('id', $loggedInUser->id)
+                                ->orWhere('manager_id', $loggedInUser->manager_id);
+                            })
+                            ->pluck('id')
+                            ->toArray();
+
                         $managedUsers = User::query()
                             ->whereIn('type', $allowedTypes)
-                            ->where(function ($q) use ($loggedInUser, $loggedInUserArea) {
-                                $q->where('manager_id', $loggedInUser->id)
-                                    ->orWhere('rsm_id', $loggedInUser->id)
-                                    ->orWhere('asm_id', $loggedInUser->id)
-                                    ->orWhere('sup_id', $loggedInUser->id)
+                            ->where(function ($q) use ($managerIds, $loggedInUser, $loggedInUserArea) {
+
+                                // Users managed by any manager in the same manager group
+                                $q->whereIn('manager_id', $managerIds)
+
+                                    // Other hierarchy
+                                    ->orWhereIn('rsm_id', $managerIds)
+                                    ->orWhereIn('asm_id', $managerIds)
+                                    ->orWhereIn('sup_id', $managerIds)
+
+                                    // Same area
                                     ->orWhere('area', $loggedInUserArea);
                             })
                             ->pluck('id')
                             ->toArray();
 
-                        $userIds = array_unique(array_merge($userIds, $managedUsers));
+                        $userIds = array_unique(
+                            array_merge([$loggedInUserId], $managedUsers)
+                        );
 
                         // 🔹 FIXED: Get allowed area_ids based on user's area
                         $allowedAreaIds = $this->getAllowedAreaIdsForUserArea($loggedInUserArea);

@@ -75,15 +75,33 @@ class ReportController extends Controller
             ])) {
                 // No additional filtering needed
             } elseif ($userRole == AppHelper::USER_MANAGER) {
-                $managedUserIds = User::where(function ($q) use ($userId) {
-                    $q->where('manager_id', $userId)
-                        ->orWhere('rsm_id', $userId)
-                        ->orWhere('sup_id', $userId)
-                        ->orWhere('asm_id', $userId);
-                })->whereIn('type', $allowedTypes)
+
+                $managerIds = User::query()
+                            ->where('role_id', AppHelper::USER_MANAGER)
+                            ->where(function ($q) use ($user) {
+                                $q->where('id', $user->id)
+                                ->orWhere('manager_id', $user->manager_id);
+                            })
+                            ->pluck('id')
+                            ->toArray();
+
+                $managedUserIds = User::query()
+                    ->whereIn('type', $allowedTypes)
+                    ->where(function ($q) use ($managerIds) {
+
+                        $q->whereIn('manager_id', $managerIds)
+                            ->orWhereIn('rsm_id', $managerIds)
+                            ->orWhereIn('asm_id', $managerIds)
+                            ->orWhereIn('sup_id', $managerIds);
+                    })
                     ->pluck('id')
                     ->toArray();
-                $userIds = array_merge($userIds, $managedUserIds);
+                $userIds = array_unique(
+                    array_merge(
+                        $userIds,
+                        $managedUserIds
+                    )
+                );
             } elseif ($userRole == AppHelper::USER_RSM) {
                 $managedUserIds = User::where(function ($q) use ($userId) {
                     $q->where('rsm_id', $userId)
@@ -154,12 +172,29 @@ class ReportController extends Controller
             AppHelper::USER_DIRECTOR
         ]))) {
             if ($userRole == AppHelper::USER_MANAGER) {
-                $employeeQuery->where(function ($q) use ($userId) {
-                    $q->where('manager_id', $userId)
-                        ->orWhere('rsm_id', $userId)
-                        ->orWhere('sup_id', $userId)
-                        ->orWhere('asm_id', $userId);
-                })->whereIn('type', $allowedTypes);
+                // ============================================================
+                // Get managers in the same manager group
+                // ============================================================
+                $managerIds = User::query()
+                            ->where('role_id', AppHelper::USER_MANAGER)
+                            ->where(function ($q) use ($user) {
+                                $q->where('id', $user->id)
+                                ->orWhere('manager_id', $user->manager_id);
+                            })
+                            ->pluck('id')
+                            ->toArray();
+                // ============================================================
+                // Get employees belonging to any manager in the group
+                // ============================================================
+                $employeeQuery
+                    ->whereIn('type', $allowedTypes)
+                    ->where(function ($q) use ($managerIds) {
+
+                        $q->whereIn('manager_id', $managerIds)
+                            ->orWhereIn('rsm_id', $managerIds)
+                            ->orWhereIn('sup_id', $managerIds)
+                            ->orWhereIn('asm_id', $managerIds);
+                    });
             } elseif ($userRole == AppHelper::USER_RSM) {
                 $employeeQuery->where(function ($q) use ($userId) {
                     $q->where('rsm_id', $userId)
