@@ -590,7 +590,7 @@ class ReportController extends Controller
                 //  Phone safe
                 'phone' => optional($report->customer)->phone ?? 'N/A',
 
-                'city' => trim(($report->city ?? '') . ' ' . ($report->address ?? '')) ?: 'N/A',
+                'city' => trim(($report->address ?? '') . ' ' . ($report->city ?? '')) ?: 'N/A',
                 'posm' => $posm,
                 'qty' => $report->qty,
 
