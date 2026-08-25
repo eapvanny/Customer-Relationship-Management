@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Helpers\AppHelper;
 use App\Models\Target;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
@@ -75,21 +76,46 @@ class TargetController extends Controller
                     $query->where('id', $loggedInUser->id);
                 }
             }
+
+        $is_filter = false;
+        $employees = $query->where('role_id',AppHelper::USER_EMPLOYEE)
+            ->get(['id', 'username', 'family_name', 'name'])
+            ->mapWithKeys(function ($user) {
+                return [$user->id => $user->username . ' (' . $user->full_name . ')'];
+            })
+            ->toArray();
+        
+        // Date filter
+        if ($request->filled(['date1', 'date2'])) {
+            $is_filter = true;
+
+            $startOfTarget = Carbon::parse($request->date1)->startOfDay();
+            $endOfTarget = Carbon::parse($request->date2)->endOfDay();
+        } else {
+            $startOfTarget = now()->startOfMonth();
+            $endOfTarget = now()->endOfMonth();
+        }
+
+        // User filter
+        if ($request->filled('user_id')) {
+            $is_filter = true;
+
+            $query->where('id', $request->user_id);
+        }
         if ($request->ajax()) {
             
-            $startOfMonth = now()->startOfMonth();
-            $endOfMonth = now()->endOfMonth();
-
             $targetQuery = $query->withSum([
-                'report as sale_target' => function ($q) use ($startOfMonth, $endOfMonth) {
-                    $q->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                    ->select(DB::raw("
-                            COALESCE(SUM(
-                                COALESCE(`250_ml`,0) +
-                                COALESCE(`350_ml`,0) +
-                                COALESCE(`600_ml`,0) +
-                                COALESCE(`1500_ml`,0)
-                            ),0)
+                'report as sale_target' => function ($q) use ($startOfTarget, $endOfTarget) {
+                    $q->whereBetween('created_at', [
+                        $startOfTarget,
+                        $endOfTarget
+                    ])->select(DB::raw("
+                        COALESCE(SUM(
+                            COALESCE(`250_ml`, 0) +
+                            COALESCE(`350_ml`, 0) +
+                            COALESCE(`600_ml`, 0) +
+                            COALESCE(`1500_ml`, 0)
+                        ), 0)
                     "));
                 }
             ], DB::raw('1'))
@@ -152,7 +178,7 @@ class TargetController extends Controller
                 ->make(true);
         }
 
-        return view('backend.sale-target.list');
+        return view('backend.sale-target.list', compact('employees','is_filter'));
     }
 
     // public function create()

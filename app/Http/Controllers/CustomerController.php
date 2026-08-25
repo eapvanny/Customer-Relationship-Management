@@ -6,6 +6,8 @@ use App\Exports\CustomerExport;
 use App\Http\Helpers\AppHelper;
 use App\Models\Customer;
 use App\Models\Depo;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
@@ -28,8 +30,96 @@ class CustomerController extends Controller
     {
         $loggedInUser = auth()->check() ? auth()->user() : null;
 
+        $query = Customer::with('user', 'depo');
+        $queryEmployee = User::query()
+            ->where('role_id', AppHelper::USER_EMPLOYEE);
+            if ($loggedInUser->type == AppHelper::SALE) {
+
+                if ($loggedInUser->role_id == AppHelper::USER_MANAGER) {
+
+                    // Manager sees all employees under Sale
+                    $queryEmployee->where('type', AppHelper::SALE);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_RSM) {
+
+                    $queryEmployee->where('type', AppHelper::SALE)
+                        ->where('rsm_id', $loggedInUser->id);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_ASM) {
+
+                    $queryEmployee->where('type', AppHelper::SALE)
+                        ->where('asm_id', $loggedInUser->id);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_SUP) {
+
+                    $queryEmployee->where('type', AppHelper::SALE)
+                        ->where('sup_id', $loggedInUser->id);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_EMPLOYEE) {
+
+                    $queryEmployee->where('id', $loggedInUser->id);
+                }
+
+            } elseif ($loggedInUser->type == AppHelper::SE) {
+
+                if ($loggedInUser->role_id == AppHelper::USER_MANAGER) {
+
+                    $queryEmployee->where('type', AppHelper::SE);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_RSM) {
+
+                    $queryEmployee->where('type', AppHelper::SE)
+                        ->where('rsm_id', $loggedInUser->id);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_ASM) {
+
+                    $queryEmployee->where('type', AppHelper::SE)
+                        ->where('asm_id', $loggedInUser->id);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_SUP) {
+
+                    $queryEmployee->where('type', AppHelper::SE)
+                        ->where('sup_id', $loggedInUser->id);
+
+                } elseif ($loggedInUser->role_id == AppHelper::USER_EMPLOYEE) {
+
+                    $queryEmployee->where('id', $loggedInUser->id);
+                }
+            }
+        $is_filter = false;
+        $employees = $queryEmployee
+            ->get(['id', 'username', 'family_name', 'name'])
+            ->mapWithKeys(function ($user) {
+                return [$user->id => $user->username . ' (' . $user->full_name . ')'];
+            })
+            ->toArray();
+
+            // Custom filters
+        if ($request->filled(['date1', 'date2'])) {
+            $is_filter = true;
+
+            $startDate = Carbon::parse($request->date1)->startOfDay();
+            $endDate = Carbon::parse($request->date2)->endOfDay();
+
+            // Filter by created_at
+            $query->whereBetween('customers.created_at', [
+                $startDate,
+                $endDate
+            ]);
+        }
+
+        // filter by supervisor (sup_id in users table)
+        if ($request->filled('user_id')) {
+            $is_filter = true;
+
+            $selectedUserId = $request->user_id;
+
+            $query->where(function ($q) use ($selectedUserId) {
+                //  Case 1: Normal reports (linked by user_id)
+                $q->where('customers.user_id', $selectedUserId);
+            });
+        }
         if ($request->ajax()) {
-            $query = Customer::with('user', 'depo');
 
             if ($loggedInUser) {
 
@@ -256,7 +346,7 @@ class CustomerController extends Controller
                 ->make(true);
         }
 
-        return view('backend.customer.list');
+        return view('backend.customer.list', compact('employees','is_filter'));
     }
 
     // public function create()
