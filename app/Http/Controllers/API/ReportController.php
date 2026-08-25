@@ -577,6 +577,7 @@ class ReportController extends Controller
                 'latitude' => 'required|numeric',
                 'longitude' => 'required|numeric',
                 'city' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
 
                 'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -632,6 +633,7 @@ class ReportController extends Controller
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'city' => $request->city,
+                'address' => $request->address,
                 'country' => $request->country,
 
                 'qty' => $request->qty,
