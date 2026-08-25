@@ -439,8 +439,8 @@ class ReportController extends Controller
                 'longitude' => $report->longitude ?? 104.9390,
                 // 'address' => $report->city ?? 'N/A',
                 'address' => $report->status === null
-                    ? $report->city
-                    : $report->address,
+                    ? trim(($report->city ?? '') . ' ' . ($report->address ?? '')) ?: 'N/A'
+                    : ($report->address ?? 'N/A'),
                 'other' => $report->other ?? 'No additional notes provided.',
                 'user' => [
                     'title' => $report->user?->title ?? 'Mr.',

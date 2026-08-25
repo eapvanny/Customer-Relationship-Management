@@ -578,9 +578,9 @@
                                                 <strong>{{ __('POSM3') }}:</strong> <span id="modalPosm3"></span>
                                             </li>
                                             <li class="list-group-item"><i class="fa-brands fa-elementor"></i>
-                                                <strong>{{ __('Quantity1') }}:</strong> <span id="modalQty"></span>, &nbsp;
-                                                <strong>{{ __('Quantity2') }}:</strong> <span id="modalQty2"></span>, &nbsp;
-                                                <strong>{{ __('Quantity3') }}:</strong> <span id="modalQty3"></span>
+                                                <strong>{{ __('Quantity') }}1:</strong> <span id="modalQty"></span>, &nbsp;
+                                                <strong>{{ __('Quantity') }}2:</strong> <span id="modalQty2"></span>, &nbsp;
+                                                <strong>{{ __('Quantity') }}3:</strong> <span id="modalQty3"></span>
                                             </li>
                                         </ul>
                                     </div>
