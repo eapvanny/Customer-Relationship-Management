@@ -151,7 +151,8 @@ class TargetController extends Controller
                     }
                 })
                 ->addColumn('employee', function ($user) {
-                    return $user->user_lang == 'en'
+                    $lang = session('user_lang', 'en');
+                    return $lang === 'en'
                         ? $user->full_name_latin
                         : $user->full_name;
                 })
@@ -164,14 +165,14 @@ class TargetController extends Controller
                     $total = $user->sale_target ?? 0;
 
                     if ($total >= 3500) {
-                        return '<span class="badge bg-success">Rank A</span>';
+                        return '<span class="badge bg-success">' . __('Rank A') . '</span>';
                     } elseif ($total >= 3000) {
-                        return '<span class="badge bg-primary">Rank B</span>';
+                        return '<span class="badge bg-primary">' . __('Rank B') . '</span>';
                     } elseif ($total >= 2600) {
-                        return '<span class="badge bg-warning">Rank C</span>';
+                        return '<span class="badge bg-warning">' . __('Rank C') . '</span>';
                     }
 
-                    return '<span class="badge bg-secondary">No Rank</span>';
+                    return '<span class="badge bg-secondary">' . __('No Rank') . '</span>';
                 })
 
                 ->rawColumns(['rank'])

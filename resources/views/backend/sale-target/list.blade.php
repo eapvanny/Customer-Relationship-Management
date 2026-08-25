@@ -102,7 +102,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>{{ __('Employee') }}</th>
-                                        <th>{{ __('Sales Target') }}</th>
+                                        <th>{{ __('Actual Sales') }}</th>
                                         <th>{{ __("Rank") }}</th>
                                     </tr>
                                 </thead>
