@@ -558,7 +558,9 @@ class CustomerController extends Controller
 
         $areaId = AppHelper::getAreaIdByText($userAreaCode);
         $depos = Depo::where('area_id',$areaId)->pluck('name','id');
-        $customer = Customer::where('user_id',$user->id)->pluck('name','id');
+        $customer = Customer::where('user_id', $user->id)
+                    ->get(['id', 'name', 'phone', 'customer_type'])
+                    ->keyBy('id');
 
         return response()->json([
             'status' => true,
