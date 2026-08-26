@@ -788,9 +788,14 @@ class CustomerController extends Controller
         }
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new CustomerExport(), 'customers_' . now()->format('Y_m_d_His') . '.xlsx');
+        $date1 = $request->input('date1');
+        $date2 = $request->input('date2');
+        $user_id = $request->input('user_id');
+        $user_id = $request->input('user_id');
+
+        return Excel::download(new CustomerExport($date1, $date2, $user_id), 'customers_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 
     public function destroy($id)

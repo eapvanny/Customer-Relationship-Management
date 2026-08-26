@@ -91,8 +91,10 @@
                     <div class="box-body">
                         <div class="row">
                             <div class="col-12">
-                                <a class="btn btn-success btn-sm" href="{{ route('customer.export') }}"><i
-                                        class="fa-solid fa-download"></i> {{ __('Export') }}</a>
+                                <a class="btn btn-success btn-sm" 
+                                    href="{{ route('customer.export') . '?' . http_build_query(request()->only(['date1', 'date2', 'user_id'])) }}">
+                                        <i class="fa fa-upload"></i> {{ __('Export') }}
+                                    </a>
                             </div>
                         </div>
                         <div class="table-responsive mt-4">

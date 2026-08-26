@@ -51,7 +51,7 @@
                 {{-- <td>{{ $getFullName($asm) }}</td> --}}
                 <td>{{ $getFullName($sup) }}</td>
                 <td>{{ $getFullName($rsm) }}</td>
-                <td>{{ $row->outlet ?? 'N/A' }}</td>
+                <td>{{ $row->depo->name ?? 'N/A' }}</td>
                 <td>{{ $row->name ?? 'N/A' }}</td>
                 <td>{{ $row->code ?? 'N/A' }}</td>
                 <td>{{ AppHelper::CUSTOMER_TYPE[$row->customer_type] ?? 'N/A' }}</td>
