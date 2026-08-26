@@ -29,6 +29,7 @@
             <th>{{ __('Driver ID') }}</th> --}}
             <th>{{ __('SUP_NAME') }}</th>
             <th>{{ __('SUP_ID') }}</th>
+            <th>{{ __('ASM_NAME') }}</th>
             <th>{{ __('RSM_NAME') }}</th>
             <th>{{ __('Depo Name') }}</th>
             <th>{{ __('Customer Name') }}</th>
@@ -71,6 +72,22 @@
                 $reportUser = $row->user;
                 $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
                 $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
+                $asmId = null;
+                if ($reportUser?->asm_id) {
+                    $decodedAsmId = is_array($reportUser->asm_id)
+                        ? $reportUser->asm_id
+                        : json_decode($reportUser->asm_id, true);
+
+                    if (is_array($decodedAsmId)) {
+                        $asmId = $decodedAsmId[0] ?? null;
+                    } else {
+                        $asmId = $decodedAsmId ?: $reportUser->asm_id;
+                    }
+                }
+
+                $asm = $asmId
+                    ? \App\Models\User::find($asmId)
+                    : null;
                 $posm  = isset(AppHelper::MATERIAL[$row->posm])  ? __(AppHelper::MATERIAL[$row->posm])  : ($row->posm_name1 ?? 'N/A');
                 $posm2 = isset(AppHelper::MATERIAL[$row->posm2]) ? __(AppHelper::MATERIAL[$row->posm2]) : ($row->posm_name2 ?? 'N/A');
                 $posm3 = isset(AppHelper::MATERIAL[$row->posm3]) ? __(AppHelper::MATERIAL[$row->posm3]) : ($row->posm_name3 ?? 'N/A');
@@ -106,6 +123,14 @@
                     }}
                 </td>
                 <td>{{ optional($sup)->staff_id_card ?? $row->sup_id ?? 'N/A' }}</td>
+                <td>
+                    {{ $asm
+                        ? (session('user_lang', 'kh') === 'en'
+                            ? ($asm->full_name_latin ?? $row->asm_name ?? 'N/A')
+                            : ($asm->full_name ?? $row->asm_name ?? 'N/A'))
+                        : ($row->asm_name ?? 'N/A')
+                    }}
+                </td>
                 <td>
                     {{ $rsm
                         ? (session('user_lang', 'kh') === 'en'
