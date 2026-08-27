@@ -625,7 +625,7 @@ class CustomerController extends Controller
 
             $customer = Customer::with('depo')
                 ->where('id', $id)
-                ->where('user_id', $user->id)
+                // ->where('user_id', $user->id)
                 ->first();
 
             if (!$customer) {
