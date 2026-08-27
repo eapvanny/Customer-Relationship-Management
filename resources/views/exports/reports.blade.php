@@ -185,7 +185,7 @@
             </tr>
         @endforeach
         <tr>
-            <td colspan="11">{{ __('Total') }}</td>
+            <td colspan="12">{{ __('Total') }}</td>
             <td>{{ $total_250ml }}</td>
             <td>{{ $total_350ml }}</td>
             <td>{{ $total_600ml }}</td>
