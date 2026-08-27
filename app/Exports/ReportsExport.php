@@ -19,6 +19,7 @@ class ReportsExport implements FromView
     protected $area_value;
     protected $staffIdCard;
 
+
     public function __construct($date1, $date2, $user_id, $area_id, $staffIdCard)
     {
         $this->date1 = $date1;
@@ -32,407 +33,110 @@ class ReportsExport implements FromView
     public function view(): View
     {
         $user = Auth::user();
+        $query = Report::with(['user', 'customer'])->orderBy('id', 'desc');
 
-        $query = Report::with(['user', 'customer'])
-            ->orderBy('id', 'desc');
-
-        // ============================================================
-        // NO LOGIN
-        // ============================================================
         if (!$user) {
-            return view('exports.reports', [
-                'rows' => collect()
-            ]);
+            return view('exports.reports', ['rows' => collect()]);
         }
 
         $userRole = $user->role_id;
         $userId = $user->id;
         $userType = $user->type;
 
-        $allowedTypes = [
-            AppHelper::SALE,
-            AppHelper::SE
-        ];
+        $allowedTypes = [AppHelper::SALE, AppHelper::SE];
 
-        // ============================================================
-        // FULL ACCESS CHECK
-        // ============================================================
-        $hasFullAccess =
-            $userType == AppHelper::ALL ||
-            in_array($userRole, [
-                AppHelper::USER_SUPER_ADMIN,
-                AppHelper::USER_ADMIN,
-                AppHelper::USER_DIRECTOR
-            ]);
-
-        // ============================================================
-        // STEP 1:
-        // GET ALLOWED USER IDS
-        // ============================================================
-
-        // Always include own user ID
+        // ✅ STEP 1: Get all managed user IDs
         $userIds = [$userId];
 
-        if (!$hasFullAccess) {
+        if (!($userType == AppHelper::ALL || in_array($userRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
 
-            // ========================================================
-            // MANAGER
-            // ========================================================
-            if ($userRole == AppHelper::USER_MANAGER) {
+            $managerIds = User::query()
+                ->where('role_id', AppHelper::USER_MANAGER)
+                ->where(function ($q) use ($user) {
+                    $q->where('id', $user->id)
+                    ->orWhere('manager_id', $user->manager_id);
+                })
+                ->pluck('id')
+                ->toArray();
 
-                /*
-                |--------------------------------------------------------------------------
-                | Get all managers in the same manager group
-                |--------------------------------------------------------------------------
-                |
-                | Example:
-                |
-                | Manager A
-                | id = 10
-                | manager_id = 5
-                |
-                | Manager B
-                | id = 20
-                | manager_id = 5
-                |
-                | Both managers belong to the same group.
-                |
-                */
+            $managedUserIds = User::where(function ($q) use ($managerIds) {
+                $q->where('manager_id', $managerIds)
+                    ->orWhere('rsm_id', $managerIds)
+                    ->orWhere('sup_id', $managerIds)
+                    ->orWhere('asm_id', $managerIds);
+            })
+                ->whereIn('type', $allowedTypes)
+                ->pluck('id')
+                ->toArray();
 
-                $managerIds = User::query()
-                    ->where('role_id', AppHelper::USER_MANAGER)
-                    ->where(function ($q) use ($user) {
-
-                        // Current manager
-                        $q->where('id', $user->id);
-
-                        // Managers with the same manager_id
-                        if (!empty($user->manager_id)) {
-                            $q->orWhere(
-                                'manager_id',
-                                $user->manager_id
-                            );
-                        }
-
-                        // Managers directly under current manager
-                        $q->orWhere(
-                            'manager_id',
-                            $user->manager_id
-                        );
-                    })
-                    ->pluck('id')
-                    ->toArray();
-
-                /*
-                |--------------------------------------------------------------------------
-                | Get employees under all managers in the group
-                |--------------------------------------------------------------------------
-                */
-
-                $managedUserIds = User::query()
-                    ->whereIn('type', $allowedTypes)
-                    ->where(function ($q) use ($managerIds) {
-
-                        $q->whereIn(
-                            'manager_id',
-                            $managerIds
-                        )
-                        ->orWhereIn(
-                            'rsm_id',
-                            $managerIds
-                        )
-                        ->orWhereIn(
-                            'asm_id',
-                            $managerIds
-                        )
-                        ->orWhereIn(
-                            'sup_id',
-                            $managerIds
-                        );
-                    })
-                    ->pluck('id')
-                    ->toArray();
-
-                $userIds = array_unique(
-                    array_merge(
-                        $userIds,
-                        $managedUserIds
-                    )
-                );
-            }
-
-            // ========================================================
-            // OTHER ROLES
-            // ========================================================
-            else {
-
-                $managedUserIds = User::query()
-                    ->whereIn('type', $allowedTypes)
-                    ->where(function ($q) use ($userId) {
-
-                        $q->where(
-                            'manager_id',
-                            $userId
-                        )
-                        ->orWhere(
-                            'rsm_id',
-                            $userId
-                        )
-                        ->orWhere(
-                            'asm_id',
-                            $userId
-                        )
-                        ->orWhere(
-                            'sup_id',
-                            $userId
-                        );
-                    })
-                    ->pluck('id')
-                    ->toArray();
-
-                $userIds = array_unique(
-                    array_merge(
-                        $userIds,
-                        $managedUserIds
-                    )
-                );
-            }
+            $userIds = array_merge($userIds, $managedUserIds);
         }
 
-        // ============================================================
-        // STEP 2:
-        // GET ALL STAFF ID CARDS
-        // ============================================================
-
+        // ✅ STEP 2: Get ALL staff_id_cards (VERY IMPORTANT)
         $staffIdCards = User::whereIn('id', $userIds)
             ->pluck('staff_id_card')
             ->filter()
             ->toArray();
 
-        // ============================================================
-        // STEP 3:
-        // APPLY MAIN ACCESS FILTER
-        // ============================================================
+        // ✅ STEP 3: Apply MAIN FILTER (NO whereIn user_id anymore)
+        if (!($userType == AppHelper::ALL || in_array($userRole, [
+            AppHelper::USER_SUPER_ADMIN,
+            AppHelper::USER_ADMIN,
+            AppHelper::USER_DIRECTOR
+        ]))) {
 
-        if (!$hasFullAccess) {
+            $query->where(function ($q) use ($userIds, $staffIdCards, $allowedTypes) {
 
-            $query->where(function ($q) use (
-                $userIds,
-                $staffIdCards,
-                $allowedTypes,
-            ) {
-
-                // ----------------------------------------------------
                 // Normal reports
-                // ----------------------------------------------------
-                $q->where(function ($q1) use (
-                    $userIds,
-                    $allowedTypes,
-                ) {
-
-                    $q1->whereIn(
-                        'reports.user_id',
-                        $userIds
-                    )
-                    ->whereHas('user', function ($q2) use (
-                        $allowedTypes,
-                    ) {
-                        $q2->whereIn(
-                            'type',
-                            $allowedTypes
-                        );
-                    });
+                $q->where(function ($q1) use ($userIds, $allowedTypes) {
+                    $q1->whereIn('reports.user_id', $userIds)
+                        ->whereHas('user', function ($q2) use ($allowedTypes) {
+                            $q2->whereIn('type', $allowedTypes);
+                        });
                 });
 
-                // ----------------------------------------------------
-                // Imported reports - SSP
-                // ----------------------------------------------------
+                // Imported (ssp_id)
                 if (!empty($staffIdCards)) {
-                    $q->orWhereIn(
-                        'reports.ssp_id',
-                        $staffIdCards
-                    );
+                    $q->orWhereIn('reports.ssp_id', $staffIdCards);
                 }
 
-                // ----------------------------------------------------
-                // Imported reports - SUP
-                // ----------------------------------------------------
+                // Imported (sup_id)
                 if (!empty($staffIdCards)) {
-                    $q->orWhereIn(
-                        'reports.sup_id',
-                        $staffIdCards
-                    );
+                    $q->orWhereIn('reports.sup_id', $staffIdCards);
                 }
             });
         }
 
-        // ============================================================
-        // STEP 4:
-        // DATE FILTER
-        // ============================================================
-
+        // ✅ STEP 4: Date filter
         if ($this->date1 && $this->date2) {
-
             $query->whereBetween('date', [
                 Carbon::parse($this->date1)->startOfDay(),
                 Carbon::parse($this->date2)->endOfDay()
             ]);
         }
 
-        // ============================================================
-        // STEP 5:
-        // USER DROPDOWN FILTER
-        // ============================================================
-
+        // ✅ STEP 5: User filter (dropdown)
         if ($this->user_id) {
 
             $selectedUserId = $this->user_id;
 
-            $selectedUser = User::find($selectedUserId);
+            $staffIdCard = User::where('id', $selectedUserId)->value('staff_id_card');
 
-            $staffIdCard = null;
-            $teamUserIds = [];
-            $teamStaffCards = [];
+            $teamUserIds = User::where(function ($q) use ($selectedUserId) {
+                $q->where('manager_id', $selectedUserId)
+                    ->orWhere('rsm_id', $selectedUserId)
+                    ->orWhere('sup_id', $selectedUserId)
+                    ->orWhere('asm_id', $selectedUserId);
+            })->pluck('id')->toArray();
 
-            if ($selectedUser) {
-
-                $staffIdCard = $selectedUser->staff_id_card;
-
-                // ====================================================
-                // SELECTED USER IS MANAGER
-                // ====================================================
-
-                if (
-                    $selectedUser->role_id ==
-                    AppHelper::USER_MANAGER
-                ) {
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Get managers in the same manager group
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $selectedManagerIds = User::query()
-                        ->where(
-                            'role_id',
-                            AppHelper::USER_MANAGER
-                        )
-                        ->where(function ($q) use (
-                            $selectedUser
-                        ) {
-
-                            // Selected manager
-                            $q->where(
-                                'id',
-                                $selectedUser->id
-                            );
-
-                            // Same manager_id
-                            if (!empty($selectedUser->manager_id)) {
-                                $q->orWhere(
-                                    'manager_id',
-                                    $selectedUser->manager_id
-                                );
-                            }
-
-                            // Managers under selected manager
-                            $q->orWhere(
-                                'manager_id',
-                                $selectedUser->id
-                            );
-                        })
-                        ->pluck('id')
-                        ->toArray();
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Get employees under all managers
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $teamUserIds = User::query()
-                        ->whereIn(
-                            'type',
-                            $allowedTypes
-                        )
-                        ->where(function ($q) use (
-                            $selectedManagerIds
-                        ) {
-
-                            $q->whereIn(
-                                'manager_id',
-                                $selectedManagerIds
-                            )
-                            ->orWhereIn(
-                                'rsm_id',
-                                $selectedManagerIds
-                            )
-                            ->orWhereIn(
-                                'asm_id',
-                                $selectedManagerIds
-                            )
-                            ->orWhereIn(
-                                'sup_id',
-                                $selectedManagerIds
-                            );
-                        })
-                        ->pluck('id')
-                        ->toArray();
-                }
-
-                // ====================================================
-                // SELECTED USER IS NOT MANAGER
-                // ====================================================
-
-                else {
-
-                    $teamUserIds = User::query()
-                        ->whereIn(
-                            'type',
-                            $allowedTypes
-                        )
-                        ->where(function ($q) use (
-                            $selectedUserId
-                        ) {
-
-                            $q->where(
-                                'manager_id',
-                                $selectedUserId
-                            )
-                            ->orWhere(
-                                'rsm_id',
-                                $selectedUserId
-                            )
-                            ->orWhere(
-                                'asm_id',
-                                $selectedUserId
-                            )
-                            ->orWhere(
-                                'sup_id',
-                                $selectedUserId
-                            );
-                        })
-                        ->pluck('id')
-                        ->toArray();
-                }
-
-                // ====================================================
-                // GET TEAM STAFF CARDS
-                // ====================================================
-
-                $teamStaffCards = User::whereIn(
-                    'id',
-                    $teamUserIds
-                )
-                    ->pluck('staff_id_card')
-                    ->filter()
-                    ->toArray();
-            }
-
-            // ========================================================
-            // APPLY SELECTED USER FILTER
-            // ========================================================
+            $teamStaffCards = User::whereIn('id', $teamUserIds)
+                ->pluck('staff_id_card')
+                ->filter()
+                ->toArray();
 
             $query->where(function ($q) use (
                 $selectedUserId,
@@ -441,86 +145,35 @@ class ReportsExport implements FromView
                 $teamStaffCards
             ) {
 
-                // ----------------------------------------------------
-                // Selected user direct reports
-                // ----------------------------------------------------
+                // direct
+                $q->where('reports.user_id', $selectedUserId);
 
-                $q->where(
-                    'reports.user_id',
-                    $selectedUserId
-                );
-
-                // ----------------------------------------------------
-                // Team users
-                // ----------------------------------------------------
-
+                // team
                 if (!empty($teamUserIds)) {
-
-                    $q->orWhereIn(
-                        'reports.user_id',
-                        $teamUserIds
-                    );
+                    $q->orWhereIn('reports.user_id', $teamUserIds);
                 }
 
-                // ----------------------------------------------------
-                // Imported reports - selected user
-                // ----------------------------------------------------
-
+                // imported self
                 if ($staffIdCard) {
-
-                    $q->orWhere(
-                        'reports.ssp_id',
-                        $staffIdCard
-                    )
-                    ->orWhere(
-                        'reports.sup_id',
-                        $staffIdCard
-                    );
+                    $q->orWhere('reports.ssp_id', $staffIdCard)
+                        ->orWhere('reports.sup_id', $staffIdCard);
                 }
 
-                // ----------------------------------------------------
-                // Imported reports - team
-                // ----------------------------------------------------
-
+                // imported team
                 if (!empty($teamStaffCards)) {
-
-                    $q->orWhereIn(
-                        'reports.ssp_id',
-                        $teamStaffCards
-                    )
-                    ->orWhereIn(
-                        'reports.sup_id',
-                        $teamStaffCards
-                    );
+                    $q->orWhereIn('reports.ssp_id', $teamStaffCards)
+                        ->orWhereIn('reports.sup_id', $teamStaffCards);
                 }
             });
         }
 
-        // ============================================================
-        // STEP 6:
-        // AREA FILTER
-        // ============================================================
-
+        // ✅ STEP 6: Area filter
         if ($this->area_id) {
-
             $query->where(function ($q) {
-
-                $q->where(
-                    'area_id',
-                    $this->area_id
-                )
-                ->orWhere(
-                    'area',
-                    'like',
-                    '%' . $this->area_value . '%'
-                );
+                $q->where('area_id', $this->area_id)
+                    ->orWhere('area', 'like', '%' . $this->area_value . '%');
             });
         }
-
-        // ============================================================
-        // STEP 7:
-        // RETURN EXCEL VIEW
-        // ============================================================
 
         return view('exports.reports', [
             'rows' => $query->get()
