@@ -1,32 +1,31 @@
 @php
     use App\Http\Helpers\AppHelper;
     use Illuminate\Support\Facades\URL;
-
+    
     $fullDomain = url('/');
-
+    
     // Custom short encryption for file path
     function shortEncrypt($string) {
-        $key = substr(hash('sha256', config('app.key')), 0, 32); // 256-bit key
-        $iv = random_bytes(16); // 128-bit IV
+        $key = substr(hash('sha256', config('app.key')), 0, 32);
+        $iv = random_bytes(16);
         $encrypted = openssl_encrypt($string, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
         $result = base64_encode($iv . $encrypted);
-        return rtrim(strtr($result, '+/', '-_'), '='); // URL safe
+        return rtrim(strtr($result, '+/', '-_'), '=');
     }
 
-    // Initialize totals
-    $total_250ml = 0;
-    $total_350ml = 0;
-    $total_600ml = 0;
-    $total_1500ml = 0;
+    // Use pre-calculated totals
+    $total250ml = $totals['total_250ml'] ?? 0;
+    $total350ml = $totals['total_350ml'] ?? 0;
+    $total600ml = $totals['total_600ml'] ?? 0;
+    $total1500ml = $totals['total_1500ml'] ?? 0;
 @endphp
+
 <table border="1">
     <thead>
         <tr>
             <th>{{ __('Area') }}</th>
             <th>{{ __('SSP_NAME') }}</th>
             <th>{{ __('SSP_ID') }}</th>
-            {{-- <th>{{ __('Driver Name') }}</th>
-            <th>{{ __('Driver ID') }}</th> --}}
             <th>{{ __('SUP_NAME') }}</th>
             <th>{{ __('SUP_ID') }}</th>
             <th>{{ __('ASM_NAME') }}</th>
@@ -58,74 +57,56 @@
     <tbody>
         @foreach ($rows as $row)
             @php
-                $val_250ml = intval($row->{'250_ml'} ?? 0);
-                $val_350ml = intval($row->{'350_ml'} ?? 0);
-                $val_600ml = intval($row->{'600_ml'} ?? 0);
-                $val_1500ml = intval($row->{'1500_ml'} ?? 0);
-                $default = $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
-
-                $total_250ml += $val_250ml;
-                $total_350ml += $val_350ml;
-                $total_600ml += $val_600ml;
-                $total_1500ml += $val_1500ml;
-
-                $reportUser = $row->user;
-                $sup = $reportUser ? \App\Models\User::find($reportUser->sup_id) : null;
-                $rsm = $reportUser ? \App\Models\User::find($reportUser->rsm_id) : null;
-                $asmId = null;
-                if ($reportUser?->asm_id) {
-                    $decodedAsmId = is_array($reportUser->asm_id)
-                        ? $reportUser->asm_id
-                        : json_decode($reportUser->asm_id, true);
-
-                    if (is_array($decodedAsmId)) {
-                        $asmId = $decodedAsmId[0] ?? null;
-                    } else {
-                        $asmId = $decodedAsmId ?: $reportUser->asm_id;
-                    }
-                }
-
-                $asm = $asmId
-                    ? \App\Models\User::find($asmId)
-                    : null;
-                $posm  = isset(AppHelper::MATERIAL[$row->posm])  ? __(AppHelper::MATERIAL[$row->posm])  : ($row->posm_name1 ?? 'N/A');
+                $data = $row->processed_data;
+                $val250ml = $data['val_250ml'];
+                $val350ml = $data['val_350ml'];
+                $val600ml = $data['val_600ml'];
+                $val1500ml = $data['val_1500ml'];
+                $default = $data['default'];
+                
+                $reportUser = $data['user'];
+                $sup = $data['sup'];
+                $rsm = $data['rsm'];
+                $asm = $data['asm'];
+                
+                $posm = isset(AppHelper::MATERIAL[$row->posm]) ? __(AppHelper::MATERIAL[$row->posm]) : ($row->posm_name1 ?? 'N/A');
                 $posm2 = isset(AppHelper::MATERIAL[$row->posm2]) ? __(AppHelper::MATERIAL[$row->posm2]) : ($row->posm_name2 ?? 'N/A');
                 $posm3 = isset(AppHelper::MATERIAL[$row->posm3]) ? __(AppHelper::MATERIAL[$row->posm3]) : ($row->posm_name3 ?? 'N/A');
-                // Check if outlet_photo or photo exists, otherwise set to 'No_Photo'
+                
                 $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'No_Photo';
                 $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'No_Photo';
+                
+                $userLang = session('user_lang', 'kh');
             @endphp
             <tr>
                 <td>
                     {{
                         !empty($row->area_id)
                             ? AppHelper::getAreaNameById($row->area_id)
-                            : ($row->user?->area ?? 'N/A')
+                            : ($reportUser?->area ?? 'N/A')
                     }}
                 </td>
                 <td>
                     {{ $reportUser
-                        ? (session('user_lang', 'kh') === 'kh'
+                        ? ($userLang === 'kh'
                             ? ($reportUser->full_name ?? $reportUser->full_name_latin ?? $row->ssp_name ?? 'N/A')
                             : ($reportUser->full_name_latin ?? $reportUser->full_name ?? $row->ssp_name ?? 'N/A'))
                         : ($row->ssp_name ?? 'N/A')
                     }}
                 </td>
-                <td>{{ optional($reportUser)->staff_id_card ?? $row->ssp_id ?? 'N/A' }}</td>
-                {{-- <td>{{ $row->driver_name ?? 'N/A' }}</td>
-                <td>{{ $row->driver_id ?? 'N/A' }}</td> --}}
+                <td>{{ $reportUser?->staff_id_card ?? $row->ssp_id ?? 'N/A' }}</td>
                 <td>
                     {{ $sup
-                        ? (session('user_lang', 'kh') === 'en'
+                        ? ($userLang === 'en'
                             ? ($sup->full_name_latin ?? $row->sup_name ?? 'N/A')
                             : ($sup->full_name ?? $row->sup_name ?? 'N/A'))
                         : ($row->sup_name ?? 'N/A')
                     }}
                 </td>
-                <td>{{ optional($sup)->staff_id_card ?? $row->sup_id ?? 'N/A' }}</td>
+                <td>{{ $sup?->staff_id_card ?? $row->sup_id ?? 'N/A' }}</td>
                 <td>
                     {{ $asm
-                        ? (session('user_lang', 'kh') === 'en'
+                        ? ($userLang === 'en'
                             ? ($asm->full_name_latin ?? $row->asm_name ?? 'N/A')
                             : ($asm->full_name ?? $row->asm_name ?? 'N/A'))
                         : ($row->asm_name ?? 'N/A')
@@ -133,29 +114,24 @@
                 </td>
                 <td>
                     {{ $rsm
-                        ? (session('user_lang', 'kh') === 'en'
+                        ? ($userLang === 'en'
                             ? ($rsm->full_name_latin ?? $row->rsm_name ?? 'N/A')
                             : ($rsm->full_name ?? $row->rsm_name ?? 'N/A'))
                         : ($row->rsm_name ?? 'N/A')
                     }}
                 </td>
-                <td>
-                    {{ $row->customer?->depo?->name 
-                        ?? $row->outlet_name 
-                        ?? 'N/A' }}
-                </td>
-                <td>{{ $row->customer->name ?? $row->customer_name ?? 'N/A' }}</td>
-                <td>{{ $row->customer->code ?? 'N/A' }}</td>
+                <td>{{ $row->depo_name ?? $row->outlet_name ?? 'N/A' }}</td>
+                <td>{{ $row->customer_name ?? $row->customer_name ?? 'N/A' }}</td>
+                <td>{{ $row->customer_code ?? 'N/A' }}</td>
                 <td>{{ $row->so_number ?? 'N/A' }}</td>
                 <td>{{ $row->date ? \Carbon\Carbon::parse($row->date)->format('d-M-Y') : 'N/A' }}</td>
-                <td>{{ $val_250ml }}</td>
-                <td>{{ $val_350ml }}</td>
-                <td>{{ $val_600ml }}</td>
-                <td>{{ $val_1500ml }}</td>
+                <td>{{ $val250ml }}</td>
+                <td>{{ $val350ml }}</td>
+                <td>{{ $val600ml }}</td>
+                <td>{{ $val1500ml }}</td>
                 <td>{{ $default }}</td>
                 <td>{{ $row->latitude ?? 'N/A' }}</td>
                 <td>{{ $row->longitude ?? 'N/A' }}</td>
-                {{-- <td>{{ ($row->city ?? '') . ', ' . ($row->country ?? '') ?: 'N/A' }}</td> --}}
                 <td>
                     {{ ($row->city && $row->country)
                         ? $row->city . ', ' . $row->country
@@ -186,11 +162,11 @@
         @endforeach
         <tr>
             <td colspan="12">{{ __('Total') }}</td>
-            <td>{{ $total_250ml }}</td>
-            <td>{{ $total_350ml }}</td>
-            <td>{{ $total_600ml }}</td>
-            <td>{{ $total_1500ml }}</td>
-            <td>{{ $total_250ml + $total_350ml + $total_600ml + $total_1500ml }}</td>
+            <td>{{ $total250ml }}</td>
+            <td>{{ $total350ml }}</td>
+            <td>{{ $total600ml }}</td>
+            <td>{{ $total1500ml }}</td>
+            <td>{{ $total250ml + $total350ml + $total600ml + $total1500ml }}</td>
             <td colspan="5"></td>
         </tr>
     </tbody>
