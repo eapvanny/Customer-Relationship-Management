@@ -1218,28 +1218,23 @@ class ReportController extends Controller
 
     public function export(Request $request)
     {
-        $date1  = $request->input('date1');
-        $date2  = $request->input('date2');
-        $userId = $request->input('user_id');
-        $areaId = $request->input('area_id');
+        $date1 = $request->input('date1');
+        $date2 = $request->input('date2');
+        $user_id = $request->input('user_id');
+        $area_id = $request->input('area_id');
+        $user_id = $request->input('user_id');
 
         $staffIdCard = null;
-
-        if ($userId) {
-            $staffIdCard = User::where('id', $userId)
-                ->value('staff_id_card');
+        if ($user_id) {
+            $staffIdCard = User::where('id', $user_id)->value('staff_id_card');
         }
-
+        // dd($date1, $date2, $user_id, $staffIdCard);
         return Excel::download(
-            new ReportsExport(
-                $date1,
-                $date2,
-                $userId,
-                $areaId,
-                $staffIdCard
-            ),
+            new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard),
             'reports_' . now()->format('Y_m_d_His') . '.xlsx'
         );
+
+        // return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 
     public function markAsSeen()
