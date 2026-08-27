@@ -298,7 +298,7 @@ class ReportController extends Controller
                     'other' => $report->other ?? '',
 
                     'formatted_date' => $report->date
-                        ? Carbon::parse($report->date)->format('d M, Y h:i A')
+                        ? Carbon::parse($report->date)->format('d M, Y')
                         : null,
 
                 ];
@@ -446,7 +446,7 @@ class ReportController extends Controller
                     ['size' => '600ML', 'quantity' => $report->{'600_ml'} ?? 0],
                     ['size' => '1500ML', 'quantity' => $report->{'1500_ml'} ?? 0],
                 ],
-                'formatted_date' => Carbon::parse($report->date)->format('d M, Y h:i A'),
+                'formatted_date' => Carbon::parse($report->date)->format('d M, Y'),
                 'sale_photo_url' => $report->outlet_photo
                     ? asset('storage/' . $report->outlet_photo)
                     : asset('images/avatar.png'),
