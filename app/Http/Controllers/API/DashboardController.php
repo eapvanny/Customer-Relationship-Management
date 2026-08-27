@@ -20,11 +20,55 @@ class DashboardController extends Controller
                 return null; // all users
 
             case AppHelper::USER_MANAGER:
-                return User::where('manager_id', $user->id)
-                    ->pluck('id')
-                    ->push($user->id)
-                    ->unique()
-                    ->toArray();
+            $managerIds = User::query()
+                ->where('role_id', AppHelper::USER_MANAGER)
+                ->where(function ($q) use ($user) {
+                    // Current manager
+                    $q->where('id', $user->id);
+                    $q->orWhere(
+                        'manager_id',
+                        $user->manager_id
+                    );
+                })
+                ->pluck('id')
+                ->toArray();
+            /*
+            |--------------------------------------------------------------------------
+            | Get all users under managers in the same group
+            |--------------------------------------------------------------------------
+            */
+
+            $ids = User::query()
+                ->where(function ($q) use ($managerIds) {
+
+                    $q->whereIn(
+                        'manager_id',
+                        $managerIds
+                    )
+                    ->orWhereIn(
+                        'rsm_id',
+                        $managerIds
+                    )
+                    ->orWhereIn(
+                        'asm_id',
+                        $managerIds
+                    )
+                    ->orWhereIn(
+                        'sup_id',
+                        $managerIds
+                    );
+                })
+                ->pluck('id')
+                ->toArray();
+
+
+            // Always include current manager
+            return array_unique(
+                array_merge(
+                    $ids,
+                    $managerIds
+                )
+            );
 
             case AppHelper::USER_RSM:
                 $ids = User::where('rsm_id', $user->id)

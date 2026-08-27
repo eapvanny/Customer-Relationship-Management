@@ -74,17 +74,35 @@ class ReportController extends Controller
 
             } elseif ($userRole == AppHelper::USER_MANAGER) {
 
-                $managedUserIds = User::where(function ($q) use ($userId) {
-                    $q->where('manager_id', $userId)
-                        ->orWhere('rsm_id', $userId)
-                        ->orWhere('sup_id', $userId)
-                        ->orWhere('asm_id', $userId);
+                $managerIds = User::query()
+                    ->where('role_id', AppHelper::USER_MANAGER)
+                    ->where(function ($q) use ($user) {
+                        // Current manager
+                        $q->where('id', $user->id);
+                        $q->orWhere(
+                            'manager_id',
+                            $user->manager_id
+                        );
+                    })
+                    ->pluck('id')
+                    ->toArray();
+
+                $managedUserIds = User::where(function ($q) use ($managerIds) {
+                    $q->where('manager_id', $managerIds)
+                        ->orWhere('rsm_id', $managerIds)
+                        ->orWhere('sup_id', $managerIds)
+                        ->orWhere('asm_id', $managerIds);
                 })
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
 
-                $userIds = array_merge($userIds, $managedUserIds);
+                $userIds = array_unique(
+                    array_merge(
+                        $userIds,
+                        $managedUserIds
+                    )
+                );
 
             } elseif ($userRole == AppHelper::USER_RSM) {
 
@@ -280,7 +298,7 @@ class ReportController extends Controller
                     'other' => $report->other ?? '',
 
                     'formatted_date' => $report->date
-                        ? Carbon::parse($report->date)->format('d F, Y')
+                        ? Carbon::parse($report->date)->format('d M, Y h:i A')
                         : null,
 
                 ];
@@ -341,11 +359,23 @@ class ReportController extends Controller
             ])) {
                 // No additional filtering needed
             } elseif ($userRole == AppHelper::USER_MANAGER) {
-                $managedUserIds = User::where(function ($q) use ($userId) {
-                    $q->where('manager_id', $userId)
-                        ->orWhere('rsm_id', $userId)
-                        ->orWhere('sup_id', $userId)
-                        ->orWhere('asm_id', $userId);
+                $managerIds = User::query()
+                    ->where('role_id', AppHelper::USER_MANAGER)
+                    ->where(function ($q) use ($user) {
+                        // Current manager
+                        $q->where('id', $user->id);
+                        $q->orWhere(
+                            'manager_id',
+                            $user->manager_id
+                        );
+                    })
+                    ->pluck('id')
+                    ->toArray();
+                $managedUserIds = User::where(function ($q) use ($managerIds) {
+                    $q->where('manager_id', $managerIds)
+                        ->orWhere('rsm_id', $managerIds)
+                        ->orWhere('sup_id', $managerIds)
+                        ->orWhere('asm_id', $managerIds);
                 })->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
@@ -416,7 +446,7 @@ class ReportController extends Controller
                     ['size' => '600ML', 'quantity' => $report->{'600_ml'} ?? 0],
                     ['size' => '1500ML', 'quantity' => $report->{'1500_ml'} ?? 0],
                 ],
-                'formatted_date' => Carbon::parse($report->date)->format('d M, Y'),
+                'formatted_date' => Carbon::parse($report->date)->format('d M, Y h:i A'),
                 'sale_photo_url' => $report->outlet_photo
                     ? asset('storage/' . $report->outlet_photo)
                     : asset('images/avatar.png'),
