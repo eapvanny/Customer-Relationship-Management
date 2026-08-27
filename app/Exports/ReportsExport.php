@@ -270,6 +270,63 @@ class ReportsExport implements FromView, WithChunkReading
         return trim($familyName . ' ' . $name);
     }
 
+    /**
+     * Extract ASM IDs from various formats
+     */
+    protected function extractAsmIds($asmId)
+    {
+        if (empty($asmId)) {
+            return [];
+        }
+
+        // If it's already an array
+        if (is_array($asmId)) {
+            // If it's a nested array with first element
+            if (isset($asmId[0]) && is_array($asmId[0])) {
+                return array_map(function($item) {
+                    return is_array($item) ? ($item['id'] ?? null) : $item;
+                }, $asmId[0]);
+            }
+            // If it's a simple array of IDs
+            return $asmId;
+        }
+
+        // If it's a JSON string
+        if (is_string($asmId)) {
+            $decoded = json_decode($asmId, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $this->extractAsmIds($decoded);
+            }
+            // If it's a comma-separated string
+            if (strpos($asmId, ',') !== false) {
+                return array_map('trim', explode(',', $asmId));
+            }
+            // Single ID as string
+            return [$asmId];
+        }
+
+        return [];
+    }
+
+    /**
+     * Safely get ASM IDs from a collection of rows
+     */
+    protected function collectAsmIds($chunk)
+    {
+        $asmIds = [];
+        foreach ($chunk as $row) {
+            if (!empty($row->user_asm_id)) {
+                $extracted = $this->extractAsmIds($row->user_asm_id);
+                foreach ($extracted as $id) {
+                    if (!empty($id) && is_numeric($id)) {
+                        $asmIds[] = (int) $id;
+                    }
+                }
+            }
+        }
+        return array_unique(array_filter($asmIds));
+    }
+
     public function view(): View
     {
         // Get the query
@@ -294,20 +351,15 @@ class ReportsExport implements FromView, WithChunkReading
             // Preload supervisor, RSM, ASM data
             $supervisorIds = $chunk->pluck('user_sup_id')->filter()->unique()->toArray();
             $rsmIds = $chunk->pluck('user_rsm_id')->filter()->unique()->toArray();
-            $asmIds = [];
-            foreach ($chunk as $row) {
-                if ($row->user_asm_id) {
-                    $decoded = is_array($row->user_asm_id) ? $row->user_asm_id : json_decode($row->user_asm_id, true);
-                    if (is_array($decoded) && isset($decoded[0])) {
-                        $asmIds[] = $decoded[0];
-                    } elseif ($decoded) {
-                        $asmIds[] = $decoded;
-                    }
-                }
-            }
-            $asmIds = array_unique(array_filter($asmIds));
+            
+            // Safely collect ASM IDs
+            $asmIds = $this->collectAsmIds($chunk);
+            
+            // Merge all IDs and get users
+            $allIds = array_merge($supervisorIds, $rsmIds, $asmIds);
+            $allIds = array_unique(array_filter($allIds));
 
-            $supervisors = User::whereIn('id', array_merge($supervisorIds, $rsmIds, $asmIds))
+            $supervisors = User::whereIn('id', $allIds)
                 ->select('id', 'family_name', 'name', 'family_name_latin', 'name_latin', 'staff_id_card')
                 ->get()
                 ->keyBy('id');
@@ -372,12 +424,16 @@ class ReportsExport implements FromView, WithChunkReading
             return null;
         }
 
-        $decoded = is_array($asmId) ? $asmId : json_decode($asmId, true);
+        $extracted = $this->extractAsmIds($asmId);
         
-        if (is_array($decoded) && isset($decoded[0])) {
-            return $supervisors->get($decoded[0]);
-        } elseif ($decoded) {
-            return $supervisors->get($decoded);
+        // Get the first valid ASM ID
+        foreach ($extracted as $id) {
+            if (!empty($id) && is_numeric($id)) {
+                $user = $supervisors->get((int) $id);
+                if ($user) {
+                    return $user;
+                }
+            }
         }
         
         return null;
