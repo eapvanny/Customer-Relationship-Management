@@ -110,6 +110,14 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/report/consumer', [ReportController::class, 'storeConsumer'])->name('consumer.store');
     Route::get('/get-reports', [ReportController::class, 'getReports'])->name('get-reports');
     Route::get('/export-report', [ReportController::class, 'export'])->name('report.export');
+    Route::get(
+        '/reports/export/download/{key}',
+        [ReportController::class, 'downloadExport']
+    )->name('reports.export.download');
+    Route::get(
+        '/reports/export/status/{key}',
+        [ReportController::class, 'exportStatus']
+    )->name('reports.export.status');
     //import report
     Route::get('form-import', [ReportController::class, 'formImport'])->name('import.form');
     // In your web.php routes file

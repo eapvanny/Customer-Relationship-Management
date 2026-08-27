@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Exports\ReportsExport;
 use App\Imports\ReportsImport;
+use App\Jobs\GenerateReportsExport;
 use App\Models\Customer;
 use App\Models\Depo;
 use App\Models\User;
@@ -1218,25 +1219,218 @@ class ReportController extends Controller
 
     public function export(Request $request)
     {
-        $date1 = $request->input('date1');
-        $date2 = $request->input('date2');
+        $date1   = $request->input('date1');
+        $date2   = $request->input('date2');
         $user_id = $request->input('user_id');
         $area_id = $request->input('area_id');
-        $user_id = $request->input('user_id');
+
+        $currentUser = auth()->user();
+
+        if (!$currentUser) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
 
         $staffIdCard = null;
+
         if ($user_id) {
-            $staffIdCard = User::where('id', $user_id)->value('staff_id_card');
+            $staffIdCard = User::where('id', $user_id)
+                ->value('staff_id_card');
         }
-        // dd($date1, $date2, $user_id, $staffIdCard);
-        return Excel::download(
-            new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard),
-            'reports_' . now()->format('Y_m_d_His') . '.xlsx'
+
+        /*
+        |--------------------------------------------------------------------------
+        | Unique cache key
+        |--------------------------------------------------------------------------
+        */
+        $cacheKey = 'reports_export_' . md5(json_encode([
+            'version' => 1,
+
+            // Important for permission
+            'current_user_id' => $currentUser->id,
+
+            'date1' => $date1,
+            'date2' => $date2,
+            'user_id' => $user_id,
+            'area_id' => $area_id,
+            'staff_id_card' => $staffIdCard,
+        ]));
+
+        /*
+        |--------------------------------------------------------------------------
+        | Excel file path
+        |--------------------------------------------------------------------------
+        */
+        $filePath = 'exports/reports/' . $cacheKey . '.xlsx';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check cached file
+        |--------------------------------------------------------------------------
+        */
+        $cached = Cache::get($cacheKey);
+
+        if (
+            $cached &&
+            ($cached['status'] ?? null) === 'completed' &&
+            Storage::disk('local')->exists($filePath)
+        ) {
+            return response()->json([
+                'status' => true,
+                'ready' => true,
+                'message' => 'Export file is ready.',
+                'download_url' => route(
+                    'reports.export.download',
+                    ['key' => $cacheKey]
+                ),
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Already processing
+        |--------------------------------------------------------------------------
+        */
+        if (
+            $cached &&
+            in_array(
+                $cached['status'] ?? null,
+                ['queued', 'processing']
+            )
+        ) {
+            return response()->json([
+                'status' => true,
+                'ready' => false,
+                'processing' => true,
+                'message' => 'Export is being generated.',
+                'cache_key' => $cacheKey,
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Set queued status
+        |--------------------------------------------------------------------------
+        */
+        Cache::put(
+            $cacheKey,
+            [
+                'status' => 'queued',
+                'file_path' => $filePath,
+            ],
+            now()->addHours(24)
         );
 
-        // return Excel::download(new ReportsExport(), 'reports_' . now()->format('Y_m_d_His') . '.xlsx');
+        /*
+        |--------------------------------------------------------------------------
+        | Dispatch Job
+        |--------------------------------------------------------------------------
+        */
+        GenerateReportsExport::dispatch(
+            $date1,
+            $date2,
+            $user_id,
+            $area_id,
+            $staffIdCard,
+            $cacheKey,
+            $filePath,
+            $currentUser->id
+        );
+
+        return response()->json([
+            'status' => true,
+            'ready' => false,
+            'processing' => true,
+            'message' => 'Export has been added to the queue.',
+            'cache_key' => $cacheKey,
+        ]);
     }
 
+    public function downloadExport($key)
+{
+    if (!preg_match('/^reports_export_[a-f0-9]{32}$/', $key)) {
+        abort(404);
+    }
+
+    $cached = Cache::get($key);
+
+    if (!$cached) {
+        abort(404, 'Export expired.');
+    }
+
+    if (($cached['status'] ?? null) !== 'completed') {
+        return response()->json([
+            'status' => false,
+            'message' => 'Export is not ready yet.'
+        ], 202);
+    }
+
+    $filePath = $cached['file_path'] ?? null;
+
+    if (
+        !$filePath ||
+        !Storage::disk('local')->exists($filePath)
+    ) {
+        abort(404, 'Export file not found.');
+    }
+
+    return Storage::disk('local')->download(
+        $filePath,
+        'reports_' . now()->format('Y_m_d_His') . '.xlsx'
+    );
+}
+public function exportStatus($key)
+{
+    if (!preg_match('/^reports_export_[a-f0-9]{32}$/', $key)) {
+        abort(404);
+    }
+
+    $cached = Cache::get($key);
+
+    if (!$cached) {
+        return response()->json([
+            'status' => false,
+            'state' => 'expired',
+            'message' => 'Export expired.'
+        ], 404);
+    }
+
+    $state = $cached['status'] ?? 'unknown';
+
+    if (
+        $state === 'completed' &&
+        Storage::disk('local')->exists(
+            $cached['file_path'] ?? ''
+        )
+    ) {
+        return response()->json([
+            'status' => true,
+            'state' => 'completed',
+            'ready' => true,
+            'download_url' => route(
+                'reports.export.download',
+                ['key' => $key]
+            ),
+        ]);
+    }
+
+    if ($state === 'failed') {
+        return response()->json([
+            'status' => false,
+            'state' => 'failed',
+            'ready' => false,
+            'message' => $cached['message'] ?? 'Export failed.'
+        ], 500);
+    }
+
+    return response()->json([
+        'status' => true,
+        'state' => $state,
+        'ready' => false,
+    ]);
+}
     public function markAsSeen()
     {
         $user = auth()->user();

@@ -201,22 +201,36 @@ class AppHelper
             14 => 'លក់តាមរទេះ',
         ];
 
-    public static function getAreaNameById($areaId)
-{
-    if (empty($areaId)) {
-        return null;
-    }
+    public static function getAreaMap()
+    {
+        static $map = null;
 
-    foreach (self::AREAS as $area => $rooms) {
-        if (isset($rooms[$areaId])) {
-            return $rooms[$areaId];
-        } elseif ($areaId == $area) {
-            return $area;
+        if ($map !== null) {
+            return $map;
         }
-    }
 
-    return null; // let caller decide fallback
-}
+        $map = [];
+
+        foreach (self::AREAS as $area => $rooms) {
+
+            foreach ($rooms as $id => $name) {
+                $map[$id] = $name;
+            }
+
+        }
+
+        return $map;
+    }
+    public static function getAreaNameById($areaId)
+    {
+        if (empty($areaId)) {
+            return null;
+        }
+
+        $map = self::getAreaMap();
+
+        return $map[$areaId] ?? $areaId;
+    }
 //search area by text and return area ids
 public static function getAreaIdsBySearch($search)
 {
@@ -308,6 +322,41 @@ public static function getAreaValue($areaKey)
     }
     
     return [];
+}
+
+
+public static function shortEncrypt($string)
+{
+    if (empty($string)) {
+        return null;
+    }
+
+    $key = substr(
+        hash('sha256', config('app.key')),
+        0,
+        32
+    );
+
+    $iv = random_bytes(16);
+
+    $encrypted = openssl_encrypt(
+        $string,
+        'AES-256-CBC',
+        $key,
+        OPENSSL_RAW_DATA,
+        $iv
+    );
+
+    if ($encrypted === false) {
+        return null;
+    }
+
+    $result = base64_encode($iv . $encrypted);
+
+    return rtrim(
+        strtr($result, '+/', '-_'),
+        '='
+    );
 }
 
 // resize image function

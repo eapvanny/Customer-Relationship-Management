@@ -3,15 +3,6 @@
     use Illuminate\Support\Facades\URL;
     
     $fullDomain = url('/');
-    
-    // Custom short encryption for file path
-    function shortEncrypt($string) {
-        $key = substr(hash('sha256', config('app.key')), 0, 32);
-        $iv = random_bytes(16);
-        $encrypted = openssl_encrypt($string, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
-        $result = base64_encode($iv . $encrypted);
-        return rtrim(strtr($result, '+/', '-_'), '=');
-    }
 
     // Use pre-calculated totals
     $total250ml = $totals['total_250ml'] ?? 0;
@@ -73,8 +64,13 @@
                 $posm2 = isset(AppHelper::MATERIAL[$row->posm2]) ? __(AppHelper::MATERIAL[$row->posm2]) : ($row->posm_name2 ?? 'N/A');
                 $posm3 = isset(AppHelper::MATERIAL[$row->posm3]) ? __(AppHelper::MATERIAL[$row->posm3]) : ($row->posm_name3 ?? 'N/A');
                 
-                $OutletUrl = $row->outlet_photo ? $fullDomain . '/photo/' . shortEncrypt($row->outlet_photo) : 'No_Photo';
-                $PosmUrl = $row->photo ? $fullDomain . '/photo/' . shortEncrypt($row->photo) : 'No_Photo';
+                $OutletUrl = $row->outlet_photo
+                    ? $fullDomain . '/photo/' . AppHelper::shortEncrypt($row->outlet_photo)
+                    : 'No_Photo';
+
+                $PosmUrl = $row->photo
+                    ? $fullDomain . '/photo/' . AppHelper::shortEncrypt($row->photo)
+                    : 'No_Photo';
                 
                 $userLang = session('user_lang', 'kh');
             @endphp
