@@ -476,7 +476,10 @@
                                         
                                     {{-- @endHasTypePermission --}}
                                     
-                                    <button type="button" id="exportBtn" class="btn btn-success btn-sm"> <i class="fa fa-upload"></i> {{ __('Export') }} </button>
+                                    <a class="btn btn-success btn-sm" 
+                                    href="{{ route('report.export') . '?' . http_build_query(request()->only(['date1', 'date2', 'user_id', 'area_id'])) }}">
+                                        <i class="fa fa-upload"></i> {{ __('Export') }}
+                                    </a>
                                 </div>
                                 @hasTypePermission('create report')
                                     <div class="col-6 text-end">
@@ -1094,165 +1097,6 @@
                 });
             });
         });
-        $('#exportBtn').on('click', function () {
-
-            const button = $(this);
-
-            const date1 = $('input[name="date1"]').val();
-            const date2 = $('input[name="date2"]').val();
-            const user_id = $('select[name="user_id"]').val();
-            const area_id = $('select[name="area_id"]').val();
-
-            // Disable button
-
-            button.prop('disabled', true);
-
-            button.html(`
-                <i class="fa fa-spinner fa-spin"></i>
-                Generating...
-            `);
-
-            $.ajax({
-                url: "{{ route('report.export') }}",
-                type: "GET",
-                data: {
-                    date1: date1,
-                    date2: date2,
-                    user_id: user_id,
-                    area_id: area_id
-                },
-
-                success: function (response) {
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | File already exists in cache
-                    |--------------------------------------------------------------------------
-                    */
-                    if (response.ready) {
-
-                        window.location.href =
-                            response.download_url;
-
-                        resetExportButton();
-
-                        return;
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Queue is processing
-                    |--------------------------------------------------------------------------
-                    */
-                    if (response.cache_key) {
-
-                        checkExportStatus(
-                            response.cache_key
-                        );
-                    }
-                },
-
-                error: function (xhr) {
-
-                    console.error(xhr);
-
-                    alert(
-                        xhr.responseJSON?.message ||
-                        'Something went wrong.'
-                    );
-
-                    resetExportButton();
-                }
-            });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Check Queue Status
-            |--------------------------------------------------------------------------
-            */
-            function checkExportStatus(cacheKey)
-            {
-                const interval = setInterval(function () {
-
-                    $.ajax({
-                        url:
-                            "{{ url('/reports/export/status') }}/"
-                            + cacheKey,
-
-                        type: "GET",
-
-                        success: function (response) {
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Completed
-                            |--------------------------------------------------------------------------
-                            */
-                            if (
-                                response.state === 'completed'
-                            ) {
-
-                                clearInterval(interval);
-
-                                // Download Excel
-                                window.location.href =
-                                    response.download_url;
-
-                                resetExportButton();
-                            }
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Failed
-                            |--------------------------------------------------------------------------
-                            */
-                            else if (
-                                response.state === 'failed'
-                            ) {
-
-                                clearInterval(interval);
-
-                                alert(
-                                    response.message ||
-                                    'Export failed.'
-                                );
-
-                                resetExportButton();
-                            }
-
-                        },
-
-                        error: function (xhr) {
-
-                            console.error(
-                                'Export status error:',
-                                xhr
-                            );
-                        }
-                    });
-
-                }, 2000);
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Reset Button
-            |--------------------------------------------------------------------------
-            */
-            function resetExportButton()
-            {
-                button.prop('disabled', false);
-
-                button.html(`
-                    <i class="fa fa-upload"></i>
-                    {{ __('Export') }}
-                `);
-            }
-
-        });
-
     </script>
 @endsection
 <!-- END PAGE JS-->
