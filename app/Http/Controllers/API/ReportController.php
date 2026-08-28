@@ -272,7 +272,7 @@ class ReportController extends Controller
                     'customer_type' => $report->customer_type
                         ?? 'អតិថិជនទូទៅ',
 
-                    'outlet_name' => optional($report->customer?->depo)->name
+                    'outlet_name' => optional($report->depo)->name
                         ?? $report->outlet_name
                         ?? 'N/A',
 
@@ -439,7 +439,7 @@ class ReportController extends Controller
                 'customer_type' => $report->customer_type
                     ? (AppHelper::CUSTOMER_TYPE[$report->customer_type] ?? 'N/A')
                     : 'N/A',
-                'outlet_name' => optional($report->customer)->depo->name ?? 'N/A',
+                'outlet_name' => optional($report->deop)->name ?? 'N/A',
                 'quantities' => [
                     ['size' => '250ML', 'quantity' => $report->{'250_ml'} ?? 0],
                     ['size' => '350ML', 'quantity' => $report->{'350_ml'} ?? 0],

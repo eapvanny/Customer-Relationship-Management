@@ -362,8 +362,8 @@ class ReportController extends Controller
                     })
                     ->addColumn('outlet_id', function ($data) {
                         // If depo relation exists
-                        if (!empty($data->customer) && !empty($data->customer->depo)) {
-                            return $data->customer->depo->name ?? 'N/A';
+                        if (!empty($data->depo) && !empty($data->depo)) {
+                            return $data->depo->name ?? 'N/A';
                         }
 
                         // Fallback to outlet_name column
