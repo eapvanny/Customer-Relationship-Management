@@ -539,19 +539,38 @@ class UserController extends Controller
 
         $managerIds = [];
 
-        if ($roleId == AppHelper::USER_RSM) {
+        if ($roleId == AppHelper::USER_MANAGER) {
+            // Get current logged-in manager
+            $managerIds = [$authUser->id];
+
+        } elseif ($roleId == AppHelper::USER_RSM) {
+
             $managerIds = User::where('type', $typeId)
                 ->where('role_id', AppHelper::USER_MANAGER)
-                ->pluck('id')->toArray();
-        } elseif ($roleId == AppHelper::USER_SUP || $roleId == AppHelper::USER_ASM || $roleId == AppHelper::USER_EMPLOYEE) {
+                ->pluck('id')
+                ->toArray();
+
+        } elseif (
+            $roleId == AppHelper::USER_SUP ||
+            $roleId == AppHelper::USER_ASM ||
+            $roleId == AppHelper::USER_EMPLOYEE
+        ) {
+
             $managerIds = User::where('id', $rsmId)
                 ->where('type', $typeId)
-                ->pluck('manager_id')->toArray();
+                ->pluck('manager_id')
+                ->toArray();
         }
 
-        $query = User::whereIn('id', array_unique($managerIds));
+        $managerIds = array_unique(array_filter($managerIds));
+
+        $query = User::whereIn('id', $managerIds);
+
+        // Optional: make sure Manager has Manager role
+        $query->where('role_id', AppHelper::USER_MANAGER);
 
         $managers = $query->get()->mapWithKeys(function ($user) use ($authUser) {
+
             if ($user->type == AppHelper::SALE) {
                 $suffix = 'PP';
             } elseif ($user->type == AppHelper::SE) {
@@ -569,7 +588,9 @@ class UserController extends Controller
             ];
         })->toArray();
 
-        return response()->json(['managers' => $managers]);
+        return response()->json([
+            'managers' => $managers
+        ]);
     }
 
 
