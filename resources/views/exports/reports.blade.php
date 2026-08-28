@@ -136,7 +136,7 @@
                     }}
                 </td>
                 <td>
-                    {{ $row->customer?->depo?->name 
+                    {{ $row->depo->name 
                         ?? $row->outlet_name 
                         ?? 'N/A' }}
                 </td>
