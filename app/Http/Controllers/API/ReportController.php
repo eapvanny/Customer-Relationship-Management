@@ -475,12 +475,10 @@ class ReportController extends Controller
                 'user' => [
                     'title' => $report->user?->title ?? 'Mr.',
                     'name' => $report->user?->name ?? 'Developer',
-                    'id' => $report->user
-                        ? '000' . str_pad($report->user->id, 3, '0', STR_PAD_LEFT)
-                        : 'N/A',
-                    'phone' => $report->user?->phone ?? '0124568888',
-                    'gender' => $report->user
-                        ? (AppHelper::GENDER[$report->user->gender] ?? 'N/A')
+                    'id' => $user->staff_id_card ?? 'N/A',
+                    'phone' => $user->phone_no ?? '0124568888',
+                    'gender' => $user && isset($user->gender)
+                        ? (AppHelper::GENDER[$user->gender] ?? 'N/A')
                         : 'N/A',
                 ],
             ];
