@@ -462,7 +462,7 @@ class DashboardController extends Controller
             ->pluck('count', 'month') 
             ->toArray();
 
-            // Performance Case
+        // Performance Case - FIXED
         $performanceCaseQuery = Report::query()
             ->whereYear('created_at', $year);
 
@@ -473,12 +473,10 @@ class DashboardController extends Controller
         $performanceCases = $performanceCaseQuery
             ->selectRaw('
                 EXTRACT(MONTH FROM created_at) as month,
-                COALESCE(SUM(
-                    COALESCE("250_ml", 0) +
-                    COALESCE("350_ml", 0) +
-                    COALESCE("600_ml", 0) +
-                    COALESCE("1500_ml", 0)
-                ), 0) as target
+                COALESCE(SUM(250_ml), 0) + 
+                COALESCE(SUM(350_ml), 0) + 
+                COALESCE(SUM(600_ml), 0) + 
+                COALESCE(SUM(1500_ml), 0) as target
             ')
             ->groupByRaw('EXTRACT(MONTH FROM created_at)')
             ->orderByRaw('EXTRACT(MONTH FROM created_at)')
