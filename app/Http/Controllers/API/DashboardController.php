@@ -568,6 +568,23 @@ class DashboardController extends Controller
             ->groupBy('day')
             ->pluck('total', 'day')
             ->toArray();
+            // ==============================
+            // Case Chart Monday -> Sunday
+            // ==============================
+            $reportCaseByDay = (clone $reportQuery)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->selectRaw("
+                    WEEKDAY(created_at) as day,
+                    COALESCE(SUM(
+                        COALESCE(`250_ml`, 0) +
+                        COALESCE(`350_ml`, 0) +
+                        COALESCE(`600_ml`, 0) +
+                        COALESCE(`1500_ml`, 0)
+                    ), 0) as total_case
+                ")
+                ->groupBy('day')
+                ->pluck('total_case', 'day')
+                ->toArray();
 
         $customerByDay = (clone $customerQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -582,9 +599,11 @@ class DashboardController extends Controller
         ];
 
         $reportChart = [];
+        $reportCaseChart = [];
         $customerChart = [];
         for ($i = 0; $i < 7; $i++) {
             $reportChart[] = $reportByDay[$i] ?? 0;
+            $reportCaseChart[] = (int) ($reportCaseByDay[$i] ?? 0);
             $customerChart[] = $customerByDay[$i] ?? 0;
         }
 
@@ -664,6 +683,7 @@ class DashboardController extends Controller
             // Chart Data
             'dayLabels' => $dayLabels,
             'reportData' => $reportChart,
+            'reportCaseData' => $reportCaseChart,
             'customerData' => $customerChart,
 
             'saleTarget' => $saleTarget,
