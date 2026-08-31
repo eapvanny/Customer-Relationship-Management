@@ -167,7 +167,7 @@ class DepoController extends Controller
                             $button .= '<a title="Edit" href="' . route('depo.edit', $depo->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>';
                             $actions = true;
                         }
-                        if (auth()->user()->can('delete depo')) {
+                        if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMINISTRATOR || auth()->user()->role_id == AppHelper::USER_DIRECTOR || auth()->user()->role_id == AppHelper::USER_MANAGER || auth()->user()->role_id == AppHelper::USER_SUP) {
                             $button .= '<a href="' . route('depo.destroy', $depo->id) . '" class="btn btn-danger btn-sm delete" title="Delete"><i class="fa fa-fw fa-trash"></i></a>';
                             $actions = true;
                         }
