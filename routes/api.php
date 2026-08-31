@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Optional for multipart/form-data
     Route::post('/profile', [APIUserController::class, 'updateUserProfile']);
     Route::get('/dashboard', [APIDashboard::class, 'index']);
+    Route::get('/maindashboard', [APIDashboard::class, 'secondindex']);
 
     Route::get('/customers', [APICustomer::class, 'index']); // Existing endpoint
     Route::get('/areas', [APICustomer::class, 'getAreas']);
