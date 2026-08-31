@@ -5,6 +5,7 @@ use App\Http\Controllers\AsmimportController;
 use App\Http\Controllers\AsmprogramController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerHRCController;
 use App\Http\Controllers\CustomerProvinceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepoController;
@@ -129,6 +130,7 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::get('/customers/getName', [ReportController::class, 'getCustomers'])->name('customers.getNames');
     Route::get('/customers/customer-types', [ReportController::class, 'getCustomerType'])->name('customers.getCustomerTypes');
     Route::resource('customer', CustomerController::class)->except(['show']);
+    Route::resource('customerhrc', CustomerHRCController::class)->except(['show']);
     Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');
     Route::get('/get-depos-by-area', [CustomerController::class, 'getDeposByArea'])->name('get-depos-by-area');
     //Depo

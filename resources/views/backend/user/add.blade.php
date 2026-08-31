@@ -564,10 +564,13 @@
 
             const SALE = "{{ AppHelper::SALE }}";
             const SE = "{{ AppHelper::SE }}";
+            const HRC = "{{ AppHelper::HRC }}";
             const EMPLOYEE = "{{ AppHelper::USER_EMPLOYEE }}";
             const ASM = "{{ AppHelper::USER_ASM }}";
             const SUP = "{{ AppHelper::USER_SUP }}";
             const RSM = "{{ AppHelper::USER_RSM }}";
+            const TSE = "{{ AppHelper::USER_SE }}";
+            const SM = "{{ AppHelper::USER_SM }}";
             const MANAGER = "{{ AppHelper::USER_MANAGER }}";
 
             function toggleHierarchyFields() {
@@ -607,59 +610,141 @@
 
             function handleRoleChange() {
                 const selectedType = $('#type').val();
-                const selectedRole = $('#role_id').val();
+    const selectedRole = $('#role_id').val();
 
-                // Reset all hierarchy fields
-                $('#sup-section, #asm-section, #rsm-section, #manager-section').addClass('d-none');
-                $('#sup_id, #asm_id, #rsm_id, #manager_id').empty().append(
-                        '<option value="">{{ __('Select') }}</option>')
-                    .val(null).trigger('change').prop('required', false);
+    /*
+    |--------------------------------------------------------------------------
+    | ALWAYS RESET ALL HIERARCHY SECTIONS
+    |--------------------------------------------------------------------------
+    */
+    $('#sup-section, #asm-section, #rsm-section, #manager-section')
+        .addClass('d-none');
 
-                if (selectedType == SALE || selectedType == SE) {
-                    if (selectedRole == EMPLOYEE) {
-                        // For Employee: show Supervisor first, then ASM, RSM, Manager
-                        $('#sup-section, #asm-section, #rsm-section, #manager-section').removeClass('d-none');
-                        $('#sup_id').prop('required', true);
-                        $('#sup_id').empty().append('<option value="">{{ __('Select a Supervisor') }}</option>');
-                        $('#asm_id').empty().append(
-                            '<option value="">{{ __('Select a Supervisor first') }}</option>');
-                        $('#rsm_id').empty().append('<option value="">{{ __('Select an ASM first') }}</option>');
-                        $('#manager_id').empty().append(
-                            '<option value="">{{ __('Select an RSM first') }}</option>');
+    $('#sup_id, #asm_id, #rsm_id, #manager_id')
+        .prop('required', false)
+        .val(null)
+        .trigger('change');
 
-                        fetchSupervisors(selectedType, selectedRole);
-                    } else if (selectedRole == SUP) {
-                        // For Supervisor: show ASM, RSM, and Manager
-                        $('#asm-section, #rsm-section, #manager-section').removeClass('d-none');
-                        $('#asm_id, #rsm_id, #manager_id').prop('required', true);
+    if (!selectedType || !selectedRole) {
+        return;
+    }
 
-                        $('#asm_id').empty().append(
-                            '<option value="">{{ __('Select one or more ASMs') }}</option>');
-                        $('#rsm_id').empty().append('<option value="">{{ __('Select an ASM first') }}</option>');
-                        $('#manager_id').empty().append(
-                            '<option value="">{{ __('Select an RSM first') }}</option>');
+    /*
+    |--------------------------------------------------------------------------
+    | HRC
+    |--------------------------------------------------------------------------
+    | HRC = Manager ONLY
+    |--------------------------------------------------------------------------
+    */
+    if (selectedType == HRC) {
 
-                        fetchAsms(selectedType, selectedRole);
-                    } else if (selectedRole == ASM) {
-                        // For ASM: show RSM and Manager
-                        $('#rsm-section, #manager-section').removeClass('d-none');
-                        $('#rsm_id, #manager_id').prop('required', true);
+        // Explicitly hide these for HRC
+        $('#sup-section').addClass('d-none');
+        $('#asm-section').addClass('d-none');
+        $('#rsm-section').addClass('d-none');
 
-                        $('#rsm_id').empty().append('<option value="">{{ __('Select an RSM') }}</option>');
-                        $('#manager_id').empty().append(
-                            '<option value="">{{ __('Select an RSM first') }}</option>');
+        // Only show Manager
+        $('#manager-section').removeClass('d-none');
+        $('#manager_id').prop('required', true);
 
-                        fetchRsms(selectedType, selectedRole);
-                    } else if (selectedRole == RSM) {
-                        // For RSM: show Manager only
-                        $('#manager-section').removeClass('d-none');
-                        $('#manager_id').prop('required', true);
-                        $('#manager_id').empty().append('<option value="">{{ __('Select Manager') }}</option>');
+        $('#manager_id')
+            .empty()
+            .append('<option value="">{{ __("Select Manager") }}</option>');
 
-                        fetchManagers(selectedType, selectedRole);
-                    }
-                }
+        fetchManagers(selectedType, selectedRole);
 
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SALE / SE
+    |--------------------------------------------------------------------------
+    */
+    if (selectedType == SALE || selectedType == SE) {
+
+        if (selectedRole == EMPLOYEE) {
+
+            // Employee
+            $('#sup-section, #asm-section, #rsm-section, #manager-section')
+                .removeClass('d-none');
+
+            $('#sup_id').prop('required', true);
+
+            $('#sup_id').empty().append(
+                '<option value="">{{ __("Select a Supervisor") }}</option>'
+            );
+
+            $('#asm_id').empty().append(
+                '<option value="">{{ __("Select a Supervisor first") }}</option>'
+            );
+
+            $('#rsm_id').empty().append(
+                '<option value="">{{ __("Select an ASM first") }}</option>'
+            );
+
+            $('#manager_id').empty().append(
+                '<option value="">{{ __("Select an RSM first") }}</option>'
+            );
+
+            fetchSupervisors(selectedType, selectedRole);
+
+        } else if (selectedRole == SUP) {
+
+            // Supervisor
+            $('#asm-section, #rsm-section, #manager-section')
+                .removeClass('d-none');
+
+            $('#asm_id, #rsm_id, #manager_id')
+                .prop('required', true);
+
+            $('#asm_id').empty().append(
+                '<option value="">{{ __("Select one or more ASMs") }}</option>'
+            );
+
+            $('#rsm_id').empty().append(
+                '<option value="">{{ __("Select an ASM first") }}</option>'
+            );
+
+            $('#manager_id').empty().append(
+                '<option value="">{{ __("Select an RSM first") }}</option>'
+            );
+
+            fetchAsms(selectedType, selectedRole);
+
+        } else if (selectedRole == ASM) {
+
+            // ASM
+            $('#rsm-section, #manager-section')
+                .removeClass('d-none');
+
+            $('#rsm_id, #manager_id')
+                .prop('required', true);
+
+            $('#rsm_id').empty().append(
+                '<option value="">{{ __("Select an RSM") }}</option>'
+            );
+
+            $('#manager_id').empty().append(
+                '<option value="">{{ __("Select an RSM first") }}</option>'
+            );
+
+            fetchRsms(selectedType, selectedRole);
+
+        } else if (selectedRole == RSM) {
+
+            // RSM
+            $('#manager-section').removeClass('d-none');
+
+            $('#manager_id').prop('required', true);
+
+            $('#manager_id').empty().append(
+                '<option value="">{{ __("Select Manager") }}</option>'
+            );
+
+            fetchManagers(selectedType, selectedRole);
+        }
+    }
                 // Trigger existing values if present
                 const oldSup = "{{ old('sup_id', optional($user)->sup_id) }}";
                 const oldAsm = @json(old('asm_id', optional($user)->asm_id ?? []));

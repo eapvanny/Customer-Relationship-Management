@@ -290,6 +290,46 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- HRC Permissions Section -->
+                            <div class="form-group permission-section" id="hrc-permissions" style="display: none;">
+                                <label class="fw-bold">{{ __('Manage Permissions for HRC') }}</label>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="all-dashboard-hrc">
+                                            <label class="form-check-label" for="all-dashboard-hrc">{{ __('Select All HRC Permissions') }}</label>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        @php $hrcPermissions = $permissions->where('type', AppHelper::HRC); @endphp
+                                        @if ($hrcPermissions->count() > 0)
+                                            @php $counter = 0; @endphp
+                                            @foreach ($hrcPermissions as $permission)
+                                                @if ($counter % 4 == 0 && $counter > 0)
+                                                    </div><div class="row">
+                                                @endif
+                                                <div class="col-md-3">
+                                                    <div class="form-check">
+                                                        <input {{ in_array($permission->id, $hasPermission) ? 'checked' : '' }}
+                                                            class="form-check-input permission-checkbox-hrc" type="checkbox"
+                                                            id="permission-se-{{ $permission->id }}" name="permissions[]"
+                                                            value="{{ $permission->id }}">
+                                                        <label class="form-check-label" for="permission-se-{{ $permission->id }}">
+                                                            {{ $permission->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                @php $counter++; @endphp
+                                            @endforeach
+                                        @else
+                                            <div class="col-md-12">
+                                                <p>No permissions available for HRC.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -312,6 +352,9 @@
                     $('#sale-permissions').show();
                 } else if (type === '3') { // SE
                     $('#se-permissions').show();
+                }
+                else if (type === '4') { // SE
+                    $('#hrc-permissions').show();
                 }
             }
 
@@ -336,6 +379,11 @@
             // Select all SE permissions
             $('#all-dashboard-se').on('change', function () {
                 $('.permission-checkbox-se').prop('checked', $(this).prop('checked'));
+            });
+
+            // Select all HRC permissions
+            $('#all-dashboard-hrc').on('change', function () {
+                $('.permission-checkbox-hrc').prop('checked', $(this).prop('checked'));
             });
         });
     </script>

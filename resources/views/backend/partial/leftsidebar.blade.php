@@ -23,7 +23,6 @@
                 </li>
             @endHasTypePermission
 
-            @hasTypePermission('view customer')
                 <li class="treeview">
                     <a href="#" class="text-decoration-none">
                         <i class="fa fa-solid fa-users"></i>
@@ -47,9 +46,25 @@
                                 </a>
                             </li>
                         @endHasTypePermission
+                        @if (
+                            auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN ||
+                            (
+                                auth()->user()->role_id === AppHelper::USER_MANAGER &&
+                                auth()->user()->position === 'NSM'
+                            ) ||
+                            auth()->user()->type === AppHelper::HRC
+                        )
+                            @hasTypePermission('view customer_hrc')
+                                <li>
+                                    <a href="{{ route('customerhrc.index') }}" class="text-decoration-none">
+                                        <i class="fa fa-solid fa-user"></i>
+                                        <span>{{ __('Customer_HRC') }}</span>
+                                    </a>
+                                </li>
+                            @endHasTypePermission
+                        @endif
                     </ul>
                 </li>
-            @endHasTypePermission
             @hasTypePermission('view target')
                 <li>
                     <a href="{{ route('target.index') }}" class="text-decoration-none">
@@ -226,13 +241,7 @@
 
             {{-- user part start here --}}
 
-            @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN ||
-                    auth()->user()->role_id === AppHelper::USER_ADMINISTRATOR ||
-                    auth()->user()->role_id === AppHelper::USER_SUP ||
-                    auth()->user()->role_id === AppHelper::USER_ADMIN ||
-                    auth()->user()->role_id === AppHelper::USER_DIRECTOR ||
-                    auth()->user()->role_id === AppHelper::USER_MANAGER ||
-                    auth()->user()->role_id === AppHelper::USER_RSM)
+            @if (auth()->user()->role_id !== AppHelper::USER_EMPLOYEE)
                 <li>
                     <a class="fw-bold p-3 text-dark m-0 text-uppercase">
                         <span>{{ __('System Operating') }}</span>

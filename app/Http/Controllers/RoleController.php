@@ -94,7 +94,7 @@ public function create(Request $request)
             'role_id' => 'required|exists:roles,id',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
-            'type' => 'required|in:1,2,3', // ALL, SALE, SE
+            'type' => 'required|in:1,2,3,4', // ALL, SALE, SE,HRC
         ]);
 
         if ($validator->fails()) {
@@ -133,7 +133,7 @@ public function create(Request $request)
         $role = Role::findOrFail($id);
         $typeGet = $request->query('type');
 
-        if ($typeGet && !in_array($typeGet, ['1', '2', '3'])) {
+        if ($typeGet && !in_array($typeGet, ['1', '2', '3', '4'])) {
             return redirect()->route('role.index')->with('error', 'Invalid role type.');
         }
 
@@ -141,6 +141,7 @@ public function create(Request $request)
             AppHelper::ALL => Permission::where('type', AppHelper::ALL)->get(),
             AppHelper::SALE => Permission::where('type', AppHelper::SALE)->get(),
             AppHelper::SE => Permission::where('type', AppHelper::SE)->get(),
+            AppHelper::HRC => Permission::where('type', AppHelper::HRC)->get(),
             default => Permission::where('type', AppHelper::ALL)->get(), // Default to ALL for consistency
         };
 
@@ -164,7 +165,7 @@ public function create(Request $request)
         $validator = Validator::make($request->all(), [
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
-            'type' => 'required|in:1,2,3',
+            'type' => 'required|in:1,2,3,4',
         ]);
 
         if ($validator->fails()) {

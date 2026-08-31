@@ -81,7 +81,7 @@ class PermissionController extends Controller
                     }
                 },
             ],
-            'type' => 'required|in:1,2,3',
+            'type' => 'required|in:1,2,3,4',
         ]);
 
         if ($validator->fails()) {

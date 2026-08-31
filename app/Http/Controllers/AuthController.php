@@ -72,6 +72,10 @@ class AuthController extends Controller
                 return redirect()->route('dashboard.index')
                     ->with('success', 'Welcome to CRM system.')
                     ->with('show_popup', true);
+            } elseif ((auth()->user()->type == AppHelper::HRC)) {
+                return redirect()->route('customerhrc.index')
+                    ->with('success', 'Welcome to CRM system.')
+                    ->with('show_popup', true);
             } else {
                 return redirect()->route('dashboard.index')
                     ->with('success', 'Welcome to AdminPanel.')

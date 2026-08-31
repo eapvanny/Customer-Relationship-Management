@@ -17,6 +17,8 @@ class AppHelper
     const USER_ASM = 7;
     const USER_SUP = 8;
     const USER_EMPLOYEE = 9;
+    const USER_SE = 10;
+    const USER_SM = 11;
 
     const USER = [
         self::USER_SUPER_ADMIN => 'Super Administrator',
@@ -24,19 +26,23 @@ class AppHelper
         self::USER_ADMIN => 'Admin',
         self::USER_DIRECTOR => 'Director',
         self::USER_MANAGER => 'Manager',
-        self::USER_RSM => 'RSM',
-        self::USER_ASM => 'ASM',
+        self::USER_SE => 'SE',
         self::USER_SUP => 'Supervisor',
+        self::USER_ASM => 'ASM',
+        self::USER_RSM => 'RSM',
+        self::USER_SM => 'SM',
         self::USER_EMPLOYEE => 'Sale Support',
     ];
 
     const ALL = 1;
     const SALE = 2;
     const SE = 3;
+    const HRC = 4;
     const USER_TYPE = [
         self::ALL => 'All',
         self::SALE => 'SSP',
         self::SE => 'SE',
+        self::HRC => 'HRC',
     ];
 
     const UMBRELLA = 1;
@@ -201,7 +207,14 @@ class AppHelper
             14 => 'លក់តាមរទេះ',
         ];
 
-    public static function getAreaMap()
+        const CUSTOMER_TYPE_HRC = [
+            1 => 'Short Stay',
+            2 => 'Restaurant',
+            3 => 'Sport',
+            4 => 'Company',
+        ];
+
+    public static function getAreaMap() 
     {
         static $map = null;
 
