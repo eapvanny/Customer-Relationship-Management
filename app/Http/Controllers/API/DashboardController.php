@@ -462,15 +462,15 @@ class DashboardController extends Controller
             ->pluck('count', 'month') 
             ->toArray();
 
-            // Performance Target
-        $performanceTargetQuery = Report::query()
+            // Performance Case
+        $performanceCaseQuery = Report::query()
             ->whereYear('created_at', $year);
 
         if ($userIds !== null) {
-            $performanceTargetQuery->whereIn('user_id', $userIds);
+            $performanceCaseQuery->whereIn('user_id', $userIds);
         }
 
-        $performanceTargets = $performanceTargetQuery
+        $performanceCases = $performanceCaseQuery
             ->selectRaw('
                 EXTRACT(MONTH FROM created_at) as month,
                 COALESCE(SUM(
@@ -489,10 +489,10 @@ class DashboardController extends Controller
 
         // Always return 12 months 
         $performanceData = []; 
-        $performanceTarget = [];
+        $performanceCase = [];
         for ($i = 1; $i <= 12; $i++) { 
             $performanceData[] = (int) ($performanceReports[$i] ?? 0); 
-            $performanceTarget[] = (int) ($performanceTargets[$i] ?? 0);
+            $performanceCase[] = (int) ($performanceCases[$i] ?? 0);
         }
         $todayReports = (clone $reportQuery)
             ->whereDate('created_at', today())
@@ -541,7 +541,7 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
-        $weeklyTargetReport = (clone $reportQuery)
+        $weeklyCaseReport = (clone $reportQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw("
                 COALESCE(SUM(
@@ -553,7 +553,7 @@ class DashboardController extends Controller
             ")
             ->value('total_target');
 
-        $weeklyTargetReport = (int) $weeklyTargetReport;
+        $weeklyCaseReport = (int) $weeklyCaseReport;
 
         $weeklyCustomers = (clone $customerQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -615,7 +615,7 @@ class DashboardController extends Controller
             $rank = 'Rank C';
         }
 
-        $todaySaleTarget = (clone $reportQuery)
+        $todaySaleCase = (clone $reportQuery)
             ->whereBetween('created_at', [
                 Carbon::today()->startOfDay(),
                 Carbon::today()->endOfDay()
@@ -656,9 +656,9 @@ class DashboardController extends Controller
 
             'monthlyReports' => $monthlyData,
             'performanceReports' => $performanceData,
-            'performanceTargets' => $performanceTarget,
+            'performanceCases' => $performanceCase,
             'weeklyReports' => $weeklyReports,
-            'weeklyTargetReport' => $weeklyTargetReport,
+            'weeklyCaseReport' => $weeklyCaseReport,
             'weeklyCustomers' => $weeklyCustomers,
 
             // Chart Data
@@ -667,7 +667,7 @@ class DashboardController extends Controller
             'customerData' => $customerChart,
 
             'saleTarget' => $saleTarget,
-            'todaySaleTarget' => $todaySaleTarget,
+            'todaySaleCase' => $todaySaleCase,
             'rank' => $rank,
 
             'rankTargets' => [
