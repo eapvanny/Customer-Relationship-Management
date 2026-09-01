@@ -359,6 +359,7 @@ class DashboardController extends Controller
                 'name',
                 'family_name_latin',
                 'name_latin',
+                'area',
             ])
             ->keyBy('id');
 
@@ -376,9 +377,13 @@ class DashboardController extends Controller
                 return null;
             }
 
-            return $isEnglish
+            $name = $isEnglish
                 ? trim($user->family_name_latin . ' ' . $user->name_latin)
                 : trim($user->family_name . ' ' . $user->name);
+
+            return $user->area
+                ? $name . ' (' . $user->area . ')'
+                : $name;
         };
 
         $getIds = function ($value) {
@@ -513,6 +518,24 @@ class DashboardController extends Controller
 
         for ($i = 1; $i <= 12; $i++) {
             $monthlyData[] = $monthlyChatReports[$i] ?? 0;
+        }
+        $monthlyCaseReports = (clone $query)
+            ->selectRaw(
+                'EXTRACT(MONTH FROM created_at) as month,
+                COALESCE(SUM(`250_ml`), 0) +
+                COALESCE(SUM(`350_ml`), 0) +
+                COALESCE(SUM(`600_ml`), 0) +
+                COALESCE(SUM(`1500_ml`), 0) AS total_case'
+            )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total_case', 'month')
+            ->toArray();
+
+        $monthlyCaseData = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlyCaseData[] = $monthlyCaseReports[$i] ?? 0;
         }
 
 
@@ -808,6 +831,8 @@ class DashboardController extends Controller
             'allCustomers' => $allCustomers,
 
             'monthlyData' => $monthlyData,
+            
+            'monthlyCaseData' => $monthlyCaseData,
 
             'show_popup' => true,
 

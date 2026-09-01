@@ -594,28 +594,28 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="250_ml"> {{ __('250ml') }} <span>{{ __('(Boxes)') }}</span></label>
+                                <label for="250_ml"> {{ __('250ml') }} <span>{{ __('(Cases)') }}</span></label>
                                 <input type="number" class="form-control" name="250_ml"
                                     value="{{ isset($report) ? $report['250_ml'] : old('250_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="350_ml"> {{ __('350ml') }} <span>{{ __('(Boxes)') }}</span></label>
+                                <label for="350_ml"> {{ __('350ml') }} <span>{{ __('(Cases)') }}</span></label>
                                 <input type="number" class="form-control" name="350_ml"
                                     value="{{ isset($report) ? $report['350_ml'] : old('350_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="600_ml"> {{ __('600ml') }} <span>{{ __('(Boxes)') }}</span></label>
+                                <label for="600_ml"> {{ __('600ml') }} <span>{{ __('(Cases)') }}</span></label>
                                 <input type="number" class="form-control" name="600_ml"
                                     value="{{ isset($report) ? $report['600_ml'] : old('600_ml') }}">
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-xl-6">
                             <div class="form-group has-feedback">
-                                <label for="1500_ml"> {{ __('1500ml') }} <span>{{ __('(Boxes)') }}</span></label>
+                                <label for="1500_ml"> {{ __('1500ml') }} <span>{{ __('(Cases)') }}</span></label>
                                 <input type="number" class="form-control" name="1500_ml"
                                     value="{{ isset($report) ? $report['1500_ml'] : old('1500_ml') }}">
                             </div>

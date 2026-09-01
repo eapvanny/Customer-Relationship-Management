@@ -671,7 +671,7 @@
                             <div class="form-group">
                                 <label for="250_ml">
                                     {{ __('250ml') }}
-                                    <span>{{ __('(Boxes)') }}</span>
+                                    <span>{{ __('(Cases)') }}</span>
                                 </label>
 
                                 <input type="number"
@@ -692,7 +692,7 @@
                             <div class="form-group">
                                 <label for="350_ml">
                                     {{ __('350ml') }}
-                                    <span>{{ __('(Boxes)') }}</span>
+                                    <span>{{ __('(Cases)') }}</span>
                                 </label>
 
                                 <input type="number"
@@ -713,7 +713,7 @@
                             <div class="form-group">
                                 <label for="600_ml">
                                     {{ __('600ml') }}
-                                    <span>{{ __('(Boxes)') }}</span>
+                                    <span>{{ __('(Cases)') }}</span>
                                 </label>
 
                                 <input type="number"
@@ -734,7 +734,7 @@
                             <div class="form-group">
                                 <label for="1500_ml">
                                     {{ __('1500ml') }}
-                                    <span>{{ __('(Boxes)') }}</span>
+                                    <span>{{ __('(Cases)') }}</span>
                                 </label>
 
                                 <input type="number"

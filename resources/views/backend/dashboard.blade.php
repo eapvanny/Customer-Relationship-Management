@@ -688,7 +688,7 @@
                 </h4>
                 <form method="GET" action="{{ url()->current() }}">
                     <div class="form-group has-feedback"
-                        style="width: 600px; margin-right: 10px;">
+                        style="width: 700px; margin-right: 10px;">
 
                         <select name="employee_id"
                             id="employee_id"
@@ -725,7 +725,7 @@
                     </select>
                     </div>
                 </form>
-                @if ($currentRank == 'Rank C')
+                @if ($currentRank == 'Rank A' && $targetPercent >= 100)
                     <span class="badge bg-success px-3 py-2">
                         <i class="fa fa-trophy"></i> {{__('Completed')}}
                     </span>
@@ -780,8 +780,8 @@
 
                             </div>
 
-                            <h3 class="fw-bold mb-0" style="color: {{ $progressColor }}">
-                                {{ $currentRank }}
+                            <h3 class="fw-bold mt-2" style="color: {{ $progressColor }}">
+                                {{ __($currentRank) }}
                             </h3>
 
                         </div>
@@ -795,7 +795,7 @@
                             </span>
 
                             <b>
-                                {{ number_format($soldThisMonth) }} {{__('Boxes')}}
+                                {{ number_format($soldThisMonth) }} {{__('Cases')}}
                             </b>
 
                         </div>
@@ -809,7 +809,7 @@
                             <b class="text-danger">
 
                                 @if ($remaining > 0)
-                                    {{ number_format($remaining) }} {{__('Boxes')}}
+                                    {{ number_format($remaining) }} {{__('Cases')}}
                                 @else
                                     {{__('Completed')}} <i class="fa fa-check-circle text-success"></i>
                                 @endif
@@ -875,7 +875,7 @@
     <section>
         <div class="row">
             <div class="col-lg-6 col-md-12 col-sm-12">
-                <div class="card mt-3">
+                {{-- <div class="card mt-3">
                     <div class="media  d-flex justify-content-between ">
                         <div class="media-body">
                             <p class="mb-0 text-black mb-2" style="font-weight: bold">{{ __('Calendar') }}</p>
@@ -894,13 +894,19 @@
                         </div>
                     </div>
                     <div id="calendar" style="height: 380px;"></div>
+                </div> --}}
+                <div class="card mt-3 ticket-chat">
+                    <div class="chart-container">
+                        <span style="font-weight: bold">{{ __('All cases in this year') }}</span>
+                        <canvas id="lineChartCase"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="col-lg-6 col-md-12 col-sm-12">
                 <div class="card mt-3 ticket-chat">
                     <div class="chart-container">
-                        <span style="font-weight: bold">{{ __('All reports in this year') }}</span>
+                        <span style="font-weight: bold">{{ __('All SO in this year') }}</span>
                         <canvas id="lineChart"></canvas>
                     </div>
                 </div>
@@ -950,8 +956,8 @@
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
                     label: reportLabel,
-                    borderColor: '#4299e1',
-                    backgroundColor: 'rgba(30, 143, 255, 0.46)',
+                    borderColor: '#F59E0B  ',
+                    backgroundColor: 'rgba(245, 158, 11, 0.46)',
                     data: monthlyReporttData,
                     fill: true,
                     tension: 0.4
@@ -992,6 +998,56 @@
                 }
             });
 
+            var caseLabel = "{{ __('Cases') }}";
+            // Data from Laravel passed as JSON
+            var monthlyCaseData = @json($monthlyCaseData);
+
+            // Line chart data for cases opened per month
+            var monthlyData = {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: caseLabel,
+                    borderColor: '#4299e1',
+                    backgroundColor: 'rgba(30, 143, 255, 0.46)',
+                    data: monthlyCaseData,
+                    fill: true,
+                    tension: 0.4
+                }]
+            };
+
+            var ctx = document.getElementById('lineChartCase').getContext('2d');
+            var lineChartCase = new Chart(ctx, {
+                type: 'line',
+                data: monthlyData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Ensure responsiveness
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                //text: 'Months
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                //text: 'Tickets Opened'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
 
         });
         $(document).ready(function() {
