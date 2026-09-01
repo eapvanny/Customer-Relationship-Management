@@ -26,10 +26,9 @@ class LoginController extends Controller
             ], 401);
         }
 
-        // Remove old tokens
-        // $user->tokens()->delete();
+        // Do NOT delete old tokens.
+        // This allows the same user to stay logged in on multiple devices.
 
-        // Create new token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
