@@ -103,6 +103,7 @@
                                         <th>#</th>
                                         <th>{{ __('Employee') }}</th>
                                         <th>{{ __('Actual Sales') }}</th>
+                                        <th>{{ __('Sales Target') }}</th>
                                         <th>{{ __("Rank") }}</th>
                                     </tr>
                                 </thead>
@@ -152,6 +153,7 @@
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'employee', name: 'employee' },
+                { data: 'actual_sales', name: 'actual_sales' },
                 { data: 'sale_target', name: 'sale_target' },
                 { data: 'rank', name: 'rank' },
             ]

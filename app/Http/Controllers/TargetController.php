@@ -21,165 +21,364 @@ class TargetController extends Controller
     public function index(Request $request)
     {
         $loggedInUser = auth()->user();
-        $query = User::query()
-            ->where('role_id', AppHelper::USER_EMPLOYEE);
-            if ($loggedInUser->type == AppHelper::SALE) {
 
-                if ($loggedInUser->role_id == AppHelper::USER_MANAGER) {
-
-                    // Manager sees all employees under Sale
-                    $query->where('type', AppHelper::SALE);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_RSM) {
-
-                    $query->where('type', AppHelper::SALE)
-                        ->where('rsm_id', $loggedInUser->id);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_ASM) {
-
-                    $query->where('type', AppHelper::SALE)
-                        ->where('asm_id', $loggedInUser->id);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_SUP) {
-
-                    $query->where('type', AppHelper::SALE)
-                        ->where('sup_id', $loggedInUser->id);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_EMPLOYEE) {
-
-                    $query->where('id', $loggedInUser->id);
-                }
-
-            } elseif ($loggedInUser->type == AppHelper::SE) {
-
-                if ($loggedInUser->role_id == AppHelper::USER_MANAGER) {
-
-                    $query->where('type', AppHelper::SE);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_RSM) {
-
-                    $query->where('type', AppHelper::SE)
-                        ->where('rsm_id', $loggedInUser->id);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_ASM) {
-
-                    $query->where('type', AppHelper::SE)
-                        ->where('asm_id', $loggedInUser->id);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_SUP) {
-
-                    $query->where('type', AppHelper::SE)
-                        ->where('sup_id', $loggedInUser->id);
-
-                } elseif ($loggedInUser->role_id == AppHelper::USER_EMPLOYEE) {
-
-                    $query->where('id', $loggedInUser->id);
-                }
-            }
-
-        $is_filter = false;
-        $employees = $query->where('role_id',AppHelper::USER_EMPLOYEE)
-            ->get(['id', 'username', 'family_name', 'name'])
-            ->mapWithKeys(function ($user) {
-                return [$user->id => $user->username . ' (' . $user->full_name . ')'];
-            })
-            ->toArray();
-        
-        // Date filter
+        // ============================================================
+        // DATE FILTER
+        // ============================================================
         if ($request->filled(['date1', 'date2'])) {
             $is_filter = true;
 
             $startOfTarget = Carbon::parse($request->date1)->startOfDay();
             $endOfTarget = Carbon::parse($request->date2)->endOfDay();
         } else {
+            $is_filter = false;
+
             $startOfTarget = now()->startOfMonth();
             $endOfTarget = now()->endOfMonth();
         }
 
-        // User filter
+        // ============================================================
+        // BASE USER QUERY
+        // ============================================================
+        $query = User::query()
+            ->where('role_id', AppHelper::USER_EMPLOYEE);
+
+        // ============================================================
+        // USER ACCESS CONDITION
+        // ============================================================
+        if ($loggedInUser->type === AppHelper::SALE) {
+
+            switch ($loggedInUser->role_id) {
+
+                case AppHelper::USER_MANAGER:
+                    $query->where('type', AppHelper::SALE);
+                    break;
+
+                case AppHelper::USER_RSM:
+                    $query->where('type', AppHelper::SALE)
+                        ->where('rsm_id', $loggedInUser->id);
+                    break;
+
+                case AppHelper::USER_ASM:
+                    $query->where('type', AppHelper::SALE)
+                        ->where('asm_id', $loggedInUser->id);
+                    break;
+
+                case AppHelper::USER_SUP:
+                    $query->where('type', AppHelper::SALE)
+                        ->where('sup_id', $loggedInUser->id);
+                    break;
+
+                case AppHelper::USER_EMPLOYEE:
+                    $query->where('id', $loggedInUser->id);
+                    break;
+            }
+
+        } elseif ($loggedInUser->type === AppHelper::SE) {
+
+            switch ($loggedInUser->role_id) {
+
+                case AppHelper::USER_MANAGER:
+                    $query->where('type', AppHelper::SE);
+                    break;
+
+                case AppHelper::USER_RSM:
+                    $query->where('type', AppHelper::SE)
+                        ->where('rsm_id', $loggedInUser->id);
+                    break;
+
+                case AppHelper::USER_ASM:
+                    $query->where('type', AppHelper::SE)
+                        ->where('asm_id', $loggedInUser->id);
+                    break;
+
+                case AppHelper::USER_SUP:
+                    $query->where('type', AppHelper::SE)
+                        ->where('sup_id', $loggedInUser->id);
+                    break;
+
+                case AppHelper::USER_EMPLOYEE:
+                    $query->where('id', $loggedInUser->id);
+                    break;
+            }
+        }
+
+        // ============================================================
+        // EMPLOYEE DROPDOWN
+        // ============================================================
+        $employees = (clone $query)
+            ->get([
+                'id',
+                'username',
+                'family_name',
+                'name',
+                'family_name_latin',
+                'name_latin',
+            ])
+            ->mapWithKeys(function ($user) {
+
+                return [
+                    $user->id => $user->username . ' (' . $user->full_name . ')'
+                ];
+            })
+            ->toArray();
+
+        // ============================================================
+        // USER FILTER
+        // ============================================================
         if ($request->filled('user_id')) {
             $is_filter = true;
 
             $query->where('id', $request->user_id);
         }
+
+        // ============================================================
+        // AJAX / DATATABLE
+        // ============================================================
         if ($request->ajax()) {
-            
-            $targetQuery = $query->withSum([
-                'report as sale_target' => function ($q) use ($startOfTarget, $endOfTarget) {
+
+            // ========================================================
+            // SALE TARGET
+            // ========================================================
+            $query->withSum([
+                'report as sale_target' => function ($q) use (
+                    $startOfTarget,
+                    $endOfTarget
+                ) {
                     $q->whereBetween('created_at', [
                         $startOfTarget,
                         $endOfTarget
-                    ])->select(DB::raw("
-                        COALESCE(SUM(
-                            COALESCE(`250_ml`, 0) +
-                            COALESCE(`350_ml`, 0) +
-                            COALESCE(`600_ml`, 0) +
-                            COALESCE(`1500_ml`, 0)
-                        ), 0)
-                    "));
+                    ]);
                 }
-            ], DB::raw('1'))
-            ->orderByDesc('sale_target');   // Highest sale_target first
+            ], DB::raw("
+                COALESCE(`250_ml`, 0)
+                + COALESCE(`350_ml`, 0)
+                + COALESCE(`600_ml`, 0)
+                + COALESCE(`1500_ml`, 0)
+            "));
 
-            return DataTables::of($targetQuery)
+            // ========================================================
+            // ORDER BY SALE TARGET
+            // ========================================================
+            $query->orderByDesc('sale_target');
+
+            // ========================================================
+            // DATATABLE
+            // ========================================================
+            return DataTables::of($query)
+
                 ->addIndexColumn()
+
+                // ====================================================
+                // SEARCH
+                // ====================================================
                 ->filter(function ($query) use ($request) {
 
-                    if ($request->filled('search.value')) {
+                    $searchValue = trim(
+                        preg_replace(
+                            '/\s+/',
+                            ' ',
+                            $request->input('search.value', '')
+                        )
+                    );
 
-                        $searchValue = trim(preg_replace('/\s+/', ' ', $request->search['value']));
+                    if ($searchValue === '') {
+                        return;
+                    }
 
-                        $query->where(function ($q) use ($searchValue) {
+                    $like = "%{$searchValue}%";
 
-                            $q->where('family_name', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('name', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('family_name_latin', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('name_latin', 'LIKE', "%{$searchValue}%")
+                    $query->where(function ($q) use ($like) {
 
-                            // Khmer full name
+                        $q->where('family_name', 'LIKE', $like)
+                            ->orWhere('name', 'LIKE', $like)
+                            ->orWhere('family_name_latin', 'LIKE', $like)
+                            ->orWhere('name_latin', 'LIKE', $like)
+
                             ->orWhereRaw(
                                 "TRIM(CONCAT(family_name, ' ', name)) LIKE ?",
-                                ["%{$searchValue}%"]
+                                [$like]
                             )
 
-                            // Latin full name
                             ->orWhereRaw(
                                 "TRIM(CONCAT(family_name_latin, ' ', name_latin)) LIKE ?",
-                                ["%{$searchValue}%"]
+                                [$like]
                             );
-                        });
-                    }
+                    });
                 })
+
+                // ====================================================
+                // EMPLOYEE
+                // ====================================================
                 ->addColumn('employee', function ($user) {
-                    $lang = session('user_lang', 'en');
-                    return $lang === 'en'
+
+                    return session('user_lang', 'en') === 'en'
                         ? $user->full_name_latin
                         : $user->full_name;
                 })
 
-                ->addColumn('sale_target', function ($user) {
-                    return number_format($user->sale_target ?? 0) . ' (កេស)';
+                // ====================================================
+                // ACTUAL SALES
+                // ====================================================
+                ->addColumn('actual_sales', function ($user) {
+
+                    $actual = (int) ($user->sale_target ?? 0);
+
+                    return number_format($actual)
+                        . ' '
+                        . __('Cases');
                 })
 
-                ->addColumn('rank', function ($user) {
-                    $total = $user->sale_target ?? 0;
+                // ====================================================
+                // SALE TARGET
+                // ====================================================
+                ->addColumn('sale_target', function ($user) {
 
-                    if ($total >= 3500) {
-                        return '<span class="badge bg-success">' . __('Rank A') . '</span>';
-                    } elseif ($total >= 3000) {
-                        return '<span class="badge bg-primary">' . __('Rank B') . '</span>';
-                    } elseif ($total >= 2600) {
-                        return '<span class="badge bg-warning">' . __('Rank C') . '</span>';
+                    $actual = (int) ($user->sale_target ?? 0);
+
+                    $rankC = 2600;
+                    $rankB = 3000;
+                    $rankA = 3500;
+
+                    // Rank A
+                    if ($actual >= $rankA) {
+
+                        return '<span class="badge bg-success">'
+                            . __('Complete')
+                            . '</span>';
                     }
 
-                    return '<span class="badge bg-secondary">' . __('No Rank') . '</span>';
+                    $html = '<div>';
+
+                    // Need Rank C
+                    if ($actual < $rankC) {
+
+                        $html .= '
+                            <div>
+                                <span class="text-muted">'
+                                    . __('Need') .
+                                '</span>
+
+                                <strong>'
+                                    . number_format($rankC - $actual) .
+                                '</strong>
+
+                                ' . __('Cases') . '
+
+                                <span class="text-muted">'
+                                    . __('To') .
+                                '</span>
+
+                                <span class="badge bg-warning">'
+                                    . __('Rank C') .
+                                '</span>
+                            </div>';
+                    }
+
+                    // Need Rank B
+                    if ($actual < $rankB) {
+
+                        $html .= '
+                            <div class="mt-1">
+                                <span class="text-muted">'
+                                    . __('Need') .
+                                '</span>
+
+                                <strong>'
+                                    . number_format($rankB - $actual) .
+                                '</strong>
+
+                                ' . __('Cases') . '
+
+                                <span class="text-muted">'
+                                    . __('To') .
+                                '</span>
+
+                                <span class="badge bg-primary">'
+                                    . __('Rank B') .
+                                '</span>
+                            </div>';
+                    }
+
+                    // Need Rank A
+                    if ($actual < $rankA) {
+
+                        $html .= '
+                            <div class="mt-1">
+                                <span class="text-muted">'
+                                    . __('Need') .
+                                '</span>
+
+                                <strong>'
+                                    . number_format($rankA - $actual) .
+                                '</strong>
+
+                                ' . __('Cases') . '
+
+                                <span class="text-muted">'
+                                    . __('To') .
+                                '</span>
+
+                                <span class="badge bg-success">'
+                                    . __('Rank A') .
+                                '</span>
+                            </div>';
+                    }
+
+                    $html .= '</div>';
+
+                    return $html;
                 })
 
-                ->rawColumns(['rank'])
+                // ====================================================
+                // RANK
+                // ====================================================
+                ->addColumn('rank', function ($user) {
+
+                    $total = (int) ($user->sale_target ?? 0);
+
+                    if ($total >= 3500) {
+
+                        return '<span class="badge bg-success">'
+                            . __('Rank A')
+                            . '</span>';
+
+                    } elseif ($total >= 3000) {
+
+                        return '<span class="badge bg-primary">'
+                            . __('Rank B')
+                            . '</span>';
+
+                    } elseif ($total >= 2600) {
+
+                        return '<span class="badge bg-warning">'
+                            . __('Rank C')
+                            . '</span>';
+                    }
+
+                    return '<span class="badge bg-secondary">'
+                        . __('No Rank')
+                        . '</span>';
+                })
+
+                ->rawColumns([
+                    'rank',
+                    'sale_target',
+                ])
+
                 ->make(true);
         }
 
-        return view('backend.sale-target.list', compact('employees','is_filter'));
+        // ============================================================
+        // NORMAL PAGE
+        // ============================================================
+        return view(
+            'backend.sale-target.list',
+            compact(
+                'employees',
+                'is_filter'
+            )
+        );
     }
 
     // public function create()
