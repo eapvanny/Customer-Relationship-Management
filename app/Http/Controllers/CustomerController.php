@@ -293,7 +293,8 @@ class CustomerController extends Controller
                                                 ["%{$search}%"]
                                             );
                                     });
-                                });
+                                })
+                                ->orWhere('phone', 'LIKE', "%{$search}%");
 
                             if (!empty($areaIds)) {
                                 $q->orWhereIn('area_id', $areaIds);
