@@ -19,6 +19,8 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'driver_id',
+        'driver_name',
         'family_name',
         'name',
         'family_name_latin',
@@ -85,6 +87,10 @@ class User extends Authenticatable
     public function rsm()
     {
         return $this->belongsTo(User::class, 'rsm_id');
+    }
+    public function asm()
+    {
+        return $this->belongsTo(User::class, 'asm_id');
     }
     // Optional: Relationship to get users managed by this user
     public function managedUsers()

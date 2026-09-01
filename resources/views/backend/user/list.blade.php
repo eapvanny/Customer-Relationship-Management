@@ -99,6 +99,15 @@
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body">
+                            <div class="row">
+                                @if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMIN)
+                                    <div class="col-12 text-end">
+                                        <button type="button" class="btn btn-info text-white" id="addDriverBtn">
+                                            <i class="fa fa-plus-circle"></i> {{ __('Add Driver') }}
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
                             <div class="table-responsive mt-3">
                                 <table id="datatabble"
                                     class="table table-bordered table-striped list_view_table display responsive no-wrap datatable-server"
@@ -358,6 +367,196 @@
                         });
                     }
                 });
+            });
+
+            $(document).on('click', '#addDriverBtn', function () {
+
+                $.ajax({
+                    url: "{{ route('drivers.modal.add') }}",
+                    type: "GET",
+
+                    beforeSend: function () {
+                        $('#addDriverBtn')
+                            .prop('disabled', true)
+                            .html('<i class="fa fa-spinner fa-spin"></i> {{ __("Loading...") }}');
+                    },
+
+                    success: function (response) {
+
+                        // Remove old modal if it already exists
+                        $('#addDriverModal').remove();
+
+                        // Add modal HTML to body
+                        $('body').append(response);
+
+                        // Show Bootstrap modal
+                        $('#addDriverModal').modal('show');
+                    },
+
+                    error: function (xhr) {
+                        console.log(xhr.responseText);
+
+                        alert('Unable to load Add Driver form.');
+                    },
+
+                    complete: function () {
+                        $('#addDriverBtn')
+                            .prop('disabled', false)
+                            .html('<i class="fa fa-plus-circle"></i> {{ __("Add Driver") }}');
+                    }
+                });
+
+            });
+            $(document).on('change', '.employee-checkbox', function () {
+
+                const employeeId = $(this).data('id');
+                const fields = $('#driver_fields_' + employeeId);
+
+                const driverIdInput = fields.find(
+                    'input[name="driver_id[' + employeeId + ']"]'
+                );
+
+                const driverNameInput = fields.find(
+                    'input[name="driver_name[' + employeeId + ']"]'
+                );
+
+                if ($(this).is(':checked')) {
+
+                    // Show fields
+                    fields.slideDown();
+
+                    // Required when checked
+                    driverIdInput.prop('required', true);
+                    driverNameInput.prop('required', true);
+
+                } else {
+
+                    // Hide fields
+                    fields.slideUp();
+
+                    // NOT required when unchecked
+                    driverIdInput.prop('required', false);
+                    driverNameInput.prop('required', false);
+
+                    // Clear values
+                    driverIdInput.val('');
+                    driverNameInput.val('');
+                }
+            });
+
+            $(document).on('submit', '#addDriverForm', function (e) {
+
+                e.preventDefault();
+
+                const form = this;
+                const formData = new FormData(form);
+                const saveButton = $(form).find('button[type="submit"]');
+
+                // Make sure at least one employee is selected
+                if ($(form).find('.employee-checkbox:checked').length === 0) {
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '{{ __("Warning") }}',
+                        text: '{{ __("Please select at least one employee.") }}'
+                    });
+
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('drivers.upstore') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+
+                    beforeSend: function () {
+
+                        saveButton
+                            .prop('disabled', true)
+                            .html(
+                                '<i class="fa fa-spinner fa-spin"></i> {{ __("Saving...") }}'
+                            );
+                    },
+
+                    success: function (response) {
+
+                        if (response.status) {
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: '{{ __("Success") }}',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(function () {
+
+                                // Close modal
+                                const modalElement =
+                                    document.getElementById('addDriverModal');
+
+                                const modal =
+                                    bootstrap.Modal.getInstance(modalElement);
+
+                                if (modal) {
+                                    modal.hide();
+                                }
+
+                                // Optional: reload DataTable
+                                if ($.fn.DataTable.isDataTable('#dataTable')) {
+                                    $('#dataTable').DataTable().ajax.reload(null, false);
+                                }
+                            });
+
+                        } else {
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: '{{ __("Error") }}',
+                                text: response.message
+                            });
+                        }
+                    },
+
+                    error: function (xhr) {
+
+                        let message = '{{ __("Something went wrong.") }}';
+
+                        if (xhr.status === 422 && xhr.responseJSON?.errors) {
+
+                            const errors = xhr.responseJSON.errors;
+
+                            message = Object.values(errors)
+                                .flat()
+                                .join('<br>');
+                        } else if (xhr.responseJSON?.message) {
+
+                            message = xhr.responseJSON.message;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: '{{ __("Error") }}',
+                            html: message
+                        });
+                    },
+
+                    complete: function () {
+
+                        saveButton
+                            .prop('disabled', false)
+                            .html('{{ __("Save") }}');
+                    }
+                });
+
+            });
+
+            $(document).on('hidden.bs.modal', '#addDriverModal', function () {
+                $('.modal-backdrop').remove();
+                $(this).remove();
+                $('body').removeClass('modal-open');
+                $('body').css('padding-right', '');
             });
 
 

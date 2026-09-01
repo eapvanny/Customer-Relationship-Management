@@ -10,6 +10,7 @@ use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redis;
@@ -1134,5 +1135,235 @@ class UserController extends Controller
         }
 
         return redirect()->route('lockscreen')->with('error', 'Invalid password.');
+    }
+
+    public function addModal()
+    {
+        $userLang = session('user_lang', 'kh');
+
+        $employees = User::where('role_id', AppHelper::USER_EMPLOYEE)
+            ->where('type', AppHelper::SALE)
+            ->orderBy('name')
+            ->get([
+                'id',
+                'username',
+                'family_name',
+                'name',
+                'family_name_latin',
+                'name_latin',
+                'area',
+                'rsm_id',
+                'asm_id',
+                'sup_id',
+                'driver_id',
+                'driver_name',
+            ]);
+
+        // Get all ASM IDs
+        $asmIds = $employees->flatMap(function ($user) {
+            $ids = $user->asm_id;
+
+            if (is_string($ids)) {
+                $ids = json_decode($ids, true);
+            }
+
+            if (!is_array($ids)) {
+                $ids = [$ids];
+            }
+
+            return $ids;
+        })
+        ->filter()
+        ->unique()
+        ->values();
+
+        // Get ASM users
+        $asms = User::whereIn('id', $asmIds)
+            ->get([
+                'id',
+                'family_name',
+                'name',
+                'family_name_latin',
+                'name_latin',
+                'area',
+            ])
+            ->keyBy('id');
+
+        // Get RSM users
+        $rsmIds = $employees->pluck('rsm_id')
+            ->filter()
+            ->unique();
+
+        $rsms = User::whereIn('id', $rsmIds)
+            ->get([
+                'id',
+                'family_name',
+                'name',
+                'family_name_latin',
+                'name_latin',
+                'area',
+            ])
+            ->keyBy('id');
+
+        // Get Supervisor users
+        $supIds = $employees->pluck('sup_id')
+            ->filter()
+            ->unique();
+
+        $supervisors = User::whereIn('id', $supIds)
+            ->get([
+                'id',
+                'family_name',
+                'name',
+                'family_name_latin',
+                'name_latin',
+                'area',
+            ])
+            ->keyBy('id');
+
+        $employees = $employees
+            ->values()
+            ->map(function ($user, $index) use (
+                $asms,
+                $rsms,
+                $supervisors,
+                $userLang
+            ) {
+
+                // Employee name
+                $employeeName = $userLang === 'en'
+                    ? $user->full_name_latin
+                    : $user->full_name;
+
+                // Employee area
+                $employeeArea = $user->area ?? '-';
+
+                // ASM IDs
+                $asmIds = $user->asm_id;
+
+                if (is_string($asmIds)) {
+                    $asmIds = json_decode($asmIds, true);
+                }
+
+                if (!is_array($asmIds)) {
+                    $asmIds = [$asmIds];
+                }
+
+                // ASM names + areas
+                $asmNames = collect($asmIds)
+                    ->map(function ($asmId) use ($asms, $userLang) {
+
+                        $asm = $asms->get($asmId);
+
+                        if (!$asm) {
+                            return null;
+                        }
+
+                        $name = $userLang === 'en'
+                            ? $asm->full_name_latin
+                            : $asm->full_name;
+
+                        $area = $asm->area ?? '-';
+
+                        return $name . ' (' . $area . ')';
+                    })
+                    ->filter()
+                    ->implode(', ');
+
+                // RSM name + area
+                $rsm = $rsms->get($user->rsm_id);
+
+                $rsmName = $rsm
+                    ? (
+                        $userLang === 'en'
+                            ? $rsm->full_name_latin
+                            : $rsm->full_name
+                    ) . ' (' . ($rsm->area ?? '-') . ')'
+                    : '-';
+
+                // Supervisor name + area
+                $supervisor = $supervisors->get($user->sup_id);
+
+                $supName = $supervisor
+                    ? (
+                        $userLang === 'en'
+                            ? $supervisor->full_name_latin
+                            : $supervisor->full_name
+                    ) . ' (' . ($supervisor->area ?? '-') . ')'
+                    : '-';
+
+                return [
+                    'id' => $user->id,
+                    'driver_id' => $user->driver_id,
+                    'driver_name' => $user->driver_name,
+                    'has_driver' => !empty($user->driver_id) || !empty($user->driver_name),
+
+                    'label' =>
+                        ($index + 1) . '. '
+                        . $employeeName
+                        . ' (' . $employeeArea . ')'
+                        . ' / RSM: ' . $rsmName
+                        . ' / ASM: ' . ($asmNames ?: '-')
+                        . ' / SUP: ' . $supName,
+                ];
+            });
+
+        return view('backend.modal.add-driver', compact('employees'));
+    }
+
+    public function updateTostoreDriver(Request $request)
+    {
+        $request->validate([
+            'employees' => 'required|array|min:1',
+            'employees.*' => 'required|integer|exists:users,id',
+
+            'driver_id' => 'nullable|array',
+            'driver_name' => 'nullable|array',
+
+            'driver_id.*' => 'nullable|integer',
+            'driver_name.*' => 'nullable|string|max:255',
+        ], [
+            'employees.required' => __('Please select at least one employee.'),
+            'employees.min' => __('Please select at least one employee.'),
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            foreach ($request->employees as $employeeId) {
+
+                $driverId = $request->input("driver_id.$employeeId");
+                $driverName = $request->input("driver_name.$employeeId");
+
+                // Selected employee MUST have both fields
+                if (empty($driverId) || empty($driverName)) {
+                    throw new \Exception(
+                        __('Driver ID and Driver Name are required.')
+                    );
+                }
+
+                User::where('id', $employeeId)->update([
+                    'driver_id' => $driverId,
+                    'driver_name' => $driverName,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => __('Driver information updated successfully.'),
+            ]);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

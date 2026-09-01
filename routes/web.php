@@ -92,6 +92,12 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::post('/users/{id}/update-profile-photo', [UserController::class, 'updateProfilePhoto'])
         ->name('users.updateProfilePhoto');
 
+    Route::get('/drivers/modal/add', [UserController::class, 'addModal'])
+        ->name('drivers.modal.add');
+
+    Route::post('/drivers/update-to-store', [UserController::class, 'updateTostoreDriver'])
+        ->name('drivers.upstore');
+
     // Route for switching languages
     Route::get('/set-lang/{lang}', [UserController::class, 'setLanguage'])->name('user.set_lang');
 

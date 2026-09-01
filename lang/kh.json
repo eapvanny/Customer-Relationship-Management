@@ -287,6 +287,8 @@
     "Driver ID is required.": "សូមបញ្ជូលលេខសម្គាល់អ្នកបើកបរ",
     "Driver ID": "លេខសម្គាល់អ្នកបើកបរ",
     "Driver Name": "ឈ្មោះអ្នកបើកបរ",
+    "Add Driver": "បន្ថែមអ្នកបើកបរ",
+    "Check Employee To Assign Driver": "សូមចុចប្រអប់ពីមុខឈ្មោះបុគ្គលិកដើម្បីចាត់តាំងអ្នកបើកបរ",
     "Monthly Sales Target": "គោលដៅលក់ប្រចាំខែ",
     "Boxes" : "កេស",
     "Actual Sales" : "ការលក់ជាក់ស្តែង",

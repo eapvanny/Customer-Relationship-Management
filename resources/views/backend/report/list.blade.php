@@ -467,7 +467,7 @@
                            <div class="row">
                                 <div class="col-6">
                                     {{-- @hasTypePermission('view import') --}}
-                                    @if (auth()->user()->role_id == AppHelper::USER_ADMIN || auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
+                                    @if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
                                         <a class="btn btn-primary btn-sm" 
                                             href="{{route('import.form')}}">
                                             <i class="fa-solid fa-download"></i> {{__('Import')}}
