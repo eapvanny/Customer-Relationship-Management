@@ -41,7 +41,6 @@ class DashboardController extends Controller
 
                 $query->where('role_id', AppHelper::USER_MANAGER)
                     ->orWhere('role_id', AppHelper::USER_EMPLOYEE);
-
             })
                 ->pluck('id')
                 ->unique()
@@ -166,12 +165,15 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $selectedYear = (int) request()->input('year', now()->year);
+        $selectedYear = request()->input('year', 'all');
         $fromDate = request()->input('from_date');
         $toDate = request()->input('to_date');
 
-        $query = Report::with('user')
-            ->whereYear('created_at', $selectedYear);
+        $query = Report::with('user');
+
+        if ($selectedYear !== 'all') {
+            $query->whereYear('created_at', (int) $selectedYear);
+        }
 
         if ($fromDate) {
             $query->whereDate('created_at', '>=', $fromDate);
@@ -194,6 +196,20 @@ class DashboardController extends Controller
 
         $allReports = (clone $query)->count();
 
+        $totalCase = (clone $query)
+            ->selectRaw("
+                COALESCE(
+                    SUM(
+                        COALESCE(`250_ml`, 0) +
+                        COALESCE(`350_ml`, 0) +
+                        COALESCE(`600_ml`, 0) +
+                        COALESCE(`1500_ml`, 0)
+                    ),
+                    0
+                ) AS total_case
+            ")
+            ->value('total_case');
+            
 
         /*
         |--------------------------------------------------------------------------
@@ -204,6 +220,25 @@ class DashboardController extends Controller
         $todayReports = (clone $query)
             ->whereDate('created_at', today())
             ->count();
+
+        $todayCase = (clone $query)
+            ->whereDate('created_at', today())
+            ->selectRaw("
+                COALESCE(
+                    SUM(
+                        COALESCE(`250_ml`, 0) +
+                        COALESCE(`350_ml`, 0) +
+                        COALESCE(`600_ml`, 0) +
+                        COALESCE(`1500_ml`, 0)
+                    ),
+                    0
+                ) AS today_case
+            ")
+            ->value('today_case');
+
+
+        $totalCase = (int) $totalCase;
+        $todayCase = (int) $todayCase;
 
 
         /*
@@ -239,29 +274,197 @@ class DashboardController extends Controller
             $allUsersEmployeeQuery->whereIn('id', $allowedUserIds);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Sort Employee Name
-        |--------------------------------------------------------------------------
-        |
-        | full_name is an Eloquent accessor, NOT a database column.
-        |
-        */
-
         if (app()->getLocale() === 'en') {
-
             $allUsersEmployeeQuery
                 ->orderBy('family_name_latin')
                 ->orderBy('name_latin');
-
         } else {
-
             $allUsersEmployeeQuery
                 ->orderBy('family_name')
                 ->orderBy('name');
         }
 
-        $allUsersEmployee = $allUsersEmployeeQuery->get();
+        $allUsersEmployee = $allUsersEmployeeQuery->get([
+            'id',
+            'username',
+            'family_name',
+            'name',
+            'family_name_latin',
+            'name_latin',
+            'area',
+            'rsm_id',
+            'asm_id',
+            'sup_id',
+            'driver_id',
+            'driver_name',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get RSM / ASM / SUP User IDs
+        |--------------------------------------------------------------------------
+        */
+        $managementUserIds = collect();
+
+        foreach ($allUsersEmployee as $employee) {
+
+            foreach (['rsm_id', 'asm_id', 'sup_id'] as $field) {
+
+                $value = $employee->{$field};
+
+                if (empty($value)) {
+                    continue;
+                }
+
+                // JSON array: ["65","74"]
+                if (is_string($value)) {
+                    $decoded = json_decode($value, true);
+
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $value = $decoded;
+                    } else {
+                        // Single ID
+                        $value = [$value];
+                    }
+                }
+
+                // Already an array
+                if (is_array($value)) {
+                    $managementUserIds = $managementUserIds->merge($value);
+                } else {
+                    $managementUserIds->push($value);
+                }
+            }
+        }
+
+        $managementUserIds = $managementUserIds
+            ->flatten()
+            ->map(function ($id) {
+                return trim((string) $id);
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get RSM / ASM / SUP Users
+        |--------------------------------------------------------------------------
+        */
+
+        $managementUsers = User::whereIn('id', $managementUserIds)
+            ->get([
+                'id',
+                'family_name',
+                'name',
+                'family_name_latin',
+                'name_latin',
+            ])
+            ->keyBy('id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prepare Employee + RSM + ASM + SUP Names
+        |--------------------------------------------------------------------------
+        */
+
+        $isEnglish = app()->getLocale() === 'en';
+
+        $getName = function ($user) use ($isEnglish) {
+
+            if (!$user) {
+                return null;
+            }
+
+            return $isEnglish
+                ? trim($user->family_name_latin . ' ' . $user->name_latin)
+                : trim($user->family_name . ' ' . $user->name);
+        };
+
+        $getIds = function ($value) {
+
+            if (empty($value)) {
+                return [];
+            }
+
+            // JSON string: ["65","74"]
+            if (is_string($value)) {
+
+                $decoded = json_decode($value, true);
+
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $value = $decoded;
+                } else {
+                    // Single ID
+                    $value = [$value];
+                }
+            }
+
+            if (!is_array($value)) {
+                $value = [$value];
+            }
+
+            return collect($value)
+                ->flatten()
+                ->map(function ($id) {
+                    return trim((string) $id);
+                })
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
+        };
+
+        foreach ($allUsersEmployee as $employee) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employee
+            |--------------------------------------------------------------------------
+            */
+
+            $employee->display_name = $getName($employee);
+
+            /*
+            |--------------------------------------------------------------------------
+            | RSM
+            |--------------------------------------------------------------------------
+            */
+
+            $rsmIds = $getIds($employee->rsm_id);
+
+            $employee->rsm_name = collect($rsmIds)
+                ->map(fn ($id) => $getName($managementUsers->get($id)))
+                ->filter()
+                ->implode(', ');
+
+            /*
+            |--------------------------------------------------------------------------
+            | ASM
+            |--------------------------------------------------------------------------
+            */
+
+            $asmIds = $getIds($employee->asm_id);
+
+            $employee->asm_name = collect($asmIds)
+                ->map(fn ($id) => $getName($managementUsers->get($id)))
+                ->filter()
+                ->implode(', ');
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUP
+            |--------------------------------------------------------------------------
+            */
+
+            $supIds = $getIds($employee->sup_id);
+
+            $employee->sup_name = collect($supIds)
+                ->map(fn ($id) => $getName($managementUsers->get($id)))
+                ->filter()
+                ->implode(', ');
+        }
+        
 
 
         /*
@@ -269,8 +472,19 @@ class DashboardController extends Controller
         | Customers
         |--------------------------------------------------------------------------
         */
-
         $allCustomersQuery = Customer::query();
+        
+        if ($selectedYear !== 'all') {
+            $allCustomersQuery->whereYear('created_at', (int) $selectedYear);
+        }
+
+        if ($fromDate) {
+            $allCustomersQuery->whereDate('created_at', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $allCustomersQuery->whereDate('created_at', '<=', $toDate);
+        }
 
         if ($allowedUserIds !== null) {
             $allCustomersQuery->whereIn('user_id', $allowedUserIds);
@@ -318,39 +532,50 @@ class DashboardController extends Controller
 
             $salesStartDate = $fromDate
                 ? \Carbon\Carbon::parse($fromDate)->startOfDay()
-                : \Carbon\Carbon::create($selectedYear, 1, 1)->startOfDay();
+                : (
+                    $selectedYear === 'all'
+                        ? \Carbon\Carbon::create(2024, 1, 1)->startOfDay()
+                        : \Carbon\Carbon::create((int) $selectedYear, 1, 1)->startOfDay()
+                );
 
             $salesEndDate = $toDate
                 ? \Carbon\Carbon::parse($toDate)->endOfDay()
-                : \Carbon\Carbon::create($selectedYear, 12, 31)->endOfDay();
+                : (
+                    $selectedYear === 'all'
+                        ? now()->endOfDay()
+                        : \Carbon\Carbon::create((int) $selectedYear, 12, 31)->endOfDay()
+                );
+
+        } elseif ($selectedYear === 'all') {
+
+            // All years
+            $salesStartDate = \Carbon\Carbon::create(2024, 1, 1)->startOfDay();
+            $salesEndDate = now()->endOfDay();
+
+        } elseif ((int) $selectedYear === now()->year) {
+
+            // Current year
+            $salesStartDate = now()->startOfMonth();
+            $salesEndDate = now()->endOfMonth();
 
         } else {
 
-            // No date filter:
-            // Show current month for the selected year.
-            if ($selectedYear == now()->year) {
+            // Specific previous year
+            $salesStartDate = \Carbon\Carbon::create(
+                (int) $selectedYear,
+                1,
+                1
+            )->startOfDay();
 
-                $salesStartDate = now()->startOfMonth();
-                $salesEndDate = now()->endOfMonth();
-
-            } else {
-
-                $salesStartDate = \Carbon\Carbon::create(
-                    $selectedYear,
-                    1,
-                    1
-                )->startOfDay();
-
-                $salesEndDate = \Carbon\Carbon::create(
-                    $selectedYear,
-                    12,
-                    31
-                )->endOfDay();
-            }
+            $salesEndDate = \Carbon\Carbon::create(
+                (int) $selectedYear,
+                12,
+                31
+            )->endOfDay();
         }
 
         $employeeSales = (clone $query)
-    ->selectRaw("
+            ->selectRaw("
         user_id,
 
         COALESCE(
@@ -363,14 +588,14 @@ class DashboardController extends Controller
             0
         ) AS total
     ")
-    ->whereBetween(
-        'created_at',
-        [$salesStartDate, $salesEndDate]
-    )
-    ->whereNotNull('user_id')
-    ->groupBy('user_id')
-    ->orderByDesc('total')
-    ->get();
+            ->whereBetween(
+                'created_at',
+                [$salesStartDate, $salesEndDate]
+            )
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->orderByDesc('total')
+            ->get();
 
 
         /*
@@ -399,7 +624,7 @@ class DashboardController extends Controller
 
         $allowedEmployeeIds = $allUsersEmployee
             ->pluck('id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->toArray();
 
 
@@ -469,7 +694,6 @@ class DashboardController extends Controller
             $currentRank = 'Rank A';
             $nextRank = null;
             $remaining = 0;
-
         } elseif ($soldThisMonth >= $rankTargets['Rank B']) {
 
             $currentRank = 'Rank B';
@@ -477,7 +701,6 @@ class DashboardController extends Controller
 
             $remaining =
                 $rankTargets['Rank A'] - $soldThisMonth;
-
         } elseif ($soldThisMonth >= $rankTargets['Rank C']) {
 
             $currentRank = 'Rank C';
@@ -485,7 +708,6 @@ class DashboardController extends Controller
 
             $remaining =
                 $rankTargets['Rank B'] - $soldThisMonth;
-
         } else {
 
             $currentRank = 'No Rank';
@@ -512,7 +734,6 @@ class DashboardController extends Controller
                 $targetPercent,
                 100
             );
-
         } else {
 
             $targetPercent = 100;
@@ -530,19 +751,15 @@ class DashboardController extends Controller
         if ($targetPercent >= 100) {
 
             $progressColor = '#198754';
-
         } elseif ($targetPercent >= 80) {
 
             $progressColor = '#20c997';
-
         } elseif ($targetPercent >= 60) {
 
             $progressColor = '#0d6efd';
-
         } elseif ($targetPercent >= 40) {
 
             $progressColor = '#ffc107';
-
         } elseif ($targetPercent >= 20) {
 
             $progressColor = '#fd7e14';
@@ -582,6 +799,9 @@ class DashboardController extends Controller
             'allReports' => $allReports,
 
             'todayReports' => $todayReports,
+
+            'totalCase' => $totalCase,
+            'todayCase' => $todayCase,
 
             'allUsers' => $allUsers,
 

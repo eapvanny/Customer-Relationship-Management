@@ -570,10 +570,14 @@
                                             id="year"
                                             class="form-control select2 crm-control"
                                         >
+                                            <option value="all" {{ request('year', now()->year) === 'all' ? 'selected' : '' }}>
+                                                {{ __('All') }}
+                                            </option>
+
                                             @for ($year = 2024; $year <= now()->year; $year++)
                                                 <option
                                                     value="{{ $year }}"
-                                                    {{ (int) request('year', now()->year) === $year ? 'selected' : '' }}
+                                                    {{ (string) request('year', now()->year) === (string) $year ? 'selected' : '' }}
                                                 >
                                                     {{ $year }}
                                                 </option>
@@ -638,28 +642,34 @@
 
             <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
-                    <h6 style="font-weight: 900;">{{ __('All Report') }}</h6>
+                    <h6 style="font-weight: 900;">{{ __('Total SO') }}</h6>
                     <h3 id="all-report" style="font-weight: 900;">{{ $allReports }}</h3>
                 </div>
             </div>
             <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #2aaa91;">
-                    <h6 style="font-weight: 900;">{{ __('Today Report') }}</h6>
-                    <h3 id="today-report" style="font-weight: 900;">{{ $todayReports }}</h3>
+                    <h6 style="font-weight: 900;">{{ __('Total Case') }}</h6>
+                    <h3 id="today-report" style="font-weight: 900;">{{ $totalCase }}</h3>
                 </div>
             </div>
             <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #95d1d4;">
-                    <h6 style="font-weight: 900;">{{ __('All Customer') }}</h6>
-                    <h3 id="all-customer" style="font-weight: 900;">{{ $allCustomers }}</h3>
+                    <h6 style="font-weight: 900;">{{ __('Today Case') }}</h6>
+                            <h3 id="all-customer" style="font-weight: 900;">{{ $todayCase }}</h3>
                 </div>
             </div>
             <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #95d1d4;">
+                    <h6 style="font-weight: 900;">{{ __('Total Customer') }}</h6>
+                    <h3 id="all-customer" style="font-weight: 900;">{{ $allCustomers }}</h3>
+                </div>
+            </div>
+            {{-- <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #feb559;">
                     <h6 style="font-weight: 900;">{{ __('All User') }}</h6>
                     <h3 id="all-user" style="font-weight: 900;">{{ $allUsers }}</h3>
                 </div>
-            </div>
+            </div> --}}
             {{-- <div class="col-lg-6 col-xl-3 col-md-6 col-sm-6">
                 <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
                     <h6 style="font-weight: 900;">{{ __('User Active') }}</h6>
@@ -678,30 +688,41 @@
                 </h4>
                 <form method="GET" action="{{ url()->current() }}">
                     <div class="form-group has-feedback"
-                        style="width: 300px; margin-right: 10px;">
+                        style="width: 600px; margin-right: 10px;">
 
                         <select name="employee_id"
-                                id="employee_id"
-                                class="form-control select2"
-                                onchange="this.form.submit()">
+                            id="employee_id"
+                            class="form-control select2"
+                            onchange="this.form.submit()">
 
-                            <option value="">
-                                {{ __('Select Employee') }}
+                        <option value="">
+                            {{ __('Select Employee') }}
+                        </option>
+
+                        @foreach($allUsersEmployee as $employee)
+
+                            <option value="{{ $employee->id }}"
+                                {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}>
+
+                                .{{ $employee->display_name }}
+
+                                @if($employee->rsm_name)
+                                    | RSM: {{ $employee->rsm_name }}
+                                @endif
+
+                                @if($employee->asm_name)
+                                    | ASM: {{ $employee->asm_name }}
+                                @endif
+
+                                @if($employee->sup_name)
+                                    | SUP: {{ $employee->sup_name }}
+                                @endif
+
                             </option>
 
-                            @foreach($allUsersEmployee as $employee)
-                                <option value="{{ $employee->id }}"
-                                    {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}>
+                        @endforeach
 
-                                    {{ app()->getLocale() === 'en'
-                                        ? $employee->full_name_latin
-                                        : $employee->full_name
-                                    }}
-
-                                </option>
-                            @endforeach
-
-                        </select>
+                    </select>
                     </div>
                 </form>
                 @if ($currentRank == 'Rank C')
