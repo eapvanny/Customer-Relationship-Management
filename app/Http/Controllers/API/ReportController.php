@@ -253,6 +253,42 @@ class ReportController extends Controller
             $reports = $query
                         ->orderByDesc('id')
                         ->paginate($perPage);
+                        // Check whether any filter is applied
+                $hasFilter =
+                    $request->filled('customer_type') ||
+                    $request->filled('quantity') ||
+                    $request->filled('search') ||
+                    $request->filled('date1') ||
+                    $request->filled('date2');
+
+                // TOTAL CASE
+                if ($hasFilter) {
+                    // Filter applied:
+                    // Calculate ALL filtered reports, ignoring pagination
+                    $totalCase = (clone $query)
+                        ->selectRaw('
+                            COALESCE(SUM(`250_ml`), 0)
+                            + COALESCE(SUM(`350_ml`), 0)
+                            + COALESCE(SUM(`600_ml`), 0)
+                            + COALESCE(SUM(`1500_ml`), 0)
+                            AS total_case
+                        ')
+                        ->value('total_case');
+
+                } else {
+
+                    // No filter:
+                    // Calculate only current page / per_page records
+                    $totalCase = $reports->getCollection()->sum(function ($report) {
+                        return
+                            (int) ($report->{'250_ml'} ?? 0) +
+                            (int) ($report->{'350_ml'} ?? 0) +
+                            (int) ($report->{'600_ml'} ?? 0) +
+                            (int) ($report->{'1500_ml'} ?? 0);
+                    });
+                }
+
+                $totalCase = (int) $totalCase;
 
             $reportsData = $reports->getCollection()->map(function ($report) {
 
@@ -308,7 +344,7 @@ class ReportController extends Controller
                 'success' => true,
                 'show_modal' => $showModal,
                 'data' => $reportsData,
-
+                'total_case' => $totalCase,
                 'pagination' => [
                     'current_page' => $reports->currentPage(),
                     'last_page'    => $reports->lastPage(),
