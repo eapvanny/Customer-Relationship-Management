@@ -35,11 +35,7 @@ class ReportController extends Controller
 
         try {
 
-            // =========================================================
-            // BASE QUERY
-            // =========================================================
-
-            $query = Report::query()->with([
+            $query = Report::with([
                 'user',
                 'customer',
                 'customer.depo'
@@ -51,69 +47,52 @@ class ReportController extends Controller
 
             $userIds = [$userId];
 
-            $allowedTypes = [
-                AppHelper::SALE,
-                AppHelper::SE,
-            ];
-
-            // =========================================================
-            // STAFF ID CARDS
-            // =========================================================
-
             $staffIdCards = User::whereIn('id', $userIds)
                 ->pluck('staff_id_card')
                 ->filter()
                 ->toArray();
 
-            // =========================================================
-            // ADMIN CHECK
-            // =========================================================
+            $allowedTypes = [
+                AppHelper::SALE,
+                AppHelper::SE,
+            ];
 
-            $isAdmin =
+            // ==============================
+            // Permission
+            // ==============================
+
+            if (
                 $userType == AppHelper::ALL ||
                 in_array($userRole, [
                     AppHelper::USER_SUPER_ADMIN,
                     AppHelper::USER_ADMIN,
                     AppHelper::USER_DIRECTOR
-                ]);
+                ])
+            ) {
 
-            // =========================================================
-            // PERMISSION
-            // =========================================================
-
-            if ($isAdmin) {
-
-                // Admin / Director / Super Admin
-                // Can see all reports.
+                // See everything
 
             } elseif ($userRole == AppHelper::USER_MANAGER) {
 
                 $managerIds = User::query()
                     ->where('role_id', AppHelper::USER_MANAGER)
                     ->where(function ($q) use ($user) {
-
-                        $q->where('id', $user->id)
-                            ->orWhere(
-                                'manager_id',
-                                $user->manager_id
-                            );
-
+                        // Current manager
+                        $q->where('id', $user->id);
+                        $q->orWhere(
+                            'manager_id',
+                            $user->manager_id
+                        );
                     })
                     ->pluck('id')
                     ->toArray();
 
-                $managedUserIds = User::query()
-                    ->where(function ($q) use ($managerIds) {
-
-                        // IMPORTANT:
-                        // managerIds is an array, so use whereIn()
-
-                        $q->whereIn('manager_id', $managerIds)
-                            ->orWhereIn('rsm_id', $managerIds)
-                            ->orWhereIn('sup_id', $managerIds)
-                            ->orWhereIn('asm_id', $managerIds);
-
-                    })
+                $managedUserIds = User::where(function ($q) use ($managerIds) {
+                    $q->where('manager_id', $managerIds)
+                        ->orWhere('rsm_id', $managerIds)
+                        ->orWhere('sup_id', $managerIds)
+                        ->orWhere('asm_id', $managerIds);
+                })
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
@@ -127,577 +106,230 @@ class ReportController extends Controller
 
             } elseif ($userRole == AppHelper::USER_RSM) {
 
-                $managedUserIds = User::query()
-                    ->where(function ($q) use ($userId) {
-
-                        $q->where('rsm_id', $userId)
-                            ->orWhere('sup_id', $userId)
-                            ->orWhere('asm_id', $userId);
-
-                    })
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('rsm_id', $userId)
+                        ->orWhere('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
 
-                $userIds = array_unique(
-                    array_merge(
-                        $userIds,
-                        $managedUserIds
-                    )
-                );
+                $userIds = array_merge($userIds, $managedUserIds);
 
             } elseif ($userRole == AppHelper::USER_SUP) {
 
-                $managedUserIds = User::query()
-                    ->where(function ($q) use ($userId) {
-
-                        $q->where('sup_id', $userId)
-                            ->orWhere('asm_id', $userId);
-
-                    })
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->where('sup_id', $userId)
+                        ->orWhere('asm_id', $userId);
+                })
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
 
-                $userIds = array_unique(
-                    array_merge(
-                        $userIds,
-                        $managedUserIds
-                    )
-                );
+                $userIds = array_merge($userIds, $managedUserIds);
 
             } elseif ($userRole == AppHelper::USER_ASM) {
 
-                $managedUserIds = User::query()
-                    ->where(function ($q) use ($userId) {
-
-                        $q->whereJsonContains(
-                            'asm_id',
-                            (string) $userId
-                        )
-                        ->orWhere(
-                            'asm_id',
-                            $userId
-                        );
-
-                    })
+                $managedUserIds = User::where(function ($q) use ($userId) {
+                    $q->whereJsonContains('asm_id', (string)$userId)
+                        ->orWhere('asm_id', $userId);
+                })
                     ->whereIn('type', $allowedTypes)
                     ->pluck('id')
                     ->toArray();
 
-                $userIds = array_unique(
-                    array_merge(
-                        $userIds,
-                        $managedUserIds
-                    )
-                );
+                $userIds = array_merge($userIds, $managedUserIds);
             }
 
-            // =========================================================
-            // APPLY USER PERMISSION
-            // =========================================================
+            if (
+                !(
+                    $userType == AppHelper::ALL ||
+                    in_array($userRole, [
+                        AppHelper::USER_SUPER_ADMIN,
+                        AppHelper::USER_ADMIN,
+                        AppHelper::USER_DIRECTOR
+                    ])
+                )
+            ) {
 
-            if (!$isAdmin) {
+                $query->where(function ($q) use ($userIds, $staffIdCards, $allowedTypes) {
 
-                $query->where(function ($q) use (
-                    $userIds,
-                    $staffIdCards,
-                    $allowedTypes
-                ) {
-
-                    // ---------------------------------------------
                     // Normal reports
-                    // ---------------------------------------------
-
-                    $q->where(function ($q1) use (
-                        $userIds,
-                        $allowedTypes
-                    ) {
-
-                        $q1->whereIn(
-                            'reports.user_id',
-                            array_unique($userIds)
-                        )
-                        ->whereHas('user', function ($q2) use (
-                            $allowedTypes
-                        ) {
-
-                            $q2->whereIn(
-                                'type',
-                                $allowedTypes
-                            );
-
-                        });
-
+                    $q->where(function ($q1) use ($userIds, $allowedTypes) {
+                        $q1->whereIn('reports.user_id', array_unique($userIds))
+                            ->whereHas('user', function ($q2) use ($allowedTypes) {
+                                $q2->whereIn('type', $allowedTypes);
+                            });
                     });
 
-                    // ---------------------------------------------
                     // Imported by SSP
-                    // ---------------------------------------------
-
                     if (!empty($staffIdCards)) {
-
-                        $q->orWhereIn(
-                            'reports.ssp_id',
-                            $staffIdCards
-                        );
-
+                        $q->orWhereIn('reports.ssp_id', $staffIdCards);
                     }
 
-                    // ---------------------------------------------
                     // Imported by SUP
-                    // ---------------------------------------------
-
                     if (!empty($staffIdCards)) {
-
-                        $q->orWhereIn(
-                            'reports.sup_id',
-                            $staffIdCards
-                        );
-
+                        $q->orWhereIn('reports.sup_id', $staffIdCards);
                     }
 
                 });
             }
 
-            // =========================================================
-            // MODAL
-            // =========================================================
+            // ==============================
+            // Modal
+            // ==============================
 
-            $hasNoReports = !Report::query()
-                ->where('user_id', $userId)
-                ->whereDate(
-                    'created_at',
-                    Carbon::today()
-                )
+            $hasNoReports = !Report::where('user_id', $userId)
+                ->whereDate('created_at', Carbon::today())
                 ->exists();
 
-            $hasUnassignedReportToday = Report::query()
-                ->where('user_id', $userId)
+            $hasUnassignedReportToday = Report::where('user_id', $userId)
                 ->whereNull('driver_id')
                 ->whereNull('driver_status')
-                ->whereDate(
-                    'created_at',
-                    Carbon::today()
-                )
+                ->whereDate('created_at', Carbon::today())
                 ->exists();
 
-            $showModal =
-                $hasNoReports ||
-                $hasUnassignedReportToday;
+            $showModal = $hasNoReports || $hasUnassignedReportToday;
 
-            // =========================================================
-            // FILTERS
-            // =========================================================
+            // ==============================
+            // Filters
+            // ==============================
 
-            $hasFilter = false;
-
-            // =========================================================
-            // CUSTOMER TYPE
-            // =========================================================
-
+            // Customer Type
             if ($request->filled('customer_type')) {
-
-                $hasFilter = true;
-
-                $query->where(
-                    'customer_type',
-                    $request->customer_type
-                );
+                $query->where('customer_type', $request->customer_type);
             }
 
-            // =========================================================
-            // QUANTITY
-            // =========================================================
-
+            // Quantity
             if ($request->filled('quantity')) {
-
-                $hasFilter = true;
-
-                switch (strtoupper(trim($request->quantity))) {
-
+                switch ($request->quantity) {
                     case '250ML':
-
-                        $query->where(
-                            '250_ml',
-                            '>',
-                            0
-                        );
-
+                        $query->where('250_ml', '>', 0);
                         break;
 
                     case '350ML':
-
-                        $query->where(
-                            '350_ml',
-                            '>',
-                            0
-                        );
-
+                        $query->where('350_ml', '>', 0);
                         break;
 
                     case '600ML':
-
-                        $query->where(
-                            '600_ml',
-                            '>',
-                            0
-                        );
-
+                        $query->where('600_ml', '>', 0);
                         break;
 
                     case '1500ML':
-
-                        $query->where(
-                            '1500_ml',
-                            '>',
-                            0
-                        );
-
+                        $query->where('1500_ml', '>', 0);
                         break;
                 }
             }
 
-            // =========================================================
-            // SEARCH
-            // =========================================================
-
+            // Search
             if ($request->filled('search')) {
 
-                $hasFilter = true;
-
-                $search = trim(
-                    $request->search
-                );
+                $search = trim($request->search);
 
                 $query->where(function ($q) use ($search) {
 
-                    $q->where(
-                        'customer_name',
-                        'like',
-                        "%{$search}%"
-                    )
-                    ->orWhere(
-                        'customer_code',
-                        'like',
-                        "%{$search}%"
-                    )
-                    ->orWhereHas(
-                        'customer',
-                        function ($qq) use ($search) {
-
-                            $qq->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            )
-                            ->orWhere(
-                                'code',
-                                'like',
-                                "%{$search}%"
-                            );
-
-                        }
-                    );
-
-                });
-            }
-
-            // =========================================================
-            // DATE
-            // =========================================================
-
-            if (
-                $request->filled('date1') &&
-                $request->filled('date2')
-            ) {
-
-                $hasFilter = true;
-
-                $startDate = Carbon::parse(
-                    $request->date1
-                )->startOfDay();
-
-                $endDate = Carbon::parse(
-                    $request->date2
-                )->endOfDay();
-
-                $query->whereBetween(
-                    'reports.date',
-                    [
-                        $startDate,
-                        $endDate
-                    ]
-                );
-            }
-
-            // =========================================================
-            // PER PAGE
-            // =========================================================
-
-            $perPage = (int) $request->get(
-                'per_page',
-                20
-            );
-
-            // Prevent invalid per_page values
-            if ($perPage <= 0) {
-                $perPage = 20;
-            }
-
-            // =========================================================
-            // TOTAL CASE
-            // =========================================================
-            //
-            // IMPORTANT:
-            //
-            // NO FILTER:
-            //   total_case = current page only
-            //
-            // FILTER:
-            //   total_case = ALL filtered records
-            //
-            // We calculate this BEFORE paginate().
-            // =========================================================
-
-            if ($hasFilter) {
-
-                // -----------------------------------------------------
-                // FILTER APPLIED
-                // -----------------------------------------------------
-                // Ignore pagination and calculate all filtered records.
-                //
-                // withoutEagerLoads() is used because relationships are
-                // not needed for SUM().
-                // -----------------------------------------------------
-
-                $totalCase = (clone $query)
-                    ->withoutEagerLoads()
-                    ->reorder()
-                    ->selectRaw('
-                        COALESCE(SUM(`250_ml`), 0)
-                        +
-                        COALESCE(SUM(`350_ml`), 0)
-                        +
-                        COALESCE(SUM(`600_ml`), 0)
-                        +
-                        COALESCE(SUM(`1500_ml`), 0)
-                        AS total_case
-                    ')
-                    ->value('total_case');
-
-            } else {
-
-                // -----------------------------------------------------
-                // NO FILTER
-                // -----------------------------------------------------
-                // We need current per_page only.
-                //
-                // Therefore get the current page first.
-                // -----------------------------------------------------
-
-                $tempReports = (clone $query)
-                    ->orderByDesc('id')
-                    ->paginate($perPage);
-
-                $totalCase = $tempReports
-                    ->getCollection()
-                    ->sum(function ($report) {
-
-                        return
-                            (int) ($report->{'250_ml'} ?? 0)
-                            +
-                            (int) ($report->{'350_ml'} ?? 0)
-                            +
-                            (int) ($report->{'600_ml'} ?? 0)
-                            +
-                            (int) ($report->{'1500_ml'} ?? 0);
+                    $q->where('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_code', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($qq) use ($search) {
+                            $qq->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
                     });
+
+                });
             }
 
-            $totalCase = (int) $totalCase;
+            // Date
+            if ($request->filled(['date1', 'date2'])) {
+                $startDate = Carbon::parse($request->date1)->startOfDay();
+                $endDate = Carbon::parse($request->date2)->endOfDay();
+                $query->whereBetween('reports.date', [$startDate, $endDate]);
+            }
 
-            // =========================================================
-            // PAGINATION
-            // =========================================================
-
+            // ==============================
+            // Reports
+            // ==============================
+            $perPage = (int) $request->get('per_page', 20);
             $reports = $query
-                ->orderByDesc('id')
-                ->paginate($perPage);
+                        ->orderByDesc('id')
+                        ->paginate($perPage);
 
-            // =========================================================
-            // REPORT DATA
-            // =========================================================
+            $reportsData = $reports->getCollection()->map(function ($report) {
 
-            $reportsData = $reports
-                ->getCollection()
-                ->map(function ($report) {
+                return [
 
-                    return [
+                    'id' => $report->id,
 
-                        'id' => $report->id,
+                    'report_id' => 'S-' . str_pad($report->id, 3, '0', STR_PAD_LEFT),
 
-                        'report_id' =>
-                            'S-' .
-                            str_pad(
-                                $report->id,
-                                3,
-                                '0',
-                                STR_PAD_LEFT
-                            ),
+                    'customer_name' => $report->customer->name
+                        ?? $report->customer_name
+                        ?? 'N/A',
 
-                        'customer_name' =>
-                            optional($report->customer)->name
-                            ??
-                            $report->customer_name
-                            ??
-                            'N/A',
+                    'customer_code' => $report->customer->code
+                        ?? 'N/A',
 
-                        'customer_code' =>
-                            optional($report->customer)->code
-                            ??
-                            $report->customer_code
-                            ??
-                            'N/A',
+                    'customer_type' => $report->customer_type
+                        ?? 'អតិថិជនទូទៅ',
 
-                        'customer_type' =>
-                            $report->customer_type
-                            ??
-                            'អតិថិជនទូទៅ',
+                    'outlet_name' => optional($report->depo)->name
+                        ?? $report->outlet_name
+                        ?? 'N/A',
 
-                        'outlet_name' =>
-                            optional($report->customer->depo)->name
-                            ??
-                            $report->outlet_name
-                            ??
-                            'N/A',
-
-                        'quantities' => [
-
-                            [
-                                'size' => '250ML',
-                                'quantity' =>
-                                    (int) (
-                                        $report->{'250_ml'}
-                                        ?? 0
-                                    )
-                            ],
-
-                            [
-                                'size' => '350ML',
-                                'quantity' =>
-                                    (int) (
-                                        $report->{'350_ml'}
-                                        ?? 0
-                                    )
-                            ],
-
-                            [
-                                'size' => '600ML',
-                                'quantity' =>
-                                    (int) (
-                                        $report->{'600_ml'}
-                                        ?? 0
-                                    )
-                            ],
-
-                            [
-                                'size' => '1500ML',
-                                'quantity' =>
-                                    (int) (
-                                        $report->{'1500_ml'}
-                                        ?? 0
-                                    )
-                            ],
-
+                    'quantities' => [
+                        [
+                            'size' => '250ML',
+                            'quantity' => (int) ($report->{'250_ml'} ?? 0)
                         ],
+                        [
+                            'size' => '350ML',
+                            'quantity' => (int) ($report->{'350_ml'} ?? 0)
+                        ],
+                        [
+                            'size' => '600ML',
+                            'quantity' => (int) ($report->{'600_ml'} ?? 0)
+                        ],
+                        [
+                            'size' => '1500ML',
+                            'quantity' => (int) ($report->{'1500_ml'} ?? 0)
+                        ],
+                    ],
 
-                        'other' =>
-                            $report->other ?? '',
+                    'other' => $report->other ?? '',
 
-                        'formatted_date' =>
-                            $report->date
-                            ? Carbon::parse(
-                                $report->date
-                            )->format(
-                                'd M, Y h:i A'
-                            )
-                            : null,
+                    'formatted_date' => $report->date
+                        ? Carbon::parse($report->date)->format('d M, Y h:i A')
+                        : null,
 
-                    ];
-                });
-
-            // =========================================================
-            // RESPONSE
-            // =========================================================
+                ];
+            });
 
             return response()->json([
-
                 'success' => true,
-
                 'show_modal' => $showModal,
-
-                // Total Case
-                'total_case' => $totalCase,
-
                 'data' => $reportsData,
 
                 'pagination' => [
-
-                    'current_page' =>
-                        $reports->currentPage(),
-
-                    'last_page' =>
-                        $reports->lastPage(),
-
-                    'per_page' =>
-                        $reports->perPage(),
-
-                    'total' =>
-                        $reports->total(),
-
-                    'from' =>
-                        $reports->firstItem(),
-
-                    'to' =>
-                        $reports->lastItem(),
-
-                    'has_more' =>
-                        $reports->hasMorePages(),
+                    'current_page' => $reports->currentPage(),
+                    'last_page'    => $reports->lastPage(),
+                    'per_page'     => $reports->perPage(),
+                    'total'        => $reports->total(),
+                    'from'         => $reports->firstItem(),
+                    'to'           => $reports->lastItem(),
+                    'has_more'     => $reports->hasMorePages(),
                 ],
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
 
-            // =========================================================
-            // LOG REAL ERROR
-            // =========================================================
-
-            Log::error(
-                'API ReportController@index',
-                [
-                    'message' =>
-                        $e->getMessage(),
-
-                    'file' =>
-                        $e->getFile(),
-
-                    'line' =>
-                        $e->getLine(),
-
-                    'trace' =>
-                        $e->getTraceAsString(),
-                ]
-            );
+            Log::error('API ReportController@index', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Server Error',
-                'error' => config(
-                    'app.debug'
-                )
-                    ? $e->getMessage()
-                    : null,
+                'message' => 'Server Error'
             ], 500);
         }
     }
