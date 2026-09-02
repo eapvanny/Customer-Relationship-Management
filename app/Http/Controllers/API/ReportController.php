@@ -254,12 +254,15 @@ class ReportController extends Controller
                         ->orderByDesc('id')
                         ->paginate($perPage);
 
-            $TotalCase = $query->sum(function ($report) {
-                return ($report->{'250_ml'} ?? 0) +
-                       ($report->{'350_ml'} ?? 0) +
-                       ($report->{'600_ml'} ?? 0) +
-                       ($report->{'1500_ml'} ?? 0);
-            });
+            $TotalCase = (clone $query)
+                ->selectRaw('
+                    COALESCE(SUM(`250_ml`), 0) +
+                    COALESCE(SUM(`350_ml`), 0) +
+                    COALESCE(SUM(`600_ml`), 0) +
+                    COALESCE(SUM(`1500_ml`), 0)
+                    AS total
+                ')
+                ->value('total');
 
             $reportsData = $reports->getCollection()->map(function ($report) {
 
