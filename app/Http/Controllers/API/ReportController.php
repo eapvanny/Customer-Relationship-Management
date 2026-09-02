@@ -1424,6 +1424,8 @@ class ReportController extends Controller
                 'ssp_id' => optional($reportUser)->staff_id_card
                     ?? $row->ssp_id
                     ?? 'N/A',
+                'driver_name' => $reportUser?->driver_name ?? 'N/A',
+                'driver_id' => $reportUser?->driver_id ?? 'N/A',
 
                 'sup_name' => $supName,
 
