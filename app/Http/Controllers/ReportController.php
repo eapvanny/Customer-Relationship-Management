@@ -423,7 +423,7 @@ class ReportController extends Controller
                                 auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
                                 (
                                     auth()->user()->role_id == AppHelper::USER_ADMIN &&
-                                    auth()->user()->position == 'SaleAdmin'
+                                    auth()->user()->position == 'Sale.Admin.Sup'
                                 )
                             
                             ? '<span class="change-action-item">
@@ -440,7 +440,7 @@ class ReportController extends Controller
                                 auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
                                 (
                                     auth()->user()->role_id == AppHelper::USER_ADMIN &&
-                                    auth()->user()->position == 'SaleAdmin'
+                                    auth()->user()->position == 'Sale.Admin.Sup'
                                 )
                             
                             ? '<span class="change-action-item">
