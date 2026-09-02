@@ -729,17 +729,56 @@ class ReportController extends Controller
 
     public function storeConsumer(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'customer_name' => ['required', 'string', 'max:255'],
 
-            '250_ml' => ['nullable', 'integer', 'min:0'],
-            '350_ml' => ['nullable', 'integer', 'min:0'],
-            '600_ml' => ['nullable', 'integer', 'min:0'],
+            'latitude'  => ['required', 'numeric'],
+            'longitude' => ['required', 'numeric'],
+            'city'      => ['required', 'string', 'max:255'],
+            'address'   => ['required', 'string', 'max:255'],
+            'country'   => ['required', 'string', 'max:255'],
+
+            // Accept either uploaded file or base64
+            'outlet_photo' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+            ],
+
+            'outlet_photo_base64' => ['nullable', 'string'],
+
+            '250_ml'  => ['nullable', 'integer', 'min:0'],
+            '350_ml'  => ['nullable', 'integer', 'min:0'],
+            '600_ml'  => ['nullable', 'integer', 'min:0'],
             '1500_ml' => ['nullable', 'integer', 'min:0'],
 
-            'other' => ['nullable', 'string'],
+            'other'  => ['nullable', 'string'],
             'status' => ['required', 'in:consumer'],
         ]);
+
+        // Outlet photo is required
+        if (
+            !$request->hasFile('outlet_photo') &&
+            !$request->filled('outlet_photo_base64')
+        ) {
+            $validator->after(function ($validator) {
+                $validator->errors()->add(
+                    'outlet_photo',
+                    'Outlet photo is required.'
+                );
+            });
+        }
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
 
         DB::beginTransaction();
 
@@ -756,79 +795,139 @@ class ReportController extends Controller
             $report = new Report();
 
             $report->user_id = $user->id;
+
             $report->customer_name = $validated['customer_name'];
             $report->customer_type = AppHelper::អ្នកប្រើប្រាស់ចុងក្រោយ​;
             $report->date = Carbon::now('Asia/Phnom_Penh');
 
-            $report->{'250_ml'} = $validated['250_ml'] ?? 0;
-            $report->{'350_ml'} = $validated['350_ml'] ?? 0;
-            $report->{'600_ml'} = $validated['600_ml'] ?? 0;
+            $report->latitude  = $validated['latitude'];
+            $report->longitude = $validated['longitude'];
+            $report->city      = $validated['city'];
+            $report->address   = $validated['address'];
+            $report->country   = $validated['country'];
+
+            $report->{'250_ml'}  = $validated['250_ml'] ?? 0;
+            $report->{'350_ml'}  = $validated['350_ml'] ?? 0;
+            $report->{'600_ml'}  = $validated['600_ml'] ?? 0;
             $report->{'1500_ml'} = $validated['1500_ml'] ?? 0;
 
             $report->other = $validated['other'] ?? null;
+
             $report->status = $validated['status'];
 
-            $report->save();
+            if ($request->hasFile('outlet_photo')) {
+
+                $file = 'uploads/outlet_'
+                    . time()
+                    . '_'
+                    . Str::random(8)
+                    . '.jpg';
+
+                Storage::put(
+                    $file,
+                    AppHelper::resizeToSpecificSize(
+                        $request->file('outlet_photo'),
+                        1024,
+                        1024,
+                        70
+                    )
+                );
+
+                $report->outlet_photo = $file;
+            }
 
             /*
             |--------------------------------------------------------------------------
-            | Generate Global SO Number
+            | Base64 Outlet Photo
             |--------------------------------------------------------------------------
             */
+
+            elseif ($request->filled('outlet_photo_base64')) {
+
+                $base64 = $request->outlet_photo_base64;
+
+                // Remove data:image/...;base64, prefix
+                if (str_contains($base64, ',')) {
+                    $base64 = explode(',', $base64, 2)[1];
+                }
+
+                $imageData = base64_decode($base64, true);
+
+                if ($imageData === false) {
+                    throw new \Exception('Invalid outlet photo base64 data.');
+                }
+
+                $file = 'uploads/outlet_'
+                    . time()
+                    . '_'
+                    . Str::random(8)
+                    . '.jpg';
+
+                Storage::put($file, $imageData);
+
+                $report->outlet_photo = $file;
+            }
+
+            $report->save();
 
             $prefix = $user->area;
 
             $lastSoNumber = Report::whereNotNull('so_number')
+                ->where('so_number', 'like', $prefix . '-%')
                 ->orderByDesc('id')
                 ->value('so_number');
 
             if ($lastSoNumber) {
+
                 $lastNumber = (int) substr($lastSoNumber, -7);
+
                 $nextNumber = $lastNumber + 1;
+
             } else {
+
                 $nextNumber = 1;
             }
 
-            $soNumber = $prefix . '-' . str_pad(
-                $nextNumber,
-                7,
-                '0',
-                STR_PAD_LEFT
-            );
+            $soNumber = $prefix . '-'
+                . str_pad(
+                    $nextNumber,
+                    7,
+                    '0',
+                    STR_PAD_LEFT
+                );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Save SO Number
-            |--------------------------------------------------------------------------
-            */
-
-            $report->update([
-                'so_number' => $soNumber,
-            ]);
+            $report->so_number = $soNumber;
+            $report->save();
 
             DB::commit();
 
-            /*
-            |--------------------------------------------------------------------------
-            | API Response
-            |--------------------------------------------------------------------------
-            */
-
             return response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Consumer report created successfully.',
+
                 'data' => [
-                    'id' => $report->id,
-                    'so_number' => $report->so_number,
-                    'user_id' => $report->user_id,
+                    'id'            => $report->id,
+                    'so_number'     => $report->so_number,
+                    'user_id'       => $report->user_id,
                     'customer_name' => $report->customer_name,
                     'customer_type' => $report->customer_type,
+
+                    'latitude'  => $report->latitude,
+                    'longitude' => $report->longitude,
+                    'city'      => $report->city,
+                    'address'   => $report->address,
+                    'country'   => $report->country,
+
+                    'outlet_photo' => $report->outlet_photo,
+
                     'date' => $report->date,
-                    '250_ml' => $report->{'250_ml'},
-                    '350_ml' => $report->{'350_ml'},
-                    '600_ml' => $report->{'600_ml'},
+
+                    '250_ml'  => $report->{'250_ml'},
+                    '350_ml'  => $report->{'350_ml'},
+                    '600_ml'  => $report->{'600_ml'},
                     '1500_ml' => $report->{'1500_ml'},
-                    'other' => $report->other,
+
+                    'other'  => $report->other,
                     'status' => $report->status,
                 ],
             ], 201);
@@ -838,12 +937,13 @@ class ReportController extends Controller
             DB::rollBack();
 
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Failed to create consumer report.',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
+
 
     // public function export(Request $request)
     // {
