@@ -687,7 +687,7 @@
                     <i class="fa fa-bullseye text-warning"></i> {{ __('Monthly Sales Target') }} 
                 </h4> {{-- Employee Filter --}} 
                 <form method="GET" action="{{ url()->current() }}" class="w-100 w-md-auto"> 
-                    <div class="form-group mb-0"> 
+                    <div class="form-group has-feedback"> 
                         <select name="employee_id" id="employee_id" class="form-control select2" onchange="this.form.submit()" style="min-width: 250px;"> 
                             <option value=""> {{ __('Select Employee') }} </option> 
                             @foreach($allUsersEmployee as $employee) 

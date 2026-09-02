@@ -254,6 +254,13 @@ class ReportController extends Controller
                         ->orderByDesc('id')
                         ->paginate($perPage);
 
+            $TotalCase = $query->sum(function ($report) {
+                return ($report->{'250_ml'} ?? 0) +
+                       ($report->{'350_ml'} ?? 0) +
+                       ($report->{'600_ml'} ?? 0) +
+                       ($report->{'1500_ml'} ?? 0);
+            });
+
             $reportsData = $reports->getCollection()->map(function ($report) {
 
                 return [
@@ -314,6 +321,7 @@ class ReportController extends Controller
                     'last_page'    => $reports->lastPage(),
                     'per_page'     => $reports->perPage(),
                     'total'        => $reports->total(),
+                    'totalCase'   => $TotalCase,
                     'from'         => $reports->firstItem(),
                     'to'           => $reports->lastItem(),
                     'has_more'     => $reports->hasMorePages(),
