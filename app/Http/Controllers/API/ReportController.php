@@ -250,6 +250,8 @@ class ReportController extends Controller
             // Reports
             // ==============================
             $perPage = (int) $request->get('per_page', 20);
+            // Add select with calculated total_case
+            $query->selectRaw('*, (COALESCE(250_ml, 0) + COALESCE(350_ml, 0) + COALESCE(600_ml, 0) + COALESCE(1500_ml, 0)) as total_case');
             $reports = $query
                         ->orderByDesc('id')
                         ->paginate($perPage);
@@ -294,7 +296,7 @@ class ReportController extends Controller
                             'quantity' => (int) ($report->{'1500_ml'} ?? 0)
                         ],
                     ],
-
+                    'total_case' => (int) $report->total_case, // Add total_case field
                     'other' => $report->other ?? '',
 
                     'formatted_date' => $report->date
