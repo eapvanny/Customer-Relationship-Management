@@ -722,9 +722,13 @@ class UserController extends Controller
             'name_latin' => 'required|min:2|max:255',
             'username' => [
                 'required',
+                'string',
                 'min:2',
                 'max:255',
-                Rule::unique('users', 'username')->where(fn($q) => $q->where('status', 1)),
+                Rule::unique('users', 'username')
+                    ->where(function ($query) {
+                        $query->where('status', 1);
+                    }),
             ],
             'password' => 'required|min:6|max:50',
             'phone_no' => 'required',

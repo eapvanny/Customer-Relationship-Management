@@ -116,6 +116,10 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::resource('report', ReportController::class);
     Route::post('/report/consumer', [ReportController::class, 'storeConsumer'])->name('consumer.store');
     Route::get('/get-reports', [ReportController::class, 'getReports'])->name('get-reports');
+    Route::get('/edit-reports/{id}/edit', [ReportController::class, 'editReport'])
+    ->name('edit.report');
+    Route::put('/update-reports/{id}', [ReportController::class, 'updateReport'])
+    ->name('update.report');
     Route::get('/export-report', [ReportController::class, 'export'])->name('report.export');
     Route::get(
         '/reports/export/download/{key}',

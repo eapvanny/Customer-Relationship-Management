@@ -809,6 +809,111 @@
         </div>
     </div>
 </div>
+{{-- new modal edit report --}}
+<div class="modal fade" id="editReportModal" 
+    tabindex="-1"
+    aria-labelledby="editModalLabel"
+    aria-hidden="true"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">
+                    {{ __('Update Report') }}
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <form id="editReportForm">
+
+                @csrf
+                @method('PUT')
+
+                <input type="hidden" id="edit_report_id" name="id">
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ __('250ml') }}
+                            <span>{{ __('(Cases)') }}</span>
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               id="edit_250_ml"
+                               name="250_ml"
+                               min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ __('350ml') }}
+                            <span>{{ __('(Cases)') }}</span>
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               id="edit_350_ml"
+                               name="350_ml"
+                               min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ __('600ml') }}
+                            <span>{{ __('(Cases)') }}</span>
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               id="edit_600_ml"
+                               name="600_ml"
+                               min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ __('1500ml') }}
+                            <span>{{ __('(Cases)') }}</span>
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               id="edit_1500_ml"
+                               name="1500_ml"
+                               min="0">
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        {{ __('Cancel') }}
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        <i class="fa fa-save"></i>
+                        {{ __('Update') }}
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
 {{-- <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true" data-bs-backdrop="static"
      data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-md">
@@ -997,6 +1102,88 @@
             $(document).on('click', '.btnClose', function() {
                 $('#viewModal').modal('hide');
                 $('.img-popup').val('');
+            });
+
+            $(document).on('click', '.edit-report', function () {
+
+                let id = $(this).data('id');
+
+                $.ajax({
+                    url: '/edit-reports/' + id + '/edit',
+                    type: 'GET',
+
+                    beforeSend: function () {
+                        // Optionally, you can show a loading spinner or disable the button here
+                    },
+
+                    success: function (response) {
+
+                        if (response.status) {
+
+                            $('#edit_report_id').val(response.data.id);
+
+                            $('#edit_250_ml').val(response.data['250_ml'] ?? 0);
+                            $('#edit_350_ml').val(response.data['350_ml'] ?? 0);
+                            $('#edit_600_ml').val(response.data['600_ml'] ?? 0);
+                            $('#edit_1500_ml').val(response.data['1500_ml'] ?? 0);
+
+                            $('#editReportModal').modal('show');
+                        }
+                    },
+
+                    error: function (xhr) {
+                        toastr.error('Unable to load report.');
+                    }
+                });
+            });
+
+            $('#editReportForm').on('submit', function (e) {
+
+                e.preventDefault();
+
+                let id = $('#edit_report_id').val();
+
+                $.ajax({
+                    url: '/update-reports/' + id,
+                    type: 'PUT',
+                    data: $(this).serialize(),
+
+                    beforeSend: function () {
+                        $('#editReportForm button[type="submit"]')
+                            .prop('disabled', true)
+                            .html('<i class="fa fa-spinner fa-spin"></i> Updating...');
+                    },
+
+                    success: function (response) {
+
+                        if (response.status) {
+
+                            $('#editReportModal').modal('hide');
+
+                            toastr.success(response.message || 'Report updated successfully.');
+
+                            // Reload DataTable
+                            $('#datatable').DataTable().ajax.reload(null, false);
+                        }
+                    },
+
+                    error: function (xhr) {
+
+                        if (xhr.status === 422) {
+                            $.each(xhr.responseJSON.errors, function (field, messages) {
+                                toastr.error(messages[0]);
+                            });
+                        } else {
+                            toastr.error('Something went wrong.');
+                        }
+                    },
+
+                    complete: function () {
+                        $('#editReportForm button[type="submit"]')
+                            .prop('disabled', false)
+                            .html('<i class="fa fa-save"></i> Update');
+                    }
+                });
             });
 
             /*$('#openModalBtn').on('click', function () {

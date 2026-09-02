@@ -409,11 +409,50 @@ class ReportController extends Controller
 
                     })
                     ->addColumn('action', function ($data) {
-                        $show = '<span class="change-action-item"><a href="javascript:void(0);" class="btn btn-primary btn-sm img-detail" data-id="' . $data->id . '" title="Show"><i class="fa fa-fw fa-eye"></i></a>';
-                        $edit = auth()->user()->can('update report') && auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN
-                            ? '<a title="Edit" href="' . route('report.edit', $data->id) . '" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></span>'
+
+                        $show = '<span class="change-action-item">
+                                    <a href="javascript:void(0);"
+                                    class="btn btn-primary btn-sm img-detail"
+                                    data-id="' . $data->id . '"
+                                    title="Show">
+                                        <i class="fa fa-fw fa-eye"></i>
+                                    </a>
+                                </span>';
+
+                        $edit = 
+                                auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
+                                (
+                                    auth()->user()->role_id == AppHelper::USER_ADMIN &&
+                                    auth()->user()->position == 'SaleAdmin'
+                                )
+                            
+                            ? '<span class="change-action-item">
+                                    <a title="Edit"
+                                    href="javascript:void(0);"
+                                    class="btn btn-primary btn-sm edit-report"
+                                    data-id="' . $data->id . '">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                            </span>'
                             : '';
-                        return $show . ' ' . $edit;
+
+                        $delete =
+                                auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
+                                (
+                                    auth()->user()->role_id == AppHelper::USER_ADMIN &&
+                                    auth()->user()->position == 'SaleAdmin'
+                                )
+                            
+                            ? '<span class="change-action-item">
+                                    <a title="Delete"
+                                    href="' . route('report.destroy', $data->id) . '"
+                                    class="btn btn-danger btn-sm delete">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                            </span>'
+                            : '';
+
+                        return $show . ' ' . $edit . ' ' . $delete;
                     })
                     ->rawColumns(['action','status']) // Allow HTML in action and status columns
                     ->make(true);
@@ -930,6 +969,46 @@ class ReportController extends Controller
                     __('Failed to add consumer report: ') . $e->getMessage()
                 );
         }
+    }
+
+    public function editReport($id)
+    {
+        $report = Report::findOrFail($id);
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id'      => $report->id,
+                '250_ml'  => $report->{'250_ml'} ?? 0,
+                '350_ml'  => $report->{'350_ml'} ?? 0,
+                '600_ml'  => $report->{'600_ml'} ?? 0,
+                '1500_ml' => $report->{'1500_ml'} ?? 0,
+            ],
+        ]);
+    }
+
+    public function updateReport(Request $request, $id)
+    {
+        $request->validate([
+            '250_ml'  => ['required', 'numeric', 'min:0'],
+            '350_ml'  => ['required', 'numeric', 'min:0'],
+            '600_ml'  => ['required', 'numeric', 'min:0'],
+            '1500_ml' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $report = Report::findOrFail($id);
+
+        $report->{'250_ml'}  = $request->{'250_ml'};
+        $report->{'350_ml'}  = $request->{'350_ml'};
+        $report->{'600_ml'}  = $request->{'600_ml'};
+        $report->{'1500_ml'} = $request->{'1500_ml'};
+
+        $report->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Report updated successfully.',
+        ]);
     }
 
     public function edit($id)
