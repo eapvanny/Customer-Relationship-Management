@@ -681,49 +681,25 @@
     <section>
         <div class="card shadow-sm border-0 rounded-4">
 
-            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                <h4 class="mb-0 fw-bold">
-                    <i class="fa fa-bullseye text-warning"></i>
-                    {{ __('Monthly Sales Target') }}
-                </h4>
-                <form method="GET" action="{{ url()->current() }}">
-                    <div class="form-group has-feedback"
-                        style="width: 700px; margin-right: 10px;">
-
-                        <select name="employee_id"
-                            id="employee_id"
-                            class="form-control select2"
-                            onchange="this.form.submit()">
-
-                        <option value="">
-                            {{ __('Select Employee') }}
-                        </option>
-
-                        @foreach($allUsersEmployee as $employee)
-
-                            <option value="{{ $employee->id }}"
-                                {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}>
-
-                                .{{ $employee->display_name }}
-
-                                @if($employee->rsm_name)
-                                    | RSM: {{ $employee->rsm_name }}
-                                @endif
-
-                                @if($employee->asm_name)
-                                    | ASM: {{ $employee->asm_name }}
-                                @endif
-
-                                @if($employee->sup_name)
-                                    | SUP: {{ $employee->sup_name }}
-                                @endif
-
-                            </option>
-
-                        @endforeach
-
-                    </select>
-                    </div>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                {{-- Title --}} 
+                <h4 class="mb-0 fw-bold text-nowrap"> 
+                    <i class="fa fa-bullseye text-warning"></i> {{ __('Monthly Sales Target') }} 
+                </h4> {{-- Employee Filter --}} 
+                <form method="GET" action="{{ url()->current() }}" class="w-100 w-md-auto"> 
+                    <div class="form-group mb-0"> 
+                        <select name="employee_id" id="employee_id" class="form-control select2" onchange="this.form.submit()" style="min-width: 250px;"> 
+                            <option value=""> {{ __('Select Employee') }} </option> 
+                            @foreach($allUsersEmployee as $employee) 
+                                <option value="{{ $employee->id }}" {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}> 
+                                    {{ $employee->display_name }} 
+                                    @if($employee->rsm_name) | RSM: {{ $employee->rsm_name }} @endif 
+                                    @if($employee->asm_name) | ASM: {{ $employee->asm_name }} @endif 
+                                    @if($employee->sup_name) | SUP: {{ $employee->sup_name }} @endif 
+                                </option> 
+                            @endforeach 
+                        </select> 
+                    </div> 
                 </form>
                 @if ($currentRank == 'Rank A' && $targetPercent >= 100)
                     <span class="badge bg-success px-3 py-2">
