@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [APIUserController::class, 'index']);
     Route::get('/users/{id}', [APIUserController::class, 'show']);
     Route::put('/profile', [APIUserController::class, 'updateUserProfile']);
+    Route::put('/password', [APIUserController::class, 'updateUserPassword']);
     // Optional for multipart/form-data
     Route::post('/profile', [APIUserController::class, 'updateUserProfile']);
     Route::get('/dashboard', [APIDashboard::class, 'index']);
