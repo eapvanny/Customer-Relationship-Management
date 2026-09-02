@@ -873,7 +873,7 @@
                 </div> --}}
                 <div class="card mt-3 ticket-chat">
                     <div class="chart-container">
-                        <span style="font-weight: bold">{{ __('All cases in this year') }}</span>
+                        <span style="font-weight: bold">{{ __('Yearly Total Cases') }}</span>
                         <canvas id="lineChartCase"></canvas>
                     </div>
                 </div>
@@ -882,7 +882,7 @@
             <div class="col-lg-6 col-md-12 col-sm-12">
                 <div class="card mt-3 ticket-chat">
                     <div class="chart-container">
-                        <span style="font-weight: bold">{{ __('All SO in this year') }}</span>
+                        <span style="font-weight: bold">{{ __('Yearly Total SO') }}</span>
                         <canvas id="lineChart"></canvas>
                     </div>
                 </div>
