@@ -251,15 +251,14 @@ class ReportController extends Controller
             // ==============================
             $perPage = (int) $request->get('per_page', 20);
             // Add select with calculated total_case
-            $totalCase = $query->selectRaw('
-                *,
-                (
-                    COALESCE(`250_ml`, 0) +
-                    COALESCE(`350_ml`, 0) +
-                    COALESCE(`600_ml`, 0) +
-                    COALESCE(`1500_ml`, 0)
-                ) AS total_case
-            ');
+            // Calculate total_case across ALL filtered reports 
+            $totalCase = (clone $query)->sum(DB::raw(' 
+                COALESCE(`250_ml`, 0) + 
+                COALESCE(`350_ml`, 0) + 
+                COALESCE(`600_ml`, 0) + 
+                COALESCE(`1500_ml`, 0) 
+            '));
+            
             $reports = $query
                         ->orderByDesc('id')
                         ->paginate($perPage);
