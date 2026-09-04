@@ -22,6 +22,7 @@ class AppVersionController extends Controller
         }
 
         return response()->json([
+            'id' => $version->id,
             'latest_version' => $version->latest_version,
             'can_update' => (bool) $version->can_update,
             'force_update' => (bool) $version->force_update,
