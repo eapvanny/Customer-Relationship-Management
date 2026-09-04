@@ -692,7 +692,7 @@
                             <option value=""> {{ __('Select Employee') }} </option> 
                             @foreach($allUsersEmployee as $employee) 
                                 <option value="{{ $employee->id }}" {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}> 
-                                    {{ $employee->display_name }} 
+                                    . {{ $employee->display_name }} 
                                     @if($employee->rsm_name) | RSM: {{ $employee->rsm_name }} @endif 
                                     @if($employee->asm_name) | ASM: {{ $employee->asm_name }} @endif 
                                     @if($employee->sup_name) | SUP: {{ $employee->sup_name }} @endif 
