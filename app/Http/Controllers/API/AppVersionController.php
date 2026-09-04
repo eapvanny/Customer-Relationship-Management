@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppVersion;
-use GuzzleHttp\Psr7\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+
 class AppVersionController extends Controller
 {
+    /**
+     * Get latest app version
+     */
     public function check()
     {
         $version = AppVersion::latest('id')->first();
@@ -20,22 +23,24 @@ class AppVersionController extends Controller
 
         return response()->json([
             'latest_version' => $version->latest_version,
-            'can_update' => $version->can_update,
-            'force_update' => $version->force_update,
+            'can_update' => (bool) $version->can_update,
+            'force_update' => (bool) $version->force_update,
 
             // Android
-            'update_version_android' => $version->update_version_android,
+            'update_version_android' => (bool) $version->update_version_android,
             'update_url_android' => $version->update_url_android,
 
             // iOS
-            'update_version_ios' => $version->update_version_ios,
+            'update_version_ios' => (bool) $version->update_version_ios,
             'update_url_ios' => $version->update_url_ios,
 
             'release_notes' => $version->release_notes,
         ]);
     }
 
-    // Update version
+    /**
+     * Update app version
+     */
     public function update(Request $request, $id)
     {
         $version = AppVersion::findOrFail($id);
