@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AppVersionController;
 use App\Http\Controllers\API\CustomerController as APICustomer;
 use App\Http\Controllers\API\DashboardController as APIDashboard;
 use App\Http\Controllers\API\LoginController;
@@ -48,4 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports/consumer', [APIReport::class, 'storeConsumer']);
     Route::get('/reports/export', [APIReport::class, 'export']); // New endpoint for exporting reports
     Route::get('/reports/{id}', [APIReport::class, 'show']); // New endpoint
+
+    Route::get('/app-version', [AppVersionController::class, 'check']);
+    Route::put('/app-version/{id}', [AppVersionController::class, 'update']);
 });
