@@ -747,7 +747,6 @@ class ReportController extends Controller
             'address'   => ['nullable', 'string', 'max:255'],
             'country'   => ['nullable', 'string', 'max:255'],
 
-            // Accept either uploaded file or base64
             'outlet_photo' => [
                 'nullable',
                 'image',
@@ -765,19 +764,6 @@ class ReportController extends Controller
             'other'  => ['nullable', 'string'],
             'status' => ['required', 'in:consumer'],
         ]);
-
-        // Outlet photo is required
-        // if (
-        //     !$request->hasFile('outlet_photo') &&
-        //     !$request->filled('outlet_photo_base64')
-        // ) {
-        //     $validator->after(function ($validator) {
-        //         $validator->errors()->add(
-        //             'outlet_photo',
-        //             'Outlet photo is required.'
-        //         );
-        //     });
-        // }
 
         if ($validator->fails()) {
             return response()->json([
@@ -806,15 +792,19 @@ class ReportController extends Controller
             $report->user_id = $user->id;
 
             $report->customer_name = $validated['customer_name'];
+
             $report->customer_type = AppHelper::អ្នកប្រើប្រាស់ចុងក្រោយ​;
+
             $report->date = Carbon::now('Asia/Phnom_Penh');
 
-            $report->latitude  = $validated['latitude'];
-            $report->longitude = $validated['longitude'];
-            $report->city      = $validated['city'];
-            $report->address   = $validated['address'];
-            $report->country   = $validated['country'];
+            // Optional fields - use ?? null
+            $report->latitude  = $validated['latitude'] ?? null;
+            $report->longitude = $validated['longitude'] ?? null;
+            $report->city      = $validated['city'] ?? null;
+            $report->address   = $validated['address'] ?? null;
+            $report->country   = $validated['country'] ?? null;
 
+            // Product quantities
             $report->{'250_ml'}  = $validated['250_ml'] ?? 0;
             $report->{'350_ml'}  = $validated['350_ml'] ?? 0;
             $report->{'600_ml'}  = $validated['600_ml'] ?? 0;
@@ -823,6 +813,12 @@ class ReportController extends Controller
             $report->other = $validated['other'] ?? null;
 
             $report->status = $validated['status'];
+
+            /*
+            |--------------------------------------------------------------------------
+            | Uploaded Outlet Photo
+            |--------------------------------------------------------------------------
+            */
 
             if ($request->hasFile('outlet_photo')) {
 
@@ -877,7 +873,18 @@ class ReportController extends Controller
                 $report->outlet_photo = $file;
             }
 
+            // No photo is okay
+            else {
+                $report->outlet_photo = null;
+            }
+
             $report->save();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate SO Number
+            |--------------------------------------------------------------------------
+            */
 
             $prefix = $user->area;
 
@@ -906,9 +913,16 @@ class ReportController extends Controller
                 );
 
             $report->so_number = $soNumber;
+
             $report->save();
 
             DB::commit();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Response
+            |--------------------------------------------------------------------------
+            */
 
             return response()->json([
                 'status'  => true,
