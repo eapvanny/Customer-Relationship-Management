@@ -432,42 +432,149 @@
             color: white;
         }
 
-        .progress-circle {
+        /* =========================
+        Monthly Sales Target
+        ========================= */
 
+        .sales-target-card {
+            overflow: hidden;
+        }
+
+        /* =========================
+        Header
+        ========================= */
+
+        .sales-target-header {
+            display: grid !important;
+
+            grid-template-columns: 250px minmax(300px, 1fr) auto;
+
+            align-items: center;
+            gap: 25px;
+
+            padding: 20px 25px !important;
+
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* Title */
+        .sales-target-title {
+            min-width: 0;
+        }
+
+        .sales-target-title h5 {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.25;
+            white-space: normal;
+        }
+
+        /* Filter */
+        .sales-target-filter-form {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .sales-target-filter {
+            width: 100% !important;
+            min-width: 0;
+        }
+
+        /* Make Select2 fit the container */
+        .sales-target-filter + .select2-container {
+            width: 100% !important;
+        }
+
+        .sales-target-filter-form .select2-container {
+            width: 100% !important;
+        }
+
+        .sales-target-filter-form .select2-selection--single {
+            height: 45px !important;
+            display: flex !important;
+            align-items: center;
+            background: #fff;
+        }
+
+        .sales-target-filter-form
+        .select2-selection--single
+        .select2-selection__rendered {
+            line-height: 44px !important;
+            padding-left: 15px !important;
+            padding-right: 40px !important;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sales-target-filter-form
+        .select2-selection--single
+        .select2-selection__arrow {
+            height: 44px !important;
+            right: 10px !important;
+        }
+
+        /* Status */
+        .sales-target-status {
+            justify-self: end;
+
+            white-space: nowrap;
+
+            padding: 10px 18px !important;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+        }
+
+
+        /* =========================
+        Main Content
+        ========================= */
+
+        .progress-circle {
             width: 180px;
             height: 180px;
+            max-width: 100%;
+
             border-radius: 50%;
 
             display: flex;
             align-items: center;
             justify-content: center;
 
+            margin: 0 auto;
+
+            flex-shrink: 0;
         }
 
-
         .circle-content {
-
             width: 140px;
             height: 140px;
 
-            background: white;
+            background: #fff;
             border-radius: 50%;
 
             display: flex;
             flex-direction: column;
-
             justify-content: center;
             align-items: center;
 
+            text-align: center;
         }
 
 
+        /* =========================
+        Target Information
+        ========================= */
 
         .target-item {
-
             display: flex;
             justify-content: space-between;
             align-items: center;
+
+            gap: 15px;
 
             padding: 14px 18px;
 
@@ -478,22 +585,196 @@
             margin-bottom: 12px;
 
             font-size: 16px;
+        }
 
+        .target-item span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .target-item b {
+            text-align: right;
+            white-space: nowrap;
         }
 
 
+        /* =========================
+        Rank
+        ========================= */
 
         .rank-box {
-
             padding: 15px 18px;
 
-            background: linear-gradient(135deg,
-                    #fff7d6,
-                    #ffffff);
+            background: linear-gradient(
+                135deg,
+                #fff7d6,
+                #ffffff
+            );
 
             border-radius: 15px;
 
             border-left: 5px solid #ffc107;
+        }
+
+        .rank-box h3 {
+            margin-bottom: 0;
+        }
+
+
+        /* =========================
+        Tablet
+        ========================= */
+
+        @media (max-width: 1199.98px) {
+
+            .sales-target-header {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 20px;
+            }
+
+            .sales-target-title {
+                grid-column: 1 / 2;
+            }
+
+            .sales-target-filter-form {
+                grid-column: 2 / 3;
+            }
+
+            .sales-target-status {
+                grid-column: 1 / -1;
+                justify-self: start;
+            }
+
+        }
+
+
+        /* =========================
+        Small Tablet / iPad
+        ========================= */
+
+        @media (max-width: 991.98px) {
+
+            .sales-target-header {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .sales-target-title,
+            .sales-target-filter-form,
+            .sales-target-status {
+                grid-column: auto;
+            }
+
+            .sales-target-status {
+                justify-self: start;
+            }
+
+            .sales-target-title h5 {
+                font-size: 24px;
+            }
+
+            .sales-target-main {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .sales-target-circle {
+                width: 100%;
+                margin-bottom: 25px;
+            }
+
+            .sales-target-details {
+                width: 100%;
+            }
+
+        }
+
+
+        /* =========================
+        Mobile
+        ========================= */
+
+        @media (max-width: 575.98px) {
+
+            .sales-target-card .card-body {
+                padding: 15px;
+            }
+
+            .sales-target-header {
+                padding: 18px 15px !important;
+            }
+
+            .sales-target-title h5 {
+                font-size: 22px;
+            }
+
+            .sales-target-status {
+                width: 100%;
+                text-align: center;
+                justify-self: stretch;
+            }
+
+            .progress-circle {
+                width: 150px;
+                height: 150px;
+            }
+
+            .circle-content {
+                width: 115px;
+                height: 115px;
+            }
+
+            .circle-content h2 {
+                font-size: 1.4rem;
+            }
+
+            .target-item {
+                flex-direction: column;
+                align-items: flex-start;
+
+                padding: 13px 15px;
+            }
+
+            .target-item b {
+                width: 100%;
+                text-align: left;
+            }
+
+            .rank-box {
+                padding: 14px 15px;
+            }
+
+            .rank-box h3 {
+                font-size: 1.5rem;
+            }
+
+        }
+
+
+        /* =========================
+        Very Small Phones
+        ========================= */
+
+        @media (max-width: 380px) {
+
+            .progress-circle {
+                width: 135px;
+                height: 135px;
+            }
+
+            .circle-content {
+                width: 105px;
+                height: 105px;
+            }
+
+            .circle-content h2 {
+                font-size: 1.2rem;
+            }
+
+            .target-item {
+                font-size: 14px;
+            }
 
         }
     </style>
@@ -679,62 +960,112 @@
         </div>
     </section>
     <section>
-        <div class="card shadow-sm border-0 rounded-4">
+        <div class="card shadow-sm border-0 rounded-4 sales-target-card">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-                {{-- Title --}} 
-                <h4 class="mb-0 fw-bold text-nowrap"> 
-                    <i class="fa fa-bullseye text-warning"></i> {{ __('Monthly Sales Target') }} 
-                </h4> {{-- Employee Filter --}} 
-                <form method="GET" action="{{ url()->current() }}" class="w-100 w-md-auto"> 
-                    <div class="form-group has-feedback"> 
-                        <select name="employee_id" id="employee_id" class="form-control select2" onchange="this.form.submit()" style="min-width: 250px;"> 
-                            <option value=""> {{ __('Select Employee') }} </option> 
-                            @foreach($allUsersEmployee as $employee) 
-                                <option value="{{ $employee->id }}" {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}> 
-                                    . {{ $employee->display_name }} 
-                                    @if($employee->rsm_name) | RSM: {{ $employee->rsm_name }} @endif 
-                                    @if($employee->asm_name) | ASM: {{ $employee->asm_name }} @endif 
-                                    @if($employee->sup_name) | SUP: {{ $employee->sup_name }} @endif 
-                                </option> 
-                            @endforeach 
-                        </select> 
-                    </div> 
+            {{-- Header --}}
+            <div class="sales-target-header">
+
+                {{-- Title --}}
+                <div class="sales-target-title">
+                    <h5 class="fw-bold">
+                        <i class="fa fa-bullseye text-warning me-2"></i>
+                        {{ __('Monthly Sales Target') }}
+                    </h5>
+                </div>
+
+
+                {{-- Employee Filter --}}
+                <form method="GET"
+                    action="{{ url()->current() }}"
+                    class="sales-target-filter-form">
+
+                    <div class="form-group mb-0">
+
+                        <select name="employee_id"
+                                id="employee_id"
+                                class="form-control select2 sales-target-filter"
+                                onchange="this.form.submit()">
+
+                            <option value="">
+                                {{ __('Select Employee') }}
+                            </option>
+
+                            @foreach($allUsersEmployee as $employee)
+
+                                <option value="{{ $employee->id }}"
+                                    {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}>
+
+                                    . {{ $employee->display_name }}
+
+                                    @if($employee->rsm_name)
+                                        | RSM: {{ $employee->rsm_name }}
+                                    @endif
+
+                                    @if($employee->asm_name)
+                                        | ASM: {{ $employee->asm_name }}
+                                    @endif
+
+                                    @if($employee->sup_name)
+                                        | SUP: {{ $employee->sup_name }}
+                                    @endif
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                    </div>
+
                 </form>
+
+
+                {{-- Status --}}
                 @if ($currentRank == 'Rank A' && $targetPercent >= 100)
-                    <span class="badge bg-success px-3 py-2">
-                        <i class="fa fa-trophy"></i> {{__('Completed')}}
+
+                    <span class="badge bg-success sales-target-status">
+                        <i class="fa fa-trophy me-1"></i>
+                        {{ __('Completed') }}
                     </span>
+
                 @else
-                    <span class="badge bg-warning text-dark px-3 py-2">
-                        <i class="fa fa-spinner"></i> {{__('In Progress')}}
+
+                    <span class="badge bg-warning text-dark sales-target-status">
+                        <i class="fa fa-spinner me-1"></i>
+                        {{ __('In Progress') }}
                     </span>
+
                 @endif
+
             </div>
 
 
             <div class="card-body">
 
-                <div class="row align-items-center">
+                {{-- Main Content --}}
+                <div class="row align-items-center sales-target-main">
 
+                    {{-- Circle --}}
+                    <div class="col-12 col-lg-4 text-center sales-target-circle">
 
-                    {{-- Circle Progress --}}
-                    <div class="col-md-4 text-center">
-
-                        <div class="progress-circle mx-auto"
+                        <div class="progress-circle"
                             style="
-                            background: conic-gradient(
-                                {{ $progressColor }} {{ $targetPercent }}%,
-                                #eeeeee {{ $targetPercent }}%
-                            );">
+                                background: conic-gradient(
+                                    {{ $progressColor }} {{ $targetPercent }}%,
+                                    #eeeeee {{ $targetPercent }}%
+                                );
+                            ">
 
                             <div class="circle-content">
+
                                 <h2 class="fw-bold mb-0">
                                     {{ $targetPercent }}%
                                 </h2>
+
                                 <small class="text-muted">
-                                    {{__('Completed')}}
+                                    {{ __('Completed') }}
                                 </small>
+
                             </div>
 
                         </div>
@@ -742,62 +1073,78 @@
                     </div>
 
 
+                    {{-- Details --}}
+                    <div class="col-12 col-lg-8 sales-target-details">
 
-                    {{-- Detail --}}
-                    <div class="col-md-8">
-
-
+                        {{-- Rank --}}
                         <div class="rank-box mb-3">
 
                             <div>
                                 <span class="text-muted">
-                                    <i class="fa fa-trophy"></i> {{__('Current Rank')}}
+                                    <i class="fa fa-trophy"></i>
+                                    {{ __('Current Rank') }}
                                 </span>
-
                             </div>
 
-                            <h3 class="fw-bold mt-2" style="color: {{ $progressColor }}">
+                            <h3 class="fw-bold mt-2"
+                                style="color: {{ $progressColor }}">
+
                                 {{ __($currentRank) }}
+
                             </h3>
 
                         </div>
 
 
-
+                        {{-- Actual Sales --}}
                         <div class="target-item">
 
                             <span>
-                                <i class="fa fa-shopping-cart"></i> {{__('Actual Sales')}}
+                                <i class="fa fa-shopping-cart"></i>
+                                {{ __('Actual Sales') }}
                             </span>
 
                             <b>
-                                {{ number_format($soldThisMonth) }} {{__('Cases')}}
+                                {{ number_format($soldThisMonth) }}
+                                {{ __('Cases') }}
                             </b>
 
                         </div>
 
+
+                        {{-- Remaining --}}
                         <div class="target-item">
 
                             <span>
-                                <i class="fa fa-hourglass-half"></i> {{__('Remaining')}}
+                                <i class="fa fa-hourglass-half"></i>
+                                {{ __('Remaining') }}
                             </span>
 
                             <b class="text-danger">
 
                                 @if ($remaining > 0)
-                                    {{ number_format($remaining) }} {{__('Cases')}}
+
+                                    {{ number_format($remaining) }}
+                                    {{ __('Cases') }}
+
                                 @else
-                                    {{__('Completed')}} <i class="fa fa-check-circle text-success"></i>
+
+                                    {{ __('Completed') }}
+                                    <i class="fa fa-check-circle text-success"></i>
+
                                 @endif
 
                             </b>
 
                         </div>
 
+
+                        {{-- Next Rank --}}
                         <div class="target-item">
 
                             <span>
-                                <i class="fa fa-trophy"></i> {{__('Next Rank')}}
+                                <i class="fa fa-trophy"></i>
+                                {{ __('Next Rank') }}
                             </span>
 
                             <b>
@@ -806,21 +1153,19 @@
 
                         </div>
 
-
                     </div>
 
-
                 </div>
-
 
 
                 {{-- Progress Bar --}}
                 <div class="mt-4">
 
-                    <div class="d-flex justify-content-between mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
 
                         <small>
-                            Progress to {{ $nextRank ?? 'Rank C' }}
+                            {{ __('Progress to') }}
+                            {{ $nextRank ?? 'Rank C' }}
                         </small>
 
                         <small class="fw-bold">
@@ -829,20 +1174,19 @@
 
                     </div>
 
-
-                    <div class="progress rounded-pill" style="height:12px;">
+                    <div class="progress rounded-pill"
+                        style="height: 12px;">
 
                         <div class="progress-bar"
                             style="
-                        width: {{ $targetPercent }}%;
-                        background-color: {{ $progressColor }};
-                    ">
+                                width: {{ min($targetPercent, 100) }}%;
+                                background-color: {{ $progressColor }};
+                            ">
                         </div>
 
                     </div>
 
                 </div>
-
 
             </div>
 
