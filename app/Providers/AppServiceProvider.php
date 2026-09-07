@@ -2,6 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Customer;
+use App\Models\Depo;
+use App\Models\Report;
+use App\Models\User;
+use App\Observers\CustomerObserver;
+use App\Observers\DepoObserver;
+use App\Observers\ReportObserver;
+use App\Observers\UserObserver;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 // use Illumiate\Support\Facade\URL;
@@ -23,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        User::observe(UserObserver::class);
+        Depo::observe(DepoObserver::class);
+        Customer::observe(CustomerObserver::class);
+        Report::observe(ReportObserver::class);
+        
         // if(env('APP_ENV') == 'local'){
         //     URL::forceScheme('https');
         // }

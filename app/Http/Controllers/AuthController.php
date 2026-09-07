@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Helpers\ActivityLogger;
 use App\Http\Helpers\AppHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -32,8 +33,9 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
-
+            ActivityLogger::login($user);
             if ($user->status == 0) {
+                ActivityLogger::logout($user);
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -175,6 +177,10 @@ class AuthController extends Controller
 
     public function logout()
     {
+        $user = Auth::user();
+
+        ActivityLogger::logout($user);
+
         Auth::logout();
 
         return redirect()->route('login');
