@@ -100,7 +100,13 @@
                         <!-- /.box-header -->
                         <div class="box-body">
                             <div class="row">
-                                @if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id == AppHelper::USER_ADMIN)
+                                @if (
+                                        auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
+                                        (
+                                            auth()->user()->role_id == AppHelper::USER_ADMIN &&
+                                            auth()->user()->position == 'Sale.Admin.Sup'
+                                        )
+                                    )
                                     <div class="col-12 text-end">
                                         <button type="button" class="btn btn-info text-white" id="addDriverBtn">
                                             <i class="fa fa-plus-circle"></i> {{ __('Add Driver') }}

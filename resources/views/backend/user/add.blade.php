@@ -355,6 +355,9 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" name="position"
                                                         value="@if ($user) {{ $user->position }}@else{{ old('position') }} @endif"
+                                                        @if ($user && $user->role_id == AppHelper::USER_ADMIN)
+                                                            readonly
+                                                        @endif
                                                         required>
                                                     <span class="fa fa-info form-control-feedback"></span>
                                                     <span class="text-danger">{{ $errors->first('position') }}</span>
