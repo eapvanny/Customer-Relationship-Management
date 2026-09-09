@@ -328,7 +328,10 @@ class UserController extends Controller
                                         <i class="fa-solid fa-arrows-rotate"></i>
                                     </a>';
                     }
-                    if ($user->role_id == AppHelper::USER_SUPER_ADMIN) {
+                    if (
+                        $user->role_id == AppHelper::USER_SUPER_ADMIN ||
+                        ($user->role_id == AppHelper::USER_ADMIN && $user->position == 'Sale.Admin.Sup')
+                    ) {
                         // Delete (Super Admin only)
                         $button .= '<a href="' . route('user.destroy', $data->id) . '" class="btn btn-danger btn-sm delete" 
                                         title="Delete">
