@@ -5,6 +5,7 @@ use App\Http\Controllers\API\CustomerController as APICustomer;
 use App\Http\Controllers\API\DashboardController as APIDashboard;
 use App\Http\Controllers\API\LoginController;
 use App\Http\Controllers\API\ReportController as APIReport;
+use App\Http\Controllers\API\SlowController;
 use App\Http\Controllers\API\UserController as APIUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/customers/{id}', [APICustomer::class, 'show']);
     Route::put('/customers/{id}', [APICustomer::class, 'update']);
     Route::post('/customers/{id}', [APICustomer::class, 'update']); // Optional for Flutter if using multipart/form-data
+    Route::get('/customers-phone', [SlowController::class, 'index']); // New endpoint for slow response
 
     Route::get('/reports', [APIReport::class, 'index']); // New endpoint: /api/reports
     Route::get('/getCustomerReport', [APIReport::class, 'getCustomerReport']); // New endpoint: /api/getCustomerReport
