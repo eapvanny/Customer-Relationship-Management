@@ -197,7 +197,8 @@ class UserController extends Controller
 
         $is_filter = false;
         if ($request->filled('sup_id')) {
-            $query->where('sup_id', $request->input('sup_id'));
+            $query->where('sup_id', $request->input('sup_id'))
+                    ->where('status', 1);
             $is_filter = true;
         }
 

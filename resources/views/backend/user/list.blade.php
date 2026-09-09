@@ -34,10 +34,19 @@
                         {{ __('User List') }}
                     </h4>
                     <div class="box-tools pull-right">
-                        <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
-                            data-bs-target="#filterContainer">
-                            <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
-                        </button>
+                        @if (
+                            auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
+                            (
+                                auth()->user()->role_id == AppHelper::USER_ADMIN &&
+                                auth()->user()->position == 'Sale.Admin.Sup'
+                            )
+                        )
+                            <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
+                                data-bs-target="#filterContainer">
+                                <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
+                            </button>
+                        @endif
+                        
                         @hasTypePermission('create user')
                             <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i
                                     class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
