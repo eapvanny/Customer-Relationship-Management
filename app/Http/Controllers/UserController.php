@@ -32,7 +32,6 @@ class UserController extends Controller
     public $indexof = 1;
     public function index(Request $request)
     {
-        $is_filter = false;
         $query = User::with(['role', 'manager', 'supervisor']);
 
         $loggedInUser = auth()->user();
@@ -169,6 +168,37 @@ class UserController extends Controller
             });
         } elseif (!in_array($loggedInUserRole, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN])) {
             $query->where('id', $loggedInUserId);
+        }
+
+        $userSup = User::where('role_id', AppHelper::USER_SUP)
+            ->where('type', AppHelper::SALE)
+            ->select(
+                'id',
+                'name',
+                'family_name',
+                'name_latin',
+                'family_name_latin',
+                'area'
+            )
+            ->get()
+            ->mapWithKeys(function ($user) {
+                $name = session('user_lang') === 'en'
+                    ? $user->full_name_latin
+                    : $user->full_name;
+
+                $label = $name;
+
+                if (!empty($user->area)) {
+                    $label .= ' (' . $user->area . ')';
+                }
+
+                return [$user->id => $label];
+            });
+
+        $is_filter = false;
+        if ($request->filled('sup_id')) {
+            $query->where('sup_id', $request->input('sup_id'));
+            $is_filter = true;
         }
 
         if ($request->ajax()) {
@@ -349,7 +379,7 @@ class UserController extends Controller
         }
 
         // Fetch Area Managers for Filter Dropdown
-        return view('backend.user.list', compact('is_filter'));
+        return view('backend.user.list', compact('is_filter', 'userSup'));
     }
 
 

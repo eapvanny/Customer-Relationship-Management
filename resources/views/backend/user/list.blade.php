@@ -34,12 +34,10 @@
                         {{ __('User List') }}
                     </h4>
                     <div class="box-tools pull-right">
-                        @if (in_array(auth()->user()->role_id, [AppHelper::USER_SUPER_ADMIN, AppHelper::USER_ADMIN]))
-                            <button id="filters" class="btn btn-outline-secondary d-none" data-bs-toggle="collapse"
-                                data-bs-target="#filterContainer">
-                                <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
-                            </button>
-                        @endif
+                        <button id="filters" class="btn btn-outline-secondary" data-bs-toggle="collapse"
+                            data-bs-target="#filterContainer">
+                            <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
+                        </button>
                         @hasTypePermission('create user')
                             <a class="btn btn-info text-white" href="{{ URL::route('user.create') }}"><i
                                     class="fa fa-plus-circle"></i> {{ __('Add New') }}</a>
@@ -49,31 +47,21 @@
                 <div class="wrap-outter-box">
                     <div class="box box-info">
                         <div class="box-header">
-                            <div class="row d-none">
+                            <div class="row">
                                 <div class="col-12 mb-2">
-                                    {{-- <form action="{{ route('user.index') }}" method="GET" id="filterForm">
+                                    <form action="{{ route('user.index') }}" method="GET" id="filterForm">
                                         <div class="wrap_filter_form @if (!$is_filter) collapse @endif"
                                             id="filterContainer">
                                             <a id="close_filter" class="btn btn-outline-secondary btn-sm">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
                                             <div class="row">
-                                                <div class="col-xl-4">
+                                                <div class="col-xl-6">
                                                     <div class="form-group">
-                                                        <label for="manager_id">{{ __('Manager') }}</label>
-                                                        {!! Form::select('manager_id', $areaManager, request('manager_id'), [
-                                                            'placeholder' => __('Select manager'),
-                                                            'id' => 'manager_id',
-                                                            'class' => 'form-control select2',
-                                                        ]) !!}
-                                                    </div>
-                                                </div>
-                                                <div class="col-xl-4">
-                                                    <div class="form-group">
-                                                        <label for="full_name">{{ __('Employee Name') }}</label>
-                                                        {!! Form::select('full_name', $full_name, request('full_name'), [
-                                                            'placeholder' => __('Select employee'),
-                                                            'id' => 'full_name',
+                                                        <label for="sup_id">{{ __('Filter By Supervisor') }}</label>
+                                                        {!! Form::select('sup_id', $userSup, request('sup_id'), [
+                                                            'placeholder' => __('Select supervisor'),
+                                                            'id' => 'sup_id',
                                                             'class' => 'form-control select2',
                                                         ]) !!}
                                                     </div>
@@ -92,7 +80,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </form> --}}
+                                    </form>
                                 </div>
                             </div>
 
@@ -180,6 +168,13 @@
                 ajax: {
                     url: "{{ route('user.index') }}",
                     type: 'GET', // or 'POST' depending on your route method
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: function(d) {
+                        // Add any additional parameters to the request here
+                        d.sup_id = "{{ request('sup_id') }}";
+                    },
                     error: function(xhr, error, thrown) {
                         console.log(xhr.responseText); // Log the error for debugging
                     }
@@ -247,6 +242,17 @@
                         orderable: false
                     }
                 ]
+            });
+
+            // Handle filter form submission
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                window.location = "{{ route('user.index') }}?" + $(this).serialize();
+            });
+
+            // Close filter panel
+            $('#close_filter').click(function() {
+                $("#filters").trigger('click');
             });
 
             $(document).on('click', '.disable-user', function() {
