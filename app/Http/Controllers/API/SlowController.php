@@ -8,13 +8,23 @@ use Illuminate\Http\Request;
 
 class SlowController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customer = Customer::pluck('phone')->toArray();
+        $since = $request->input('since');
+
+        $query = Customer::query();
+
+        // Only filter when "since" has a value
+        if (!empty($since)) {
+            $query->where('updated_at', '>', $since);
+        }
+
+        $customer = $query->pluck('phone')->toArray();
+
         return response()->json([
             'status' => true,
             'message' => 'Customer Phone Numbers',
-            'data' => $customer
+            'data' => $customer,
         ]);
     }
 }
