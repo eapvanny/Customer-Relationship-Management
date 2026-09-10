@@ -18,14 +18,39 @@
                     @csrf
 
                     <div class="mb-3">
+                        <label for="supervisorFilter" class="form-label fw-bold">
+                            {{ __('Filter By Supervisor') }}
+                        </label>
+
+                        <select id="supervisorFilter" class="form-select select2" name="supervisor_id">
+                            <option value="">
+                                {{ __('All Supervisors') }}
+                            </option>
+
+                            @foreach ($supervisors as $supervisor)
+                                @php
+                                    $supervisorName = session('user_lang', 'kh') === 'en'
+                                        ? $supervisor->full_name_latin
+                                        : $supervisor->full_name;
+                                @endphp
+
+                                <option value="{{ $supervisor->id }}">
+                                    {{ $supervisorName }}{{ $supervisor->area ? ' (' . $supervisor->area . ')' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label fw-bold">
                             {{ __('Check Employee To Assign Driver') }}
                         </label>
 
-                        <div class="border rounded">
+                        <div class="border rounded"  id="employeeList">
 
                             @foreach ($employees as $employee)
-                                <div class="employee-item border-bottom p-3">
+                                <div class="employee-item border-bottom p-3"
+                                    data-supervisor-id="{{ $employee['sup_id'] ?? '' }}">
 
                                     <div class="form-check">
 

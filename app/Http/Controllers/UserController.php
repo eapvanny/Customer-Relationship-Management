@@ -264,11 +264,13 @@ class UserController extends Controller
                     return __($data->staff_id_card);
                 })
                 ->addColumn('name', function ($data) {
-                    // return auth()->user()->user_lang == 'en' ? $data->getFullNameLatinAttribute() : $data->getFullNameAttribute();
-                    return  $data->getFullNameAttribute();
+                    return session('user_lang') == 'en' ? $data->getFullNameLatinAttribute() : $data->getFullNameAttribute();
                 })
-                ->addColumn('name_latin', function ($data) {
-                    return  $data->getFullNameLatinAttribute();
+                ->addColumn('driver_id', function ($data) {
+                    return $data->driver_id;
+                })
+                ->addColumn('driver_name', function ($data) {
+                    return $data->driver_name;
                 })
                 ->addColumn('position', function ($data) {
                     return __($data->position);
@@ -1333,6 +1335,7 @@ class UserController extends Controller
 
                 return [
                     'id' => $user->id,
+                    'sup_id' => $user->sup_id, // ADD THIS
                     'driver_id' => $user->driver_id,
                     'driver_name' => $user->driver_name,
                     'has_driver' => !empty($user->driver_id) || !empty($user->driver_name),
@@ -1347,7 +1350,7 @@ class UserController extends Controller
                 ];
             });
 
-        return view('backend.modal.add-driver', compact('employees'));
+        return view('backend.modal.add-driver', compact('employees','supervisors'));
     }
 
     public function updateTostoreDriver(Request $request)

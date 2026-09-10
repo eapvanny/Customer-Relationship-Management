@@ -119,8 +119,9 @@
                                         <tr>
                                             <th>{{ __('Photo') }}</th>
                                             <th>{{ __('Staff ID') }}</th>
-                                            <th>{{ __('Name') }}</th>
-                                            <th>{{ __('Name Latin') }}</th>
+                                            <th>{{ __('Employee Name') }}</th>
+                                            <th>{{ __('Driver ID') }}</th>
+                                            <th>{{ __('Driver Name') }}</th>
                                             <th>{{ __('Position') }}</th>
                                             <th>{{ __('Area') }}</th>
                                             <th>{{ __('Username') }}</th>
@@ -204,8 +205,12 @@
                         name: 'name'
                     },
                     {
-                        data: 'name_latin',
-                        name: 'name_latin'
+                        data: 'driver_id',
+                        name: 'driver_id'
+                    },
+                    {
+                        data: 'driver_name',
+                        name: 'driver_name'
                     },
                     {
                         data: 'position',
@@ -428,6 +433,26 @@
                 });
 
             });
+
+            $(document).on('change', '#supervisorFilter', function () {
+
+                const supervisorId = String($(this).val() || '');
+
+                $('#employeeList .employee-item').each(function () {
+
+                    const employeeSupervisorId = String(
+                        $(this).attr('data-supervisor-id') || ''
+                    );
+
+                    if (!supervisorId || employeeSupervisorId === supervisorId) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+
+                });
+
+            });
             $(document).on('change', '.employee-checkbox', function () {
 
                 const employeeId = $(this).data('id');
@@ -576,6 +601,7 @@
             $(document).on('hidden.bs.modal', '#addDriverModal', function () {
                 $('.modal-backdrop').remove();
                 $(this).remove();
+                $('#datatabble').DataTable().ajax.reload(null, false);
                 $('body').removeClass('modal-open');
                 $('body').css('padding-right', '');
             });
