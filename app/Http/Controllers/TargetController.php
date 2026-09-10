@@ -41,7 +41,8 @@ class TargetController extends Controller
         // BASE USER QUERY
         // ============================================================
         $query = User::query()
-            ->where('role_id', AppHelper::USER_EMPLOYEE);
+            ->where('role_id', AppHelper::USER_EMPLOYEE)
+            ->where('status', 1);
 
         // ============================================================
         // USER ACCESS CONDITION
@@ -124,6 +125,7 @@ class TargetController extends Controller
             ->toArray();
         $supervisors = User::where('role_id', AppHelper::USER_SUP)
             ->where('type', AppHelper::SALE)
+            ->where('status', 1)
             ->select(
                 'id',
                 'name',
