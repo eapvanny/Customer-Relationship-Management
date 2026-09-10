@@ -1181,6 +1181,7 @@ class UserController extends Controller
 
         $employees = User::where('role_id', AppHelper::USER_EMPLOYEE)
             ->where('type', AppHelper::SALE)
+            ->where('status', 1)
             ->orderBy('name')
             ->get([
                 'id',
