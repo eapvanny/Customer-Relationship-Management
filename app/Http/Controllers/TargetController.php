@@ -122,14 +122,30 @@ class TargetController extends Controller
                 ];
             })
             ->toArray();
+        $supervisors = User::where('role_id', AppHelper::USER_SUP)
+            ->where('type', AppHelper::SALE)
+            ->select(
+                'id',
+                'name',
+                'username',
+                'family_name',
+                'name_latin',
+                'family_name_latin',
+                'area'
+            )
+            ->get()
+            ->mapWithKeys(function ($user) {
+                return [$user->id => $user->username . ' (' . $user->full_name . ')'];
+            })
+            ->toArray();
 
         // ============================================================
-        // USER FILTER
+        // SUPERVISOR FILTER
         // ============================================================
-        if ($request->filled('user_id')) {
+        if ($request->filled('sup_id')) {
             $is_filter = true;
 
-            $query->where('id', $request->user_id);
+            $query->where('sup_id', $request->sup_id);
         }
 
         // ============================================================
@@ -376,6 +392,7 @@ class TargetController extends Controller
             'backend.sale-target.list',
             compact(
                 'employees',
+                'supervisors',
                 'is_filter'
             )
         );

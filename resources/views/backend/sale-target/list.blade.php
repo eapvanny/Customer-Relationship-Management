@@ -62,10 +62,10 @@
                                             </div>
                                             <div class="col-xl-4">
                                                 <div class="form-group">
-                                                    <label for="user_id">{{ __('Filter By Employee') }}</label>
-                                                    {!! Form::select('user_id', $employees, request('user_id'), [
-                                                        'placeholder' => __('Select employee'),
-                                                        'id' => 'user_id',
+                                                    <label for="sup_id">{{ __('Filter By Supervisor') }}</label>
+                                                    {!! Form::select('sup_id', $supervisors, request('sup_id'), [
+                                                        'placeholder' => __('Select supervisor'),
+                                                        'id' => 'sup_id',
                                                         'class' => 'form-control select2',
                                                     ]) !!}
                                                 </div>
@@ -141,7 +141,7 @@
                     d.search_value = d.search.value;
                     d.date1 = "{{ request('date1') }}";
                     d.date2 = "{{ request('date2') }}";
-                    d.user_id = "{{ request('user_id') }}";
+                    d.sup_id = "{{ request('sup_id') }}";
                 },
                 error: function(xhr, error, thrown) {
                     console.log('AJAX Error:', xhr.responseText);
