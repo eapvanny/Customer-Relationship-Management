@@ -1388,4 +1388,29 @@ class CustomerController extends Controller
             'data'    => $data,
         ]);
     }
+
+    public function getCustomerLocation()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        $customers = Customer::select(
+            'id',
+            'name',
+            'latitude',
+            'longitude',
+            'phone'
+        )->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $customers
+        ]);
+    }
 }
