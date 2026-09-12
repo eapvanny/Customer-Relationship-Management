@@ -803,12 +803,17 @@ class CustomerController extends Controller
     {
         $userLang = session('user_lang', 'kh');
 
-        $customers = Customer::with([
-            'user:id,name,family_name,name_latin,family_name_latin,area',
-            'depo:id,name',
-        ])
+        /*
+        |--------------------------------------------------------------------------
+        | Customers
+        |--------------------------------------------------------------------------
+        */
+
+        $customers = Customer::query()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
+            ->where('latitude', '!=', 0)
+            ->where('longitude', '!=', 0)
             ->select([
                 'id',
                 'name',
@@ -820,41 +825,84 @@ class CustomerController extends Controller
                 'city',
                 'country',
                 'code',
-                'customer_type',
-                'user_type',
                 'user_id',
             ])
-            ->get();
+            ->with([
+                'user:id,name,family_name,name_latin,family_name_latin,area',
+                'depo:id,name',
+            ])
+            ->get()
+            ->map(function ($customer) use ($userLang) {
+
+                $userName = '-';
+                $userArea = '-';
+
+                if ($customer->user) {
+
+                    $userName = $userLang === 'en'
+                        ? trim(
+                            ($customer->user->family_name_latin ?? '') .
+                            ' ' .
+                            ($customer->user->name_latin ?? '')
+                        )
+                        : trim(
+                            ($customer->user->family_name ?? '') .
+                            ' ' .
+                            ($customer->user->name ?? '')
+                        );
+
+                    $userArea = $customer->user->area ?? '-';
+                }
+
+                return [
+                    'id'        => $customer->id,
+                    'name'      => $customer->name,
+                    'phone'     => $customer->phone,
+                    'code'      => $customer->code,
+                    'area_id'   => $customer->area_id,
+                    'depo_id'   => $customer->depo_id,
+                    'user_id'   => $customer->user_id,
+                    'latitude'  => (float) $customer->latitude,
+                    'longitude' => (float) $customer->longitude,
+                    'city'      => $customer->city,
+                    'country'   => $customer->country,
+                    'user_name' => $userName ?: '-',
+                    'user_area' => $userArea,
+                    'depo_name' => $customer->depo->name ?? '-',
+                ];
+            });
 
         /*
         |--------------------------------------------------------------------------
-        | Area
+        | Areas
         |--------------------------------------------------------------------------
         */
 
-        $areas = Customer::whereNotNull('area_id')
+        $areas = Customer::query()
+            ->whereNotNull('area_id')
             ->select('area_id')
             ->distinct()
             ->pluck('area_id')
             ->mapWithKeys(function ($areaId) {
-
                 return [
                     $areaId => AppHelper::getAreaNameById($areaId)
                 ];
-
             });
-
 
         /*
         |--------------------------------------------------------------------------
-        | Users / Sales
+        | Users
         |--------------------------------------------------------------------------
         */
 
-        $users = User::whereIn(
-            'id',
-            $customers->pluck('user_id')->filter()->unique()
-        )
+        $userIds = $customers
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $users = User::query()
+            ->whereIn('id', $userIds)
             ->where('role_id', AppHelper::USER_EMPLOYEE)
             ->select([
                 'id',
@@ -864,21 +912,17 @@ class CustomerController extends Controller
                 'family_name_latin',
                 'area',
             ])
-            ->get();
+            ->get()
+            ->mapWithKeys(function ($user) use ($userLang) {
 
+                $name = $userLang === 'en'
+                    ? trim(($user->family_name_latin ?? '') . ' ' . ($user->name_latin ?? ''))
+                    : trim(($user->family_name ?? '') . ' ' . ($user->name ?? ''));
 
-        $users = $users->mapWithKeys(function ($user) use ($userLang) {
-
-            $name = $userLang === 'en'
-                ? ($user->family_name_latin . ' ' . $user->name_latin)
-                : ($user->family_name . ' ' . $user->name);
-
-            return [
-                $user->id => trim($name) . ' (' . $user->area . ')'
-            ];
-
-        });
-
+                return [
+                    $user->id => $name . ' (' . ($user->area ?? '-') . ')'
+                ];
+            });
 
         /*
         |--------------------------------------------------------------------------
@@ -886,13 +930,13 @@ class CustomerController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $depos = Depo::whereIn(
-            'id',
-            $customers->pluck('depo_id')->filter()->unique()
-        )
+        $depos = Depo::query()
+            ->whereIn(
+                'id',
+                $customers->pluck('depo_id')->filter()->unique()
+            )
             ->orderBy('name')
             ->pluck('name', 'id');
-
 
         return view('backend.customer.map', compact(
             'customers',

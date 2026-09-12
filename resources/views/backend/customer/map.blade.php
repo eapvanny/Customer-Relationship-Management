@@ -6,14 +6,25 @@
 
 
 @section('extraStyle')
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    />
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    />
+
     <style>
-        .head-map{
-            padding: 8px;
-        }
-        .head-map .header{
-            margin: 8px 8px 8px 0; 
-            border-bottom: 1px solid rgb(206, 206, 208);
+        .head-map {
+            padding: 15px 2px;
         }
         #customerMap {
             width: 100%;
@@ -45,13 +56,101 @@
             color: #666;
         }
 
-        .customer-popup .view-customer {
-            margin-top: 12px;
-        }
-        .leaflet-control-attribution{
+        .leaflet-control-attribution {
             display: none;
         }
+
+        /* =========================================================
+        Customer Marker Cluster
+        ========================================================= */
+
+        .customer-cluster {
+            background: rgba(27, 107, 168, 0.20);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .customer-cluster div {
+            width: 36px;
+            height: 36px;
+
+            border-radius: 50%;
+
+            background: #1B6BA8;
+
+            color: #ffffff;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            border: 3px solid rgba(255, 255, 255, 0.95);
+
+            box-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.25);
+
+            transition: all 0.2s ease;
+        }
+
+
+        /* Small cluster */
+
+        .customer-cluster-small {
+            background: rgba(52, 152, 219, 0.20);
+        }
+
+        .customer-cluster-small div {
+            background: #3498DB;
+        }
+
+
+        /* Medium cluster */
+
+        .customer-cluster-medium {
+            background: rgba(27, 107, 168, 0.22);
+        }
+
+        .customer-cluster-medium div {
+            background: #1B6BA8;
+        }
+
+
+        /* Large cluster */
+
+        .customer-cluster-large {
+            background: rgba(21, 76, 121, 0.24);
+        }
+
+        .customer-cluster-large div {
+            background: #154C79;
+        }
+
+
+        /* Very large cluster */
+
+        .customer-cluster-xlarge {
+            background: rgba(76, 61, 139, 0.22);
+        }
+
+        .customer-cluster-xlarge div {
+            background: #4C3D8B;
+        }
+
+
+        /* Hover */
+
+        .customer-cluster:hover div {
+            transform: scale(1.08);
+            box-shadow:
+                0 4px 10px rgba(0, 0, 0, 0.30);
+        }
     </style>
+
 @endsection
 
 @section('pageContent')
@@ -151,12 +250,14 @@
 
     </div>
 @endsection
-
 @section('extraScript')
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             const customers = @json($customers);
 
@@ -166,7 +267,9 @@
             |--------------------------------------------------------------------------
             */
 
-            const map = L.map('customerMap').setView(
+            const map = L.map('customerMap', {
+                preferCanvas: true
+            }).setView(
                 [11.5564, 104.9282],
                 12
             );
@@ -179,20 +282,158 @@
             */
 
             L.tileLayer(
-                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    // attribution: '&copy; OpenStreetMap contributors'
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                    maxZoom: 19
                 }
             ).addTo(map);
 
 
             /*
             |--------------------------------------------------------------------------
-            | Marker Layer
+            | Marker Cluster
             |--------------------------------------------------------------------------
             */
 
-            let markerLayer = L.layerGroup().addTo(map);
+            let markerLayer = L.markerClusterGroup({
+
+                chunkedLoading: true,
+
+                chunkInterval: 100,
+
+                chunkDelay: 10,
+
+                removeOutsideVisibleBounds: true,
+
+                maxClusterRadius: 50,
+
+                disableClusteringAtZoom: 17,
+
+                spiderfyOnMaxZoom: true,
+
+                showCoverageOnHover: false,
+
+                iconCreateFunction: function (cluster) {
+
+                    const count = cluster.getChildCount();
+
+                    let sizeClass = 'customer-cluster-small';
+
+                    if (count >= 10 && count < 50) {
+                        sizeClass = 'customer-cluster-medium';
+                    }
+
+                    else if (count >= 50 && count < 100) {
+                        sizeClass = 'customer-cluster-large';
+                    }
+
+                    else if (count >= 100) {
+                        sizeClass = 'customer-cluster-xlarge';
+                    }
+
+                    return L.divIcon({
+
+                        html: `
+                            <div>
+                                ${count}
+                            </div>
+                        `,
+
+                        className: `customer-cluster ${sizeClass}`,
+
+                        iconSize: L.point(46, 46),
+
+                        iconAnchor: L.point(23, 23)
+
+                    });
+                }
+
+            });
+
+            map.addLayer(markerLayer);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Popup
+            |--------------------------------------------------------------------------
+            */
+
+            function createPopup(customer) {
+
+                const latitude = parseFloat(customer.latitude);
+                const longitude = parseFloat(customer.longitude);
+
+                return `
+                    <div class="customer-popup">
+
+                        <h5>
+                            <strong>
+                                ${customer.name ?? '-'}
+                            </strong>
+                        </h5>
+
+                        <div class="info-row">
+                            <i class="fas fa-barcode"></i>
+                            <strong>{{ __('Code') }}:</strong>
+                            ${customer.code ?? '-'}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-phone"></i>
+                            <strong>{{ __('Phone') }}:</strong>
+                            ${customer.phone ?? '-'}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-user"></i>
+                            <strong>{{ __('Employee') }}:</strong>
+                            ${customer.user_name ?? '-'}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-map"></i>
+                            <strong>{{ __('Area') }}:</strong>
+                            ${customer.user_area ?? '-'}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-warehouse"></i>
+                            <strong>{{ __('Depo') }}:</strong>
+                            ${customer.depo_name ?? '-'}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-city"></i>
+                            <strong>{{ __('City') }}:</strong>
+                            ${customer.city ?? '-'}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-globe"></i>
+                            <strong>{{ __('Country') }}:</strong>
+                            ${customer.country ?? '-'}
+                        </div>
+
+                        <hr>
+
+                        <div class="coordinates">
+
+                            <div>
+                                <strong>Latitude:</strong>
+                                ${latitude}
+                            </div>
+
+                            <div>
+                                <strong>Longitude:</strong>
+                                ${longitude}
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+            }
 
 
             /*
@@ -203,53 +444,132 @@
 
             function renderMarkers(data) {
 
-                // Remove old markers
                 markerLayer.clearLayers();
 
                 const markers = [];
 
-
-                data.forEach(function(customer) {
+                data.forEach(function (customer) {
 
                     const latitude = parseFloat(customer.latitude);
                     const longitude = parseFloat(customer.longitude);
 
-
-                    // Invalid coordinates
                     if (
-                        isNaN(latitude) ||
-                        isNaN(longitude)
+                        !Number.isFinite(latitude) ||
+                        !Number.isFinite(longitude)
                     ) {
                         return;
                     }
 
+                    const marker = L.marker([
+                        latitude,
+                        longitude
+                    ]);
 
                     /*
                     |--------------------------------------------------------------------------
-                    | Customer Information
+                    | Create popup only when marker is clicked
                     |--------------------------------------------------------------------------
                     */
 
-                    const customerName = customer.name ?? '-';
+                    marker.bindPopup(function () {
+                        return createPopup(customer);
+                    });
 
-                    const phone = customer.phone ?? '-';
+                    markers.push(marker);
+                });
 
-                    const code = customer.code ?? '-';
 
-                    const city = customer.city ?? '-';
+                /*
+                |--------------------------------------------------------------------------
+                | Add all markers
+                |--------------------------------------------------------------------------
+                */
 
-                    const country = customer.country ?? '-';
+                markerLayer.addLayers(markers);
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Fit bounds
+                |--------------------------------------------------------------------------
+                */
+
+                if (markers.length > 0) {
+
+                    const group = L.featureGroup(markers);
+
+                    map.fitBounds(
+                        group.getBounds(),
+                        {
+                            padding: [30, 30],
+                            maxZoom: 16
+                        }
+                    );
+
+                } else {
+
+                    map.setView(
+                        [11.5564, 104.9282],
+                        12
+                    );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Fix Leaflet size
+                |--------------------------------------------------------------------------
+                */
+
+                setTimeout(function () {
+                    map.invalidateSize();
+                }, 200);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Apply Filters
+            |--------------------------------------------------------------------------
+            */
+
+            function applyFilters() {
+
+                const search = $('#customerSearch')
+                    .val()
+                    .toLowerCase()
+                    .trim();
+
+                const areaId = $('#filterArea').val();
+
+                const userId = $('#filterUser').val();
+
+                const depoId = $('#filterDepo').val();
+
+
+                const filteredCustomers = customers.filter(function (customer) {
 
                     /*
                     |--------------------------------------------------------------------------
-                    | User
+                    | Search
                     |--------------------------------------------------------------------------
                     */
 
-                    let userName = customer.user
-                        ? `${customer.user.family_name ?? ''} ${customer.user.name ?? ''}`.trim()
-                        : '-';
+                    if (search) {
+
+                        const searchText = [
+                            customer.name,
+                            customer.phone,
+                            customer.code
+                        ]
+                            .filter(Boolean)
+                            .join(' ')
+                            .toLowerCase();
+
+                        if (!searchText.includes(search)) {
+                            return false;
+                        }
+                    }
 
 
                     /*
@@ -258,13 +578,25 @@
                     |--------------------------------------------------------------------------
                     */
 
-                    let area = '-';
+                    if (
+                        areaId &&
+                        String(customer.area_id) !== String(areaId)
+                    ) {
+                        return false;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | User
+                    |--------------------------------------------------------------------------
+                    */
 
                     if (
-                        customer.user &&
-                        customer.user.area
+                        userId &&
+                        String(customer.user_id) !== String(userId)
                     ) {
-                        area = customer.user.area;
+                        return false;
                     }
 
 
@@ -274,193 +606,25 @@
                     |--------------------------------------------------------------------------
                     */
 
-                    let depo = '-';
-
-                    if (customer.depo) {
-
-                        depo =
-                            customer.depo.name ??
-                            '-';
-
+                    if (
+                        depoId &&
+                        String(customer.depo_id) !== String(depoId)
+                    ) {
+                        return false;
                     }
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Marker
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const marker = L.marker([
-                        latitude,
-                        longitude
-                    ]);
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Detail URL
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const detailUrl =
-                        "{{ url('/customers') }}/" + customer.id;
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Popup
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const popup = `
-                <div class="customer-popup">
-
-                    <h5>
-                        <strong>
-                            ${customerName}
-                        </strong>
-                    </h5>
-
-                    <div class="info-row">
-                        <i class="fas fa-barcode"></i>
-                        <strong>{{ __('Code') }}:</strong>
-                        ${code}
-                    </div>
-
-                    <div class="info-row">
-                        <i class="fas fa-phone"></i>
-                        <strong>{{ __('Phone') }}:</strong>
-                        ${phone}
-                    </div>
-
-                    <div class="info-row">
-                        <i class="fas fa-user"></i>
-                        <strong>{{ __('Employee') }}:</strong>
-                        ${userName}
-                    </div>
-
-                    <div class="info-row">
-                        <i class="fas fa-map"></i>
-                        <strong>{{ __('Area') }}:</strong>
-                        ${area}
-                    </div>
-
-                    <div class="info-row">
-                        <i class="fas fa-warehouse"></i>
-                        <strong>{{ __('Depo') }}:</strong>
-                        ${depo}
-                    </div>
-
-                    <div class="info-row">
-                        <i class="fas fa-city"></i>
-                        <strong>{{ __('City') }}:</strong>
-                        ${city}
-                    </div>
-
-                    <div class="info-row">
-                        <i class="fas fa-globe"></i>
-                        <strong>{{ __('Country') }}:</strong>
-                        ${country}
-                    </div>
-
-                    <hr>
-
-                    <div class="coordinates">
-
-                        <div>
-                            <strong>Latitude:</strong>
-                            ${latitude}
-                        </div>
-
-                        <div>
-                            <strong>Longitude:</strong>
-                            ${longitude}
-                        </div>
-
-                    </div>
-
-                    
-                </div>
-            `;
-                    // <div class="view-customer">
-
-                    //     <a
-                    //         href="${detailUrl}"
-                    //         class="btn btn-sm btn-primary"
-                    //     >
-                    //         <i class="fas fa-eye"></i>
-                    //         {{ __('View Customer') }}
-                    //     </a>
-
-                    // </div>
-
-
-                    marker.bindPopup(popup);
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Add Marker
-                    |--------------------------------------------------------------------------
-                    */
-
-                    markerLayer.addLayer(marker);
-
-
-                    markers.push([
-                        latitude,
-                        longitude
-                    ]);
-
+                    return true;
                 });
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Fit Map
-                |--------------------------------------------------------------------------
-                */
-
-                if (markers.length > 0) {
-
-                    const bounds = L.latLngBounds(markers);
-
-                    map.fitBounds(
-                        bounds, {
-                            padding: [30, 30]
-                        }
-                    );
-
-                } else {
-
-                    // No result
-                    map.setView(
-                        [11.5564, 104.9282],
-                        12
-                    );
-
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Fix Map Size
-                |--------------------------------------------------------------------------
-                */
-
-                setTimeout(function() {
-
-                    map.invalidateSize();
-
-                }, 300);
-
+                renderMarkers(filteredCustomers);
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | Initial Markers
+            | Initial markers
             |--------------------------------------------------------------------------
             */
 
@@ -469,132 +633,15 @@
 
             /*
             |--------------------------------------------------------------------------
-            | Apply Filter
-            |--------------------------------------------------------------------------
-            */
-
-            function applyFilters() {
-
-                const search =
-                    $('#customerSearch')
-                    .val()
-                    .toLowerCase()
-                    .trim();
-
-
-                const areaId =
-                    $('#filterArea').val();
-
-
-                const userId =
-                    $('#filterUser').val();
-
-
-                const depoId =
-                    $('#filterDepo').val();
-
-
-                const filteredCustomers = customers.filter(
-                    function(customer) {
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Search
-                        |--------------------------------------------------------------------------
-                        */
-
-                        const searchText = [
-                                customer.name,
-                                customer.phone,
-                                customer.code
-                            ]
-                            .filter(Boolean)
-                            .join(' ')
-                            .toLowerCase();
-
-
-                        if (
-                            search &&
-                            !searchText.includes(search)
-                        ) {
-                            return false;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Area
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            areaId &&
-                            String(customer.area_id) !== String(areaId)
-                        ) {
-                            return false;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | User
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            userId &&
-                            String(customer.user_id) !== String(userId)
-                        ) {
-                            return false;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Depo
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            depoId &&
-                            String(customer.depo_id) !== String(depoId)
-                        ) {
-                            return false;
-                        }
-
-
-                        return true;
-
-                    }
-                );
-
-
-                renderMarkers(filteredCustomers);
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
             | Filter Events
             |--------------------------------------------------------------------------
             */
 
-            $('#filterArea').on(
-                'change',
-                applyFilters
-            );
+            $('#filterArea').on('change', applyFilters);
 
-            $('#filterUser').on(
-                'change',
-                applyFilters
-            );
+            $('#filterUser').on('change', applyFilters);
 
-            $('#filterDepo').on(
-                'change',
-                applyFilters
-            );
+            $('#filterDepo').on('change', applyFilters);
 
 
             /*
@@ -619,30 +666,24 @@
 
                 $('#customerSearch').val('');
 
-                $('#filterArea').val('');
-                $('#filterUser').val('');
-                $('#filterDepo').val('');
+                $('#filterArea').val('').trigger('change.select2');
 
-                // Refresh Select2 display only
-                $('#filterArea').trigger('change.select2');
-                $('#filterUser').trigger('change.select2');
-                $('#filterDepo').trigger('change.select2');
+                $('#filterUser').val('').trigger('change.select2');
 
-                // Reset map markers
+                $('#filterDepo').val('').trigger('change.select2');
+
                 renderMarkers(customers);
             });
 
 
             /*
             |--------------------------------------------------------------------------
-            | Initial Map Resize
+            | Resize
             |--------------------------------------------------------------------------
             */
 
-            setTimeout(function() {
-
+            setTimeout(function () {
                 map.invalidateSize();
-
             }, 300);
 
         });
