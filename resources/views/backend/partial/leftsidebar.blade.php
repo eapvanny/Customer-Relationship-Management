@@ -45,6 +45,11 @@
                                     <i class="fa fa-solid fa-user"></i> <span>{{ __('Customer') }}</span>
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('customers.map') }}" class="text-decoration-none">
+                                    <i class="fa fa-map-marked-alt"></i> <span>{{ __('Customer Location') }}</span>
+                                </a>
+                            </li>
                         @endHasTypePermission
                         @if (
                             auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN ||

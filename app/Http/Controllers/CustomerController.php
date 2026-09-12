@@ -799,6 +799,109 @@ class CustomerController extends Controller
         return Excel::download(new CustomerExport($date1, $date2, $user_id), 'customers_' . now()->format('Y_m_d_His') . '.xlsx');
     }
 
+    public function map()
+    {
+        $userLang = session('user_lang', 'kh');
+
+        $customers = Customer::with([
+            'user:id,name,family_name,name_latin,family_name_latin,area',
+            'depo:id,name',
+        ])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->select([
+                'id',
+                'name',
+                'phone',
+                'area_id',
+                'depo_id',
+                'latitude',
+                'longitude',
+                'city',
+                'country',
+                'code',
+                'customer_type',
+                'user_type',
+                'user_id',
+            ])
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Area
+        |--------------------------------------------------------------------------
+        */
+
+        $areas = Customer::whereNotNull('area_id')
+            ->select('area_id')
+            ->distinct()
+            ->pluck('area_id')
+            ->mapWithKeys(function ($areaId) {
+
+                return [
+                    $areaId => AppHelper::getAreaNameById($areaId)
+                ];
+
+            });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Users / Sales
+        |--------------------------------------------------------------------------
+        */
+
+        $users = User::whereIn(
+            'id',
+            $customers->pluck('user_id')->filter()->unique()
+        )
+            ->where('role_id', AppHelper::USER_EMPLOYEE)
+            ->select([
+                'id',
+                'name',
+                'family_name',
+                'name_latin',
+                'family_name_latin',
+                'area',
+            ])
+            ->get();
+
+
+        $users = $users->mapWithKeys(function ($user) use ($userLang) {
+
+            $name = $userLang === 'en'
+                ? ($user->family_name_latin . ' ' . $user->name_latin)
+                : ($user->family_name . ' ' . $user->name);
+
+            return [
+                $user->id => trim($name) . ' (' . $user->area . ')'
+            ];
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Depo
+        |--------------------------------------------------------------------------
+        */
+
+        $depos = Depo::whereIn(
+            'id',
+            $customers->pluck('depo_id')->filter()->unique()
+        )
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+
+        return view('backend.customer.map', compact(
+            'customers',
+            'areas',
+            'users',
+            'depos'
+        ));
+    }
+
     public function destroy($id)
     {
         $customer = Customer::findOrFail($id);

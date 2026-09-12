@@ -143,6 +143,10 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
     Route::resource('customerhrc', CustomerHRCController::class)->except(['show']);
     Route::get('/export-customer', [CustomerController::class, 'export'])->name('customer.export');
     Route::get('/get-depos-by-area', [CustomerController::class, 'getDeposByArea'])->name('get-depos-by-area');
+
+    Route::get('/customers/map', [CustomerController::class, 'map'])
+    ->name('customers.map');
+    
     //Depo
     Route::resource('depo', DepoController::class);
 
