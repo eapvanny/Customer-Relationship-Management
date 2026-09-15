@@ -750,13 +750,10 @@ class DashboardController extends Controller
         if ($nextRank) {
 
             $targetPercent = round(
-                ($soldThisMonth / $rankTargets[$nextRank]) * 100
+                ($soldThisMonth / $rankTargets['Rank A']) * 100
             );
 
-            $targetPercent = min(
-                $targetPercent,
-                100
-            );
+            $targetPercent = min($targetPercent, 100);
         } else {
 
             $targetPercent = 100;

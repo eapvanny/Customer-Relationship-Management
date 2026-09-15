@@ -165,7 +165,7 @@
                 </h4>
             </div>
 
-            <div class="card-body">
+            <div class="card-body mt-2">
 
                 {{-- FILTER --}}
                 <div class="row mb-3">

@@ -25,6 +25,13 @@ class LoginController extends Controller
                 'message' => 'Invalid credentials'
             ], 401);
         }
+        // User is inactive
+        if ((int) $user->status === 0) {
+            return response()->json([
+                'message' => 'Your account is inactive. Please contact the administrator.'
+            ], 403);
+        }
+
 
         // Do NOT delete old tokens.
         // This allows the same user to stay logged in on multiple devices.
