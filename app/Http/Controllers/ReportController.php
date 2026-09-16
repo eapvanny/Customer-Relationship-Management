@@ -1296,27 +1296,30 @@ class ReportController extends Controller
     }
 
     public function export(Request $request)
-{
-    // Allow long-running generation
-    set_time_limit(0);
-    ini_set('memory_limit', '1024M');
+    {
+        $date1 = $request->input('date1');
+        $date2 = $request->input('date2');
+        $user_id = $request->input('user_id');
+        $area_id = $request->input('area_id');
 
-    $date1   = $request->input('date1');
-    $date2   = $request->input('date2');
-    $user_id = $request->input('user_id');
-    $area_id = $request->input('area_id');
+        $staffIdCard = null;
 
-    $staffIdCard = $user_id
-        ? User::where('id', $user_id)->value('staff_id_card')
-        : null;
+        if ($user_id) {
+            $staffIdCard = User::where('id', $user_id)
+                ->value('staff_id_card');
+        }
 
-    $fileName = 'reports_' . now()->format('Y_m_d_His') . '.xlsx';
-
-    return Excel::download(
-        new ReportsExport($date1, $date2, $user_id, $area_id, $staffIdCard),
-        $fileName
-    );
-}
+        return Excel::download(
+            new ReportsExport(
+                $date1,
+                $date2,
+                $user_id,
+                $area_id,
+                $staffIdCard
+            ),
+            'reports_' . now()->format('Y_m_d_His') . '.xlsx'
+        );
+    }
 
     public function markAsSeen()
     {
