@@ -244,7 +244,7 @@ return [
         | Drivers: memory|illuminate|batch
         |
         */
-        'driver'      => 'memory',
+        'driver'      => 'batch',
 
         /*
         |--------------------------------------------------------------------------
@@ -326,7 +326,7 @@ return [
         | and the create file (file).
         |
         */
-        'local_path'          => storage_path('framework/cache/laravel-excel'),
+        'local_path' => storage_path('framework/cache/laravel-excel'),
 
         /*
         |--------------------------------------------------------------------------
