@@ -7,18 +7,19 @@ use App\Models\Report;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use App\Models\ReportExportCache;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\FromCollection;
 
 class ReportsExport implements
-    FromQuery,
+    FromCollection,
     WithHeadings,
-    WithMapping,
-    WithChunkReading,
     WithEvents
 {
     protected $date1;
@@ -27,6 +28,12 @@ class ReportsExport implements
     protected $area_id;
     protected $area_value;
     protected $staffIdCard;
+
+    protected Collection $exportRows;
+
+    protected array $cachedReportIds = [];
+
+    protected array $newReportIds = [];
 
     /**
      * Cache users to avoid repeated User::find()
@@ -54,7 +61,7 @@ class ReportsExport implements
      * QUERY
      * ============================================================
      */
-    public function query()
+    protected function reportQuery()
     {
         $user = Auth::user();
 
@@ -182,18 +189,18 @@ class ReportsExport implements
                             'manager_id',
                             $managerIds
                         )
-                        ->orWhereIn(
-                            'rsm_id',
-                            $managerIds
-                        )
-                        ->orWhereIn(
-                            'asm_id',
-                            $managerIds
-                        )
-                        ->orWhereIn(
-                            'sup_id',
-                            $managerIds
-                        );
+                            ->orWhereIn(
+                                'rsm_id',
+                                $managerIds
+                            )
+                            ->orWhereIn(
+                                'asm_id',
+                                $managerIds
+                            )
+                            ->orWhereIn(
+                                'sup_id',
+                                $managerIds
+                            );
                     })
                     ->pluck('id')
                     ->toArray();
@@ -210,9 +217,7 @@ class ReportsExport implements
             |--------------------------------------------------------------------------
             | OTHER ROLES
             |--------------------------------------------------------------------------
-            */
-
-            else {
+            */ else {
 
                 $managedUserIds = User::query()
                     ->whereIn(
@@ -225,18 +230,18 @@ class ReportsExport implements
                             'manager_id',
                             $userId
                         )
-                        ->orWhere(
-                            'rsm_id',
-                            $userId
-                        )
-                        ->orWhere(
-                            'asm_id',
-                            $userId
-                        )
-                        ->orWhere(
-                            'sup_id',
-                            $userId
-                        );
+                            ->orWhere(
+                                'rsm_id',
+                                $userId
+                            )
+                            ->orWhere(
+                                'asm_id',
+                                $userId
+                            )
+                            ->orWhere(
+                                'sup_id',
+                                $userId
+                            );
                     })
                     ->pluck('id')
                     ->toArray();
@@ -294,14 +299,14 @@ class ReportsExport implements
                         'reports.user_id',
                         $userIds
                     )
-                    ->whereHas('user', function ($q2) use (
-                        $allowedTypes
-                    ) {
-                        $q2->whereIn(
-                            'type',
+                        ->whereHas('user', function ($q2) use (
                             $allowedTypes
-                        );
-                    });
+                        ) {
+                            $q2->whereIn(
+                                'type',
+                                $allowedTypes
+                            );
+                        });
                 });
 
                 /*
@@ -419,9 +424,7 @@ class ReportsExport implements
                             | Same manager group
                             */
                             if (
-                                !empty(
-                                    $selectedUser->manager_id
-                                )
+                                !empty($selectedUser->manager_id)
                             ) {
 
                                 $q->orWhere(
@@ -460,18 +463,18 @@ class ReportsExport implements
                                 'manager_id',
                                 $selectedManagerIds
                             )
-                            ->orWhereIn(
-                                'rsm_id',
-                                $selectedManagerIds
-                            )
-                            ->orWhereIn(
-                                'asm_id',
-                                $selectedManagerIds
-                            )
-                            ->orWhereIn(
-                                'sup_id',
-                                $selectedManagerIds
-                            );
+                                ->orWhereIn(
+                                    'rsm_id',
+                                    $selectedManagerIds
+                                )
+                                ->orWhereIn(
+                                    'asm_id',
+                                    $selectedManagerIds
+                                )
+                                ->orWhereIn(
+                                    'sup_id',
+                                    $selectedManagerIds
+                                );
                         })
                         ->pluck('id')
                         ->toArray();
@@ -481,9 +484,7 @@ class ReportsExport implements
                 |--------------------------------------------------------------------------
                 | SELECTED USER IS NOT MANAGER
                 |--------------------------------------------------------------------------
-                */
-
-                else {
+                */ else {
 
                     $teamUserIds = User::query()
                         ->whereIn(
@@ -498,18 +499,18 @@ class ReportsExport implements
                                 'manager_id',
                                 $selectedUserId
                             )
-                            ->orWhere(
-                                'rsm_id',
-                                $selectedUserId
-                            )
-                            ->orWhere(
-                                'asm_id',
-                                $selectedUserId
-                            )
-                            ->orWhere(
-                                'sup_id',
-                                $selectedUserId
-                            );
+                                ->orWhere(
+                                    'rsm_id',
+                                    $selectedUserId
+                                )
+                                ->orWhere(
+                                    'asm_id',
+                                    $selectedUserId
+                                )
+                                ->orWhere(
+                                    'sup_id',
+                                    $selectedUserId
+                                );
                         })
                         ->pluck('id')
                         ->toArray();
@@ -585,10 +586,10 @@ class ReportsExport implements
                         'reports.ssp_id',
                         $staffIdCard
                     )
-                    ->orWhere(
-                        'reports.sup_id',
-                        $staffIdCard
-                    );
+                        ->orWhere(
+                            'reports.sup_id',
+                            $staffIdCard
+                        );
                 }
 
                 /*
@@ -603,10 +604,10 @@ class ReportsExport implements
                         'reports.ssp_id',
                         $teamStaffCards
                     )
-                    ->orWhereIn(
-                        'reports.sup_id',
-                        $teamStaffCards
-                    );
+                        ->orWhereIn(
+                            'reports.sup_id',
+                            $teamStaffCards
+                        );
                 }
             });
         }
@@ -626,15 +627,310 @@ class ReportsExport implements
                     'reports.area_id',
                     $this->area_id
                 )
-                ->orWhere(
-                    'reports.area',
-                    'like',
-                    '%' . $this->area_value . '%'
-                );
+                    ->orWhere(
+                        'reports.area',
+                        'like',
+                        '%' . $this->area_value . '%'
+                    );
             });
         }
 
         return $query;
+    }
+
+    /**
+     * ============================================================
+     * BUILD EXPORT DATA
+     * ============================================================
+     *
+     * IMPORTANT:
+     * We use reports.id as the unique identity.
+     *
+     * If report.id already exists in report_export_caches:
+     *      DO NOT query/map it again.
+     *
+     * If report.id does not exist:
+     *      Query the full report
+     *      Map it
+     *      Save it into cache
+     *
+     * Finally:
+     *      cached rows + new rows
+     *      are exported together.
+     */
+    public function collection(): Collection
+    {
+        /*
+    |--------------------------------------------------------------------------
+    | Step 1
+    | Get report IDs + updated_at from current query
+    |--------------------------------------------------------------------------
+    */
+
+        $reportVersions = (clone $this->reportQuery())
+            ->select([
+                'reports.id',
+                'reports.updated_at',
+            ])
+            ->get()
+            ->keyBy('id');
+
+        /*
+    |--------------------------------------------------------------------------
+    | No records
+    |--------------------------------------------------------------------------
+    */
+
+        if ($reportVersions->isEmpty()) {
+            $this->exportRows = collect();
+
+            return $this->exportRows;
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Step 2
+    | Get existing caches
+    |--------------------------------------------------------------------------
+    */
+
+        $cachedData = ReportExportCache::query()
+            ->whereIn(
+                'report_id',
+                $reportVersions->keys()->map(fn($id) => (int) $id)
+            )
+            ->get([
+                'report_id',
+                'source_updated_at',
+                'data',
+            ])
+            ->keyBy('report_id');
+
+        /*
+    |--------------------------------------------------------------------------
+    | Step 3
+    | Detect:
+    |
+    | 1. New reports
+    | 2. Existing reports that were edited
+    |--------------------------------------------------------------------------
+    */
+
+        $rowsById = [];
+
+        $reportsToRefresh = [];
+
+        $this->cachedReportIds = [];
+        $this->newReportIds = [];
+
+        foreach ($reportVersions as $reportId => $reportVersion) {
+
+            $reportId = (int) $reportId;
+
+            $cache = $cachedData->get($reportId);
+
+            /*
+        |--------------------------------------------------------------------------
+        | No cache
+        |--------------------------------------------------------------------------
+        */
+
+            if (!$cache) {
+
+                $this->newReportIds[] = $reportId;
+
+                $reportsToRefresh[] = $reportId;
+
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Cache exists
+        |--------------------------------------------------------------------------
+        */
+
+            $cacheUpdatedAt = $cache->source_updated_at;
+            $reportUpdatedAt = $reportVersion->updated_at;
+
+            /*
+        |--------------------------------------------------------------------------
+        | Check whether report was edited
+        |--------------------------------------------------------------------------
+        */
+
+            $isChanged = false;
+
+            if (!$cacheUpdatedAt || !$reportUpdatedAt) {
+
+                $isChanged = true;
+            } else {
+
+                $isChanged =
+                    $cacheUpdatedAt->timestamp !==
+                    $reportUpdatedAt->timestamp;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Report changed
+        |--------------------------------------------------------------------------
+        */
+
+            if ($isChanged) {
+
+                $reportsToRefresh[] = $reportId;
+            } else {
+
+                /*
+            |--------------------------------------------------------------------------
+            | Cache is still valid
+            |--------------------------------------------------------------------------
+            */
+
+                $this->cachedReportIds[] = $reportId;
+
+                $rowsById[$reportId] = $cache->data;
+            }
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Step 4
+    | Query ONLY:
+    |
+    | - new reports
+    | - edited reports
+    |--------------------------------------------------------------------------
+    */
+
+        if (!empty($reportsToRefresh)) {
+
+            $query = $this->reportQuery();
+
+            $reports = $query
+                ->whereIn(
+                    'reports.id',
+                    $reportsToRefresh
+                )
+                ->with([
+                    'user',
+                    'customer',
+                    'depo',
+                ])
+                ->orderByDesc('reports.id')
+                ->get();
+
+            /*
+        |--------------------------------------------------------------------------
+        | Prepare cache rows
+        |--------------------------------------------------------------------------
+        */
+
+            $cacheRows = [];
+
+            foreach ($reports as $report) {
+
+                /*
+            |--------------------------------------------------------------------------
+            | Map fresh data
+            |--------------------------------------------------------------------------
+            */
+
+                $mappedRow = $this->mapReport($report);
+
+                $reportId = (int) $report->id;
+
+                /*
+            |--------------------------------------------------------------------------
+            | Put fresh data into export rows
+            |--------------------------------------------------------------------------
+            */
+
+                $rowsById[$reportId] = $mappedRow;
+
+                /*
+            |--------------------------------------------------------------------------
+            | Prepare cache
+            |--------------------------------------------------------------------------
+            */
+
+                $cacheRows[] = [
+                    'report_id' => $reportId,
+
+                    'source_updated_at' =>
+                    $report->updated_at,
+
+                    'data' => json_encode(
+                        $mappedRow,
+                        JSON_UNESCAPED_UNICODE |
+                            JSON_UNESCAPED_SLASHES
+                    ),
+
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Step 5
+        | Insert new cache OR update existing cache
+        |--------------------------------------------------------------------------
+        */
+
+            foreach (array_chunk($cacheRows, 500) as $chunk) {
+
+                foreach ($chunk as $cacheRow) {
+
+                    DB::table('report_export_caches')
+                        ->updateOrInsert(
+                            [
+                                'report_id' =>
+                                $cacheRow['report_id'],
+                            ],
+                            [
+                                'source_updated_at' =>
+                                $cacheRow['source_updated_at'],
+
+                                'data' =>
+                                $cacheRow['data'],
+
+                                'updated_at' =>
+                                $cacheRow['updated_at'],
+
+                                'created_at' =>
+                                $cacheRow['created_at'],
+                            ]
+                        );
+                }
+            }
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Step 6
+    | Restore original query order
+    |--------------------------------------------------------------------------
+    */
+
+        $finalRows = collect();
+
+        foreach ($reportVersions as $reportId => $reportVersion) {
+
+            $reportId = (int) $reportId;
+
+            if (isset($rowsById[$reportId])) {
+
+                $finalRows->push(
+                    $rowsById[$reportId]
+                );
+            }
+        }
+
+        $this->exportRows = $finalRows;
+
+        return $this->exportRows;
     }
 
     /**
@@ -684,7 +980,7 @@ class ReportsExport implements
      * MAP EACH REPORT TO EXCEL ROW
      * ============================================================
      */
-    public function map($row): array
+    protected function mapReport($row): array
     {
         /*
         |--------------------------------------------------------------------------
@@ -784,17 +1080,16 @@ class ReportsExport implements
                 $sspName =
                     trim(
                         ($reportUser->family_name ?? '') .
-                        ' ' .
-                        ($reportUser->name ?? '')
+                            ' ' .
+                            ($reportUser->name ?? '')
                     );
-
             } else {
 
                 $sspName =
                     trim(
                         ($reportUser->family_name_latin ?? '') .
-                        ' ' .
-                        ($reportUser->name_latin ?? '')
+                            ' ' .
+                            ($reportUser->name_latin ?? '')
                     );
             }
         }
@@ -832,17 +1127,16 @@ class ReportsExport implements
                 $supName =
                     trim(
                         ($sup->family_name ?? '') .
-                        ' ' .
-                        ($sup->name ?? '')
+                            ' ' .
+                            ($sup->name ?? '')
                     );
-
             } else {
 
                 $supName =
                     trim(
                         ($sup->family_name_latin ?? '') .
-                        ' ' .
-                        ($sup->name_latin ?? '')
+                            ' ' .
+                            ($sup->name_latin ?? '')
                     );
             }
         }
@@ -862,17 +1156,16 @@ class ReportsExport implements
                 $rsmName =
                     trim(
                         ($rsm->family_name ?? '') .
-                        ' ' .
-                        ($rsm->name ?? '')
+                            ' ' .
+                            ($rsm->name ?? '')
                     );
-
             } else {
 
                 $rsmName =
                     trim(
                         ($rsm->family_name_latin ?? '') .
-                        ' ' .
-                        ($rsm->name_latin ?? '')
+                            ' ' .
+                            ($rsm->name_latin ?? '')
                     );
             }
         }
@@ -892,17 +1185,16 @@ class ReportsExport implements
                 $asmName =
                     trim(
                         ($asm->family_name ?? '') .
-                        ' ' .
-                        ($asm->name ?? '')
+                            ' ' .
+                            ($asm->name ?? '')
                     );
-
             } else {
 
                 $asmName =
                     trim(
                         ($asm->family_name_latin ?? '') .
-                        ' ' .
-                        ($asm->name_latin ?? '')
+                            ' ' .
+                            ($asm->name_latin ?? '')
                     );
             }
         }
@@ -944,7 +1236,6 @@ class ReportsExport implements
                     $row->customer->customer_name ??
                     $row->customer->name ??
                     '';
-
             } else {
 
                 $customerName =
@@ -1015,18 +1306,17 @@ class ReportsExport implements
 
             $address =
                 $row->address;
-
         } else {
 
             $address = trim(
                 ($row->city ?? '') .
-                (
-                    !empty($row->city) &&
-                    !empty($row->country)
+                    (
+                        !empty($row->city) &&
+                        !empty($row->country)
                         ? ', '
                         : ''
-                ) .
-                ($row->country ?? '')
+                    ) .
+                    ($row->country ?? '')
             );
         }
 
@@ -1410,15 +1700,6 @@ class ReportsExport implements
         return $value;
     }
 
-    /**
-     * ============================================================
-     * CHUNK SIZE
-     * ============================================================
-     */
-    public function chunkSize(): int
-    {
-        return 1000;
-    }
 
     /**
      * ============================================================
@@ -1428,36 +1709,28 @@ class ReportsExport implements
     public function registerEvents(): array
     {
         return [
-
             AfterSheet::class => function (
                 AfterSheet $event
             ) {
-
                 $sheet = $event->sheet->getDelegate();
 
                 $highestRow = $sheet->getHighestRow();
 
                 /*
-                |--------------------------------------------------------------------------
-                | If there are no records
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | No records
+            |--------------------------------------------------------------------------
+            */
 
                 if ($highestRow < 2) {
                     return;
                 }
 
                 /*
-                |--------------------------------------------------------------------------
-                | Hyperlink Style
-                |--------------------------------------------------------------------------
-                |
-                | W = Photo Outlet
-                | X = POSM PHOTO
-                |
-                | Blue + Underline
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | Hyperlink Style
+            |--------------------------------------------------------------------------
+            */
 
                 $sheet
                     ->getStyle("W2:W{$highestRow}")
@@ -1474,18 +1747,12 @@ class ReportsExport implements
                     ->setARGB('FF0000FF');
 
                 /*
-                |--------------------------------------------------------------------------
-                | Total row
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | TOTAL ROW
+            |--------------------------------------------------------------------------
+            */
 
                 $totalRow = $highestRow + 1;
-
-                /*
-                |--------------------------------------------------------------------------
-                | TOTAL label
-                |--------------------------------------------------------------------------
-                */
 
                 $sheet->mergeCells(
                     "A{$totalRow}:N{$totalRow}"
@@ -1497,54 +1764,30 @@ class ReportsExport implements
                 );
 
                 /*
-                |--------------------------------------------------------------------------
-                | 250ml
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | Bottle totals
+            |--------------------------------------------------------------------------
+            */
 
                 $sheet->setCellValue(
                     "O{$totalRow}",
                     "=SUM(O2:O{$highestRow})"
                 );
 
-                /*
-                |--------------------------------------------------------------------------
-                | 350ml
-                |--------------------------------------------------------------------------
-                */
-
                 $sheet->setCellValue(
                     "P{$totalRow}",
                     "=SUM(P2:P{$highestRow})"
                 );
-
-                /*
-                |--------------------------------------------------------------------------
-                | 600ml
-                |--------------------------------------------------------------------------
-                */
 
                 $sheet->setCellValue(
                     "Q{$totalRow}",
                     "=SUM(Q2:Q{$highestRow})"
                 );
 
-                /*
-                |--------------------------------------------------------------------------
-                | 1500ml
-                |--------------------------------------------------------------------------
-                */
-
                 $sheet->setCellValue(
                     "R{$totalRow}",
                     "=SUM(R2:R{$highestRow})"
                 );
-
-                /*
-                |--------------------------------------------------------------------------
-                | DEFAULT
-                |--------------------------------------------------------------------------
-                */
 
                 $sheet->setCellValue(
                     "S{$totalRow}",
@@ -1552,10 +1795,10 @@ class ReportsExport implements
                 );
 
                 /*
-                |--------------------------------------------------------------------------
-                | Bold headings
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | Bold heading
+            |--------------------------------------------------------------------------
+            */
 
                 $sheet
                     ->getStyle("A1:AE1")
@@ -1563,10 +1806,10 @@ class ReportsExport implements
                     ->setBold(true);
 
                 /*
-                |--------------------------------------------------------------------------
-                | Bold total row
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | Bold total
+            |--------------------------------------------------------------------------
+            */
 
                 $sheet
                     ->getStyle("A{$totalRow}:AE{$totalRow}")
@@ -1574,13 +1817,12 @@ class ReportsExport implements
                     ->setBold(true);
 
                 /*
-                |--------------------------------------------------------------------------
-                | Auto size columns
-                |--------------------------------------------------------------------------
-                */
+            |--------------------------------------------------------------------------
+            | Auto size
+            |--------------------------------------------------------------------------
+            */
 
                 foreach (range('A', 'AE') as $column) {
-
                     $sheet
                         ->getColumnDimension($column)
                         ->setAutoSize(true);
