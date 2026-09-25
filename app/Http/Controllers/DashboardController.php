@@ -195,7 +195,7 @@ class DashboardController extends Controller
         */
 
         $allReports = (clone $query)->count();
-
+        $allReports = number_format($allReports);
         $totalCase = (clone $query)
             ->selectRaw("
                 COALESCE(
@@ -237,8 +237,8 @@ class DashboardController extends Controller
             ->value('today_case');
 
 
-        $totalCase = (int) $totalCase;
-        $todayCase = (int) $todayCase;
+        $totalCase = number_format((int) $totalCase);
+        $todayCase = number_format((int) $todayCase);
 
 
         /*
@@ -495,8 +495,8 @@ class DashboardController extends Controller
             $allCustomersQuery->whereIn('user_id', $allowedUserIds);
         }
 
-        $allCustomers = $allCustomersQuery->count();
-
+        $allCustomers = number_format($allCustomersQuery->count());
+        
 
         /*
         |--------------------------------------------------------------------------
