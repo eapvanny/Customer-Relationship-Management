@@ -615,6 +615,8 @@ class DashboardController extends Controller
                 'created_at',
                 [$salesStartDate, $salesEndDate]
             )
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->whereNotNull('user_id')
             ->groupBy('user_id')
             ->orderByDesc('total')
