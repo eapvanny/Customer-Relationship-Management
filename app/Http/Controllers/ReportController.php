@@ -400,6 +400,9 @@ class ReportController extends Controller
                         $val_1500ml = intval($data->{'1500_ml'} ?? 0);
                         return $val_250ml + $val_350ml + $val_600ml + $val_1500ml;
                     })
+                    ->addColumn('date_time', function ($data) {
+                        return Carbon::parse($data->date)->format('d-M-Y h:i A');
+                    })
                     ->addColumn('status', function ($data) {
                         $color = '';
                         if ($data->status === 'import') {
@@ -617,7 +620,7 @@ class ReportController extends Controller
                 'customer_type' => $report->customer_type,
 
                 // 'date' => Carbon::parse($report->date)->format('d-m-Y h:i A'),
-                'date' => Carbon::parse($report->date)->format('d-M-Y'),
+                'date' => Carbon::parse($report->date)->format('d-M-Y h:i A'),
 
                 'other' => $report->other ?? 'N/A',
 

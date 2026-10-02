@@ -505,6 +505,7 @@
                                             <th>{{ __('600ml') }}</th>
                                             <th>{{ __('1500ml') }}</th>
                                             <th>{{ __('Default') }}</th>
+                                            <th style="min-width: 80px;">{{ __('Date & Time') }}</th>
                                             <th>{{ __('Status') }}</th>
                                             <th class="notexport" style="max-width: 82px">{{ __('Action') }}</th>
                                         </tr>
@@ -1033,6 +1034,7 @@
                     { data: '600ml', name: '600ml' },
                     { data: '1500ml', name: '1500ml' },
                     { data: 'default', name: 'default' },
+                    { data: 'date_time', name: 'date_time' },
                     { data: 'status', name: 'status' },
                     { 
                         data: 'action', 
