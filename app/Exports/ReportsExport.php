@@ -140,7 +140,10 @@ class ReportsExport implements
             |--------------------------------------------------------------------------
             */
 
-            if ($userRole == AppHelper::USER_MANAGER) {
+            if (
+                $userRole == AppHelper::USER_MANAGER ||
+                $user->position == 'NSM'
+            ) {
 
                 /*
                 |--------------------------------------------------------------------------

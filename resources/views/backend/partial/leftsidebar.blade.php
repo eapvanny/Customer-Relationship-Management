@@ -46,7 +46,7 @@
                                 </a>
                             </li>
                         @endHasTypePermission
-                        @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id === AppHelper::USER_MANAGER​)
+                        @if (auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN || auth()->user()->role_id === AppHelper::USER_MANAGER)
                             <li>
                                 <a href="{{ route('customers.map') }}" class="text-decoration-none">
                                     <i class="fa fa-map-marked-alt"></i> <span>{{ __('Customer Location') }}</span>
