@@ -121,6 +121,7 @@ class ReportsExport implements
                 AppHelper::USER_SUPER_ADMIN,
                 AppHelper::USER_ADMIN,
                 AppHelper::USER_DIRECTOR,
+                AppHelper::USER_MANAGER,
             ]);
 
         /*
@@ -140,10 +141,7 @@ class ReportsExport implements
             |--------------------------------------------------------------------------
             */
 
-            if (
-                $userRole == AppHelper::USER_MANAGER ||
-                $user->position == 'NSM'
-            ) {
+            if ($userRole == AppHelper::USER_MANAGER) {
 
                 /*
                 |--------------------------------------------------------------------------
