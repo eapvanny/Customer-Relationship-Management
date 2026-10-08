@@ -219,7 +219,9 @@ class ReportController extends Controller
         // Get employees for dropdown
         $loginRole = auth()->user()->role_id;
 
-        $employeeQuery->when(in_array($loginRole, [
+        $employeeQuery
+            ->where('status', 1)
+            ->when(in_array($loginRole, [
                 AppHelper::USER_SUPER_ADMIN,
                 AppHelper::USER_ADMINISTRATOR,
                 AppHelper::USER_ADMIN,
