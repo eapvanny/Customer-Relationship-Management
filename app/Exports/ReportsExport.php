@@ -1436,7 +1436,7 @@ class ReportsExport implements
 
             // 14
             $row->date
-                ? Carbon::parse($row->date)->format('h:i A d-M-Y')
+                ? Carbon::parse($row->date)->format('h:i A | d-M-Y')
                 : '',
 
             // 15
