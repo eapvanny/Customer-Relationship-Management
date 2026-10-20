@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customers/{id}', [APICustomer::class, 'update']); // Optional for Flutter if using multipart/form-data
     Route::get('/customers-phone', [SlowController::class, 'index']); // New endpoint for slow response
     Route::get('/customers-location', [APICustomer::class, 'getCustomerLocation']); // New endpoint for slow response
+    Route::get('/customers/{id}/detail', [APICustomer::class, 'customerDetail']); // New endpoint for detailed customer information
 
     Route::get('/reports', [APIReport::class, 'index']); // New endpoint: /api/reports
     Route::get('/getCustomerReport', [APIReport::class, 'getCustomerReport']); // New endpoint: /api/getCustomerReport

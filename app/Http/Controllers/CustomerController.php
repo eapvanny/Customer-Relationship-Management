@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\DB;
 class CustomerController extends Controller
 {
     public function __construct()
@@ -30,7 +30,23 @@ class CustomerController extends Controller
     {
         $loggedInUser = auth()->check() ? auth()->user() : null;
 
-        $query = Customer::with('user', 'depo');
+        $query = Customer::query()
+        ->with([
+            'user',
+            'depo',
+        ])
+        ->select('customers.*')
+        ->selectSub(function ($subQuery) {
+            $subQuery->from('reports')
+                ->selectRaw('MAX(reports.date)')
+                ->whereColumn('reports.customer_id', 'customers.id')
+                ->whereRaw("
+                    COALESCE(`250_ml`, 0)
+                    + COALESCE(`350_ml`, 0)
+                    + COALESCE(`600_ml`, 0)
+                    + COALESCE(`1500_ml`, 0) > 0
+                ");
+        }, 'last_purchase_at');
         $queryEmployee = User::query()
             ->where('role_id', AppHelper::USER_EMPLOYEE);
             if ($loggedInUser->type == AppHelper::SALE) {
@@ -314,6 +330,44 @@ class CustomerController extends Controller
                 ->addColumn('customer_name', fn($customer) => $customer->name)
                 ->addColumn('customer_type', fn($customer) =>
                 AppHelper::CUSTOMER_TYPE[$customer->customer_type] ?? 'N/A')
+                ->addColumn('purchase_status', function ($customer) {
+                    $lastPurchaseAt = $customer->last_purchase_at;
+
+                    if (!$lastPurchaseAt) {
+                        return '<span class="text-danger" title="No purchase records found">
+                            ' . __('No Purchase') . '
+                                </span>';
+                    }
+
+                    $lastPurchase = Carbon::parse($lastPurchaseAt);
+
+                    $hoursSincePurchase = (int) floor(
+                        $lastPurchase->diffInMinutes(now()) / 60
+                    );
+
+                    if ($hoursSincePurchase >= 72) {
+                        $days = (int) floor($hoursSincePurchase / 24);
+
+                        return '<span class="text-primary" title="' .
+                            e($lastPurchase->format('d-M-Y h:i A')) . '">' .
+                            __('No Purchase for') . ' (' . $days . ' ' . __('days') . ')' .
+                            '</span>';
+                    }
+
+                    if ($hoursSincePurchase >= 24) {
+                        $days = (int) floor($hoursSincePurchase / 24);
+
+                        return '<span class="text-warning" title="' .
+                            e($lastPurchase->format('d-M-Y h:i A')) . '">'.
+                            __('Warning') . ' (' . $days . ' ' . __('days') . ')
+                            </span>';
+                    }
+
+                    return '<span class="text-success" title="' .
+                        e($lastPurchase->format('d-M-Y h:i A')) . '">
+                            ' . __('Active') . '
+                        </span>';
+                })
                 ->addColumn('phone', fn($customer) => $customer->phone)
                 ->addColumn('action', function ($customer) {
                     $btn = '<div class="change-action-item">';
@@ -343,7 +397,7 @@ class CustomerController extends Controller
 
                     return $btn . '</div>';
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action','purchase_status'])
                 ->make(true);
         }
 
@@ -827,48 +881,88 @@ class CustomerController extends Controller
                 'code',
                 'user_id',
             ])
+            ->selectSub(function ($query) {
+                $query->from('reports')
+                    ->selectRaw('MAX(reports.date)')
+                    ->whereColumn('reports.customer_id', 'customers.id')
+                    ->whereRaw(
+                        'COALESCE(`250_ml`, 0)
+                        + COALESCE(`350_ml`, 0)
+                        + COALESCE(`600_ml`, 0)
+                        + COALESCE(`1500_ml`, 0) > 0'
+                    );
+            }, 'last_purchase_at')
             ->with([
                 'user:id,name,family_name,name_latin,family_name_latin,area',
                 'depo:id,name',
             ])
             ->get()
             ->map(function ($customer) use ($userLang) {
-
                 $userName = '-';
                 $userArea = '-';
 
                 if ($customer->user) {
-
                     $userName = $userLang === 'en'
                         ? trim(
-                            ($customer->user->family_name_latin ?? '') .
-                            ' ' .
+                            ($customer->user->family_name_latin ?? '') . ' ' .
                             ($customer->user->name_latin ?? '')
                         )
                         : trim(
-                            ($customer->user->family_name ?? '') .
-                            ' ' .
+                            ($customer->user->family_name ?? '') . ' ' .
                             ($customer->user->name ?? '')
                         );
 
                     $userArea = $customer->user->area ?? '-';
                 }
 
+                $lastPurchaseAt = $customer->last_purchase_at;
+                $daysSincePurchase = null;
+                $hoursSincePurchase = null;
+
+                if ($lastPurchaseAt) {
+                    $lastPurchase = Carbon::parse($lastPurchaseAt);
+
+                    // Format date and time
+                    $lastPurchaseAt = $lastPurchase->format('d-M-Y h:i A');
+
+                    $hoursSincePurchase = (int) floor(
+                        $lastPurchase->diffInMinutes(now()) / 60
+                    );
+
+                    $daysSincePurchase = (int) floor(
+                        $lastPurchase->diffInMinutes(now()) / 1440
+                    );
+                }
+
+                if ($hoursSincePurchase === null) {
+                    $purchaseStatus = 'unknown';
+                } elseif ($hoursSincePurchase >= 72) {
+                    $purchaseStatus = 'overdue';
+                } elseif ($hoursSincePurchase >= 24) {
+                    $purchaseStatus = 'warning';
+                } else {
+                    $purchaseStatus = 'active';
+                }
+
                 return [
-                    'id'        => $customer->id,
-                    'name'      => $customer->name,
-                    'phone'     => $customer->phone,
-                    'code'      => $customer->code,
-                    'area_id'   => $customer->area_id,
-                    'depo_id'   => $customer->depo_id,
-                    'user_id'   => $customer->user_id,
-                    'latitude'  => (float) $customer->latitude,
-                    'longitude' => (float) $customer->longitude,
-                    'city'      => $customer->city,
-                    'country'   => $customer->country,
-                    'user_name' => $userName ?: '-',
-                    'user_area' => $userArea,
-                    'depo_name' => $customer->depo->name ?? '-',
+                    'id'                  => $customer->id,
+                    'name'                => $customer->name,
+                    'phone'               => $customer->phone,
+                    'code'                => $customer->code,
+                    'area_id'             => $customer->area_id,
+                    'depo_id'             => $customer->depo_id,
+                    'user_id'             => $customer->user_id,
+                    'latitude'            => (float) $customer->latitude,
+                    'longitude'           => (float) $customer->longitude,
+                    'city'                => $customer->city,
+                    'country'             => $customer->country,
+                    'user_name'           => $userName ?: '-',
+                    'user_area'           => $userArea,
+                    'depo_name'           => $customer->depo->name ?? '-',
+                    'last_purchase_at'    => $lastPurchaseAt,
+                    'days_since_purchase' => $daysSincePurchase,
+                    'hours_since_purchase'=> $hoursSincePurchase,
+                    'purchase_status'     => $purchaseStatus,
                 ];
             });
 

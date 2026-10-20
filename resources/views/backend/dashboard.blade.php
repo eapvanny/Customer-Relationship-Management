@@ -620,6 +620,12 @@
         .rank-box h3 {
             margin-bottom: 0;
         }
+        .card p {
+            font-size: 22px;
+        }
+        .card h6, .card h5, .card h4, .card p{
+            font-weight: 900;
+        }
 
 
         /* =========================
@@ -1233,6 +1239,91 @@
             </div>
         </div>
     </section>
+
+    <section class="mt-3">
+        <div class="row">
+            <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
+                    <h6 class="mb-2">
+                        {{ __('Best Sales Month') }}
+                    </h6>
+
+                    @if ($bestMonthName)
+                        <h4 class="text-success mb-2">
+                            {{ $bestMonthName }}
+                        </h4>
+
+                        <p class="mb-0">
+                            {{ number_format($bestMonthCases) }}
+                            {{ __('Cases Sold') }}
+                        </p>
+                    @else
+                        <p class="text-muted mb-0">
+                            {{ __('No sales data available') }}
+                        </p>
+                    @endif
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #2aaa91;">
+                    <h6 class="mb-2">
+                        {{ __('Peak Selling Hour') }}
+                    </h6>
+
+                    @if ($bestSellingHour)
+                        <h4 class="text-primary mb-2">
+                            {{ $bestSellingHour }}
+                        </h4>
+
+                        <p class="mb-0">
+                            {{ number_format($bestSellingHourCases) }}
+                            {{ __('Cases Sold') }}
+                        </p>
+                    @else
+                        <p class="text-muted mb-0">
+                            {{ __('No sales data available') }}
+                        </p>
+                    @endif
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
+                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #95d1d4;">
+                    <h6 class="mb-2">
+                        {{ __('Most Active Sales Month') }}
+                    </h6>
+
+                    @if ($bestUsersMonthName)
+                        <h4 class="text-info mb-2">
+                            {{ $bestUsersMonthName }}
+                        </h4>
+
+                        <p class="mb-0">
+                            {{ number_format($bestUsersMonthCount) }}
+                            {{ __('Active Sales Users') }}
+                        </p>
+                    @else
+                        <p class="text-muted mb-0">
+                            {{ __('No active sales data available') }}
+                        </p>
+                    @endif
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card mt-2 ticket-chat">
+                    <div class="card-body">
+                        <h5 class="mb-3">
+                            {{ __('Performance Report') }}
+                        </h5>
+
+                        <div style="position: relative; height: 380px;">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
 @endsection
 
 @section('extraScript')
@@ -1466,5 +1557,153 @@
 
             updateTodayButton();
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const canvas = document.getElementById('performanceChart');
+
+            if (!canvas) return;
+
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded.');
+                return;
+            }
+
+            const labels = @json($performanceLabels);
+            const salesData = @json($performanceCases);
+            const activeUsersData = @json($performanceActiveUsers);
+
+            // Prevent duplicate charts if the chart is initialized again.
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'line',
+
+                data: {
+                    labels: labels,
+
+                    datasets: [
+                        {
+                            label: @json(__('Cases Sold')),
+                            data: salesData,
+
+                            borderColor: '#4299e1',
+                            backgroundColor: 'rgba(30, 143, 255, 0.46)',
+
+                            borderWidth: 2.5,
+                            pointBackgroundColor: '#4299e1',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 1.5,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: @json(__('Active Sales Users')),
+                            data: activeUsersData,
+
+                            borderColor: 'green',
+                            backgroundColor: 'rgba(72, 187, 120, 0.46)',
+
+                            borderWidth: 2.5,
+                            pointBackgroundColor: 'green',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 1.5,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+
+                            labels: {
+                                usePointStyle: false,
+                                boxWidth: 36,
+                                boxHeight: 12,
+                                padding: 15
+                            }
+                        },
+
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' +
+                                        Number(context.raw ?? 0).toLocaleString();
+                                }
+                            }
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.08)'
+                            }
+                        },
+
+                        y: {
+                            beginAtZero: true,
+
+                            title: {
+                                display: true,
+                                text: @json(__('Cases Sold'))
+                            },
+
+                            ticks: {
+                                precision: 0
+                            },
+
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.08)'
+                            }
+                        },
+
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+
+                            title: {
+                                display: true,
+                                text: @json(__('Active Sales Users'))
+                            },
+
+                            ticks: {
+                                precision: 0
+                            },
+
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
     </script>
 @endsection

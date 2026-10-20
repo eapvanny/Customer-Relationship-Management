@@ -6,26 +6,17 @@
 
 
 @section('extraStyle')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-    />
-
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
     <style>
         .head-map {
             padding: 15px 2px;
         }
+
         #customerMap {
             width: 100%;
             height: calc(87vh - 130px);
@@ -61,8 +52,8 @@
         }
 
         /* =========================================================
-        Customer Marker Cluster
-        ========================================================= */
+            Customer Marker Cluster
+            ========================================================= */
 
         .customer-cluster {
             background: rgba(27, 107, 168, 0.20);
@@ -149,8 +140,58 @@
             box-shadow:
                 0 4px 10px rgba(0, 0, 0, 0.30);
         }
-    </style>
 
+        /* Customer marker */
+.customer-status-marker {
+    width: 28px;
+    height: 28px;
+    border: 4px solid #ffffff;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.customer-status-active {
+    background: #238636;
+}
+
+.customer-status-warning {
+    background: #E5A000;
+}
+
+.customer-status-overdue {
+    background: #D93025;
+}
+
+.customer-status-unknown {
+    background: #808080;
+}
+
+.purchase-status-label {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.purchase-status-label.active {
+    background: #238636;
+}
+
+.purchase-status-label.warning {
+    background: #E5A000;
+}
+
+.purchase-status-label.overdue {
+    background: #D93025;
+}
+
+.purchase-status-label.unknown {
+    background: #808080;
+}
+    </style>
 @endsection
 
 @section('pageContent')
@@ -251,13 +292,12 @@
     </div>
 @endsection
 @section('extraScript')
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
 
             const customers = @json($customers);
 
@@ -282,8 +322,7 @@
             */
 
             L.tileLayer(
-                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                {
+                'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19
                 }
             ).addTo(map);
@@ -313,7 +352,7 @@
 
                 showCoverageOnHover: false,
 
-                iconCreateFunction: function (cluster) {
+                iconCreateFunction: function(cluster) {
 
                     const count = cluster.getChildCount();
 
@@ -321,13 +360,9 @@
 
                     if (count >= 10 && count < 50) {
                         sizeClass = 'customer-cluster-medium';
-                    }
-
-                    else if (count >= 50 && count < 100) {
+                    } else if (count >= 50 && count < 100) {
                         sizeClass = 'customer-cluster-large';
-                    }
-
-                    else if (count >= 100) {
+                    } else if (count >= 100) {
                         sizeClass = 'customer-cluster-xlarge';
                     }
 
@@ -359,18 +394,68 @@
             |--------------------------------------------------------------------------
             */
 
+            function createCustomerIcon(customer) {
+                const status = customer.purchase_status || 'unknown';
+
+                return L.divIcon({
+                    className: 'customer-marker-wrapper',
+                    html: `
+                        <div class="customer-status-marker customer-status-${status}">
+                        </div>
+                    `,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 28],
+                    popupAnchor: [0, -28]
+                });
+            }
+
+            
             function createPopup(customer) {
 
                 const latitude = parseFloat(customer.latitude);
                 const longitude = parseFloat(customer.longitude);
 
+                // Purchase status
+                
+                const purchaseStatus = customer.purchase_status || 'unknown';
+
+                const days = customer.days_since_purchase;
+                const hours = customer.hours_since_purchase;
+
+                let statusLabel = 'No Purchase History';
+
+                if (purchaseStatus === 'active') {
+                    statusLabel = 'Recently Purchased';
+                } else if (purchaseStatus === 'warning' || purchaseStatus === 'overdue') {
+                    if (days !== null && days !== undefined) {
+                        statusLabel = `No Purchase for ${days} ${days === 1 ? 'Day' : 'Days'}`;
+                    } else {
+                        statusLabel = 'No Purchase History';
+                    }
+                }
+
+                const statusClass = purchaseStatus;
+
+                const lastPurchaseText = customer.last_purchase_at
+                    ? customer.last_purchase_at
+                    : 'No purchase history';
+
+                let daysSinceText = '—';
+
+                if (hours !== null && hours !== undefined) {
+                    if (days !== null && days !== undefined) {
+                        daysSinceText = `${days} ${days === 1 ? 'Day' : 'Days'}`;
+                    } else {
+                        daysSinceText = `${hours} Hours`;
+                    }
+                }
+
+
                 return `
                     <div class="customer-popup">
 
                         <h5>
-                            <strong>
-                                ${customer.name ?? '-'}
-                            </strong>
+                            <strong>${customer.name ?? '-'}</strong>
                         </h5>
 
                         <div class="info-row">
@@ -405,7 +490,7 @@
 
                         <div class="info-row">
                             <i class="fas fa-city"></i>
-                            <strong>{{ __('City') }}:</strong>
+                            <strong>{{ __('Address') }}:</strong>
                             ${customer.city ?? '-'}
                         </div>
 
@@ -417,23 +502,40 @@
 
                         <hr>
 
+                        <div class="info-row">
+                            <i class="fas fa-shopping-cart"></i>
+                            <strong>{{ __('Purchase Status') }}:</strong>
+                            <span class="purchase-status-label ${statusClass}">
+                                ${statusLabel}
+                            </span>
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-calendar-alt"></i>
+                            <strong>{{ __('Last Purchase') }}:</strong>
+                            ${lastPurchaseText}
+                        </div>
+
+                        <div class="info-row">
+                            <i class="fas fa-clock"></i>
+                            <strong>{{ __('Time Since Purchase') }}:</strong>
+                            ${daysSinceText}
+                        </div>
+                        <hr>
+
                         <div class="coordinates">
-
                             <div>
-                                <strong>Latitude:</strong>
-                                ${latitude}
+                                <strong>{{ __('Latitude') }}:</strong> ${latitude}
                             </div>
-
                             <div>
-                                <strong>Longitude:</strong>
-                                ${longitude}
+                                <strong>{{ __('Longitude') }}:</strong> ${longitude}
                             </div>
-
                         </div>
 
                     </div>
                 `;
             }
+
 
 
             /*
@@ -448,7 +550,7 @@
 
                 const markers = [];
 
-                data.forEach(function (customer) {
+                data.forEach(function(customer) {
 
                     const latitude = parseFloat(customer.latitude);
                     const longitude = parseFloat(customer.longitude);
@@ -460,10 +562,12 @@
                         return;
                     }
 
-                    const marker = L.marker([
-                        latitude,
-                        longitude
-                    ]);
+                    const marker = L.marker(
+                        [latitude, longitude],
+                        {
+                            icon: createCustomerIcon(customer)
+                        }
+                    );
 
                     /*
                     |--------------------------------------------------------------------------
@@ -471,7 +575,7 @@
                     |--------------------------------------------------------------------------
                     */
 
-                    marker.bindPopup(function () {
+                    marker.bindPopup(function() {
                         return createPopup(customer);
                     });
 
@@ -499,8 +603,7 @@
                     const group = L.featureGroup(markers);
 
                     map.fitBounds(
-                        group.getBounds(),
-                        {
+                        group.getBounds(), {
                             padding: [30, 30],
                             maxZoom: 16
                         }
@@ -521,7 +624,7 @@
                 |--------------------------------------------------------------------------
                 */
 
-                setTimeout(function () {
+                setTimeout(function() {
                     map.invalidateSize();
                 }, 200);
             }
@@ -547,7 +650,7 @@
                 const depoId = $('#filterDepo').val();
 
 
-                const filteredCustomers = customers.filter(function (customer) {
+                const filteredCustomers = customers.filter(function(customer) {
 
                     /*
                     |--------------------------------------------------------------------------
@@ -558,10 +661,10 @@
                     if (search) {
 
                         const searchText = [
-                            customer.name,
-                            customer.phone,
-                            customer.code
-                        ]
+                                customer.name,
+                                customer.phone,
+                                customer.code
+                            ]
                             .filter(Boolean)
                             .join(' ')
                             .toLowerCase();
@@ -662,7 +765,7 @@
             |--------------------------------------------------------------------------
             */
 
-            $('#resetMapFilter').on('click', function () {
+            $('#resetMapFilter').on('click', function() {
 
                 $('#customerSearch').val('');
 
@@ -682,7 +785,7 @@
             |--------------------------------------------------------------------------
             */
 
-            setTimeout(function () {
+            setTimeout(function() {
                 map.invalidateSize();
             }, 300);
 

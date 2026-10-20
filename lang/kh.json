@@ -435,5 +435,12 @@
     "Special FOC" : "FOC ពិសេស",
     "FOC Photo" : "រូបថត FOC",
     "Add Report Consumer" : "បន្ថែមរបាយការណ៍អតិថិជនទូទៅ",
-    "Report For Consumer" : "របាយការណ៍សម្រាប់អតិថិជនទូទៅ"
+    "Report For Consumer" : "របាយការណ៍សម្រាប់អតិថិជនទូទៅ",
+    "No Purchase" : "មិនដែលទិញទេ",
+    "Last Purchase" : "ទិញចុងក្រោយ",
+    "Time Since Purchase" : "រយៈពេលចាប់តាំងពីការទិញ",
+    "Purchase" : "ទិញ",
+    "No Purchase for" : "មិនបានទិញទរយះពេល",
+    "days" : "ថ្ងៃ",
+    "Purchase Status" : "ស្ថានភាពការទិញ"
 }

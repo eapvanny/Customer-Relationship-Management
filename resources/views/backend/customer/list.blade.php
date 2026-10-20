@@ -109,6 +109,7 @@
                                         <th>{{ __('Customer Code') }}</th>
                                         <th>{{ __('Customer Name') }}</th>
                                         <th>{{ __('Customer Type') }}</th>
+                                        <th>{{ __('Purchase Status') }}</th>
                                         <th>{{ __('Phone') }}</th>
                                         <th style="max-width: 82px">{{ __('Action') }}</th>
                                     </tr>
@@ -164,6 +165,7 @@
                 { data: 'customer_code', name: 'customer_code' },
                 { data: 'customer_name', name: 'customer_name' },
                 { data: 'customer_type', name: 'customer_type' },
+                { data: 'purchase_status', name: 'purchase_status' },
                 { data: 'phone', name: 'phone' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]

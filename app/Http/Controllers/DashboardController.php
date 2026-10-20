@@ -9,6 +9,7 @@ use App\Models\Report; // Assuming Report model represents chat reports
 use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\User;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -541,6 +542,137 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Performance Report: Monthly Cases + Active Users
+        |--------------------------------------------------------------------------
+        */
+
+        $monthlyPerformance = (clone $query)
+            ->selectRaw("
+                MONTH(created_at) AS month,
+                COALESCE(
+                    SUM(
+                        COALESCE(`250_ml`, 0) +
+                        COALESCE(`350_ml`, 0) +
+                        COALESCE(`600_ml`, 0) +
+                        COALESCE(`1500_ml`, 0)
+                    ),
+                    0
+                ) AS total_cases,
+                COUNT(DISTINCT user_id) AS active_users
+            ")
+            ->groupByRaw('MONTH(created_at)')
+            ->orderByRaw('MONTH(created_at)')
+            ->get()
+            ->keyBy('month');
+
+        $performanceLabels = [];
+        $performanceCases = [];
+        $performanceActiveUsers = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $performanceLabels[] = \Carbon\Carbon::create()
+                ->month($month)
+                ->locale(app()->getLocale())
+                ->translatedFormat('F');
+
+            $performanceCases[] = (int) (
+                $monthlyPerformance->get($month)->total_cases ?? 0
+            );
+
+            $performanceActiveUsers[] = (int) (
+                $monthlyPerformance->get($month)->active_users ?? 0
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Best-Selling Month
+        |--------------------------------------------------------------------------
+        */
+
+        $bestMonthIndex = null;
+
+        if (max($performanceCases) > 0) {
+            $bestMonthIndex = array_search(
+                max($performanceCases),
+                $performanceCases
+            );
+        }
+
+        $bestMonthName = $bestMonthIndex !== null
+            ? $performanceLabels[$bestMonthIndex]
+            : null;
+
+        $bestMonthCases = $bestMonthIndex !== null
+            ? $performanceCases[$bestMonthIndex]
+            : 0;
+
+        $bestMonthActiveUsers = $bestMonthIndex !== null
+            ? $performanceActiveUsers[$bestMonthIndex]
+            : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Best Selling Hour
+        |--------------------------------------------------------------------------
+        | Find the hour with the highest total cases.
+        */
+
+        $hourlyPerformance = (clone $query)
+            ->selectRaw("
+                HOUR(created_at) AS sale_hour,
+                COALESCE(
+                    SUM(
+                        COALESCE(`250_ml`, 0) +
+                        COALESCE(`350_ml`, 0) +
+                        COALESCE(`600_ml`, 0) +
+                        COALESCE(`1500_ml`, 0)
+                    ),
+                    0
+                ) AS total_cases
+            ")
+            ->groupByRaw('HOUR(created_at)')
+            ->orderByDesc('total_cases')
+            ->orderBy('sale_hour')
+            ->first();
+
+        $bestSellingHour = null;
+        $bestSellingHourCases = 0;
+
+        if ($hourlyPerformance && (int) $hourlyPerformance->total_cases > 0) {
+            $hour = (int) $hourlyPerformance->sale_hour;
+
+            $bestSellingHour = Carbon::createFromTime($hour, 0)->format('g:i A')
+                . ' - ' .
+                Carbon::createFromTime(($hour + 1) % 24, 0)->format('g:i A');
+
+            $bestSellingHourCases = (int) $hourlyPerformance->total_cases;
+        }
+
+
+        // Best-Selling Month
+        $bestUsersMonthIndex = null;
+
+        if (max($performanceActiveUsers) > 0) {
+            $bestUsersMonthIndex = array_search(
+                max($performanceActiveUsers),
+                $performanceActiveUsers
+            );
+        }
+
+        $bestUsersMonthName = $bestUsersMonthIndex !== null
+            ? $performanceLabels[$bestUsersMonthIndex]
+            : null;
+
+        $bestUsersMonthCount = $bestUsersMonthIndex !== null
+            ? $performanceActiveUsers[$bestUsersMonthIndex]
+            : 0;
+
+
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Monthly Sales
         |--------------------------------------------------------------------------
         */
@@ -864,6 +996,24 @@ class DashboardController extends Controller
             'targetPercent' => $targetPercent,
 
             'progressColor' => $progressColor,
+
+            
+            'performanceLabels' => $performanceLabels,
+            'performanceCases' => $performanceCases,
+            'performanceActiveUsers' => $performanceActiveUsers,
+
+            'bestMonthName' => $bestMonthName,
+            'bestMonthCases' => $bestMonthCases,
+            'bestMonthActiveUsers' => $bestMonthActiveUsers,
+
+            'bestSellingHour' => $bestSellingHour,
+            'bestSellingHourCases' => $bestSellingHourCases,
+
+            
+            'bestUsersMonthName' => $bestUsersMonthName,
+            'bestUsersMonthCount' => $bestUsersMonthCount,
+
+
         ]);
     }
 
