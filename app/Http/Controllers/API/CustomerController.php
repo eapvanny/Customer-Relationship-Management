@@ -1362,11 +1362,58 @@ class CustomerController extends Controller
             ->whereNotNull('longitude')
             ->where('latitude', '!=', '')
             ->where('longitude', '!=', '')
+            ->selectSub(function ($subQuery) {
+                $subQuery->from('reports')
+                    ->selectRaw('MAX(reports.date)')
+                    ->whereColumn(
+                        'reports.customer_id',
+                        'customers.id'
+                    )
+                    ->whereRaw(
+                        'COALESCE(`250_ml`, 0)
+                        + COALESCE(`350_ml`, 0)
+                        + COALESCE(`600_ml`, 0)
+                        + COALESCE(`1500_ml`, 0) > 0'
+                    );
+            }, 'last_purchase_at')
             ->get();
+            // Last purchase information
+            $lastPurchaseAt = null;
+            $hoursSincePurchase = null;
+            $daysSincePurchase = null;
+
+            if ($customers->last_purchase_at) {
+                $lastPurchase = Carbon::parse(
+                    $customers->last_purchase_at
+                );
+
+                $lastPurchaseAt = $lastPurchase->format(
+                    'd-M-Y h:i A'
+                );
+
+                $hoursSincePurchase = (int) floor(
+                    $lastPurchase->diffInMinutes(now()) / 60
+                );
+
+                $daysSincePurchase = (int) floor(
+                    $lastPurchase->diffInMinutes(now()) / 1440
+                );
+            }
+
+            // Purchase status
+            if ($hoursSincePurchase === null) {
+                $purchaseStatus = 'No Purchase';
+            } elseif ($hoursSincePurchase >= 24) {
+                $purchaseStatus = 'No Purchase for ' . $daysSincePurchase . ' days';
+            } else {
+                $purchaseStatus = 'Active';
+            }
+
 
         return response()->json([
             'status' => true,
             'data' => $customers,
+            'purchase_status' => $purchaseStatus,
         ]);
     }
 
@@ -1400,6 +1447,7 @@ class CustomerController extends Controller
                 'customers.id',
                 'customers.name',
                 'customers.phone',
+                'customers.outlet_photo',
                 'customers.area_id',
                 'customers.depo_id',
                 'customers.latitude',
@@ -1511,6 +1559,9 @@ class CustomerController extends Controller
                 'id'                   => $customer->id,
                 'name'                 => $customer->name,
                 'phone'                => $customer->phone,
+                'outlet_photo'         => $customer->outlet_photo
+                    ? asset('storage/' . $customer->outlet_photo)
+                    : null,
                 'totalCase'            => (int) $customer->total_case,
                 'code'                 => $customer->code,
                 'area_id'              => $customer->area_id,
