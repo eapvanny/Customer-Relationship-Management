@@ -1240,90 +1240,101 @@
         </div>
     </section>
 
-    <section class="mt-3">
-        <div class="row">
-            <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
-                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
-                    <h6 class="mb-2">
-                        {{ __('Best Sales Month') }}
-                    </h6>
+    @if (auth()->check() && auth()->user()->role_id == 1)
+        <section class="mt-3">
+            <div class="row">
+                {{-- Best Sales Month --}}
+                <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
+                    <div class="card"
+                        style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #39a1ea;">
+                        <h6 class="mb-2">
+                            {{ __('Best Sales Month') }}
+                        </h6>
 
-                    @if ($bestMonthName)
-                        <h4 class="text-success mb-2">
-                            {{ $bestMonthName }}
-                        </h4>
+                        @if ($bestMonthName)
+                            <h4 class="text-success mb-2">
+                                {{ $bestMonthName }}
+                            </h4>
 
-                        <p class="mb-0">
-                            {{ number_format($bestMonthCases) }}
-                            {{ __('Cases Sold') }}
-                        </p>
-                    @else
-                        <p class="text-muted mb-0">
-                            {{ __('No sales data available') }}
-                        </p>
-                    @endif
+                            <p class="mb-0">
+                                {{ number_format($bestMonthCases) }}
+                                {{ __('Cases Sold') }}
+                            </p>
+                        @else
+                            <p class="text-muted mb-0">
+                                {{ __('No sales data available') }}
+                            </p>
+                        @endif
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
-                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #2aaa91;">
-                    <h6 class="mb-2">
-                        {{ __('Peak Selling Hour') }}
-                    </h6>
 
-                    @if ($bestSellingHour)
-                        <h4 class="text-primary mb-2">
-                            {{ $bestSellingHour }}
-                        </h4>
+                {{-- Peak Selling Hour --}}
+                <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
+                    <div class="card"
+                        style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #2aaa91;">
+                        <h6 class="mb-2">
+                            {{ __('Peak Selling Hour') }}
+                        </h6>
 
-                        <p class="mb-0">
-                            {{ number_format($bestSellingHourCases) }}
-                            {{ __('Cases Sold') }}
-                        </p>
-                    @else
-                        <p class="text-muted mb-0">
-                            {{ __('No sales data available') }}
-                        </p>
-                    @endif
+                        @if ($bestSellingHour)
+                            <h4 class="text-primary mb-2">
+                                {{ $bestSellingHour }}
+                            </h4>
+
+                            <p class="mb-0">
+                                {{ number_format($bestSellingHourCases) }}
+                                {{ __('Cases Sold') }}
+                            </p>
+                        @else
+                            <p class="text-muted mb-0">
+                                {{ __('No sales data available') }}
+                            </p>
+                        @endif
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
-                <div class="card" style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #95d1d4;">
-                    <h6 class="mb-2">
-                        {{ __('Most Active Sales Month') }}
-                    </h6>
 
-                    @if ($bestUsersMonthName)
-                        <h4 class="text-info mb-2">
-                            {{ $bestUsersMonthName }}
-                        </h4>
+                {{-- Most Active Sales Month --}}
+                <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
+                    <div class="card"
+                        style="color: rgb(60, 60, 60); font-size: xx-large; border-bottom: 3px solid #95d1d4;">
+                        <h6 class="mb-2">
+                            {{ __('Most Active Sales Month') }}
+                        </h6>
 
-                        <p class="mb-0">
-                            {{ number_format($bestUsersMonthCount) }}
-                            {{ __('Active Sales Users') }}
-                        </p>
-                    @else
-                        <p class="text-muted mb-0">
-                            {{ __('No active sales data available') }}
-                        </p>
-                    @endif
+                        @if ($bestUsersMonthName)
+                            <h4 class="text-info mb-2">
+                                {{ $bestUsersMonthName }}
+                            </h4>
+
+                            <p class="mb-0">
+                                {{ number_format($bestUsersMonthCount) }}
+                                {{ __('Active Sales Users') }}
+                            </p>
+                        @else
+                            <p class="text-muted mb-0">
+                                {{ __('No active sales data available') }}
+                            </p>
+                        @endif
+                    </div>
                 </div>
-            </div>
-            <div class="col-12">
-                <div class="card mt-2 ticket-chat">
-                    <div class="card-body">
-                        <h5 class="mb-3">
-                            {{ __('Performance Report') }}
-                        </h5>
 
-                        <div style="position: relative; height: 380px;">
-                            <canvas id="performanceChart"></canvas>
+                {{-- Performance Report Chart --}}
+                <div class="col-12">
+                    <div class="card mt-2 ticket-chat">
+                        <div class="card-body">
+                            <h5 class="mb-3">
+                                {{ __('Performance Report') }}
+                            </h5>
+
+                            <div style="position: relative; height: 380px;">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-        </div>
-    </section>
+        </section>
+    @endif
 @endsection
 
 @section('extraScript')

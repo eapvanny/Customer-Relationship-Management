@@ -855,10 +855,24 @@ class CustomerController extends Controller
 
     public function map()
     {
-        $customers = Customer::query()
-            ->select(['id', 'area_id', 'user_id', 'depo_id'])
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        // Apply customer permissions from AppHelper
+        $customers = AppHelper::getCustomerQueryUnderManagement(
+            request(),
+            $user
+        )
+            ->select([
+                'customers.id',
+                'customers.area_id',
+                'customers.user_id',
+                'customers.depo_id',
+            ])
             ->get();
 
+        // Areas available to the logged-in user
         $areas = $customers
             ->pluck('area_id')
             ->filter()
@@ -871,7 +885,9 @@ class CustomerController extends Controller
 
         $userLang = session('user_lang', 'kh');
 
-        $userIds = $customers->pluck('user_id')
+        // Users associated with permitted customers
+        $userIds = $customers
+            ->pluck('user_id')
             ->filter()
             ->unique()
             ->values();
@@ -890,16 +906,21 @@ class CustomerController extends Controller
             ->get()
             ->mapWithKeys(function ($user) use ($userLang) {
                 $name = $userLang === 'en'
-                    ? trim(($user->family_name_latin ?? '') . ' ' .
-                        ($user->name_latin ?? ''))
-                    : trim(($user->family_name ?? '') . ' ' .
-                        ($user->name ?? ''));
+                    ? trim(
+                        ($user->family_name_latin ?? '') . ' ' .
+                        ($user->name_latin ?? '')
+                    )
+                    : trim(
+                        ($user->family_name ?? '') . ' ' .
+                        ($user->name ?? '')
+                    );
 
                 return [
                     $user->id => $name . ' (' . ($user->area ?? '-') . ')',
                 ];
             });
 
+        // Depos associated with permitted customers
         $depos = Depo::query()
             ->whereIn(
                 'id',
@@ -916,6 +937,16 @@ class CustomerController extends Controller
     }
     public function mapMarkers()
     {
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        // Apply customer management permissions.
+        $query = AppHelper::getCustomerQueryUnderManagement(
+            request(),
+            $user
+        );
+
         // Latest report date for reports with at least one bottle sold.
         $lastPurchases = DB::table('reports')
             ->select('customer_id')
@@ -928,7 +959,7 @@ class CustomerController extends Controller
             ')
             ->groupBy('customer_id');
 
-        $customers = Customer::query()
+        $customers = $query
             ->leftJoinSub(
                 $lastPurchases,
                 'last_purchases',
@@ -986,105 +1017,112 @@ class CustomerController extends Controller
         ]);
     }
     public function mapCustomerDetails($id)
-{
-    $userLang = session('user_lang', 'kh');
+    {
+        $user = auth()->user();
 
-    $customer = Customer::query()
-        ->where('id', $id)
-        ->whereNotNull('latitude')
-        ->whereNotNull('longitude')
-        ->where('latitude', '!=', 0)
-        ->where('longitude', '!=', 0)
-        ->select([
-            'id',
-            'name',
-            'phone',
-            'area_id',
-            'depo_id',
-            'latitude',
-            'longitude',
-            'city',
-            'country',
-            'code',
-            'user_id',
-        ])
-        ->with([
-            'user:id,name,family_name,name_latin,family_name_latin,area',
-            'depo:id,name',
-        ])
-        ->firstOrFail();
+        abort_unless($user, 401);
 
-    $lastPurchaseAt = DB::table('reports')
-        ->where('customer_id', $customer->id)
-        ->whereRaw('
-            COALESCE(`250_ml`, 0)
-            + COALESCE(`350_ml`, 0)
-            + COALESCE(`600_ml`, 0)
-            + COALESCE(`1500_ml`, 0) > 0
-        ')
-        ->max('date');
+        $userLang = session('user_lang', 'kh');
 
-    $hoursSincePurchase = null;
-    $daysSincePurchase = null;
+        $customer = AppHelper::getCustomerQueryUnderManagement(
+            request(),
+            $user
+        )
+            ->where('customers.id', $id)
+            ->whereNotNull('customers.latitude')
+            ->whereNotNull('customers.longitude')
+            ->where('customers.latitude', '!=', 0)
+            ->where('customers.longitude', '!=', 0)
+            ->select([
+                'customers.id',
+                'customers.name',
+                'customers.phone',
+                'customers.area_id',
+                'customers.depo_id',
+                'customers.latitude',
+                'customers.longitude',
+                'customers.city',
+                'customers.country',
+                'customers.code',
+                'customers.user_id',
+            ])
+            ->with([
+                'user:id,name,family_name,name_latin,family_name_latin,area',
+                'depo:id,name',
+            ])
+            ->firstOrFail();
 
-    if ($lastPurchaseAt) {
-        $lastPurchase = Carbon::parse($lastPurchaseAt);
+        $lastPurchaseAt = DB::table('reports')
+            ->where('customer_id', $customer->id)
+            ->whereRaw('
+                COALESCE(`250_ml`, 0)
+                + COALESCE(`350_ml`, 0)
+                + COALESCE(`600_ml`, 0)
+                + COALESCE(`1500_ml`, 0) > 0
+            ')
+            ->max('date');
 
-        $hoursSincePurchase = max(
-            0,
-            (int) floor($lastPurchase->diffInMinutes(now()) / 60)
-        );
+        $hoursSincePurchase = null;
+        $daysSincePurchase = null;
 
-        $daysSincePurchase = max(
-            0,
-            (int) floor($lastPurchase->diffInMinutes(now()) / 1440)
-        );
+        if ($lastPurchaseAt) {
+            $lastPurchase = Carbon::parse($lastPurchaseAt);
 
-        $lastPurchaseAt = $lastPurchase->format('d-M-Y h:i A');
+            $hoursSincePurchase = max(
+                0,
+                (int) floor($lastPurchase->diffInMinutes(now()) / 60)
+            );
+
+            $daysSincePurchase = max(
+                0,
+                (int) floor($lastPurchase->diffInMinutes(now()) / 1440)
+            );
+
+            $lastPurchaseAt = $lastPurchase->format('d-M-Y h:i A');
+        }
+
+        $purchaseStatus = match (true) {
+            $hoursSincePurchase === null => 'unknown',
+            $hoursSincePurchase >= 72 => 'overdue',
+            $hoursSincePurchase >= 24 => 'warning',
+            default => 'active',
+        };
+
+        $user = $customer->user;
+
+        $userName = '-';
+
+        if ($user) {
+            $userName = $userLang === 'en'
+                ? trim(($user->family_name_latin ?? '') . ' ' .
+                    ($user->name_latin ?? ''))
+                : trim(($user->family_name ?? '') . ' ' .
+                    ($user->name ?? ''));
+        }
+
+        return response()->json([
+            'data' => [
+                'id'                   => $customer->id,
+                'name'                 => $customer->name,
+                'phone'                => $customer->phone,
+                'code'                 => $customer->code,
+                'area_id'              => $customer->area_id,
+                'depo_id'              => $customer->depo_id,
+                'user_id'              => $customer->user_id,
+                'latitude'             => (float) $customer->latitude,
+                'longitude'            => (float) $customer->longitude,
+                'city'                 => $customer->city,
+                'country'              => $customer->country,
+                'user_name'            => $userName ?: '-',
+                'user_area'            => $user->area ?? '-',
+                'depo_name'            => $customer->depo->name ?? '-',
+                'last_purchase_at'     => $lastPurchaseAt,
+                'days_since_purchase'  => $daysSincePurchase,
+                'hours_since_purchase' => $hoursSincePurchase,
+                'purchase_status'      => $purchaseStatus,
+            ],
+        ]);
     }
-
-    $purchaseStatus = match (true) {
-        $hoursSincePurchase === null => 'unknown',
-        $hoursSincePurchase >= 72 => 'overdue',
-        $hoursSincePurchase >= 24 => 'warning',
-        default => 'active',
-    };
-
-    $user = $customer->user;
-
-    $userName = '-';
-
-    if ($user) {
-        $userName = $userLang === 'en'
-            ? trim(($user->family_name_latin ?? '') . ' ' .
-                ($user->name_latin ?? ''))
-            : trim(($user->family_name ?? '') . ' ' .
-                ($user->name ?? ''));
-    }
-
-    return response()->json([
-        'data' => [
-            'id'                   => $customer->id,
-            'name'                 => $customer->name,
-            'phone'                => $customer->phone,
-            'code'                 => $customer->code,
-            'area_id'              => $customer->area_id,
-            'depo_id'              => $customer->depo_id,
-            'user_id'              => $customer->user_id,
-            'latitude'             => (float) $customer->latitude,
-            'longitude'            => (float) $customer->longitude,
-            'city'                 => $customer->city,
-            'country'              => $customer->country,
-            'user_name'            => $userName ?: '-',
-            'user_area'            => $user->area ?? '-',
-            'depo_name'            => $customer->depo->name ?? '-',
-            'last_purchase_at'     => $lastPurchaseAt,
-            'days_since_purchase'  => $daysSincePurchase,
-            'hours_since_purchase' => $hoursSincePurchase,
-            'purchase_status'      => $purchaseStatus,
-        ],
-    ]);
-}
 
     public function destroy($id)
     {

@@ -442,5 +442,6 @@
     "Purchase" : "ទិញ",
     "No Purchase for" : "មិនបានទិញទរយះពេល",
     "days" : "ថ្ងៃ",
-    "Purchase Status" : "ស្ថានភាពការទិញ"
+    "Purchase Status" : "ស្ថានភាពការទិញ",
+    "( Show areas, users, and depots that contain only customer data )" : "(បង្ហាញតំបន់ អ្នកប្រើប្រាស់ និងដេប៉ូដែលមានទិន្នន័យអតិថិជនតែប៉ុណ្ណោះ)"
 }

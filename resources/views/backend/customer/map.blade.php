@@ -202,7 +202,7 @@
             <div class="header">
                 <h4 class="mb-0">
                     <i class="fas fa-map-marked-alt"></i>
-                    <b>{{ __('Customer Location') }}</b>
+                    <b>{{ __('Customer Location') }} <span style="font-size:18px" class="text-danger">{{__('( Show areas, users, and depots that contain only customer data )')}}</span></b>
                 </h4>
             </div>
 
