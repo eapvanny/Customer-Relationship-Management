@@ -1338,7 +1338,7 @@ class CustomerController extends Controller
         // Authentication
         if (!$user) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Unauthenticated',
             ], 401);
         }
@@ -1349,19 +1349,21 @@ class CustomerController extends Controller
             $user
         );
 
-        // Return customers with valid coordinates
+        // Get customers with valid coordinates and their latest purchase date
         $customers = $query
+            ->whereNotNull('customers.latitude')
+            ->whereNotNull('customers.longitude')
+            ->where('customers.latitude', '!=', '')
+            ->where('customers.longitude', '!=', '')
+            ->where('customers.latitude', '!=', 0)
+            ->where('customers.longitude', '!=', 0)
             ->select([
-                'id',
-                'name',
-                'latitude',
-                'longitude',
-                'phone',
+                'customers.id',
+                'customers.name',
+                'customers.latitude',
+                'customers.longitude',
+                'customers.phone',
             ])
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
-            ->where('latitude', '!=', '')
-            ->where('longitude', '!=', '')
             ->selectSub(function ($subQuery) {
                 $subQuery->from('reports')
                     ->selectRaw('MAX(reports.date)')
@@ -1369,51 +1371,69 @@ class CustomerController extends Controller
                         'reports.customer_id',
                         'customers.id'
                     )
-                    ->whereRaw(
-                        'COALESCE(`250_ml`, 0)
+                    ->whereRaw('
+                        COALESCE(`250_ml`, 0)
                         + COALESCE(`350_ml`, 0)
                         + COALESCE(`600_ml`, 0)
-                        + COALESCE(`1500_ml`, 0) > 0'
-                    );
+                        + COALESCE(`1500_ml`, 0) > 0
+                    ');
             }, 'last_purchase_at')
             ->get();
-            // Last purchase information
+
+        // Calculate purchase information for each customer
+        $customers->transform(function ($customer) {
             $lastPurchaseAt = null;
             $hoursSincePurchase = null;
             $daysSincePurchase = null;
 
-            if ($customers->last_purchase_at) {
+            if ($customer->last_purchase_at) {
                 $lastPurchase = Carbon::parse(
-                    $customers->last_purchase_at
+                    $customer->last_purchase_at
                 );
 
                 $lastPurchaseAt = $lastPurchase->format(
                     'd-M-Y h:i A'
                 );
 
+                $minutesSincePurchase = max(
+                    0,
+                    (int) floor(
+                        $lastPurchase->diffInMinutes(now())
+                    )
+                );
+
                 $hoursSincePurchase = (int) floor(
-                    $lastPurchase->diffInMinutes(now()) / 60
+                    $minutesSincePurchase / 60
                 );
 
                 $daysSincePurchase = (int) floor(
-                    $lastPurchase->diffInMinutes(now()) / 1440
+                    $minutesSincePurchase / 1440
                 );
             }
 
-            // Purchase status
+            // Purchase status for this customer
             if ($hoursSincePurchase === null) {
                 $purchaseStatus = 'No Purchase';
             } elseif ($hoursSincePurchase >= 24) {
-                $purchaseStatus = 'No Purchase for ' . $daysSincePurchase . ' days';
+                $purchaseStatus = 'No Purchase for '
+                    . $daysSincePurchase
+                    . ' days';
             } else {
                 $purchaseStatus = 'Active';
             }
 
+            // Append calculated fields to the customer response
+            $customer->last_purchase_at = $lastPurchaseAt;
+            $customer->hours_since_purchase = $hoursSincePurchase;
+            $customer->days_since_purchase = $daysSincePurchase;
+            $customer->purchase_status = $purchaseStatus;
+
+            return $customer;
+        });
 
         return response()->json([
             'status' => true,
-            'data' => $customers,
-            'purchase_status' => $purchaseStatus,
+            'data'   => $customers,
         ]);
     }
 
