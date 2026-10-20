@@ -359,7 +359,7 @@ class CustomerController extends Controller
 
                         return '<span class="text-warning" title="' .
                             e($lastPurchase->format('d-M-Y h:i A')) . '">'.
-                            __('Warning') . ' (' . $days . ' ' . __('days') . ')
+                            __('No Purchase for') . ' (' . $days . ' ' . __('days') . ')
                             </span>';
                     }
 

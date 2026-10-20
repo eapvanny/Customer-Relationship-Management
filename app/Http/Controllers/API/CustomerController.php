@@ -1498,13 +1498,11 @@ class CustomerController extends Controller
 
         // Purchase status
         if ($hoursSincePurchase === null) {
-            $purchaseStatus = 'unknown';
-        } elseif ($hoursSincePurchase >= 72) {
-            $purchaseStatus = 'overdue';
+            $purchaseStatus = 'No Purchase';
         } elseif ($hoursSincePurchase >= 24) {
-            $purchaseStatus = 'warning';
+            $purchaseStatus = 'No Purchase for ' . $daysSincePurchase . ' days';
         } else {
-            $purchaseStatus = 'active';
+            $purchaseStatus = 'Active';
         }
 
         return response()->json([
