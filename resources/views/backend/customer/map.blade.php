@@ -299,8 +299,13 @@
     <script>
         $(document).ready(function() {
 
-            const customers = @json($customers);
+            let customers = [];
 
+            const markersUrl = @json(route('customers.map.markers'));
+
+            const customerDetailsUrl = @json(
+                url('/customers/map')
+            );
             /*
             |--------------------------------------------------------------------------
             | Map
@@ -545,19 +550,19 @@
             */
 
             function renderMarkers(data) {
-
                 markerLayer.clearLayers();
 
                 const markers = [];
 
-                data.forEach(function(customer) {
-
-                    const latitude = parseFloat(customer.latitude);
-                    const longitude = parseFloat(customer.longitude);
+                data.forEach(function (customer) {
+                    const latitude = Number(customer.latitude);
+                    const longitude = Number(customer.longitude);
 
                     if (
                         !Number.isFinite(latitude) ||
-                        !Number.isFinite(longitude)
+                        !Number.isFinite(longitude) ||
+                        latitude === 0 ||
+                        longitude === 0
                     ) {
                         return;
                     }
@@ -569,64 +574,69 @@
                         }
                     );
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Create popup only when marker is clicked
-                    |--------------------------------------------------------------------------
-                    */
+                    // Do not load full customer details until clicked.
+                    marker.bindPopup(
+                        '<div class="customer-popup">Loading customer details...</div>'
+                    );
 
-                    marker.bindPopup(function() {
-                        return createPopup(customer);
+                    marker.on('click', async function () {
+                        // Show the loading popup immediately.
+                        marker.setPopupContent(
+                            '<div class="customer-popup">Loading customer details...</div>'
+                        );
+
+                        try {
+                            const response = await fetch(
+                                `${customerDetailsUrl}/${customer.id}/details`,
+                                {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    credentials: 'same-origin'
+                                }
+                            );
+
+                            if (!response.ok) {
+                                throw new Error(
+                                    `Unable to load customer details (${response.status})`
+                                );
+                            }
+
+                            const result = await response.json();
+                            const details = result.data;
+
+                            // Reuse your existing popup builder.
+                            marker.setPopupContent(createPopup(details));
+
+                        } catch (error) {
+                            console.error(error);
+
+                            marker.setPopupContent(
+                                '<div class="customer-popup">' +
+                                'Unable to load customer details. Please try again.' +
+                                '</div>'
+                            );
+                        }
                     });
 
                     markers.push(marker);
                 });
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Add all markers
-                |--------------------------------------------------------------------------
-                */
-
                 markerLayer.addLayers(markers);
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Fit bounds
-                |--------------------------------------------------------------------------
-                */
-
                 if (markers.length > 0) {
-
                     const group = L.featureGroup(markers);
 
-                    map.fitBounds(
-                        group.getBounds(), {
-                            padding: [30, 30],
-                            maxZoom: 16
-                        }
-                    );
-
+                    map.fitBounds(group.getBounds(), {
+                        padding: [30, 30],
+                        maxZoom: 16
+                    });
                 } else {
-
-                    map.setView(
-                        [11.5564, 104.9282],
-                        12
-                    );
+                    map.setView([11.5564, 104.9282], 12);
                 }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Fix Leaflet size
-                |--------------------------------------------------------------------------
-                */
-
-                setTimeout(function() {
-                    map.invalidateSize();
-                }, 200);
+                map.invalidateSize();
             }
 
 
@@ -731,7 +741,28 @@
             |--------------------------------------------------------------------------
             */
 
-            renderMarkers(customers);
+            fetch(markersUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Unable to load customer markers.');
+                }
+
+                return response.json();
+            })
+            .then(function (result) {
+                customers = result.data || [];
+                renderMarkers(customers);
+            })
+            .catch(function (error) {
+                console.error(error);
+                alert('Unable to load customer locations. Please refresh the page.');
+            });
 
 
             /*

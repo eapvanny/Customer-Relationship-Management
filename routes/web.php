@@ -146,6 +146,15 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
 
     Route::get('/customers/map', [CustomerController::class, 'map'])
     ->name('customers.map');
+    Route::get('/customers/map/markers', [
+        CustomerController::class,
+        'mapMarkers',
+    ])->name('customers.map.markers');
+
+    Route::get('/customers/map/{id}/details', [
+        CustomerController::class,
+        'mapCustomerDetails',
+    ])->whereNumber('id')->name('customers.map.details');
     
     //Depo
     Route::resource('depo', DepoController::class);
