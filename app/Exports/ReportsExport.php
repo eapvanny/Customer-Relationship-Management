@@ -956,6 +956,7 @@ class ReportsExport implements
             'Customer Code',
             'SO Number',
             'SO Date',
+            'SO Time',
             '250ml (Case)',
             '350ml (Case)',
             '600ml (Case)',
@@ -1436,7 +1437,10 @@ class ReportsExport implements
 
             // 14
             $row->date
-                ? Carbon::parse($row->date)->format('h:i A | d-M-Y')
+                ? Carbon::parse($row->date)->format('d-M-Y')
+                : '',
+            $row->date
+                ? Carbon::parse($row->date)->format('H:i A')
                 : '',
 
             // 15
@@ -1734,14 +1738,14 @@ class ReportsExport implements
             */
 
                 $sheet
-                    ->getStyle("W2:W{$highestRow}")
+                    ->getStyle("X2:X{$highestRow}")
                     ->getFont()
                     ->setUnderline('single')
                     ->getColor()
                     ->setARGB('FF0000FF');
 
                 $sheet
-                    ->getStyle("X2:X{$highestRow}")
+                    ->getStyle("Y2:Y{$highestRow}")
                     ->getFont()
                     ->setUnderline('single')
                     ->getColor()
@@ -1756,7 +1760,7 @@ class ReportsExport implements
                 $totalRow = $highestRow + 1;
 
                 $sheet->mergeCells(
-                    "A{$totalRow}:N{$totalRow}"
+                    "A{$totalRow}:O{$totalRow}"
                 );
 
                 $sheet->setCellValue(
@@ -1769,11 +1773,6 @@ class ReportsExport implements
             | Bottle totals
             |--------------------------------------------------------------------------
             */
-
-                $sheet->setCellValue(
-                    "O{$totalRow}",
-                    "=SUM(O2:O{$highestRow})"
-                );
 
                 $sheet->setCellValue(
                     "P{$totalRow}",
@@ -1793,6 +1792,11 @@ class ReportsExport implements
                 $sheet->setCellValue(
                     "S{$totalRow}",
                     "=SUM(S2:S{$highestRow})"
+                );
+
+                $sheet->setCellValue(
+                    "T{$totalRow}",
+                    "=SUM(T2:T{$highestRow})"
                 );
 
                 /*
