@@ -415,6 +415,9 @@ class CustomerController extends Controller
                         ),
 
                         'phone' => (string) $customer->phone,
+                        'outlet_photo' => $customer->outlet_photo
+                            ? asset('storage/' . $customer->outlet_photo)
+                            : null,
                     ];
                 })
                 ->values(),
