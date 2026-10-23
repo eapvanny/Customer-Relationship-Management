@@ -35,6 +35,7 @@ class Report extends Model
         'qty3',
         'photo',
         'outlet_photo',
+        'photo_stock',
         'manager_id',
         'so_number',
         'driver_id',

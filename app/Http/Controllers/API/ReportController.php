@@ -444,6 +444,8 @@ class ReportController extends Controller
                 'customer_name' => optional($report->customer)->name
                     ?? $report->customer_name
                     ?? 'N/A',
+                'latitude_cus' => $report->customer->latitude ?? 'N/A',
+                'longitude_cus' => $report->customer->longitude ?? 'N/A',
                 'customer_code' => optional($report->customer)->code ?? 'N/A',
                 'customer_type' => $report->customer_type
                     ? (AppHelper::CUSTOMER_TYPE[$report->customer_type] ?? 'N/A')
@@ -533,7 +535,7 @@ class ReportController extends Controller
         }
 
         $customers = $query
-            ->select('id', 'name','phone')
+            ->select('id', 'name','phone','latitude','longitude')
             ->orderBy('name')
             ->get();
 
@@ -735,6 +737,178 @@ class ReportController extends Controller
             ], 500);
         }
     }
+
+    public function storenew(Request $request)
+    {
+        try {
+
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            // Get valid area ids
+            $areaIds = Cache::rememberForever('area_ids', function () {
+                return collect(AppHelper::getAreas())
+                    ->flatMap(fn($group) => array_keys($group))
+                    ->toArray();
+            });
+
+            $validator = Validator::make($request->all(), [
+                'area_id' => ['required', Rule::in($areaIds)],
+                'outlet_id' => 'required',
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+                'city' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+
+                'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+
+                'outlet_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+                'photo_stock' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+
+                'customer_id' => 'required|exists:customers,id',
+                'customer_type' => 'required',
+
+                '250_ml' => 'nullable|integer',
+                '350_ml' => 'nullable|integer',
+                '600_ml' => 'nullable|integer',
+                '1500_ml' => 'nullable|integer',
+                'other' => 'nullable|string',
+
+                'qty' => 'nullable|integer',
+                'posm' => 'nullable',
+                'qty2' => 'nullable|integer',
+                'posm2' => 'nullable',
+                'qty3' => 'nullable|integer',
+                'posm3' => 'nullable',
+            ]);
+
+            if (!$request->hasFile('outlet_photo') && !$request->filled('outlet_photo_base64')) {
+                $validator->after(function ($validator) {
+                    $validator->errors()->add('outlet_photo', 'Outlet photo is required.');
+                });
+            }
+
+            if (!$request->hasFile('photo_stock') && !$request->filled('photo_stock_base64')) {
+                $validator->after(function ($validator) {
+                    $validator->errors()->add('photo_stock', 'Stock photo is required.');
+                });
+            }
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $prefix = AppHelper::getAreaNameById($request->area);
+
+            $data = [
+                'user_id' => $user->id,
+                'area_id' => $request->area,
+                'outlet_id' => $request->outlet_id,
+                'customer_id' => $request->customer_id,
+                'customer_type' => $request->customer_type,
+                'date' => now('Asia/Phnom_Penh'),
+
+                '250_ml' => $request->input('250_ml'),
+                '350_ml' => $request->input('350_ml'),
+                '600_ml' => $request->input('600_ml'),
+                '1500_ml' => $request->input('1500_ml'),
+                'other' => $request->other,
+
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'city' => $request->city,
+                'address' => $request->address,
+                'country' => $request->country,
+
+                'qty' => $request->qty,
+                'posm' => $request->posm,
+                'qty2' => $request->qty2,
+                'posm2' => $request->posm2,
+                'qty3' => $request->qty3,
+                'posm3' => $request->posm3,
+            ];
+
+            // Photo
+            if ($request->hasFile('photo')) {
+
+                $file = 'uploads/photo_' . time() . '_' . Str::random(8) . '.jpg';
+
+                Storage::put(
+                    $file,
+                    AppHelper::resizeToSpecificSize(
+                        $request->file('photo'),
+                        1024,
+                        1024,
+                        70
+                    )
+                );
+
+                $data['photo'] = $file;
+            } 
+            // Outlet Photo
+            if ($request->hasFile('outlet_photo')) {
+
+                $file = 'uploads/outlet_' . time() . '_' . Str::random(8) . '.jpg';
+
+                Storage::put(
+                    $file,
+                    AppHelper::resizeToSpecificSize(
+                        $request->file('outlet_photo'),
+                        1024,
+                        1024,
+                        70
+                    )
+                );
+
+                $data['outlet_photo'] = $file;
+            } 
+            // Stock Photo
+            if ($request->hasFile('photo_stock')) {
+
+                $file = 'uploads/stock_' . time() . '_' . Str::random(8) . '.jpg';
+
+                Storage::put(
+                    $file,
+                    AppHelper::resizeToSpecificSize(
+                        $request->file('photo_stock'),
+                        1024,
+                        1024,
+                        70
+                    )
+                );
+
+                $data['photo_stock'] = $file;
+            }
+            $report = Report::create($data);
+
+            $report->update([
+                'so_number' => $prefix . '-' . str_pad($report->id, 7, '0', STR_PAD_LEFT),
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Report created successfully.',
+                'data' => $report
+            ], 201);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
 
     public function storeConsumer(Request $request)
     {
