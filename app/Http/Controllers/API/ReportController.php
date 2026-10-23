@@ -460,10 +460,13 @@ class ReportController extends Controller
                 'formatted_date' => Carbon::parse($report->date)->format('d M, Y h:i A'),
                 'sale_photo_url' => $report->outlet_photo
                     ? asset('storage/' . $report->outlet_photo)
-                    : asset('images/avatar.png'),
+                    : null,
+                'photo_stock_url' => $report->photo_stock
+                    ? asset('storage/' . $report->photo_stock)
+                    : null,
                 'posm_photo_url' => $report->photo
                     ? asset('storage/' . $report->photo)
-                    : asset('images/avatar.png'),
+                    : null,
                 'material_type' => isset(AppHelper::MATERIAL[$report->posm])
                     ? __(AppHelper::MATERIAL[$report->posm])
                     : ($report->posm_name1 ?? 'N/A'),
