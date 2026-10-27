@@ -844,6 +844,12 @@
                         {{-- Filters --}}
                         <div class="col-12 col-xl-7">
                             <form method="GET" action="{{ url()->current() }}">
+                                 {{-- Preserve Employee Filter --}}
+                                    <input
+                                        type="hidden"
+                                        name="employee_id"
+                                        value="{{ request('employee_id', $selectedEmployeeId ?? 'all') }}"
+                                    >
                                 <div class="crm-filter-wrapper">
 
                                     {{-- Year --}}
@@ -857,14 +863,15 @@
                                             id="year"
                                             class="form-control select2 crm-control"
                                         >
-                                            <option value="all" {{ request('year', now()->year) === 'all' ? 'selected' : '' }}>
+                                            <option value="all"
+                                                {{ request('year', 'all') === 'all' ? 'selected' : '' }}>
                                                 {{ __('All') }}
                                             </option>
 
                                             @for ($year = 2024; $year <= now()->year; $year++)
                                                 <option
                                                     value="{{ $year }}"
-                                                    {{ (string) request('year', now()->year) === (string) $year ? 'selected' : '' }}
+                                                    {{ (string) request('year', 'all') === (string) $year ? 'selected' : '' }}
                                                 >
                                                     {{ $year }}
                                                 </option>
@@ -985,44 +992,58 @@
                     action="{{ url()->current() }}"
                     class="sales-target-filter-form">
 
+                    {{-- Preserve Year --}}
+                    <input
+                        type="hidden"
+                        name="year"
+                        value="{{ request('year', 'all') }}"
+                    >
+
+                    {{-- Preserve From Date --}}
+                    <input
+                        type="hidden"
+                        name="from_date"
+                        value="{{ request('from_date') }}"
+                    >
+
+                    {{-- Preserve To Date --}}
+                    <input
+                        type="hidden"
+                        name="to_date"
+                        value="{{ request('to_date') }}"
+                    >
+
                     <div class="form-group mb-0">
-
-                        <select name="employee_id"
-                                id="employee_id"
-                                class="form-control select2 sales-target-filter"
-                                onchange="this.form.submit()">
-
-                            <option value="">
-                                {{ __('Select Employee') }}
+                        <select
+                            name="employee_id"
+                            id="employee_id"
+                            class="form-control select2"
+                            onchange="this.form.submit()"
+                        >
+                            <option value="all"
+                                {{ ($selectedEmployeeId ?? 'all') === 'all' ? 'selected' : '' }}>
+                                {{ __('All Employees') }}
                             </option>
 
-                            @foreach($allUsersEmployee as $employee)
-
-                                <option value="{{ $employee->id }}"
-                                    {{ (int) $selectedEmployeeId === (int) $employee->id ? 'selected' : '' }}>
-
+                            @foreach ($allUsersEmployee as $employee)
+                                <option
+                                    value="{{ $employee->id }}"
+                                    {{ (string) ($selectedEmployeeId ?? 'all') === (string) $employee->id ? 'selected' : '' }}
+                                >
                                     . {{ $employee->display_name }}
-
-                                    @if($employee->rsm_name)
+                                    @if ($employee->rsm_name)
                                         | RSM: {{ $employee->rsm_name }}
                                     @endif
-
-                                    @if($employee->asm_name)
+                                    @if ($employee->asm_name)
                                         | ASM: {{ $employee->asm_name }}
                                     @endif
-
-                                    @if($employee->sup_name)
+                                    @if ($employee->sup_name)
                                         | SUP: {{ $employee->sup_name }}
                                     @endif
-
                                 </option>
-
                             @endforeach
-
                         </select>
-
                     </div>
-
                 </form>
 
 

@@ -302,6 +302,58 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Top Employee
+        |--------------------------------------------------------------------------
+        */
+
+        // $topEmployee = $employeeSales->first();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selected Employee
+        |--------------------------------------------------------------------------
+        */
+
+        $selectedEmployeeId = request()->input('employee_id', 'all');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get IDs Of Employees In Dropdown
+        |--------------------------------------------------------------------------
+        */
+
+        $allowedEmployeeIds = $allUsersEmployee
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Selection
+        |--------------------------------------------------------------------------
+        | Default = all employees
+        | Invalid employee ID = all employees
+        */
+
+        if (
+            $selectedEmployeeId !== 'all' &&
+            (
+                !is_numeric($selectedEmployeeId) ||
+                !in_array(
+                    (int) $selectedEmployeeId,
+                    $allowedEmployeeIds,
+                    true
+                )
+            )
+        ) {
+            $selectedEmployeeId = 'all';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | Get RSM / ASM / SUP User IDs
         |--------------------------------------------------------------------------
         */
@@ -499,44 +551,68 @@ class DashboardController extends Controller
         $allCustomers = number_format($allCustomersQuery->count());
         
 
+        // Start with the existing report query.
+        // This preserves the management hierarchy and date filters.
+        $chartQuery = clone $query;
+
+        // Only include employees available in the dropdown.
+        $chartQuery->whereIn('user_id', $allowedEmployeeIds);
+
+        // Apply the selected employee filter.
+        if ($selectedEmployeeId !== 'all') {
+            $chartQuery->where(
+                'user_id',
+                (int) $selectedEmployeeId
+            );
+        }
+
         /*
         |--------------------------------------------------------------------------
-        | Monthly Report Data
+        | Monthly Total SO
         |--------------------------------------------------------------------------
         */
 
-        $monthlyChatReports = (clone $query)
-            ->selectRaw(
-                'EXTRACT(MONTH FROM created_at) as month,
-                COUNT(id) as count'
-            )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->pluck('count', 'month')
+        $monthlyReportCounts = (clone $chartQuery)
+            ->selectRaw('MONTH(created_at) AS month, COUNT(*) AS total')
+            ->groupByRaw('MONTH(created_at)')
+            ->orderByRaw('MONTH(created_at)')
+            ->pluck('total', 'month')
             ->toArray();
 
         $monthlyData = [];
 
-        for ($i = 1; $i <= 12; $i++) {
-            $monthlyData[] = $monthlyChatReports[$i] ?? 0;
+        for ($month = 1; $month <= 12; $month++) {
+            $monthlyData[] = (int) ($monthlyReportCounts[$month] ?? 0);
         }
-        $monthlyCaseReports = (clone $query)
-            ->selectRaw(
-                'EXTRACT(MONTH FROM created_at) as month,
-                COALESCE(SUM(`250_ml`), 0) +
-                COALESCE(SUM(`350_ml`), 0) +
-                COALESCE(SUM(`600_ml`), 0) +
-                COALESCE(SUM(`1500_ml`), 0) AS total_case'
-            )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->pluck('total_case', 'month')
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Total Cases
+        |--------------------------------------------------------------------------
+        */
+
+        $monthlyCaseCounts = (clone $chartQuery)
+            ->selectRaw("
+                MONTH(created_at) AS month,
+                COALESCE(
+                    SUM(
+                        COALESCE(`250_ml`, 0) +
+                        COALESCE(`350_ml`, 0) +
+                        COALESCE(`600_ml`, 0) +
+                        COALESCE(`1500_ml`, 0)
+                    ),
+                    0
+                ) AS total_cases
+            ")
+            ->groupByRaw('MONTH(created_at)')
+            ->orderByRaw('MONTH(created_at)')
+            ->pluck('total_cases', 'month')
             ->toArray();
 
         $monthlyCaseData = [];
 
-        for ($i = 1; $i <= 12; $i++) {
-            $monthlyCaseData[] = $monthlyCaseReports[$i] ?? 0;
+        for ($month = 1; $month <= 12; $month++) {
+            $monthlyCaseData[] = (int) ($monthlyCaseCounts[$month] ?? 0);
         }
 
 
@@ -757,70 +833,136 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Top Employee
+        | Apply Selected Employee To Dashboard Cards
+        |--------------------------------------------------------------------------
+        | $query already contains management permissions and date filters.
         |--------------------------------------------------------------------------
         */
 
-        $topEmployee = $employeeSales->first();
+        $dashboardQuery = clone $query;
 
+        // Only count reports belonging to employees in the dropdown.
+        $dashboardQuery->whereIn('user_id', $allowedEmployeeIds);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Selected Employee
-        |--------------------------------------------------------------------------
-        */
-
-        $selectedEmployeeId = request()->input('employee_id');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Get IDs Of Employees In Dropdown
-        |--------------------------------------------------------------------------
-        */
-
-        $allowedEmployeeIds = $allUsersEmployee
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->toArray();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate Selected Employee
-        |--------------------------------------------------------------------------
-        |
-        | If employee_id is empty OR employee is not under current manager,
-        | automatically select the highest-selling employee.
-        |
-        */
-
-        if (
-            !$selectedEmployeeId ||
-            !in_array(
-                (int) $selectedEmployeeId,
-                $allowedEmployeeIds,
-                true
-            )
-        ) {
-
-            $selectedEmployeeId = $topEmployee->user_id ?? null;
+        if ($selectedEmployeeId !== 'all') {
+            $dashboardQuery->where(
+                'user_id',
+                (int) $selectedEmployeeId
+            );
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | Selected Employee Sales
+        | Total SO
         |--------------------------------------------------------------------------
         */
 
-        $selectedEmployeeSale = $employeeSales
-            ->firstWhere(
+        $allReports = number_format(
+            (clone $dashboardQuery)->count()
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Case
+        |--------------------------------------------------------------------------
+        */
+
+        $caseExpression = '
+            COALESCE(`250_ml`, 0) +
+            COALESCE(`350_ml`, 0) +
+            COALESCE(`600_ml`, 0) +
+            COALESCE(`1500_ml`, 0)
+        ';
+
+        $totalCaseValue = (clone $dashboardQuery)
+            ->selectRaw("COALESCE(SUM($caseExpression), 0) AS total_case")
+            ->value('total_case');
+
+        $totalCase = number_format((int) $totalCaseValue);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Today Case
+        |--------------------------------------------------------------------------
+        */
+
+        $todayQuery = (clone $dashboardQuery)
+            ->whereDate('created_at', today());
+
+        $todayReports = (clone $todayQuery)->count();
+
+        $todayCaseValue = (clone $todayQuery)
+            ->selectRaw("COALESCE(SUM($caseExpression), 0) AS today_case")
+            ->value('today_case');
+
+        $todayCase = number_format((int) $todayCaseValue);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Customer
+        |--------------------------------------------------------------------------
+        */
+
+        $allCustomersQuery = Customer::query()
+            ->whereIn('user_id', $allowedEmployeeIds);
+
+        if ($selectedEmployeeId !== 'all') {
+            $allCustomersQuery->where(
+                'user_id',
+                (int) $selectedEmployeeId
+            );
+        }
+
+        // Preserve the existing dashboard date filters.
+        if ($selectedYear !== 'all') {
+            $allCustomersQuery->whereYear(
+                'created_at',
+                (int) $selectedYear
+            );
+        }
+
+        if ($fromDate) {
+            $allCustomersQuery->whereDate(
+                'created_at',
+                '>=',
+                $fromDate
+            );
+        }
+
+        if ($toDate) {
+            $allCustomersQuery->whereDate(
+                'created_at',
+                '<=',
+                $toDate
+            );
+        }
+
+        $allCustomers = number_format($allCustomersQuery->count());
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate Sales
+        |--------------------------------------------------------------------------
+        */
+
+        if ($selectedEmployeeId === 'all') {
+
+            // Sum all permitted employees
+            $soldThisMonth = (int) $employeeSales
+                ->whereIn('user_id', $allowedEmployeeIds)
+                ->sum('total');
+
+        } else {
+
+            // Sum the selected employee only
+            $selectedEmployeeSale = $employeeSales->firstWhere(
                 'user_id',
                 (int) $selectedEmployeeId
             );
 
-        $soldThisMonth = $selectedEmployeeSale->total ?? 0;
+            $soldThisMonth = (int) ($selectedEmployeeSale->total ?? 0);
+        }
+
 
 
         /*

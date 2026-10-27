@@ -244,6 +244,14 @@ class ReportController extends Controller
                 return [$user->id => $user->username . ' (' . $user->full_name . ')'];
             })
             ->toArray();
+        $userEmployees = User::query()
+            ->where('status', 1)
+            ->where('role_id', AppHelper::USER_EMPLOYEE)
+            ->get(['id', 'username', 'family_name', 'name'])
+            ->mapWithKeys(fn ($user) => [
+                $user->id => "{$user->username} ({$user->full_name})",
+            ])
+            ->toArray();
 
         $area_id = AppHelper::AREAS;
 
@@ -469,7 +477,7 @@ class ReportController extends Controller
             }
         }
 
-        return view('backend.report.list', compact('is_filter', 'area_id', 'employees'));
+        return view('backend.report.list', compact('is_filter', 'area_id', 'employees','userEmployees'));
     }
 
 
@@ -863,15 +871,15 @@ class ReportController extends Controller
     public function storeConsumer(Request $request)
     {
         $validated = $request->validate([
-            'customer_name' => ['required', 'string', 'max:255'],
-
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'employee_id' => ['nullable', 'exists:users,id'],
+            'date' => ['required', 'date'],
             '250_ml' => ['nullable', 'integer', 'min:0'],
             '350_ml' => ['nullable', 'integer', 'min:0'],
             '600_ml' => ['nullable', 'integer', 'min:0'],
             '1500_ml' => ['nullable', 'integer', 'min:0'],
 
             'other' => ['nullable', 'string'],
-            'status' => ['required', 'in:consumer'],
         ]);
 
         DB::beginTransaction();
@@ -886,10 +894,13 @@ class ReportController extends Controller
 
             $report = new Report();
 
-            $report->user_id = auth()->id();
-            $report->customer_name = $validated['customer_name'];
+            // $report->user_id = auth()->id();
+            $report->customer_name = 'អតិថិជនចុងក្រោយ';
             $report->customer_type = AppHelper::អ្នកប្រើប្រាស់ចុងក្រោយ​;
-            $report->date = Carbon::now('Asia/Phnom_Penh');
+            $report->user_id = $validated['employee_id'] ?? auth()->id();
+            $report->date = Carbon::parse($validated['date'], 'Asia/Phnom_Penh')
+                ->setTimeFrom(Carbon::now('Asia/Phnom_Penh'));
+            // $report->date = Carbon::now('Asia/Phnom_Penh');
 
             $report->{'250_ml'} = $validated['250_ml'] ?? 0;
             $report->{'350_ml'} = $validated['350_ml'] ?? 0;
@@ -897,7 +908,6 @@ class ReportController extends Controller
             $report->{'1500_ml'} = $validated['1500_ml'] ?? 0;
 
             $report->other = $validated['other'] ?? null;
-            $report->status = $validated['status'];
 
             /*
             |--------------------------------------------------------------------------

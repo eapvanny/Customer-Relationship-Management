@@ -4,6 +4,29 @@
     Customers
 @endsection
 
+@section('extraStyle')
+    <style>
+        .outlet-photo-zoom {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+            cursor: zoom-in;
+            transition: transform 0.35s ease-in-out;
+            transform-origin: bottom left;
+            position: relative;
+            z-index: 1;
+        }
+
+        .outlet-photo-zoom:hover {
+            transform: scale(2);
+            z-index: 9999;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+@endsection 
+
 @section('pageContent')
 <!-- Section header -->
 <section class="content-header">
@@ -102,7 +125,8 @@
                                     width="100%">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
+                                        {{-- <th>#</th> --}}
+                                        <th>{{ __('Photo') }}</th>
                                         <th>{{ __('Created by') }}</th>
                                         <th>{{ __('Area') }}</th>
                                         <th>{{ __("Depo's Name") }}</th>
@@ -158,7 +182,8 @@
             lengthMenu: [10, 25, 50, 100],
 
             columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                // { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'outlet_photo', name: 'outlet_photo' },
                 { data: 'created_by', name: 'created_by' },
                 { data: 'area_id', name: 'area_id' },
                 { data: 'depo_id', name: 'depo_id' },

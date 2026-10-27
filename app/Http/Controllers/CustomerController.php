@@ -279,7 +279,19 @@ class CustomerController extends Controller
             $customers = $query->orderBy('id', 'desc');
 
             return DataTables::of($customers)
-                ->addIndexColumn()
+                // ->addIndexColumn()
+                ->addColumn('outlet_photo', function ($customer) {
+                    if ($customer->outlet_photo) {
+                        $photoUrl = asset('storage/' . $customer->outlet_photo);
+
+                        return '<img class="img-circle outlet-photo-zoom"
+                                    src="' . e($photoUrl) . '"
+                                    alt="Outlet Photo"
+                                    style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">';
+                    }
+
+                    return '<span class="text-muted">No Photo</span>';
+                })
                 ->filter(function ($query) use ($request) {
                     if ($search = $request->input('search.value')) {
 
@@ -397,7 +409,7 @@ class CustomerController extends Controller
 
                     return $btn . '</div>';
                 })
-                ->rawColumns(['action','purchase_status'])
+                ->rawColumns(['action','purchase_status', 'outlet_photo']) // Allow HTML in these columns
                 ->make(true);
         }
 

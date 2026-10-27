@@ -364,20 +364,22 @@
                             data-bs-target="#filterContainer">
                             <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
                         </button>
-                        @hasTypePermission('create report')
-                            {{-- @if($showModal)
-                                <button type="button" class="btn btn-info text-white" id="openModalBtn">
-                                    <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
-                                </button>
-                            @else
+                        @if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
+                            @hasTypePermission('create report')
+                                {{-- @if($showModal)
+                                    <button type="button" class="btn btn-info text-white" id="openModalBtn">
+                                        <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                                    </button>
+                                @else
+                                    <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
+                                        <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
+                                    </a>
+                                @endif --}}
                                 <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
                                     <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
                                 </a>
-                            @endif --}}
-                            <a class="btn btn-info text-white" href="{{ URL::route('report.create') }}">
-                                <i class="fa fa-plus-circle idPopup"></i> {{ __('Add New') }}
-                            </a>
-                        @endHasTypePermission
+                            @endHasTypePermission
+                        @endif
                     </div>
                 </div>
                 <div class="wrap-outter-box">
@@ -481,13 +483,15 @@
                                         <i class="fa fa-upload"></i> {{ __('Export') }}
                                     </a>
                                 </div>
-                                @hasTypePermission('create report')
-                                    <div class="col-6 text-end">
-                                        <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#addModal">
-                                            <i class="fa fa-plus-circle"></i> {{ __('Add Report Consumer') }}
-                                        </button>
-                                    </div>
-                                @endHasTypePermission
+                                @if (auth()->user()->role_id != AppHelper::USER_EMPLOYEE)
+                                    @hasTypePermission('create report')
+                                        <div class="col-6 text-end">
+                                            <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#addModal">
+                                                <i class="fa fa-plus-circle"></i> {{ __('Add Report') }}
+                                            </button>
+                                        </div>
+                                    @endHasTypePermission
+                                @endif
                             </div>
                             <div class="table-responsive mt-4">
                                 <table id="datatable"
@@ -627,7 +631,7 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="addModalLabel">
                     <i class="fa fa-regular fa-folder-open"></i>
-                    {{ __('Report For Consumer') }}
+                    {{ __('Add Report') }}
                 </h5>
 
                 <button type="button"
@@ -641,170 +645,136 @@
                 @csrf
 
                 <div class="modal-body">
-
                     <div class="row">
 
                         {{-- Customer Name --}}
-                        <div class="col-12 mb-3">
-                            <div class="form-group has-feedback">
+                        {{-- <div class="col-12">
+                            <div class="form-group">
                                 <label for="customer_name">
                                     {{ __('Customer Name') }}
                                     <span class="text-danger">*</span>
                                 </label>
 
-                                <input type="text"
-                                       name="customer_name"
-                                       id="customer_name"
-                                       class="form-control"
-                                       value="{{ old('customer_name') }}"
-                                       required>
-
-                                <span class="fa fa-user form-control-feedback"></span>
+                                <input
+                                    type="text"
+                                    name="customer_name"
+                                    id="customer_name"
+                                    class="form-control @error('customer_name') is-invalid @enderror"
+                                    value="{{ old('customer_name') }}"
+                                    placeholder="{{ __('Enter customer name') }}"
+                                    autocomplete="name"
+                                >
 
                                 @error('customer_name')
-                                    <span class="text-danger">{{ $message }}</span>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div> --}}
 
-                        {{-- 250ml --}}
-                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
+                        {{-- Employee Name --}}
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="250_ml">
-                                    {{ __('250ml') }}
-                                    <span>{{ __('(Cases)') }}</span>
-                                </label>
-
-                                <input type="number"
-                                       class="form-control"
-                                       name="250_ml"
-                                       id="250_ml"
-                                       min="0"
-                                       value="{{ old('250_ml') }}">
-
-                                @error('250_ml')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- 350ml --}}
-                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
-                            <div class="form-group">
-                                <label for="350_ml">
-                                    {{ __('350ml') }}
-                                    <span>{{ __('(Cases)') }}</span>
-                                </label>
-
-                                <input type="number"
-                                       class="form-control"
-                                       name="350_ml"
-                                       id="350_ml"
-                                       min="0"
-                                       value="{{ old('350_ml') }}">
-
-                                @error('350_ml')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- 600ml --}}
-                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
-                            <div class="form-group">
-                                <label for="600_ml">
-                                    {{ __('600ml') }}
-                                    <span>{{ __('(Cases)') }}</span>
-                                </label>
-
-                                <input type="number"
-                                       class="form-control"
-                                       name="600_ml"
-                                       id="600_ml"
-                                       min="0"
-                                       value="{{ old('600_ml') }}">
-
-                                @error('600_ml')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- 1500ml --}}
-                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
-                            <div class="form-group">
-                                <label for="1500_ml">
-                                    {{ __('1500ml') }}
-                                    <span>{{ __('(Cases)') }}</span>
-                                </label>
-
-                                <input type="number"
-                                       class="form-control"
-                                       name="1500_ml"
-                                       id="1500_ml"
-                                       min="0"
-                                       value="{{ old('1500_ml') }}">
-
-                                @error('1500_ml')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Other --}}
-                        <div class="col-lg-12 col-md-12 col-xl-6 mb-3">
-                            <div class="form-group">
-                                <label for="other">
-                                    {{ __('Other') }}
-                                </label>
-
-                                <textarea class="form-control"
-                                          name="other"
-                                          id="other"
-                                          rows="2"
-                                          placeholder="{{ __('Enter other here...') }}">{{ old('other') }}</textarea>
-
-                                @error('other')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Status --}}
-                        <div class="col-lg-6 col-md-6 col-xl-6 mb-3">
-                            <div class="form-group">
-                                <label for="status">
-                                    {{ __('Status') }}
+                                <label for="employee_id">
+                                    {{ __('Employee Name') }}
                                     <span class="text-danger">*</span>
                                 </label>
 
-                                <select name="status"
-                                        id="status"
-                                        class="form-control"
-                                        required>
-                                    <option value="consumer" selected>
-                                        {{ __('Consumer') }}
-                                    </option>
-                                </select>
+                                {!! Form::select('employee_id', $userEmployees, old('employee_id'), [
+                                    'placeholder' => __('Select employee'),
+                                    'id' => 'employee_id',
+                                    'class' => 'form-control select2' . ($errors->has('employee_id') ? ' is-invalid' : ''),
+                                    'required' => true,
+                                ]) !!}
 
-                                @error('status')
-                                    <span class="text-danger">{{ $message }}</span>
+                                @error('employee_id')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Date --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="date">
+                                    {{ __('Date') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="date"
+                                    id="date"
+                                    class="form-control @error('date') is-invalid @enderror"
+                                    value=""
+                                    required
+                                >
+
+                                @error('date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Product Cases --}}
+                        @foreach ([
+                            '250_ml'  => '250ml',
+                            '350_ml'  => '350ml',
+                            '600_ml'  => '600ml',
+                            '1500_ml' => '1500ml',
+                        ] as $field => $label)
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ $field }}">
+                                        {{ __($label) }}
+                                        <small class="text-muted">({{ __('Cases') }})</small>
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        name="{{ $field }}"
+                                        id="{{ $field }}"
+                                        class="form-control @error($field) is-invalid @enderror"
+                                        value="{{ old($field) }}"
+                                        min="0"
+                                        step="1"
+                                    >
+
+                                    @error($field)
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endforeach
+
+                        {{-- Other --}}
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="other">{{ __('Other') }}</label>
+
+                                <textarea
+                                    name="other"
+                                    id="other"
+                                    class="form-control @error('other') is-invalid @enderror"
+                                    rows="3"
+                                    placeholder="{{ __('Enter additional information...') }}"
+                                >{{ old('other') }}</textarea>
+
+                                @error('other')
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                     </div>
-
                 </div>
 
+                {{-- Modal Footer --}}
                 <div class="modal-footer">
-                    <button type="submit"
-                            class="btn btn-info text-white">
-                        <i class="fa fa-save"></i>
+                    <button type="submit" class="btn btn-info text-white">
+                        <i class="fa fa-save mr-1"></i>
                         {{ __('Save') }}
                     </button>
                 </div>
-
             </form>
 
         </div>
@@ -977,6 +947,10 @@
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
+            });
+
+            $('#addModal .select2').select2({
+                dropdownParent: $('#addModal'),
             });
 
             @if (session('show_popup'))
