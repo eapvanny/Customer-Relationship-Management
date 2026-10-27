@@ -35,6 +35,9 @@ class CustomerController extends Controller
             'user',
             'depo',
         ])
+        ->whereHas('user', function ($query) {
+            $query->where('role_id', AppHelper::USER_EMPLOYEE);
+        })
         ->select('customers.*')
         ->selectSub(function ($subQuery) {
             $subQuery->from('reports')
