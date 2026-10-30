@@ -503,7 +503,7 @@ class CustomerController extends Controller
         $areaId = AppHelper::getAreaIdByText($userAreaCode);
         $depos = Depo::where('area_id',$areaId)->pluck('name','id');
         $customer = Customer::where('user_id', $user->id)
-                    ->get(['id', 'name', 'phone', 'customer_type'])
+                    ->get(['id', 'name', 'phone', 'customer_type', 'latitude', 'longitude'])
                     ->keyBy('id');
 
         return response()->json([
