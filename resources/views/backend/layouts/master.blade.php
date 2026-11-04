@@ -16,6 +16,7 @@
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="{{ asset('js/app.js') }}"></script>
     <!-- Favicon png -->
     <link rel="icon" href="@if(isset(auth()->user()->organization->favicon) && !empty(auth()->user()->organization->favicon)){{asset('storage/logo/'.auth()->user()->organization->favicon)}} @else{{ asset('images/Hi-Tech_Water_Logo.png') }}@endif" type="image/png">
     <!-- Pace loading -->

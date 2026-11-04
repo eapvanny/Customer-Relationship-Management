@@ -53,7 +53,7 @@
                                 </a>
                             </li>
                         @endif
-                        @if (
+                        {{-- @if (
                             auth()->user()->role_id === AppHelper::USER_SUPER_ADMIN ||
                             (
                                 auth()->user()->role_id === AppHelper::USER_MANAGER &&
@@ -69,7 +69,7 @@
                                     </a>
                                 </li>
                             @endHasTypePermission
-                        @endif
+                        @endif --}}
                     </ul>
                 </li>
             @hasTypePermission('view target')
@@ -86,6 +86,13 @@
                     </a>
                 </li>
             @endHasTypePermission
+            @if (auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN)
+                <li>
+                    <a href="{{ route('live-tracking.index') }}" class="text-decoration-none">
+                        <i class="fa fa-location-arrow"></i> <span>{{ __('Live Tracking') }}</span>
+                    </a>
+                </li>
+            @endif
             @hasTypePermission('view marketing')
                 <li>
                     <a class="fw-bold p-3 text-dark m-0 text-uppercase">

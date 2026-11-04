@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Helpers\AppHelper;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -13,6 +14,18 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+Broadcast::channel('crm.live-location', function ($user) {
+    // Replace with your CRM's real authorization logic.
+    // Only users explicitly permitted to view live tracking
+    // should be allowed to subscribe.
+    return in_array((int) $user->role_id, [
+        AppHelper::USER_SUPER_ADMIN,
+        AppHelper::USER_ADMINISTRATOR,
+        AppHelper::USER_ADMIN,
+        AppHelper::USER_DIRECTOR,
+        AppHelper::USER_MANAGER,
+        AppHelper::USER_RSM,
+        AppHelper::USER_ASM,
+        AppHelper::USER_SUP,
+    ], true);
 });

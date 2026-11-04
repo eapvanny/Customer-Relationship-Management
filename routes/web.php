@@ -19,6 +19,7 @@ use App\Http\Controllers\PosmController;
 use App\Http\Controllers\ProvinceReportController;
 use App\Http\Controllers\RegionsController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LiveTrackingController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\RestaurantimportController;
 use App\Http\Controllers\RetailController;
@@ -155,6 +156,16 @@ Route::group(['middleware' => ['auth', 'isAdmin']], function () {
         CustomerController::class,
         'mapCustomerDetails',
     ])->whereNumber('id')->name('customers.map.details');
+
+    // locatio  tracking
+     Route::get('/location', [LiveTrackingController::class, 'index'])
+        ->name('live-tracking.index');
+
+    Route::get('/active-users', [LiveTrackingController::class, 'activeUsers'])
+        ->name('live-tracking.active-users');
+
+    Route::get('/history/{userId}', [LiveTrackingController::class, 'history'])
+        ->name('live-tracking.history');
     
     //Depo
     Route::resource('depo', DepoController::class);
