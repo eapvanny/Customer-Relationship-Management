@@ -339,7 +339,7 @@ class UserController extends Controller
                                 </a>';
                     }
                     // Disable
-                    if ($user->role_id != AppHelper::USER_ADMIN && $user->role_id != AppHelper::USER_EMPLOYEE) {
+                    if ($user->role_id != AppHelper::USER_EMPLOYEE) {
                         if ($data->status == 1) {
                             $button .= '<a href="javascript:void(0)" class="btn btn-danger btn-sm disable-user" 
                                             title="Disable" data-id="' . $data->id . '">
