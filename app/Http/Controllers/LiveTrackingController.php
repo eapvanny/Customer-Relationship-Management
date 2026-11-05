@@ -12,7 +12,7 @@ class LiveTrackingController extends Controller
 {
     public function index()
     {
-        return view('backend.location-tacking.live_tracking');
+        return view('backend.location-tracking.live_tracking');
     }
 
     public function activeUsers(Request $request)
