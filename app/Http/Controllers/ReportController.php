@@ -435,7 +435,7 @@ class ReportController extends Controller
                         $edit = 
                                 auth()->user()->role_id == AppHelper::USER_SUPER_ADMIN ||
                                 (
-                                    auth()->user()->role_id == AppHelper::USER_ADMIN &&
+                                    auth()->user()->role_id == AppHelper::USER_ADMIN ||
                                     auth()->user()->position == 'Sale.Admin.Sup'
                                 )
                             
