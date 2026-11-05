@@ -1653,6 +1653,10 @@ class ReportController extends Controller
                     ? Carbon::parse($row->date)->format('d-M-Y')
                     : 'N/A',
 
+                'so_time' => $row->date
+                    ? Carbon::parse($row->date)->format('H:i A')
+                    : 'N/A',
+
                 '250ml' => $val250,
 
                 '350ml' => $val350,
