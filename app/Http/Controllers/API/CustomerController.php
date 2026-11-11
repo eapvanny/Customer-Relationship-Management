@@ -1431,25 +1431,119 @@ class CustomerController extends Controller
             ]);
     }
     
+    
     public function getCustomerLocation(Request $request)
     {
         $user = auth()->user();
 
-        // Authentication
         if (!$user) {
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Unauthenticated',
             ], 401);
         }
 
-        // Apply customer permissions and management hierarchy
+        // Validate Flutter filter parameters
+        $validated = $request->validate([
+            'area_id' => 'nullable|integer',
+            'user_id' => 'nullable|integer',
+            'depo_id' => 'nullable|integer',
+            'purchase_status' => 'nullable|in:all,today,last_7day,never',
+        ]);
+
+        // Apply management permissions first
         $query = $this->getCustomerQueryUnderManagement(
             $request,
             $user
         );
 
-        // Get customers with valid coordinates and their latest purchase date
+        // Apply Area filter
+        if (!empty($validated['area_id'])) {
+            $query->where(
+                'customers.area_id',
+                $validated['area_id']
+            );
+        }
+
+        // Apply Employee filter
+        if (!empty($validated['user_id'])) {
+            $query->where(
+                'customers.user_id',
+                $validated['user_id']
+            );
+        }
+
+        // Apply Depo filter
+        if (!empty($validated['depo_id'])) {
+            $query->where(
+                'customers.depo_id',
+                $validated['depo_id']
+            );
+        }
+
+        // Reusable condition: customer has a valid purchase
+        $hasPurchase = function ($subQuery) {
+            $subQuery->selectRaw('1')
+                ->from('reports')
+                ->whereColumn(
+                    'reports.customer_id',
+                    'customers.id'
+                )
+                ->whereRaw('
+                    COALESCE(`250_ml`, 0)
+                    + COALESCE(`350_ml`, 0)
+                    + COALESCE(`600_ml`, 0)
+                    + COALESCE(`1500_ml`, 0) > 0
+                ');
+        };
+
+        // Apply Purchase Status filter
+        $purchaseStatus = $validated['purchase_status'] ?? 'all';
+
+        switch ($purchaseStatus) {
+
+            case 'today':
+
+                $query->whereExists(function ($subQuery) use ($hasPurchase) {
+                    $hasPurchase($subQuery);
+
+                    $subQuery->whereDate(
+                        'reports.date',
+                        today()
+                    );
+                });
+
+                break;
+
+            case 'last_7day':
+
+                $query->whereExists(function ($subQuery) use ($hasPurchase) {
+                    $hasPurchase($subQuery);
+
+                    $subQuery->whereBetween(
+                        'reports.date',
+                        [
+                            now()->subDays(6)->startOfDay(),
+                            now()->endOfDay(),
+                        ]
+                    );
+                });
+
+                break;
+
+            case 'never':
+
+                $query->whereNotExists($hasPurchase);
+
+                break;
+
+            case 'all':
+            default:
+                // No purchase restriction
+                break;
+        }
+
+        // Get customers with valid GPS coordinates
         $customers = $query
             ->whereNotNull('customers.latitude')
             ->whereNotNull('customers.longitude')
@@ -1457,13 +1551,19 @@ class CustomerController extends Controller
             ->where('customers.longitude', '!=', '')
             ->where('customers.latitude', '!=', 0)
             ->where('customers.longitude', '!=', 0)
+
             ->select([
                 'customers.id',
                 'customers.name',
+                'customers.phone',
+                'customers.area_id',
+                'customers.user_id',
+                'customers.depo_id',
                 'customers.latitude',
                 'customers.longitude',
-                'customers.phone',
             ])
+
+            // Get latest valid purchase date
             ->selectSub(function ($subQuery) {
                 $subQuery->from('reports')
                     ->selectRaw('MAX(reports.date)')
@@ -1478,15 +1578,18 @@ class CustomerController extends Controller
                         + COALESCE(`1500_ml`, 0) > 0
                     ');
             }, 'last_purchase_at')
+
             ->get();
 
-        // Calculate purchase information for each customer
+        // Calculate purchase information
         $customers->transform(function ($customer) {
+
             $lastPurchaseAt = null;
             $hoursSincePurchase = null;
             $daysSincePurchase = null;
 
             if ($customer->last_purchase_at) {
+
                 $lastPurchase = Carbon::parse(
                     $customer->last_purchase_at
                 );
@@ -1511,18 +1614,21 @@ class CustomerController extends Controller
                 );
             }
 
-            // Purchase status for this customer
             if ($hoursSincePurchase === null) {
+
                 $purchaseStatus = 'No Purchase';
+
             } elseif ($hoursSincePurchase >= 24) {
+
                 $purchaseStatus = 'No Purchase for '
                     . $daysSincePurchase
                     . ' days';
+
             } else {
+
                 $purchaseStatus = 'Active';
             }
 
-            // Append calculated fields to the customer response
             $customer->last_purchase_at = $lastPurchaseAt;
             $customer->hours_since_purchase = $hoursSincePurchase;
             $customer->days_since_purchase = $daysSincePurchase;
@@ -1533,9 +1639,17 @@ class CustomerController extends Controller
 
         return response()->json([
             'status' => true,
-            'data'   => $customers,
+            'filters' => [
+                'area_id' => $validated['area_id'] ?? null,
+                'user_id' => $validated['user_id'] ?? null,
+                'depo_id' => $validated['depo_id'] ?? null,
+                'purchase_status' => $purchaseStatus,
+            ],
+            'total' => $customers->count(),
+            'data' => $customers,
         ]);
     }
+
 
     
     public function customerDetail(Request $request, $id)
