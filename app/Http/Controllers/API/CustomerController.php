@@ -1420,6 +1420,13 @@ class CustomerController extends Controller
                     'areas' => $areas,
                     'users' => $users,
                     'depos' => $depos,
+
+                    'purchase_statuses' => [
+                        'all' => 'All Customers',
+                        'today' => 'Purchased Today',
+                        'last_7day' => 'Purchased Last 7 Days',
+                        'never' => 'Never Purchased',
+                    ],
                 ],
             ]);
     }
