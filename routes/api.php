@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customers/{id}', [APICustomer::class, 'update']);
     Route::get('/customers-phone', [SlowController::class, 'index']);
     Route::get('/customers-location', [APICustomer::class, 'getCustomerLocation']);
+    Route::get('/filtered-customers', [APICustomer::class, 'filterCustomerLocation']);
     Route::get('/customers/{id}/detail', [APICustomer::class, 'customerDetail']);
 
     // Reports

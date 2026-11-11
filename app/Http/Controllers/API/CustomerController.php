@@ -1333,7 +1333,96 @@ class CustomerController extends Controller
         ]);
     }
 
-    
+    public function filterCustomerLocation()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        // Apply customer permissions from AppHelper
+        $customers = AppHelper::getCustomerQueryUnderManagement(
+            request(),
+            $user
+        )
+            ->select([
+                'customers.id',
+                'customers.area_id',
+                'customers.user_id',
+                'customers.depo_id',
+            ])
+            ->get();
+
+        // Areas available to the logged-in user
+        $areas = $customers
+            ->pluck('area_id')
+            ->filter()
+            ->unique()
+            ->mapWithKeys(function ($areaId) {
+                return [
+                    $areaId => AppHelper::getAreaNameById($areaId),
+                ];
+            });
+
+        $userLang = session('user_lang', 'kh');
+
+        // Users associated with permitted customers
+        $userIds = $customers
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $users = User::query()
+            ->whereIn('id', $userIds)
+            ->where('role_id', AppHelper::USER_EMPLOYEE)
+            ->select([
+                'id',
+                'name',
+                'family_name',
+                'name_latin',
+                'family_name_latin',
+                'area',
+            ])
+            ->get()
+            ->mapWithKeys(function ($user) use ($userLang) {
+                $name = $userLang === 'en'
+                    ? trim(
+                        ($user->family_name_latin ?? '') . ' ' .
+                        ($user->name_latin ?? '')
+                    )
+                    : trim(
+                        ($user->family_name ?? '') . ' ' .
+                        ($user->name ?? '')
+                    );
+
+                return [
+                    $user->id => $name . ' (' . ($user->area ?? '-') . ')',
+                ];
+            });
+
+        // Depos associated with permitted customers
+        $depos = Depo::query()
+            ->whereIn(
+                'id',
+                $customers->pluck('depo_id')->filter()->unique()
+            )
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'areas' => $areas,
+                    'users' => $users,
+                    'depos' => $depos,
+                ],
+            ]);
+    }
     
     public function getCustomerLocation(Request $request)
     {
@@ -1347,86 +1436,13 @@ class CustomerController extends Controller
             ], 401);
         }
 
-        // Validate filters
-        $request->validate([
-            'area_id'        => 'nullable|integer',
-            'user_id'        => 'nullable|integer',
-            'depo_id'        => 'nullable|integer',
-            'purchase_status' => 'nullable|in:all,today,last_7_days,never',
-        ]);
-
-        // Base customer query with management permissions
+        // Apply customer permissions and management hierarchy
         $query = $this->getCustomerQueryUnderManagement(
             $request,
             $user
         );
 
-        // Filter by Area
-        if ($request->filled('area_id')) {
-            $query->where('customers.area_id', $request->area_id);
-        }
-
-        // Filter by Employee/User
-        if ($request->filled('user_id')) {
-            $query->where('customers.user_id', $request->user_id);
-        }
-
-        // Filter by Depo
-        if ($request->filled('depo_id')) {
-            $query->where('customers.depo_id', $request->depo_id);
-        }
-
-        // Purchase conditions:
-        // Only count reports with actual product purchases.
-        $purchaseCondition = function ($subQuery) {
-            $subQuery->whereRaw('
-                COALESCE(`250_ml`, 0)
-                + COALESCE(`350_ml`, 0)
-                + COALESCE(`600_ml`, 0)
-                + COALESCE(`1500_ml`, 0) > 0
-            ');
-        };
-
-        // Purchase status filter
-        $purchaseStatus = $request->input('purchase_status', 'all');
-
-        if ($purchaseStatus === 'today') {
-
-            // Customers who purchased today
-            $query->whereExists(function ($subQuery) use ($purchaseCondition) {
-                $subQuery->selectRaw('1')
-                    ->from('reports')
-                    ->whereColumn('reports.customer_id', 'customers.id')
-                    ->whereDate('reports.date', today())
-                    ->where($purchaseCondition);
-            });
-
-        } elseif ($purchaseStatus === 'last_7_days') {
-
-            // Customers who purchased within the last 7 days
-            $query->whereExists(function ($subQuery) use ($purchaseCondition) {
-                $subQuery->selectRaw('1')
-                    ->from('reports')
-                    ->whereColumn('reports.customer_id', 'customers.id')
-                    ->whereBetween('reports.date', [
-                        now()->subDays(7)->startOfDay(),
-                        now()
-                    ])
-                    ->where($purchaseCondition);
-            });
-
-        } elseif ($purchaseStatus === 'never') {
-
-            // Customers who have never purchased
-            $query->whereNotExists(function ($subQuery) use ($purchaseCondition) {
-                $subQuery->selectRaw('1')
-                    ->from('reports')
-                    ->whereColumn('reports.customer_id', 'customers.id')
-                    ->where($purchaseCondition);
-            });
-        }
-
-        // Get customers with valid coordinates
+        // Get customers with valid coordinates and their latest purchase date
         $customers = $query
             ->whereNotNull('customers.latitude')
             ->whereNotNull('customers.longitude')
@@ -1440,30 +1456,30 @@ class CustomerController extends Controller
                 'customers.latitude',
                 'customers.longitude',
                 'customers.phone',
-                'customers.area_id',
-                'customers.user_id',
-                'customers.depo_id',
             ])
-
-            // Latest purchase date
-            ->selectSub(function ($subQuery) use ($purchaseCondition) {
+            ->selectSub(function ($subQuery) {
                 $subQuery->from('reports')
                     ->selectRaw('MAX(reports.date)')
-                    ->whereColumn('reports.customer_id', 'customers.id')
-                    ->where($purchaseCondition);
+                    ->whereColumn(
+                        'reports.customer_id',
+                        'customers.id'
+                    )
+                    ->whereRaw('
+                        COALESCE(`250_ml`, 0)
+                        + COALESCE(`350_ml`, 0)
+                        + COALESCE(`600_ml`, 0)
+                        + COALESCE(`1500_ml`, 0) > 0
+                    ');
             }, 'last_purchase_at')
-
             ->get();
 
-        // Calculate purchase information
+        // Calculate purchase information for each customer
         $customers->transform(function ($customer) {
-
             $lastPurchaseAt = null;
             $hoursSincePurchase = null;
             $daysSincePurchase = null;
 
             if ($customer->last_purchase_at) {
-
                 $lastPurchase = Carbon::parse(
                     $customer->last_purchase_at
                 );
@@ -1474,7 +1490,9 @@ class CustomerController extends Controller
 
                 $minutesSincePurchase = max(
                     0,
-                    (int) floor($lastPurchase->diffInMinutes(now()))
+                    (int) floor(
+                        $lastPurchase->diffInMinutes(now())
+                    )
                 );
 
                 $hoursSincePurchase = (int) floor(
@@ -1486,40 +1504,22 @@ class CustomerController extends Controller
                 );
             }
 
-            // Purchase status
+            // Purchase status for this customer
             if ($hoursSincePurchase === null) {
-
-                $purchaseStatus = 'Never Purchased';
-
+                $purchaseStatus = 'No Purchase';
             } elseif ($hoursSincePurchase >= 24) {
-
                 $purchaseStatus = 'No Purchase for '
                     . $daysSincePurchase
                     . ' days';
-
             } else {
-
                 $purchaseStatus = 'Active';
             }
 
-            // Customer information
+            // Append calculated fields to the customer response
             $customer->last_purchase_at = $lastPurchaseAt;
             $customer->hours_since_purchase = $hoursSincePurchase;
             $customer->days_since_purchase = $daysSincePurchase;
             $customer->purchase_status = $purchaseStatus;
-
-            $customer->area_name = AppHelper::getAreaNameById(
-                $customer->area_id
-            );
-
-            $customer->user_name = trim(
-                optional($customer->user)->family_name . ' ' .
-                optional($customer->user)->name
-            ) ?: '-';
-
-            $customer->depo_name = optional(
-                $customer->depo
-            )->name ?? '-';
 
             return $customer;
         });
