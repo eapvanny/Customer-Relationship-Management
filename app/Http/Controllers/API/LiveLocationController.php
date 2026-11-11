@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Events\LiveLocationUpdated;
+use App\Events\LiveLocationStopped;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserLocationHistory;
@@ -184,12 +185,20 @@ class LiveLocationController extends Controller
             ], 409);
         }
 
+        // Broadcast Check Out status to Web Dashboard.
+        event(new LiveLocationStopped(
+            (int) $session->user_id,
+            (int) $session->id,
+            $session->ended_at->toIso8601String()
+        ));
+
         return response()->json([
             'success' => true,
             'message' => 'Check Out successful. Tracking stopped.',
             'user_id' => $user->id,
             'session_id' => $session->id,
             'tracking' => false,
+            'status' => 'offline',
             'ended_at' => $session->ended_at,
         ]);
     }

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
+use Illuminate\Database\Eloquent\Relations\HasOne;
 class UserWorkSession extends Model
 {
     protected $fillable = [
@@ -35,5 +35,13 @@ class UserWorkSession extends Model
     public function locations(): HasMany
     {
         return $this->hasMany(UserLocationHistory::class);
+    }
+
+    public function latestLocation(): HasOne
+    {
+        return $this->hasOne(
+            UserLocationHistory::class,
+            'user_work_session_id'
+        )->latestOfMany('created_at');
     }
 }

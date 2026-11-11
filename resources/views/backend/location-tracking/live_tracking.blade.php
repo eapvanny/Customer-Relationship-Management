@@ -624,14 +624,29 @@
                     Math.floor((Date.now() - parsed.getTime()) / 1000)
                 );
 
-                if (seconds < 60) return seconds + ' sec ago';
+                if (seconds < 60) {
+                    return seconds + ' sec ago';
+                }
 
                 if (seconds < 3600) {
                     return Math.floor(seconds / 60) + ' min ago';
                 }
 
-                return Math.floor(seconds / 3600) + ' hr ago';
+                if (seconds < 86400) {
+                    return Math.floor(seconds / 3600) + ' hr ago';
+                }
+
+                // Convert hours to days when >= 24 hours
+                const days = Math.floor(seconds / 86400);
+                const hours = Math.floor((seconds % 86400) / 3600);
+
+                if (hours > 0) {
+                    return `${days} day${days > 1 ? 's' : ''} ${hours} hr ago`;
+                }
+
+                return `${days} day${days > 1 ? 's' : ''} ago`;
             }
+
 
             function popupHtml(user) {
                 const name = document.createElement('span');
@@ -652,20 +667,12 @@
         `;
             }
 
+            
             function updateMarker(data) {
 
                 const userId = String(data.user_id);
 
-                const lat = Number(data.latitude);
-                const lng = Number(data.longitude);
-
-                if (!Number.isFinite(lat) ||
-                    !Number.isFinite(lng) ||
-                    Math.abs(lat) > 90 ||
-                    Math.abs(lng) > 180) {
-                    return;
-                }
-
+                // Merge latest information with existing member.
                 const user = {
                     ...members.get(userId),
                     ...data,
@@ -677,14 +684,56 @@
                     user.name ||
                     'User';
 
-                user.recorded_at =
+                user.recorded_at = data.recorded_at ||
+                    data.last_seen_at ||
+                    user.recorded_at;
+
+                user.last_seen_at =
+                    data.last_seen_at ||
+                    user.last_seen_at ||
                     data.recorded_at ||
                     user.recorded_at;
 
+                user.status = (
+                    data.status ||
+                    user.status ||
+                    'working'
+                ).toLowerCase();
+
                 members.set(userId, user);
 
-                const point = [lat, lng];
+                // CHECK OUT: Change user to OFFLINE
+                if (user.status === 'offline') {
 
+                    // Remove marker from live map.
+                    if (markers.has(userId)) {
+                        map.removeLayer(markers.get(userId));
+                        markers.delete(userId);
+                    }
+
+                    // Keep tracking history.
+                    // Do not delete trails.
+                    renderTeam();
+                    updateSummary();
+
+                    return;
+                }
+                // Validate GPS coordinates
+                const lat = Number(data.latitude);
+                const lng = Number(data.longitude);
+
+                if (
+                    !Number.isFinite(lat) ||
+                    !Number.isFinite(lng) ||
+                    Math.abs(lat) > 90 ||
+                    Math.abs(lng) > 180
+                ) {
+                    renderTeam();
+                    updateSummary();
+                    return;
+                }
+                const point = [lat, lng];
+                // Create or Update Marker
                 if (!markers.has(userId)) {
 
                     const marker = L.marker(point, {
@@ -707,6 +756,9 @@
 
                 markers.get(userId).bindPopup(popupHtml(user));
 
+                // ===================================
+                // Create Tracking Trail
+                // ===================================
                 if (!trails.has(userId)) {
 
                     const trail = L.polyline([], {
@@ -717,15 +769,17 @@
 
                     trails.set(userId, trail);
                 }
+
                 const trail = trails.get(userId);
 
-                const lastPoint = trail.getLatLngs();
-                const last = lastPoint[lastPoint.length - 1];
+                const lastPoints = trail.getLatLngs();
+                const last = lastPoints[lastPoints.length - 1];
 
-                // Avoid duplicate GPS points.
-                if (!last ||
+                if (
+                    !last ||
                     last.lat !== lat ||
-                    last.lng !== lng) {
+                    last.lng !== lng
+                ) {
                     trail.addLatLng(point);
                 }
 
@@ -737,6 +791,7 @@
                 renderTeam();
                 updateSummary();
             }
+
 
             function selectUser(userId) {
 
@@ -827,7 +882,17 @@
                         </span>
                         <br>
                         <small>
-                            ${formatLastSeen(user.recorded_at)}
+                            ${
+                                status === 'offline' && user.ended_at
+                                    ? 'Checked Out'
+                                    : status === 'offline'
+                                        ? 'GPS Disconnected'
+                                        : 'GPS Connected'
+                            }
+                        </small>
+                        <br>
+                        <small>
+                            ${formatLastSeen(user.last_seen_at || user.recorded_at)}
                         </small>
                     </div>
                 </div>
@@ -940,8 +1005,16 @@
 
                     const points = await response.json();
 
+                    // Create trail if it does not exist.
                     if (!trails.has(String(userId))) {
-                        return;
+
+                        const trail = L.polyline([], {
+                            color: getColor(userId),
+                            weight: 3,
+                            opacity: 0.8
+                        }).addTo(map);
+
+                        trails.set(String(userId), trail);
                     }
 
                     const trail = trails.get(String(userId));
@@ -989,9 +1062,24 @@
 
             if (window.Echo) {
                 window.Echo.private('crm.live-location')
-                    .listen('.location.updated', function(data) {
-                        updateMarker(data);
+                // Receive live GPS updates.
+                .listen('.location.updated', function(data) {
+                    updateMarker({
+                        ...data,
+                        status: 'working',
+                        last_seen_at: new Date().toISOString()
                     });
+
+                })
+                // Receive Check Out notification.
+                .listen('.location.stopped', function(data) {
+
+                    updateMarker({
+                        ...data,
+                        status: 'offline'
+                    });
+
+                });
 
                 const connection = window.Echo.connector?.pusher?.connection;
 

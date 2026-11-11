@@ -17,25 +17,47 @@ class LiveTrackingController extends Controller
 
     public function activeUsers(Request $request)
     {
-        $query = UserWorkSession::query()
-            ->with('user')
-            ->whereNull('ended_at')
-            ->whereHas('locations');
+        $timeout = (int) config(
+            'tracking.heartbeat_timeout_seconds',
+            60
+        );
 
-        // Add your CRM role/hierarchy authorization here
-        // before allowing the query to return other users.
+        $now = now();
 
-        $sessions = $query->get();
+        // Get the latest session for each user.
+        $sessions = UserWorkSession::query()
+            ->whereIn('id', function ($query) {
+                $query->selectRaw('MAX(id)')
+                    ->from('user_work_sessions')
+                    ->groupBy('user_id');
+            })
+            ->with([
+                'user',
+                'latestLocation',
+            ])
+            ->get();
 
-        $data = $sessions->map(function ($session) {
+        $data = $sessions->map(function ($session) use ($timeout, $now) {
 
-            $location = $session->locations()
-                ->latest('recorded_at')
-                ->first();
+            $location = $session->latestLocation;
 
-            if (!$location) {
-                return null;
-            }
+            // created_at is the actual server-received timestamp.
+            $lastHeartbeat = $location?->created_at;
+
+            $heartbeatAge = $lastHeartbeat
+                ? $now->diffInSeconds($lastHeartbeat)
+                : null;
+
+            // Check whether the GPS heartbeat is still fresh.
+            $isHeartbeatAlive = $lastHeartbeat &&
+                $lastHeartbeat->greaterThanOrEqualTo(
+                    $now->copy()->subSeconds($timeout)
+                );
+
+            $isWorking = is_null($session->ended_at)
+                && $isHeartbeatAlive;
+
+            $status = $isWorking ? 'working' : 'offline';
 
             return [
                 'user_id' => $session->user_id,
@@ -45,21 +67,37 @@ class LiveTrackingController extends Controller
                     ?? $session->user?->name
                     ?? 'Unknown',
 
-                'position' => $session->user?->position ?? null,
+                'position' => $session->user?->position,
 
-                'area' => $session->user?->area ?? null,
+                'area' => $session->user?->area,
 
-                'latitude' => (float) $location->latitude,
-                'longitude' => (float) $location->longitude,
+                'latitude' => $location
+                    ? (float) $location->latitude
+                    : null,
 
-                'accuracy' => $location->accuracy,
+                'longitude' => $location
+                    ? (float) $location->longitude
+                    : null,
 
-                'status' => 'working',
+                'accuracy' => $location?->accuracy,
 
-                'recorded_at' => $location->recorded_at,
-                'last_seen_at' => $location->recorded_at,
+                'status' => $status,
+
+                // Original GPS capture time.
+                'recorded_at' => $location?->recorded_at,
+
+                // Actual server received time.
+                'last_seen_at' => $lastHeartbeat,
+
+                'heartbeat_age_seconds' => $heartbeatAge,
+
+                'heartbeat_timeout_seconds' => $timeout,
+
+                'started_at' => $session->started_at,
+
+                'ended_at' => $session->ended_at,
             ];
-        })->filter()->values();
+        })->values();
 
         return response()->json($data);
     }
