@@ -1545,6 +1545,7 @@ class CustomerController extends Controller
 
         // Get customers with valid GPS coordinates
         $customers = $query
+            ->without(['user', 'depo'])
             ->whereNotNull('customers.latitude')
             ->whereNotNull('customers.longitude')
             ->where('customers.latitude', '!=', '')
@@ -1561,6 +1562,7 @@ class CustomerController extends Controller
                 'customers.depo_id',
                 'customers.latitude',
                 'customers.longitude',
+                'customers.outlet_photo',
             ])
 
             // Get latest valid purchase date
@@ -1633,6 +1635,9 @@ class CustomerController extends Controller
             $customer->hours_since_purchase = $hoursSincePurchase;
             $customer->days_since_purchase = $daysSincePurchase;
             $customer->purchase_status = $purchaseStatus;
+            $customer->outlet_photo_url = $customer->outlet_photo
+                ? asset('storage/' . $customer->outlet_photo)
+                : null;
 
             return $customer;
         });
