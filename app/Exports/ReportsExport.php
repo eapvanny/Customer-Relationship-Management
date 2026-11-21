@@ -1087,9 +1087,9 @@ class ReportsExport implements
 
                 $sspName =
                     trim(
-                        ($reportUser->family_name_latin ?? '') .
+                        ($reportUser->family_name ?? '') .
                             ' ' .
-                            ($reportUser->name_latin ?? '')
+                            ($reportUser->name ?? '')
                     );
             }
         }
@@ -1134,9 +1134,9 @@ class ReportsExport implements
 
                 $supName =
                     trim(
-                        ($sup->family_name_latin ?? '') .
+                        ($sup->family_name ?? '') .
                             ' ' .
-                            ($sup->name_latin ?? '')
+                            ($sup->name ?? '')
                     );
             }
         }
@@ -1163,9 +1163,9 @@ class ReportsExport implements
 
                 $rsmName =
                     trim(
-                        ($rsm->family_name_latin ?? '') .
+                        ($rsm->family_name ?? '') .
                             ' ' .
-                            ($rsm->name_latin ?? '')
+                            ($rsm->name ?? '')
                     );
             }
         }
@@ -1192,9 +1192,9 @@ class ReportsExport implements
 
                 $asmName =
                     trim(
-                        ($asm->family_name_latin ?? '') .
+                        ($asm->family_name ?? '') .
                             ' ' .
-                            ($asm->name_latin ?? '')
+                            ($asm->name ?? '')
                     );
             }
         }
@@ -1239,7 +1239,7 @@ class ReportsExport implements
             } else {
 
                 $customerName =
-                    $row->customer->name_latin ??
+                    $row->customer->name ??
                     $row->customer->customer_name ??
                     $row->customer->name ??
                     '';
