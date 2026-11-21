@@ -1062,10 +1062,8 @@ class ReportsExport implements
         |--------------------------------------------------------------------------
         */
 
-        $lang = session(
-            'user_lang',
-            'kh'
-        );
+        $lang = session('user_lang') ?? 'kh';
+        $lang = strtolower(trim($lang));
 
         /*
         |--------------------------------------------------------------------------
