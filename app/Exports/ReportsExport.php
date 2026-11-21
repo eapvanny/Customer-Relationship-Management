@@ -1071,28 +1071,32 @@ class ReportsExport implements
         |--------------------------------------------------------------------------
         */
 
-        $sspName = '';
-
-        if ($reportUser) {
-
-            if ($lang === 'kh') {
-
-                $sspName =
-                    trim(
+        // $sspName = '';
+        $sspName = trim(
                         ($reportUser->family_name ?? '') .
                             ' ' .
                             ($reportUser->name ?? '')
                     );
-            } else {
+        // if ($reportUser) {
 
-                $sspName =
-                    trim(
-                        ($reportUser->family_name ?? '') .
-                            ' ' .
-                            ($reportUser->name ?? '')
-                    );
-            }
-        }
+        //     if ($lang === 'kh') {
+
+        //         $sspName =
+        //             trim(
+        //                 ($reportUser->family_name ?? '') .
+        //                     ' ' .
+        //                     ($reportUser->name ?? '')
+        //             );
+        //     } else {
+
+        //         $sspName =
+        //             trim(
+        //                 ($reportUser->family_name ?? '') .
+        //                     ' ' .
+        //                     ($reportUser->name ?? '')
+        //             );
+        //     }
+        // }
 
         /*
         |--------------------------------------------------------------------------
@@ -1118,28 +1122,11 @@ class ReportsExport implements
         |--------------------------------------------------------------------------
         */
 
-        $supName = '';
-
-        if ($sup) {
-
-            if ($lang === 'kh') {
-
-                $supName =
-                    trim(
+        $supName = trim(
                         ($sup->family_name ?? '') .
                             ' ' .
                             ($sup->name ?? '')
                     );
-            } else {
-
-                $supName =
-                    trim(
-                        ($sup->family_name ?? '') .
-                            ' ' .
-                            ($sup->name ?? '')
-                    );
-            }
-        }
 
         /*
         |--------------------------------------------------------------------------
@@ -1147,28 +1134,11 @@ class ReportsExport implements
         |--------------------------------------------------------------------------
         */
 
-        $rsmName = '';
-
-        if ($rsm) {
-
-            if ($lang === 'kh') {
-
-                $rsmName =
-                    trim(
+        $rsmName = trim(
                         ($rsm->family_name ?? '') .
                             ' ' .
                             ($rsm->name ?? '')
                     );
-            } else {
-
-                $rsmName =
-                    trim(
-                        ($rsm->family_name ?? '') .
-                            ' ' .
-                            ($rsm->name ?? '')
-                    );
-            }
-        }
 
         /*
         |--------------------------------------------------------------------------
@@ -1176,28 +1146,11 @@ class ReportsExport implements
         |--------------------------------------------------------------------------
         */
 
-        $asmName = '';
-
-        if ($asm) {
-
-            if ($lang === 'kh') {
-
-                $asmName =
-                    trim(
+        $asmName = trim(
                         ($asm->family_name ?? '') .
                             ' ' .
                             ($asm->name ?? '')
                     );
-            } else {
-
-                $asmName =
-                    trim(
-                        ($asm->family_name ?? '') .
-                            ' ' .
-                            ($asm->name ?? '')
-                    );
-            }
-        }
 
         /*
         |--------------------------------------------------------------------------
